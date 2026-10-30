@@ -4,9 +4,9 @@ const assert=require('node:assert/strict');
 const vm=require('node:vm');
 const fs=require('node:fs');
 function boot(preset="standard", options={}){
- const nodes=new Map(),draws=[];
+ const nodes=new Map(),draws=[],strokes=[];
  function node(id){if(!nodes.has(id))nodes.set(id,{textContent:'',style:{},classList:{add(){},remove(){},toggle(){}},listeners:{},addEventListener(k,f){this.listeners[k]=f;},closest(){return this;},setAttribute(k,v){this[k]=v;},getBoundingClientRect(){return {left:0,top:0,width:1200,height:675};}});return nodes.get(id);}
- const ctx=new Proxy({drawImage(img){draws.push(img)},createRadialGradient(){return {addColorStop(){}};}},{get(o,k){return o[k]||(()=>{});}});
+ const ctx=new Proxy({drawImage(img){draws.push(img)},stroke(){strokes.push(this.strokeStyle)},createRadialGradient(){return {addColorStop(){}};}},{get(o,k){return o[k]||(()=>{});}});
  node('arena').getContext=()=>ctx;
  const window={devicePixelRatio:1,listeners:{},addEventListener(k,f){this.listeners[k]=f;}};
  const document={getElementById:node,querySelectorAll:()=>[],addEventListener(){}};
@@ -19,7 +19,7 @@ function boot(preset="standard", options={}){
  const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,addWave,addTarget,get bait(){return bait},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
- return {g,node,window,draws,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
+ return {g,node,window,draws,strokes,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
 }
 function foe(g,x=800,y=337.5){const e=g.enemy(x,y);e.speed=0;e.shoot=999;e.hp=e.maxHp=10000;g.setFoes([e]);return e;}
 function advance(g,seconds){for(let i=0;i<Math.round(seconds*120);i++)g.update(1/120);}
@@ -453,4 +453,13 @@ test('mirrored first waves move together and meet around the lane centre',()=>{
  const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const blue=g.allies[1],red=g.foes[1];const initial=Math.hypot(blue.x-red.x,blue.y-red.y);
  assert.ok(blue.x<red.x&&blue.y>red.y);advance(g,.4);assert.ok(Math.hypot(blue.x-red.x,blue.y-red.y)<initial-80);
  advance(g,1);const mx=(blue.x+red.x)/2,my=(blue.y+red.y)/2;assert.ok(Math.abs(mx-650)<35&&Math.abs(my-325)<35,`meeting ${mx}, ${my}`);assert.equal(blue.targetId,red.id);assert.equal(red.targetId,blue.id);
+});
+
+test('Dodge hides cast trajectory while retaining the cast cue and launched projectile',()=>{
+ const {g,strokes}=boot('ahri');g.reset('dodge');g.disableSpawn();const e=foe(g,900);g.shootEnemy(e);g.render();
+ assert.ok(e.pending);assert.ok(!strokes.includes('#ff80634a'));assert.ok(strokes.includes('#ffcf87'));
+ g.releaseEnemy(e);assert.equal(g.shots.length,1);assert.ok(g.shots[0].alive);
+});
+test('non-Dodge training modes retain their trajectory guide',()=>{
+ const {g,strokes}=boot();g.reset('kite');g.disableSpawn();const e=foe(g,900);g.shootEnemy(e);g.render();assert.ok(strokes.includes('#ff80634a'));
 });
