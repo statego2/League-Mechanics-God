@@ -1,7 +1,7 @@
 // A policy, not a combat simulator. Times are seconds; distances share engine units.
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const point = p => ({ x: p.x, y: p.y });
-const reachable = (a, b, range) => dist(a, b) <= range + (a.radius || 0) + (b.radius || 0);
+export const reachable = (a, b, range) => dist(a.position, b.position) <= range + (a.radius || 0) + (b.radius || 0);
 const hold = reason => ({ type: 'hold', reason });
 
 export function createLaningOpponent(options = {}) {
@@ -67,7 +67,7 @@ export function createLaningOpponent(options = {}) {
     farm.sort((a,b) => (b.m.value || 1) - (a.m.value || 1) || a.hp - b.hp || String(a.m.id).localeCompare(String(b.m.id)));
     const target = farm.find(x => {
       const now = liveTarget(x.m.id);
-      return now && now.health > 0 && reachable(state.self.position, now.position, state.self.attack.range + (state.self.radius || 0) + (now.radius || 0));
+      return now && now.health > 0 && reachable(state.self, now, state.self.attack.range);
     });
     // Values are expressed in the same utility units by the adapter; missing data uses legacy estimates.
     const hpFraction = me.maxHealth > 0 ? Math.max(0, Math.min(1, me.health / me.maxHealth)) : 1;
@@ -75,7 +75,7 @@ export function createLaningOpponent(options = {}) {
     const value = Math.min(seen.tradeValue || 0, Number.isFinite(player?.health) ? Math.max(0, player.health) : Infinity);
     const riskAdjusted = cost * cfg.tradeMargin / Math.max(.25, hpFraction);
     const trade = visiblePlayer && currentPlayer && (player.windingUp || player.exposed) && value > riskAdjusted;
-    const spell = (me.abilities || []).find(a => a.ready && a.damage > 0 && a.lineClear && (a.manaCost || 0) <= (me.mana ?? Infinity) && reachable(me.position, player?.position || me.position, a.range) && (state.self.abilities || []).some(b => b.id === a.id && b.ready && b.lineClear && (b.manaCost || 0) <= (state.self.mana ?? Infinity) && currentPlayer && reachable(state.self.position, state.player.position, b.range)));
+    const spell = (me.abilities || []).find(a => a.ready && a.damage > 0 && a.lineClear && (a.manaCost || 0) <= (me.mana ?? Infinity) && visiblePlayer && reachable(me, player, a.range) && (state.self.abilities || []).some(b => b.id === a.id && b.ready && b.lineClear && (b.manaCost || 0) <= (state.self.mana ?? Infinity) && currentPlayer && reachable(state.self, state.player, b.range)));
     // A good trade can outweigh a low-value CS, but not a high-value minion by default.
     if (trade && spell && (!target || (value - riskAdjusted) > (target.m.value || 1))) {
       return { type: 'cast', abilityId: spell.id, targetId: player.id, aim: point(player.position), reason: player.windingUp ? 'punish visible windup' : 'punish exposed position' };
@@ -87,9 +87,9 @@ export function createLaningOpponent(options = {}) {
       const step = Math.max  (0, approach.distance - approach.reach * .9);
       return move({x: me.position.x + dx / approach.distance * step, y: me.position.y + dy / approach.distance * step}, 'approach last hit');
     }
-    if (trade && canAttack && reachable(me.position, player.position, me.attack.range) && reachable(state.self.position, state.player.position, state.self.attack.range)) return { type: 'attack', targetId: player.id, reason: 'punish commitment' };
+    if (trade && canAttack && reachable(me, player, me.attack.range) && reachable(state.self, state.player, state.self.attack.range)) return { type: 'attack', targetId: player.id, reason: 'punish commitment' };
     if (visiblePlayer && currentPlayer) {
-      const d = dist(me.position, player.position), desired = me.attack.range * cfg.spacing;
+      const d = dist(me.position, player.position), desired = (me.attack.range + (me.radius || 0) + (player.radius || 0)) * cfg.spacing;
       if (d < desired * 0.7 && d > 0) return move({ x: me.position.x + (me.position.x-player.position.x)/d * (desired-d), y: me.position.y + (me.position.y-player.position.y)/d * (desired-d) }, 'maintain spacing');
       if (d > desired * 1.2 && d > 0 && cost < (seen.tradeValue || 0)) return move({ x: me.position.x + (player.position.x-me.position.x)/d * (d-desired), y: me.position.y + (player.position.y-me.position.y)/d * (d-desired) }, 'approach range');
       if (!target && player.threatReady && state.time - lastBait >= cfg.baitInterval && d > desired * 0.9 && d < desired * 1.4 && cost < (seen.tradeValue || 0)) {
