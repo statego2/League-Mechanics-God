@@ -171,6 +171,11 @@ Kite records now prefer a completed run, then the fastest victory; before the fi
 - Moved the two hand-authored collision rectangles toward the illustrated edge structures, opening more central ground. Their dashed overlays show the approximate collision boundaries. These are still rectangular proxies, not a trace of the actual Rift, and the rest of the illustrated terrain is decorative. The user's image is a camera reference, not a measured collision map; exact lane topology still needs work.
 - Browser smoke: Last-Hit Lab loads the new background, Ahri and the two marked wall regions. `node --test tests/*.test.cjs`: **93/93 PASS**, including pathfinding, dash/flash, obstacle avoidance and 500 randomized routes using the adjusted walls. No full human playthrough on this map yet.
 
+## Mid framing adjustment (2026-10-30)
+
+- User clarified that the view should be slightly farther up and to the right. The existing background is now framed using its upper-right 96% crop; no new background was generated. The two approximate wall proxies were transformed to remain aligned with the shifted image. These are still illustrative rectangles, not the actual Rift map.
+- Browser opened Last-Hit with the adjusted framing. `node --test tests/*.test.cjs`: **93/93 PASS**, including movement, wall routing, dash/flash and 500 randomized routes. No full human playthrough after this framing change.
+
 ## Current playable state
 
 Dodge Trial, Kite Arena and Last-Hit Lab are available in the visible menu locally at http://localhost:8080. The repository was cloned into the `League-Mechanics-God` subdirectory of the original workspace, whose parent contains separate historical Unity research. Work is on `codex/controls-and-dodge`, based on `7de3430`.

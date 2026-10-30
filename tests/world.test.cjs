@@ -2,18 +2,18 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const world=require('../world.js');
 test('a route goes around the wall and all segments clear the player radius',()=>{
- const start={x:80,y:150},goal={x:400,y:150},route=world.path(start,goal);
+ const start={x:35,y:150},goal={x:400,y:150},route=world.path(start,goal);
  assert.ok(route.length>1);let previous=start;
  for(const waypoint of route){assert.ok(world.pointWalkable(waypoint));assert.ok(world.segmentClear(previous,waypoint));previous=waypoint;}
  assert.deepEqual(route.at(-1),goal);
 });
 test('a click inside a wall resolves to a nearby walkable destination',()=>{
- const desired={x:160,y:150},actual=world.nearestWalkable(desired);
+ const desired={x:125,y:150},actual=world.nearestWalkable(desired);
  assert.ok(world.pointWalkable(actual));assert.ok(Math.hypot(actual.x-desired.x,actual.y-desired.y)<100);
 });
 test('a dash stops before the wall and cannot tunnel across in one update',()=>{
- const start={x:100,y:150},end={x:400,y:150},actual=world.clip(start,end);
- assert.ok(actual.x<130);assert.ok(world.segmentClear(start,actual));assert.ok(world.pointWalkable(actual));
+ const start={x:35,y:150},end={x:400,y:150},actual=world.clip(start,end);
+ assert.ok(actual.x<85);assert.ok(world.segmentClear(start,actual));assert.ok(world.pointWalkable(actual));
 });
 test('unobstructed paths remain direct',()=>{
  const start={x:600,y:337},goal={x:800,y:337};assert.deepEqual(world.path(start,goal),[goal]);
