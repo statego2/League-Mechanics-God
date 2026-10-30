@@ -14,7 +14,7 @@ function boot(preset="standard"){
  sandbox.Math.random=()=>.5;
  vm.createContext(sandbox);
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,addWave,addTarget,get bait(){return bait},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,addWave,addTarget,get bait(){return bait},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -197,7 +197,7 @@ test('enabled sound plays attack cues and the toggle mutes subsequent cues',()=>
 test('lane scenario separates player CS, enemy kills and allied misses',()=>{
  const {g,node}=boot();g.reset('lane');advance(g,.02);const minion=g.foes.find(e=>e.minion),opponent=g.foes.find(e=>!e.minion);assert.ok(minion&&opponent);
  g.damageEnemy(minion,100);assert.equal(g.stats.cs,1);assert.equal(g.stats.missed,0);g.damageEnemy(opponent,100);assert.equal(g.stats.cs,1);
- advance(g,.02);assert.equal(node('killsValue').textContent,1);g.setTime(59.99);advance(g,.02);assert.equal(g.state,'ended');assert.match(node('menuDescription').textContent,/1 \/ 15 CS · 2 missed · 1 enemies defeated/);
+ advance(g,.02);assert.equal(node('killsValue').textContent,1);g.setTime(59.99);advance(g,.02);assert.equal(g.state,'ended');assert.match(node('menuDescription').textContent,/1 \/ 15 CS · 0 missed · 2 unresolved · 1 enemies defeated/);
 });
 
 test('lane scenario resolves all 15 minions and ends at 60 seconds',()=>{
@@ -260,10 +260,10 @@ test('Ahri timing uses level-one cadence and 20 percent windup',()=>{
 test('Ahri CS profile uses 53 damage and separates old timing-only records',()=>{
  const {g,node,window}=boot(),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
  node('attackSpeed').listeners.change({target:{value:'ahri'}});g.reset('lastHit');g.disableSpawn();g.addWave();g.setAllies([]);const e=g.foes[0];assert.equal(e.hp,465);assert.equal(g.player.speed,165);e.x=820;e.tick=999;e.hp=54;g.attackOrder(e);advance(g,.7);assert.equal(e.hp,1);assert.equal(g.stats.cs,0);
- g.moveTo(600,337.5);e.hp=53;g.attackOrder(e);advance(g,2);assert.equal(e.alive,false);assert.equal(node('killsValue').textContent,1);g.end(true);assert.equal(values.get('lmg.best.v1.lastHit.normal.cs_ahri_v3'),'1');assert.match(node('menuDescription').textContent,/53 damage/);
+ g.moveTo(600,337.5);e.hp=53;g.attackOrder(e);advance(g,2);assert.equal(e.alive,false);assert.equal(node('killsValue').textContent,1);g.end(true);assert.equal(values.get('lmg.best.v1.lastHit.normal.cs_ahri_v4'),'1');assert.match(node('menuDescription').textContent,/53 damage/);
 });
 test('Ahri CS unattended waves resolve without breaking the drill',()=>{
- for(const difficulty of ['easy','normal','hard']){const {g,node}=boot();node('attackSpeed').listeners.change({target:{value:'ahri'}});node('difficulty').listeners.change({target:{value:difficulty}});g.reset('lastHit');advance(g,60.02);assert.equal(g.state,'ended');assert.equal(g.stats.missed,12);}
+ for(const difficulty of ['easy','normal','hard']){const {g,node}=boot();node('attackSpeed').listeners.change({target:{value:'ahri'}});node('difficulty').listeners.change({target:{value:difficulty}});g.reset('lastHit');advance(g,60.02);assert.equal(g.state,'ended');assert.equal(g.stats.missed+g.stats.unresolved,12);}
 });
 
 test('auto attacks apply armor mitigation at impact and CS lethal boundary',()=>{
@@ -302,7 +302,7 @@ test('Ahri waves contain three melee and three caster minions and use edge attac
  const e=g.foes[0];e.x=931;e.y=g.player.y;e.tick=e.meleeTick=999;g.attackOrder(e);advance(g,.31);assert.equal(g.stats.released,1);
 });
 test('Ahri CS allied melee and caster damage use minion ratios',()=>{
- const {g,node}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const e=g.foes[0],ally=g.allies[0];e.x=e.destination;e.tick=999;ally.x=e.x-60;ally.y=e.y;ally.tick=0;g.setFoes([e]);g.setAllies([ally]);g.update(1/120);assert.ok(Math.abs(e.hp-(465-11-465*.02))<1e-8);
+ const {g,node}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const e=g.foes[0],ally=g.allies[0];e.x=e.destination;e.tick=999;ally.x=e.x-60;ally.y=e.y;ally.tick=0;g.setFoes([e]);g.setAllies([ally]);advance(g,.27);assert.ok(Math.abs(e.hp-(465-11-465*.02))<1e-8);
  ally.minionType='caster';ally.tick=0;advance(g,.5);const hpAfterMelee=465-11-465*.02;assert.ok(Math.abs(e.hp-(hpAfterMelee-21-hpAfterMelee*.035))<1e-7);
 });
 
@@ -376,7 +376,7 @@ test('Ahri heals on ninth minion last hit and champion takedown',()=>{
  const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.player.hp=400;for(let i=0;i<9;i++){const e=g.enemy(900,300);e.minion=true;e.hp=1;g.damageEnemy(e,1);}assert.equal(g.player.essence,0);assert.equal(g.player.hp,435);g.reset('kite');g.disableSpawn();g.player.hp=550;const champ=foe(g,800);champ.hp=1;g.damageEnemy(champ,1);assert.equal(g.player.hp,590);
 });
 test('allied minion damage respects target armor',()=>{
- const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const e=g.foes[0],ally=g.allies[0];e.x=e.destination;e.armor=100;e.tick=999;ally.x=e.x-60;ally.y=e.y;ally.tick=0;g.setFoes([e]);g.setAllies([ally]);g.update(1/120);assert.ok(Math.abs(e.hp-(465-(11+465*.02)/2))<1e-8);
+ const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const e=g.foes[0],ally=g.allies[0];e.x=e.destination;e.armor=100;e.tick=999;ally.x=e.x-60;ally.y=e.y;ally.tick=0;g.setFoes([e]);g.setAllies([ally]);advance(g,.27);assert.ok(Math.abs(e.hp-(465-(11+465*.02)/2))<1e-8);
 });
 
 test('Ahri champion takedown adds a Spirit Rush charge during its active window',()=>{
@@ -392,9 +392,28 @@ test('CS waves fight both ways, stop attacking after death and retarget',()=>{
 });
 
 test('allied minions retarget after a target dies and player last hits retain credit',()=>{
- const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const a=g.allies[0],first=g.foes[0],second=g.foes[1];a.x=760;a.y=first.y;a.tick=0;first.x=first.destination;first.hp=1;second.x=second.destination;first.tick=second.tick=999;g.setAllies([a]);g.setFoes([first,second]);g.update(1/120);assert.equal(first.alive,false);assert.equal(g.stats.missed,1);advance(g,.1);assert.equal(a.targetId,second.id);second.hp=1;g.damageEnemy(second,1);assert.equal(g.stats.missed,1);assert.equal(g.player.essence,1);
+ const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const a=g.allies[0],first=g.foes[0],second=g.foes[1];a.x=760;a.y=first.y;a.tick=0;first.x=first.destination;first.hp=1;second.x=second.destination;first.tick=second.tick=999;g.setAllies([a]);g.setFoes([first,second]);advance(g,.27);assert.equal(first.alive,false);assert.equal(g.stats.missed,1);advance(g,.1);assert.equal(a.targetId,second.id);second.hp=1;g.damageEnemy(second,1);assert.equal(g.stats.missed,1);assert.equal(g.player.essence,1);
 });
 
 test('bidirectional waves remain deterministic across frame rates and freeze on pause',()=>{
  const outcomes=[];for(const fps of [30,60,120]){const {g}=boot('ahri');g.reset('lastHit');g.loop(1000);for(let i=1;i<=fps*12;i++)g.loop(1000+i*1000/fps);outcomes.push(JSON.stringify([g.stats.missed,g.foes.map(e=>[e.id,Math.round(e.hp*1000)]),g.allies.map(e=>[e.id,Math.round(e.hp*1000)])]));g.pause();const state=JSON.stringify([g.foes,g.allies,g.shots]);advance(g,2);assert.equal(JSON.stringify([g.foes,g.allies,g.shots]),state);}assert.deepEqual(outcomes,[outcomes[0],outcomes[0],outcomes[0]]);
+});
+
+test('impact applies damage types and records one killer once',()=>{
+ const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const e=g.foes[0];e.armor=100;e.mr=100;e.hp=100;
+ assert.equal(g.applyImpact(e,{sourceId:7,sourceTeam:'ally',kind:'test',raw:53,damageType:'physical'}),26.5);
+ assert.equal(g.applyImpact(e,{sourceId:'player',sourceTeam:'player',kind:'test',raw:53,damageType:'magic'}),26.5);
+ assert.equal(g.applyImpact(e,{sourceId:7,sourceTeam:'ally',kind:'test',raw:47,damageType:'true'}),47);
+ assert.equal(e.death.killerId,7);assert.equal(g.stats.missed,1);assert.equal(g.player.essence,0);
+ assert.equal(g.applyImpact(e,{sourceId:'player',sourceTeam:'player',kind:'auto',raw:999,damageType:'true'}),0);assert.equal(g.stats.missed,1);assert.equal(g.player.essence,0);
+});
+test('timeout survivors are unresolved rather than attributed deaths',()=>{
+ const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();g.setAllies([]);g.end(true);assert.equal(g.stats.missed,0);assert.equal(g.stats.unresolved,6);assert.ok(g.foes.every(e=>e.alive));
+});
+test('minion windup cancels when target dies and can reacquire another wave',()=>{
+ const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const a=g.allies[0],first=g.foes[0],next=g.foes[1];a.x=760;a.y=first.y;a.tick=0;first.x=first.destination;first.tick=999;next.x=next.destination;next.wave=2;g.setAllies([a]);g.setFoes([first,next]);advance(g,.1);assert.equal(first.hp,465);g.damageEnemy(first,999);advance(g,.1);assert.equal(a.targetId,next.id);assert.equal(next.hp,465);advance(g,.3);assert.ok(next.hp<465);
+});
+
+test('pinned Ahri data is converted once and leaves time and damage unscaled',()=>{
+ const {g}=boot('ahri');assert.equal(g.AHRI_DATA.patch,'16.21.1');assert.equal(g.SIMULATION.toWorld(165),330);assert.equal(g.AHRI.speed,165);assert.equal(g.AHRI.range,275);assert.equal(g.AHRI.missileSpeed,875);assert.equal(g.AHRI.q.radius,50);assert.equal(g.AHRI.q.range,450);assert.equal(g.AHRI.q.cast,.25);assert.equal(g.AHRI.damage,53);
 });

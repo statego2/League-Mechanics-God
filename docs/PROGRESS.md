@@ -265,3 +265,14 @@ Commit: `89e7529`.
 - Auditor now detects GameMaker exports with query-suffixed filenames and their extension/atlas dependencies: 372 resolved, 18 missing static references, 97 external/inline and zero escapes. Python reference tests: 8/8 passed.
 - `5c9a0cc`: independent two-sided minion waves and caster travel; removed roots only in Dodge Trial. Gameplay tests: 97/97 passed. Browser observed both waves fighting with no console errors; a complete human CS calibration is still needed.
 - User preference: keep Ahri for the wider game, but plan a fast-attacking ADC for Kite; no change has yet been made to its champion.
+
+## Research PR #1 integration (30 October 2026)
+
+- Read `ENGINEERING_SPEC.md`, `INTEGRATION_GUIDE.md`, `DATA_GAPS.md` and `SOURCES.md` from PR #1 (`origin/research-pr-1`); the research branch was not merged. Review Riot's developer policy before any public product distribution, as flagged in its source notes.
+- Added a shared `applyImpact`/`resolveDeath` path for player, allied and enemy damage, physical/magic/true mitigation and one death/credit record. Minion percentage bonus is calculated from current HP at impact; minion kills by allies do not credit CS or Ahri passive. Stable fixed-step processing order is an approximation, not a proven server race rule; environmental/XP/gold/death grace remain unimplemented.
+- End-of-drill live minions are now counted as unresolved instead of fabricated deaths/misses. Ahri CS record key changed to `cs_ahri_v4`.
+- Existing two-sided simulation now has approximate 0.25s windup, target retention, cancellation/reacquisition on target death or leaving range, and can target nearby opposing minions across waves. Caster projectiles retain source identity. Acquisition 250 canvas units, cadence, windup, pathing and priority remain training approximations; no champion call-for-help, first-wave special rules, siege or complete lane progression.
+- Centralized pinned Ahri base values and one provisional 0.5 canvas/game-unit conversion in `game.js`; HP/damage/timing are unscaled. Attack range, movement, missile and Q geometry now derive from this compact in-code data. This is not yet a generated/validated schema adapter; community values and radii require further verification.
+- Browser localhost: unattended Last-Hit finished and showed CS/missed/unresolved; Kite start and pause, Dodge start verified. No captured console warnings/errors. No full interactive playthrough or client comparison. `node --test tests/*.test.cjs`: 101 tests passed; `node --check game.js` and `git diff --check` passed.
+
+Next: validate event ordering and add complete source/event identity plus gold/XP only when sourced; implement minion priority/call-for-help and movement when no target; generate and validate a provenance-bearing adapter from the research dataset, then calibrate minion attacks and run full human CS sessions.
