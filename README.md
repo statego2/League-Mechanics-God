@@ -19,11 +19,12 @@ For a public URL, enable **GitHub Pages** in the repository Settings → Pages �
 ## Modes
 
 - **Dodge Trial:** survive 60 seconds of enemy skillshots. Track damage and dodges.
+- **Lux Q / Ezreal Q Dodge:** survive 60 seconds against a stationary caster. Q projectiles use approximate scaled rank-1 cast, range, speed, width and damage against level-1 Ahri defenses; Lux roots for 2 seconds. Right-click to move, F to flash. A visible aim line and a fixed 3.5-second firing interval are training aids. No minion interception, accurate champion collision size, real cooldown or full ability effects yet; difficulty does not alter these two reference drills.
 - **Kite Arena:** defeat 10 enemies using movement, autos and abilities.
 - **Lane Scenario:** farm five waves while one enemy attacks; avoid skillshots and trade using all abilities. Results distinguish CS, misses, enemy defeats and damage.
 - **Bait → Dodge → CS:** enter the moving enemy’s threat ring to draw a locked skillshot, evade it and last-hit a minion during the 3-second window while an ally damages it. Three rounds track baits, dodges, CS and damage. Q/E/R are disabled; W/F remain available.
 - **Skillshot Lab:** aim Q at moving targets for 45 seconds; results show hits, shots and accuracy. W/F reposition.
-- **Last-Hit Lab:** time 28-damage auto attacks across 5 minion waves (15 possible CS). Allied caster projectiles damage minions; only your killing blow earns CS. Gold health bars mark last-hit range. Q/E/R are disabled in this drill; W/F remain available.
+- **Last-Hit Lab:** time auto attacks (28 damage by default; 53 in the experimental Ahri CS profile) across 5 minion waves (15 possible CS). Allied caster projectiles damage minions; only your killing blow earns CS. Gold health bars mark last-hit range. Q/E/R are disabled in this drill; W/F remain available.
 
 Optional synthesized combat cues are disabled by default. Use **SOUND OFF / ON** to toggle them; no audio files or external service are required.
 

@@ -275,3 +275,20 @@ test('Ahri can secure a minion after allied damage on each difficulty',()=>{
  for(let i=0;i<1800&&e.alive&&e.hp>53;i++)g.update(1/120);assert.ok(e.alive&&e.hp>0&&e.hp<=53,`${difficulty} has a last-hit window`);g.attackOrder(e);
  for(let i=0;i<120&&e.alive;i++)g.update(1/120);assert.equal(node('killsValue').textContent,1,`${difficulty} secures CS`);}
 });
+
+test('reference spells use stated cast, speed, range and mitigated damage',()=>{
+ for(const [mode,speed,radius,ttl,damage,root] of [['luxDodge',600,35,650/600,80/1.3,2],['ezrealDodge',1000,30,.6,98/1.21,0]]){const {g,node}=boot();g.reset(mode);advance(g,1.52);const caster=g.foes[0];assert.ok(caster.pending);assert.equal(g.shots.length,0);advance(g,.26);const s=g.shots[0];assert.ok(s);assert.ok(Math.abs(Math.hypot(s.vx,s.vy)-speed)<1e-6);assert.equal(s.r,radius);assert.ok(s.ttl<=ttl&&s.ttl>ttl-.03);advance(g,1);assert.ok(Math.abs(g.stats.damage-damage)<1e-6);assert.equal(g.stats.hits,1);assert.equal(node('killsValue').textContent,1);if(root)assert.ok(g.player.root>1);else assert.equal(g.player.root,0);}
+});
+test('Lux root prevents movement while flash remains usable and pause freezes it',()=>{
+ const {g}=boot();g.reset('luxDodge');advance(g,2.6);assert.ok(g.player.root>0);const x=g.player.x;g.moveTo(x-200,g.player.y);advance(g,.3);assert.equal(g.player.x,x);const root=g.player.root;g.pause();advance(g,1);assert.equal(g.player.root,root);g.pause();g.cast('f');assert.notEqual(g.player.x,x);advance(g,2);assert.equal(g.player.root,0);
+});
+test('reference missiles expire at range and reference drills restart cleanly',()=>{
+ for(const mode of ['luxDodge','ezrealDodge']){const {g}=boot();g.reset(mode);g.player.x=100;g.player.y=337.5;advance(g,3.5);assert.equal(g.stats.hits,0);assert.equal(g.shots.length,0);g.reset(mode);assert.equal(g.player.root,0);assert.equal(g.player.hp,590);g.setTime(59.99);advance(g,.02);assert.equal(g.state,'ended');}
+});
+
+test('reference shots retain damage and timing at 30, 60 and 120 FPS',()=>{
+ for(const mode of ['luxDodge','ezrealDodge']){const outcomes=[];for(const fps of [30,60,120]){const {g}=boot();g.reset(mode);g.loop(1000);for(let i=1;i<=fps*3;i++)g.loop(1000+i*1000/fps);outcomes.push([g.stats.hits,g.stats.damage]);}for(const outcome of outcomes){assert.equal(outcome[0],1);assert.ok(Math.abs(outcome[1]-outcomes[0][1])<1e-8);}}
+});
+test('reference flash does not grant invulnerability',()=>{
+ const {g}=boot();g.reset('luxDodge');g.cast('f');assert.equal(g.player.invuln,0);
+});

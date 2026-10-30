@@ -103,6 +103,12 @@ Kite records now prefer a completed run, then the fastest victory; before the fi
 - Auto attacks now apply target armor at impact, and the gold last-hit threshold uses the same calculation. Present minions still have zero armor; this prepares other minion types and later upgrades without pretending their waves are already modeled. Basic negative armor is supported; penetration and damage modifiers are not.
 - `node --test tests/*.test.cjs`: **63/63 PASS**, including an armored target immediately above and at the lethal boundary. A further 64th test confirms an Ahri auto can secure a minion after allied damage at every difficulty, from a controlled in-range position.
 
+## Reference spell dodge drills (2026-10-30)
+
+- Added standalone Lux Q and Ezreal Q dodge drills. A stationary caster aims every 3.5 seconds after a 0.25-second cast; a training-only line shows the locked aim. The player has 590 HP, 165 canvas units/s movement and Ahri level-1 resistances. With a provisional 0.5 canvas-unit scale: Lux Q speed 600, range 650, radius 35, 80 base magic damage reduced by 30 MR and 2-second root; Ezreal Q speed 1000, range 600, radius 30, 98 base physical damage (20 + 130% of 60 AD) reduced by 21 armor. Flash does not grant invulnerability here and is usable during root. Spell damage and root freeze on pause; missiles stop at maximum range.
+- These are approximations, not full LoL implementations: visible telegraph, fixed 3.5-second interval, locked caster, simplified player radius, no minion interception, Lux two-target interaction, tenacity, items, runes, on-hit effects or precise Flash cooldown. Difficulty does not change these drills. A screenshot/feel comparison and a full human survival run remain open.
+- Browser: started both drills, each registered a hit; Lux root was visible. `node --test tests/*.test.cjs`: **69/69 PASS**, including cast delay, range, damage, root/pause, Flash and 30/60/120 FPS.
+
 ## Current playable state
 
 Dodge Trial, Kite Arena, Last-Hit Lab, Skillshot Lab, Bait → Dodge → CS and Lane Scenario run locally at http://localhost:8080. The repository was cloned into the `League-Mechanics-God` subdirectory of the original workspace, whose parent contains separate historical Unity research. Work is on `codex/controls-and-dodge`, based on `7de3430`.
@@ -150,7 +156,7 @@ Commit: `89e7529`.
 
 ## Tests actually run
 
-- `node --test tests/*.test.cjs`: **64/64 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
+- `node --test tests/*.test.cjs`: **69/69 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
 - `node --check game.js` and `git diff --check`: PASS.
 - Python reference tools: `python3 -m unittest discover -s reference/league-of-dodge/tools -p 'test_*.py'`: **7/7 PASS**.
 - HTTP server logs: app, JS and CSS return 200/304; initial missing favicon fixed with an original SVG icon.
@@ -169,6 +175,6 @@ Commit: `89e7529`.
 ## Next three actions
 
 1. Implement a consistent League unit scale and selectable level-1 Ahri CS profile (53 AD, timing, missile travel, minion armor and truthful lethal threshold); validate with controlled tests and a human run. See Blueprint §11.
-2. Implement patch-pinned Lux Q and Ezreal Q as selectable data-driven training shots, including collision, mitigation and root; distinguish training warnings from authentic cast time.
+2. Expand Lux Q and Ezreal Q training with accurate collision sizes and minion interception, complete relevant effects and validate against real gameplay; distinguish training warnings from authentic cast time.
 3. Replace two rectangular wall proxies with a carefully traced, original mid-lane terrain mesh and navigation, including rivers and jungle entrances. Acceptance: visible walls match collision, no entity spawns inside obstacles, clicks and chase route around them.
 
