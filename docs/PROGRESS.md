@@ -304,3 +304,12 @@ Next: human-play complete CS waves; add a separate opt-in combined lane with cha
 - Added approximate first-attack staggering by formation row (0/0.14/0.28 seconds after reaching range), preventing perfectly synchronized first-wave health losses. These timings are a training choice and must be calibrated against live behavior. Added small team-coloured staffs to distinguish casters without changing hitboxes. Ahri CS records now use `cs_ahri_v7`.
 - Browser smoke: Last-Hit loaded, both waves moved and fought, caster staffs and missiles rendered, and no console errors/warnings were captured. No full manual last-hit run. Automated suite: 115/115; new tests cover two-sided simultaneous melee, equal projectile radii, staggered early attacks and caster rendering.
 - Remaining: full actual-client measurements, champion aggro/combined lane, minion collision and movement avoidance, cannon, timing, more accurate ranged and melee animations.
+
+## Farming reference and explicit S stop (30 October 2026)
+
+- Revisited `https://loldodgegame.com/farming/` and the privately archived playable export: observed opposing moving waves containing melee, caster and cannon plus separate missed minions / missed money / earned money. This is reference gameplay, not proof of live LoL simulation accuracy. Retained League-aligned two early normal waves; cannon for a later wave remains open.
+- S now clears movement destination, route, chase, focus and pending attack-move; it cancels an uncommitted auto windup but leaves an already released missile intact. A held right button no longer silently overwrites S until a new press. Tests cover movement, windup, fired missile and held-right reissue. Existing dash/cast behavior is not asserted to reproduce every LoL interruption case.
+- Ahri Last-Hit tracks earned and missed minion gold separately on actual death; unresolved survivors award neither. Starting melee 20 gold is from Riot 26.1; caster 14 is community-reported, subject to the research caveats. This is feedback, not XP/items or full economy. Gold gain is displayed on kill and in the arena/results.
+- Browser: launched Last-Hit, issued right click and S, saw the wave and missed gold update with no console warnings/errors. Reference: short unattended play only; no precise timing or full human CS run. `node --test tests/*.test.cjs`: 118/118, including stop and gold attribution.
+
+Next: measured minion attack/cadence and complete practice run; cannon wave and later scheduling, careful champion aggro and collision based on verified sources.

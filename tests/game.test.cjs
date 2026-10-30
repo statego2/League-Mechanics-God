@@ -486,3 +486,19 @@ test('initial formation staggers attack readiness rather than synchronizing all 
  const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();assert.ok(g.allies[0].firstAttackDelay<g.allies[1].firstAttackDelay);assert.ok(g.allies[1].firstAttackDelay<g.allies[2].firstAttackDelay);
  let distinct=false;for(let i=0;i<360;i++){g.update(1/120);const hp=g.foes.filter(e=>e.minionType==='melee').map(e=>e.hp);if(hp.length===3&&new Set(hp).size>1)distinct=true;}assert.ok(distinct,'initial attacks never staggered');
 });
+
+test('S stops movement and chase, cancels windup but preserves launched autos',()=>{
+ const {g,key}=boot();const e=foe(g);g.moveTo(400,300);advance(g,.1);key('s');const pos=[g.player.x,g.player.y];advance(g,.1);assert.deepEqual([g.player.x,g.player.y],pos);assert.equal(g.player.target,null);
+ g.attackOrder(e);advance(g,.1);assert.ok(g.player.windup>0);key('s');assert.equal(g.player.order,null);assert.equal(g.player.windup,0);advance(g,.2);assert.equal(g.stats.released,0);
+ g.attackOrder(e);advance(g,.2);assert.equal(g.stats.released,1);key('s');advance(g,.5);assert.ok(e.hp<e.maxHp);assert.equal(g.stats.released,1);
+});
+test('S overrides a held right-click until a new right press',()=>{
+ const {g,node,key,click}=boot();click(400,300);advance(g,.05);key('s');node('arena').listeners.pointermove({clientX:350,clientY:300,buttons:2});assert.equal(g.player.target,null);
+ node('arena').listeners.pointermove({clientX:350,clientY:300,buttons:0});click(400,300);assert.ok(g.player.target);
+});
+
+test('CS gold credits only player last hits; missed and unresolved stay separate',()=>{
+ const {g,node}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();g.setAllies([]);const melee=g.foes[0],caster=g.foes[3],alive=g.foes[4];
+ g.damageEnemy(melee,9999);g.applyImpact(caster,{sourceId:-4,sourceTeam:'ally',kind:'minionProjectile',raw:9999,damageType:'true'});g.applyImpact(caster,{sourceId:'player',sourceTeam:'player',kind:'auto',raw:9999,damageType:'true'});
+ assert.equal(g.stats.gold,20);assert.equal(g.stats.missedGold,14);assert.ok(alive.alive);g.end(true);assert.equal(g.stats.unresolved,4);assert.equal(g.stats.missedGold,14);assert.match(node('menuDescription').textContent,/20 gold earned · 14 gold missed/);
+});

@@ -2,6 +2,10 @@
 
 **Evidence level:** static inspection of the full supplied archive and browser checks of individual local exports on 30 October 2026. Kiting and Farming reached gameplay; several other exports fail because dependencies are absent. There is no editable GML source or authoritative redistribution license. Distinguish observed behavior from metadata and inference; see [manifest](manifest.md) and [complete inventory](ZIP_INVENTORY.md).
 
+## Farming observation (30 October 2026, follow-up)
+
+Revisited the supplied public Farming page and ran the previously archived export locally. Its opening wave visibly included blue/red melee, casters and cannon units moving from opposite directions; it displayed separate minions missed, money missed and money earned counters. During this short unattended observation the counters reached two misses and 42 money missed. This does not establish individual rewards, actual LoL attack timings, complete wave schedules or in-client fidelity; the Farming implementation uses its own training rules. For our two-wave Ahri drill the first two ordinary League waves remain melee/caster only, so cannon is not inserted into them merely because the reference opens with one. The game now reports earned/missed gold independently using the PR #1 source-reported starting melee/caster values; these are not an implemented economy or XP system.
+
 ## Archive comparison and practical application
 
 | Area | Reference evidence | Our current implementation and next work |
