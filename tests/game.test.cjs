@@ -146,12 +146,12 @@ test('kite records prefer a win, then the fastest win, over earlier partial runs
 });
 
 test('right-click routes the player around walls without entering them',()=>{
- const {g}=boot(),world=require('../world.js');g.player.x=120;g.player.y=150;g.moveTo(400,150);
+ const {g}=boot(),world=require('../world.js');g.player.x=80;g.player.y=150;g.moveTo(400,150);
  let diverted=false;for(let i=0;i<360;i++){g.update(1/120);assert.ok(world.pointWalkable(g.player));if(Math.abs(g.player.y-150)>20)diverted=true;}assert.ok(diverted);assert.ok(Math.hypot(g.player.x-400,g.player.y-150)<2);
 });
 test('dash stops at a wall, while flash can cross and ends in walkable space',()=>{
- const {g,node}=boot(),world=require('../world.js');g.player.x=100;g.player.y=150;node('arena').listeners.pointermove({clientX:600,clientY:150,buttons:0});g.cast('w');assert.ok(g.player.x<205);assert.ok(world.pointWalkable(g.player));
- g.reset('kite');g.disableSpawn();g.player.x=100;g.player.y=150;g.cast('f');assert.ok(g.player.x>312);assert.ok(world.pointWalkable(g.player));
+ const {g,node}=boot(),world=require('../world.js');g.player.x=100;g.player.y=150;node('arena').listeners.pointermove({clientX:600,clientY:150,buttons:0});g.cast('w');assert.ok(g.player.x<130);assert.ok(world.pointWalkable(g.player));
+ g.reset('kite');g.disableSpawn();g.player.x=100;g.player.y=150;g.cast('f');assert.ok(g.player.x>222);assert.ok(world.pointWalkable(g.player));
 });
 test('a pursuing enemy routes around a wall rather than crossing or getting stuck',()=>{
  const {g}=boot(),world=require('../world.js');g.player.x=500;g.player.y=150;
@@ -159,12 +159,12 @@ test('a pursuing enemy routes around a wall rather than crossing or getting stuc
  assert.ok(diverted);assert.ok(Math.hypot(e.x-g.player.x,e.y-g.player.y)<260);
 });
 test('attack-move navigates around a wall before acquiring a destination',()=>{
- const {g,key,click}=boot(),world=require('../world.js');g.player.x=120;g.player.y=150;
+ const {g,key,click}=boot(),world=require('../world.js');g.player.x=80;g.player.y=150;
  key('a');click(400,150,0);let diverted=false;for(let i=0;i<360;i++){g.update(1/120);assert.ok(world.pointWalkable(g.player));if(Math.abs(g.player.y-150)>20)diverted=true;}
  assert.ok(diverted);assert.ok(Math.hypot(g.player.x-400,g.player.y-150)<2);
 });
 test('a fresh move order interrupts a detour immediately',()=>{
- const {g}=boot(),world=require('../world.js');g.player.x=120;g.player.y=150;g.moveTo(400,150);advance(g,.3);g.moveTo(100,350);
+ const {g}=boot(),world=require('../world.js');g.player.x=80;g.player.y=150;g.moveTo(400,150);advance(g,.3);g.moveTo(100,350);
  for(let i=0;i<300;i++){g.update(1/120);assert.ok(world.pointWalkable(g.player));}
  assert.ok(Math.hypot(g.player.x-100,g.player.y-350)<2);
 });
@@ -249,7 +249,7 @@ test('results and pause reopen the menu at the top',()=>{
 test('skillshot targets spawn and move outside physical walls',()=>{
  const world=require('../world.js');const {g}=boot();g.reset('skillshot');g.disableSpawn();
  for(let i=0;i<100;i++){g.setFoes([]);g.addTarget();for(const e of g.foes)assert.ok(world.pointWalkable(e,e.r));}
- const e=foe(g,730,550);e.targetDummy=true;e.anchorX=700;e.anchorY=550;e.phase=0;e.speed=90;
+ const e=foe(g,810,550);e.targetDummy=true;e.anchorX=780;e.anchorY=550;e.phase=0;e.speed=90;
  for(let i=0;i<1200;i++){g.update(1/120);assert.ok(world.pointWalkable(e,e.r),`target entered a wall at ${e.x}, ${e.y}`);}
 });
 

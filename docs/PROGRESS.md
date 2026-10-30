@@ -165,6 +165,12 @@ Kite records now prefer a completed run, then the fastest victory; before the fi
 - Allied melee and caster damage now go through the target armor calculation, including current-health bonus damage. Current training minions have zero armor by default; minion simulation still uses scripted attackers and needs real bidirectional units and target selection.
 - `node --test tests/*.test.cjs`: **93/93 PASS**. Added tests for ninth CS heal, champion heal/cap, armored allied damage, and R charge gain.
 
+## User mid-lane screenshot and reframing (2026-10-30)
+
+- User supplied an in-game screenshot of the mid-lane wave and requested a view slightly farther up the lane. Replaced the arena background with `assets/mid-reference-v2.png`, a generated ground-only scene using that screenshot for layout; original art remains in the repo. The view has broad engraved paving, grass shoulders, upper-left river ramp/brush and a lower-right embankment. Prompt and reference provenance are in assets/README.md.
+- Moved the two hand-authored collision rectangles toward the illustrated edge structures, opening more central ground. Their dashed overlays show the approximate collision boundaries. These are still rectangular proxies, not a trace of the actual Rift, and the rest of the illustrated terrain is decorative. The user's image is a camera reference, not a measured collision map; exact lane topology still needs work.
+- Browser smoke: Last-Hit Lab loads the new background, Ahri and the two marked wall regions. `node --test tests/*.test.cjs`: **93/93 PASS**, including pathfinding, dash/flash, obstacle avoidance and 500 randomized routes using the adjusted walls. No full human playthrough on this map yet.
+
 ## Current playable state
 
 Dodge Trial, Kite Arena and Last-Hit Lab are available in the visible menu locally at http://localhost:8080. The repository was cloned into the `League-Mechanics-God` subdirectory of the original workspace, whose parent contains separate historical Unity research. Work is on `codex/controls-and-dodge`, based on `7de3430`.
