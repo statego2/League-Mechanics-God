@@ -90,7 +90,7 @@ Kite records now prefer a completed run, then the fastest victory; before the fi
 
 - Added an opt-in Ahri timing preset: 0.668 attacks/s and 20% windup, based on Riot patch 13.22. The normal prototype default and its records remain unchanged. This preset changes timing only: it does not yet implement Ahri damage, range, movement, projectile speed, resistances or abilities.
 - The Blueprint now contains a sourced, patch-aware plan for a full level-1 Ahri baseline, CS with mitigation, a consistent unit scale and real Lux Q / Ezreal Q training. Those spells are not yet implemented. Community wiki values still need in-client verification.
-- `node --test tests/*.test.cjs`: **60/60 PASS**, including timing and windup at 30/60/120 FPS. No manual Ahri preset playthrough yet.
+- `node --test tests/*.test.cjs`: **60/60 PASS**, including timing and windup at 30/60/120 FPS. Browser smoke: selected Ahri timing, started Kite Arena and confirmed HUD shows AS 0.668. No full manual Ahri preset playthrough yet.
 
 ## Current playable state
 
