@@ -9,7 +9,7 @@ function random(){rng=(Math.imul(1664525,rng)+1013904223)>>>0;return rng/4294967
 const cosmetic=(a,b)=>a+Math.random()*(b-a);
 const COLORS={player:"#6ff5df",enemy:"#ff858d",bullet:"#ffb17f"};
 const ATTACK={range:275,windup:.18,period:.72};
-const ATTACK_PRESETS={slow:{period:1.25,windup:.3125,label:"0.80"},standard:{period:.72,windup:.18,label:"1.39"},fast:{period:.5,windup:.125,label:"2.00"}};
+const ATTACK_PRESETS={ahri:{period:1/.668,windup:.2/.668,label:"0.668"},slow:{period:1.25,windup:.3125,label:"0.80"},standard:{period:.72,windup:.18,label:"1.39"},fast:{period:.5,windup:.125,label:"2.00"}};
 let attackPreset="standard";
 function recordSuffix(){return attackPreset==="standard"?"":".as_"+attackPreset;}
 function recordLabel(){return difficulty+(attackPreset==="standard"?"":", "+ATTACK_PRESETS[attackPreset].label+" AS");}

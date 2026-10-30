@@ -252,3 +252,7 @@ test('skillshot targets spawn and move outside physical walls',()=>{
  const e=foe(g,730,550);e.targetDummy=true;e.anchorX=700;e.anchorY=550;e.phase=0;e.speed=90;
  for(let i=0;i<1200;i++){g.update(1/120);assert.ok(world.pointWalkable(e,e.r),`target entered a wall at ${e.x}, ${e.y}`);}
 });
+
+test('Ahri timing uses level-one cadence and 20 percent windup',()=>{
+ for(const fps of [30,60,120]){const {g,node}=boot();node('attackSpeed').listeners.change({target:{value:'ahri'}});g.reset('kite');g.disableSpawn();const e=foe(g);g.attackOrder(e);advance(g,.28);assert.equal(g.stats.released,0);advance(g,.04);assert.equal(g.stats.released,1);g.loop(1000);for(let i=1;i<=fps*4;i++)g.loop(1000+i*1000/fps);assert.equal(g.stats.released,3);assert.match(node('encounterValue').textContent,/AS 0.668/);}
+});

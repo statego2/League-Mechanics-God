@@ -254,3 +254,23 @@ Every implementation decision should answer:
 If not, it is probably not the next priority.
 
 **BUILD → PLAY → TEST → IMPROVE → COMMIT → REPEAT.**
+
+
+## 11. Champion-faithful training: Ahri baseline and real skillshots
+
+**User priority (30 October 2026):** make the base player mimic level-1 Ahri, especially movement and last-hitting, and add recognizable enemy abilities with real timing, projectile speed, hitboxes and damage. Preserve the existing playable drills while calibration is introduced. Use a pinned patch and cite each value; do not silently describe approximate mechanics as exact.
+
+### Reference snapshot and sources
+
+- Riot's [Data Dragon documentation](https://developer.riotgames.com/docs/lol) explains versioned champion data; its [version list](https://ddragon.leagueoflegends.com/api/versions.json) returned 16.21.1 on 30 October 2026. Riot's [13.22 patch notes](https://www.leagueoflegends.com/en-gb/news/game-updates/patch-13-22-notes/) explicitly state Ahri base attack speed 0.668, attack speed ratio 0.625, windup 20%, and AS growth 2.2%.
+- The community [Ahri statistics](https://wiki.leagueoflegends.com/en-us/Ahri) list level-1 AD 53, health 590, armor 21, magic resist 30, movement 330, attack range 550 and attack missile speed 1750. Confirm these against the chosen Riot Data Dragon snapshot and gameplay tests before calling the implementation patch-accurate. Range is an edge-range rule, not simply center-to-center.
+- First candidate hostile spells: [Lux Q](https://wiki.leagueoflegends.com/en-us/Lux), 0.25 s cast, 1200 units/s, 140 width, 80 base magic damage at rank 1, 2 s root, hits up to two targets; [Ezreal Q](https://wiki.leagueoflegends.com/en-us/Ezreal), 0.25 s cast, 2000 units/s, 120 width, 1200 range and 20 + 130% total AD physical damage at rank 1, first target only. Values are community-documented snapshot, not verified in-client; skill effects, ranks, AP/AD, resistances, minion interception and range all matter. Do not use raw base damage as post-mitigation damage.
+- Early [melee minions](https://wiki.leagueoflegends.com/en-us/Melee_minion) are listed at 465 health and 0 starting armor; actual last-hit outcomes also depend on minion type, wave upgrades, runes, items, allied attacks and projectile travel.
+
+### Implementation and acceptance
+
+1. **Timing first:** an opt-in Ahri level-1 timing preset is implemented at 0.668 attacks/s and 20% windup (about 0.299 s). It only changes timing, not player damage, range, speed, health, visuals or abilities; retain old defaults and separate records until full calibration is validated.
+2. **Consistent scale:** define and document a world-units-to-arena conversion shared by movement speed, edge-based attack range, missile speeds, collision radii and spell range. Calibrate camera and walking distance together, rather than copying raw numbers into a differently scaled 1200×675 canvas.
+3. **Level-1 CS profile:** introduce explicit 53 AD, early minion health/resistances and physical mitigation, accurate attack travel, and allied minion cadence. Show the actual post-mitigation last-hit threshold. Include boundary tests for HP immediately above/below lethal and an actual timed human run; protect the current accessible drills with a selectable profile until balanced.
+4. **Real skillshot library:** add data-driven spell definitions with champion, spell, patch, rank, cast time, speed, range, width, damage type/scaling, collision and crowd control. Start with Lux Q and Ezreal Q, then add more after verification. Differentiate training-only extra warnings/difficulty modifiers from authentic timing; never claim exact behavior while units or effects are approximated.
+5. **Validation and maintenance:** test missile travel time, maximum range, swept collisions, interception, resistance, CC and dodge vs block scoring at several frame rates. Record sources, assumptions, manual playthroughs and patch updates; use original assets and follow Riot's current community-use policies.
