@@ -107,7 +107,7 @@ Kite records now prefer a completed run, then the fastest victory; before the fi
 
 - Added standalone Lux Q and Ezreal Q dodge drills. A stationary caster aims every 3.5 seconds after a 0.25-second cast; a training-only line shows the locked aim. The player has 590 HP, 165 canvas units/s movement and Ahri level-1 resistances. With a provisional 0.5 canvas-unit scale: Lux Q speed 600, range 650, radius 35, 80 base magic damage reduced by 30 MR and 2-second root; Ezreal Q speed 1000, range 600, radius 30, 98 base physical damage (20 + 130% of 60 AD) reduced by 21 armor. Flash does not grant invulnerability here and is usable during root. Spell damage and root freeze on pause; missiles stop at maximum range.
 - These are approximations, not full LoL implementations: visible telegraph, fixed 3.5-second interval, locked caster, simplified player radius, no minion interception, Lux two-target interaction, tenacity, items, runes, on-hit effects or precise Flash cooldown. Difficulty does not change these drills. A screenshot/feel comparison and a full human survival run remain open.
-- Browser: started both drills, each registered a hit; Lux root was visible. `node --test tests/*.test.cjs`: **69/69 PASS**, including cast delay, range, damage, root/pause, Flash and 30/60/120 FPS.
+- Browser: started both drills, each registered a hit; Lux root was visible. `node --test tests/*.test.cjs`: **69/69 PASS**, including cast delay, range, damage, root/pause, Flash and 30/60/120 FPS. A further full-duration automated survival test covers both result screens from outside missile range; this is not a human playthrough.
 
 ## Current playable state
 
@@ -156,7 +156,7 @@ Commit: `89e7529`.
 
 ## Tests actually run
 
-- `node --test tests/*.test.cjs`: **69/69 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
+- `node --test tests/*.test.cjs`: **70/70 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
 - `node --check game.js` and `git diff --check`: PASS.
 - Python reference tools: `python3 -m unittest discover -s reference/league-of-dodge/tools -p 'test_*.py'`: **7/7 PASS**.
 - HTTP server logs: app, JS and CSS return 200/304; initial missing favicon fixed with an original SVG icon.

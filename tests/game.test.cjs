@@ -292,3 +292,7 @@ test('reference shots retain damage and timing at 30, 60 and 120 FPS',()=>{
 test('reference flash does not grant invulnerability',()=>{
  const {g}=boot();g.reset('luxDodge');g.cast('f');assert.equal(g.player.invuln,0);
 });
+
+test('both reference drills complete a full simulated survival and report correct score',()=>{
+ for(const mode of ['luxDodge','ezrealDodge']){const {g,node}=boot();g.reset(mode);g.player.x=100;advance(g,60.02);assert.equal(g.state,'ended');assert.equal(g.stats.hits,0);assert.equal(g.dodged,0);assert.match(node('menuTitle').innerHTML,/COMPLETE/);assert.match(node('menuDescription').textContent,/0 hits/);}
+});
