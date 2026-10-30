@@ -1,0 +1,54 @@
+# Laning opponent decision policy
+
+Standalone, dependency-free ES module. It does not implement a mode, minion combat, pathfinding, damage, projectile collision, champion stats or cooldowns. Numbers in the demo are synthetic, not League data. Research PR #1 is a research handoff; its historical champion extracts are not a current configuration.
+
+## Integration contract
+
+`createLaningOpponent({ reactionDelay: 0.2, spacing: 0.85, tradeMargin: 1.2, baitInterval: 5 })` returns `{ decide(state), reset() }`. Call once per fixed simulation tick with monotonic `time` in seconds; `reset()` at a new match. Input is copied into a delayed observation buffer. Reaction delay must be positive. The first observation is actionable only after that delay. Use a fixed tick and a stable snapshot ordering for deterministic behavior.
+
+```js
+const state = {
+  time: 1, // seconds; all positions, speeds and ranges use the same engine scale
+  self: { alive: true, position: {x: 0, y: 0}, radius: 10, committed: false,
+    attack: {ready: true, range: 150, windup: .25, projectileSpeed: 600, damage: 50},
+    abilities: [{id:'Q', ready:true, range:250, damage:70, lineClear:true}] },
+  player: {id:'player', alive:true, visible:true, position:{x:120,y:0},
+    windingUp:true, exposed:false, threatReady:true},
+  minions: [{id:'m1', team:'player', visible:true, alive:true, position:{x:80,y:0},
+    health:40, value:1, incoming:[{visible:true, eta:.1, damage:10}]}],
+  skillshots: [{visible:true, position:{x:100,y:0}, velocity:{x:-100,y:0}, radius:10}],
+  tradeValue: 30, tradeRisk: 10
+};
+const action = brain.decide(state);
+```
+
+`team:'player'` means minions allied to the human and attackable by the bot. `incoming` contains only visible already-launched attacks, with estimated time-to-impact relative to that snapshot and estimated post-mitigation damage. `attack.damage` is estimated post-mitigation damage for the target class; use conservative estimates or adapt the interface for differing target armor. `value`, `tradeValue`, and `tradeRisk` share a utility scale; risk should include estimated retaliation. `windingUp`, `exposed`, `threatReady`, and `lineClear` must derive from visible/inferred information only. Use `lineClear:false` for unknown or blocked shots. Never pass hidden future orders, RNG, or future attack schedules. IDs must be stable; invisible entities should be omitted or marked invisible.
+
+Output is one of `hold`, `move` (`destination`), `attack` (`targetId`), or `cast` (`abilityId`, `targetId`, locked `aim`), with a diagnostic `reason`. Movement targets are requests, not teleports; the engine must clamp/pathfind and validate terrain. The engine is authoritative: revalidate range, visibility, target life/team, line of fire, mana, cooldowns, cast/attack phases and all other rules when consuming **every** request. Reject stale or impossible requests; a cast locks aim at the delayed observed position and cannot track the player. Do not restart a committed animation on every tick. The module checks immediate readiness, range and visibility as a safety layer, but cannot know engine-specific rules. Supply an immutable public snapshot, not private engine state.
+
+The policy predicts last-hit health only from already-visible incoming shots, weighs trade utility against CS value, backs away when close, approaches when favorable, and occasionally makes a small bait approach. It dodges straight visible projectiles with a limited horizon; no perfect path safety or collision prediction is claimed. Dodge endpoints require engine validation. Bait is a heuristic, not a learned opponent model. No actual combat, fairness calibration, full lane integration or human playtest is claimed.
+
+Run `node --test modules/laning-opponent-ai/*.test.mjs` and `node modules/laning-opponent-ai/demo.mjs`. The demo prints deterministic mock decisions and does not simulate combat.
+
+## Extended observations and deterministic harness
+
+Supply `self.moveSpeed` in distance units per second for farming approaches and dodges, and optionally `health`, `maxHealth`, `mana`, and each ability's `manaCost`. A missing speed disables those movement predictions; a missing mana value retains the legacy unlimited assumption, so integrations with mana must supply it. `player.health` caps trade utility; observable/inferred `player.threatReady` and `player.threatDamage` add to risk. Supply `minionRetaliation`, `positionalRisk`, and `tradeRisk` as non-overlapping estimates in the same utility units as `tradeValue` and minion `value`. `farmRiskLimit` optionally prevents approaches into excess estimated risk. These are approximations, not automatic calculations of aggro or damage. The adapter must avoid double counting.
+
+For a delayed visible linear projectile, position is extrapolated from its last observation by elapsed time. `remainingRange`, if supplied, is distance remaining **at observation time**. Dodge only requests movement when straight-line clearance at the actor's speed fits before the predicted crossing. The engine must validate walkability and actual collisions; other projectiles, acceleration, crowd control, obstructions and changing paths are not modeled. The policy does not dodge if speed is unknown or its predicted move is too late. Incoming minion attack `eta` is relative to the observation; elapsed time and approach/windup/travel are considered. Unobserved future attacks are not invented.
+
+`node modules/laning-opponent-ai/simulation.mjs` runs a 180-second fixed-step deterministic mock lane and prints CS attempts, successes, missed opportunities, damage, invalid requests, dodges, movement and poke. It is a deliberately small fixture with scripted waves and linear shots, instant mock poke damage and simplified cooldowns, not the production engine or a fidelity/balance benchmark. Successful CS is counted on mock impact; misses count mock expiry. Its results do not establish that a human cannot bait or defeat the bot.
+
+## Adapter preparation and integration blockers
+
+`adapter.mjs` provides `makeObservation(view)` and `validateAction(action, observation, rules)`. The projection maps existing engine conventions (`x`, `y`, `r`/`hitRadius`, `hp`, `maxHp`, `speed`) into the policy schema and copies only explicit fields. Pass only visibility-filtered entities, marking each `visible: true`; incoming shots must also be explicitly visible. Do not pass raw global game state or player `cd`, cursor, orders, future minion timers, or RNG. Enemy cooldown/threat fields must come from a separate visibility-limited inference system; unknown is not ready-to-cast intelligence. Incoming ETA/damage must be estimates from visible launched projectiles, not hidden scheduled impacts. Observe the player only when visible. The bot's own readiness, mana and commitments may be known directly.
+
+Call `validateAction` immediately before execution with a current observation and engine callbacks `canTarget`, `canAttack`, `canCast`, `canMove`. All must return exactly `true` where applicable; missing callbacks fail closed. The engine must check target hostility, control effects, interruption, walkability/path, projectile blockers and ability-specific range/geometry, as well as actual resources and cooldowns. `canCast` receives the locked observed aim and must reject invalid aim geometry; never retarget it to the current player position. Do not directly dispatch unvalidated actions. The development-only bridge projects selected state from the `game.js` closure and executes validated requests; its enemy cooldown inference and game rules remain incomplete. The development lane now uses this interface; it is an initial integration, not a finished or fully validated lane. Champion-specific spell range conventions, real path timing, minion armor-specific damage and human calibration remain blockers. These require coordination with the engine owner.
+
+The mock dodge counter now marks only a projectile whose remaining linear trajectory threatened the stationary actor within two seconds, and counts avoidance only if it subsequently passes without hitting. A harmless miss or expiration before passing is not a dodge. This counterfactual is a conservative test-harness approximation, not production scoring.
+
+
+## Real-game development lane
+
+From the repository root run `python3 -m http.server 8765` and open `http://localhost:8765/?middev`. This internal entry point runs the real game, not a separate HTML game or public menu mode. It reuses the existing Ahri, two-sided CS waves, world pathfinding, missiles, damage and attribution. The opponent uses the same approximate Ahri basic-attack stats, a synthetic 45-damage straight Q with a 0.25-second cast, 7-second cooldown and 50 mana cost, and approximate nearby minion retaliation. Those values and retaliation are training approximations, not a sourced champion kit. Red minions retaliate against the player for damage to the bot; blue minions retaliate against the bot when it damages the player. Spell projectiles hit the first blue minion or player. Bot death lasts until restart.
+
+The integration exposes only visible in-flight shots and player windup, not future orders or cooldowns; there is no fog of war in this arena. The bot does not infer player cooldowns, does not model future melee windups, and uses a constant minion damage estimate despite armor differences. Player mana is not implemented by the existing engine. Dodge prediction assumes linear motion, and engine path validation does not guarantee a dodge path remains safe. Trade evaluation and minion aggro are provisional. There is no turret, respawn, full champion kit, full-match scoring, or verified LoL fidelity. Further integrated tests and extended human playtesting are required.
