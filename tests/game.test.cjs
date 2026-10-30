@@ -330,3 +330,10 @@ test('Ahri orb pierces units once each way and returns true damage',()=>{
 test('Ahri orb follows the player on return after they move',()=>{
  const {g}=boot('ahri');g.reset('kite');g.disableSpawn();g.cast('q');advance(g,.9);assert.equal(g.shots[0].phase,'return');g.moveTo(400,500);advance(g,2);assert.equal(g.shots.length,0);assert.ok(g.player.x<600);
 });
+
+test('Ahri Fox-Fire boosts movement and its three flames deal reduced repeat damage',()=>{
+ const {g}=boot('ahri');g.reset('kite');g.disableSpawn();const e=foe(g,800);e.mr=100;const x=g.player.x;g.moveTo(700,g.player.y);g.cast('w');assert.equal(g.player.cd.w,9);advance(g,.2);assert.ok(g.player.x-x>33);advance(g,1.5);assert.ok(Math.abs(e.hp-9964)<1e-7);assert.equal(g.player.fox,null);
+});
+test('Ahri Fox-Fire does not cancel an auto windup and is locked in auto-only CS',()=>{
+ const {g,node}=boot('ahri');g.reset('kite');g.disableSpawn();const e=foe(g,800);g.attackOrder(e);advance(g,.1);const windup=g.player.windup;g.cast('w');assert.equal(g.player.windup,windup);advance(g,.25);assert.equal(g.stats.released,1);g.reset('lastHit');g.cast('w');assert.equal(g.player.cd.w,0);assert.equal(node('cdW').textContent,'—');
+});
