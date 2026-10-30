@@ -570,8 +570,8 @@ test('successive melee waves receive the sourced 90-second health upgrade',()=>{
 });
 
 test('Dodge director sends single-cast visitors with deterministic Ezreal-heavy spell selection',()=>{
- function run(){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,55);return [g.dodgeDirector.ezreal,g.dodgeDirector.lux,g.dodgeDirector.ahri,g.dodgeDirector.blitz,g.dodgeDirector.xerath,g.dodgeDirector.xerathQ,g.dodgeDirector.attempted];}
- const a=run(),b=run();assert.deepEqual(a,b);assert.equal(a[0]+a[1]+a[2]+a[3]+a[4]+a[5],a[6]);assert.ok(a[0]>a[1]);assert.ok(a[6]>=10,`too few casts: ${a}`);
+ function run(){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,55);return [g.dodgeDirector.ezreal,g.dodgeDirector.lux,g.dodgeDirector.ahri,g.dodgeDirector.blitz,g.dodgeDirector.velkoz,g.dodgeDirector.xerath,g.dodgeDirector.xerathQ,g.dodgeDirector.attempted];}
+ const a=run(),b=run();assert.deepEqual(a,b);assert.equal(a[0]+a[1]+a[2]+a[3]+a[4]+a[5]+a[6],a[7]);assert.ok(a[0]>a[1]);assert.ok(a[7]>=10,`too few casts: ${a}`);
 });
 test('Dodge visitor enters, casts only once, then exits without deleting its missile',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,.02);const visitor=g.foes.find(e=>e.dodgeVisitor);assert.ok(visitor);advance(g,1.1);assert.equal(g.dodgeDirector.attempted,1);assert.equal(visitor.phase,'exit');advance(g,1);assert.ok(!g.foes.includes(visitor));assert.equal(g.dodgeDirector.attempted,1);
@@ -592,7 +592,7 @@ test('Dodge director completes a long session with bounded directed threats',()=
   g.update(1/120);const active=g.foes.filter(e=>e.alive&&e.dodgeVisitor&&e.phase!=='exit'&&e.phase!=='orbFlight'&&e.phase!=='hookFlight').length+g.shots.filter(s=>s.alive&&s.directed).length+g.hazards.filter(h=>h.directed).length;
   assert.ok(active<=2,`directed threats exceeded cap: ${active}`);
  }
- assert.equal(g.state,'ended');assert.ok(g.dodgeDirector.attempted>100);assert.ok(g.dodgeDirector.xerathQ>0,'long session never scheduled Xerath Q');assert.equal(g.dodgeDirector.attempted,g.dodgeDirector.ezreal+g.dodgeDirector.lux+g.dodgeDirector.ahri+g.dodgeDirector.blitz+g.dodgeDirector.xerath+g.dodgeDirector.xerathQ);
+ assert.equal(g.state,'ended');assert.ok(g.dodgeDirector.attempted>100);assert.ok(g.dodgeDirector.xerathQ>0,'long session never scheduled Xerath Q');assert.ok(g.dodgeDirector.velkoz>0,'long session never scheduled Velkoz Q');assert.equal(g.dodgeDirector.attempted,g.dodgeDirector.ezreal+g.dodgeDirector.lux+g.dodgeDirector.ahri+g.dodgeDirector.blitz+g.dodgeDirector.velkoz+g.dodgeDirector.xerath+g.dodgeDirector.xerathQ);
 });
 test('Dodge visitor uses distinct existing visual profiles and projectile colours',()=>{
  const {g,node,draws,strokes}=boot('ahri');for(const id of ['mageArt','rangerArt']){node(id).complete=true;node(id).naturalWidth=100;}
@@ -781,4 +781,32 @@ test('Xerath beam uses a flat-ended rectangle against the champion circle',()=>{
   assert.equal(g.beamTouchesPlayer(beam,{x,y},5),expected,`${x},${y}`);
  }
  const rotated={x:100,y:100,endX:100,endY:200,r:10};assert.equal(g.beamTouchesPlayer(rotated,{x:114,y:96},5),false);assert.equal(g.beamTouchesPlayer(rotated,{x:113,y:96},5),true);
+});
+
+
+test('Velkoz Q splits into two perpendicular faster bolts after a short delay',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.y=550;
+ const e=g.enemy(300,200),spec=g.REFERENCE_SPELLS.velkozDodge;Object.assign(e,{dodgeVisitor:true,pending:{angle:0,spell:spec}});g.releaseEnemy(e);
+ const main=g.shots[0];assert.equal(main.velkoz,'main');assert.equal(g.dodgeDirector.velkoz,1);
+ advance(g,1);const children=g.shots.filter(s=>s.velkoz==='child');assert.equal(children.length,2);
+ assert.ok(children.every(s=>Math.abs(s.vx)<1e-9&&Math.abs(Math.abs(s.vy)-1050)<1e-9));assert.ok(children[0].vy*children[1].vy<0);assert.equal(g.spawnDodgeVisitor(),false);
+});
+test('Velkoz main-bolt hit cannot damage the same champion again with its split',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const e=g.enemy(400,g.player.y),spec=g.REFERENCE_SPELLS.velkozDodge;Object.assign(e,{dodgeVisitor:true,pending:{angle:0,spell:spec}});g.releaseEnemy(e);advance(g,1);
+ assert.equal(g.stats.hits,1);assert.equal(g.player.root,0);assert.ok(Math.abs(g.player.hp-(590-80/1.3))<1e-7);
+});
+
+
+test('Velkoz angled split can threaten the player outside the main bolt path',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const e=g.enemy(300,g.player.y),spec=g.REFERENCE_SPELLS.velkozDodge;Object.assign(e,{dodgeVisitor:true,pending:{angle:.32,spell:spec,splitDistance:300*Math.cos(.32)}});g.releaseEnemy(e);advance(g,1);
+ assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.player.hp-(590-80/1.3))<1e-7);
+});
+
+
+test('Velkoz split branches cannot both hit the same champion',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const e=g.enemy(300,200),spec=g.REFERENCE_SPELLS.velkozDodge;Object.assign(e,{dodgeVisitor:true,pending:{angle:0,spell:spec,splitDistance:200}});g.releaseEnemy(e);
+ advance(g,.4);const main=g.shots.find(s=>s.velkoz==='delay');assert.ok(main);g.player.x=main.x;g.player.y=main.y;advance(g,.4);assert.equal(g.stats.hits,1);
 });
