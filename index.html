@@ -42,18 +42,13 @@
           <p id="menuDescription">A fast, original browser combat arena built for League-style movement, skillshots and kiting. Choose a mode and jump straight in.</p>
           <div class="settings" id="settings">
             <label for="difficulty">DIFFICULTY <select id="difficulty"><option value="easy">Foundation</option><option value="normal" selected>Standard</option><option value="hard">Expert</option></select></label>
-            <label for="attackSpeed">ATTACK SPEED <select id="attackSpeed"><option value="ahri">0.668 · Ahri timing / CS</option><option value="slow">0.80</option><option value="standard" selected>1.39</option><option value="fast">2.00</option></select></label>
+            <label for="attackSpeed" hidden>ATTACK SPEED <select id="attackSpeed"><option value="ahri" selected>0.668 · Ahri timing / CS</option><option value="slow">0.80</option><option value="standard">1.39</option><option value="fast">2.00</option></select></label>
             <button type="button" class="ghost-button" id="newSeed" title="Change the encounter for your next run"><span id="seedLabel">SEED 73129</span> ↻</button>
           </div>
           <div class="mode-buttons" id="modeButtons">
-            <button class="mode-card" data-mode="dodge" type="button"><span class="mode-icon">◎</span><span class="mode-info"><b>DODGE TRIAL</b><small>Survive 60 seconds of incoming skillshots</small></span><span class="mode-arrow">→</span></button>
-            <button class="mode-card" data-mode="luxDodge" type="button"><span class="mode-icon">✦</span><span class="mode-info"><b>LUX Q · DODGE</b><small>Reference projectile · root on hit · 60 seconds</small></span><span class="mode-arrow">→</span></button>
-            <button class="mode-card" data-mode="ezrealDodge" type="button"><span class="mode-icon">➤</span><span class="mode-info"><b>EZREAL Q · DODGE</b><small>Reference projectile · 60 seconds</small></span><span class="mode-arrow">→</span></button>
+            <button class="mode-card" data-mode="dodge" type="button"><span class="mode-icon">◎</span><span class="mode-info"><b>DODGE TRIAL</b><small>Survive Lux and Ezreal skillshots</small></span><span class="mode-arrow">→</span></button>
             <button class="mode-card" data-mode="kite" type="button"><span class="mode-icon">⌁</span><span class="mode-info"><b>KITE ARENA</b><small>Orbwalk, attack-move and defeat 10 foes</small></span><span class="mode-arrow">→</span></button>
-            <button class="mode-card" data-mode="lastHit" type="button"><span class="mode-icon">♜</span><span class="mode-info"><b>LAST-HIT LAB</b><small>Time your autos · original or Ahri wave profile</small></span><span class="mode-arrow">→</span></button>
-            <button class="mode-card" data-mode="skillshot" type="button"><span class="mode-icon">✧</span><span class="mode-info"><b>SKILLSHOT LAB</b><small>Lead moving targets · 45 seconds · Q to fire</small></span><span class="mode-arrow">→</span></button>
-            <button class="mode-card" data-mode="bait" type="button"><span class="mode-icon">⚑</span><span class="mode-info"><b>BAIT → DODGE → CS</b><small>Draw a spell, evade, then secure the minion</small></span><span class="mode-arrow">→</span></button>
-            <button class="mode-card" data-mode="lane" type="button"><span class="mode-icon">♞</span><span class="mode-info"><b>LANE SCENARIO</b><small>Last hit and trade while dodging spells</small></span><span class="mode-arrow">→</span></button>
+            <button class="mode-card" data-mode="lastHit" type="button"><span class="mode-icon">♜</span><span class="mode-info"><b>LAST-HIT LAB</b><small>Practice Ahri last hits on minion waves</small></span><span class="mode-arrow">→</span></button>
           </div>
           <p class="tiny-note" id="menuFooter">No installation · No login · Desktop mouse and keyboard</p>
           <button id="resumeBtn" type="button" class="primary-button" hidden>RESUME</button>

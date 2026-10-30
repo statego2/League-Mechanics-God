@@ -115,9 +115,16 @@ Kite records now prefer a completed run, then the fastest victory; before the fi
 - This is still not a full League wave: allied minions are scripted attackers rather than independently targetable units and cannot die; enemy attacks, pathing/aggro, real windups, wave upgrades, siege minions and exact projectile behavior are missing. W/F remain the prototype abilities. The waves start at drill time zero rather than the actual match clock. Difficulty does not change the Ahri wave. Browser smoke showed six minions and WAVE 1/2; no complete human run yet.
 - `node --test tests/*.test.cjs`: **72/72 PASS**, including composition, damage ratios, attack reach and two-wave resolution.
 
+## Focused menu and Ahri baseline (2026-10-30)
+
+- User explicitly asked for a few polished modes, with Ahri as the base player. Menu now exposes only Dodge Trial, Kite Arena and Last-Hit Lab; legacy modes remain in code and tests. Attack speed selection is hidden and Ahri is the default: 0.668 AS, 20% windup, 53 auto AD, 590 HP and scaled 330 movement / 1750 auto projectile speed. CS uses the six-minion Ahri waves by default. Range is edge-based and uses approximate scaled radii.
+- Dodge Trial now alternates the previously standalone Lux Q and Ezreal Q implementations per enemy; difficulty affects encounter spawning but does not scale those projectile values. Dodge records are separate from earlier modes. The old synthetic sweep is not used in the default Ahri dodge.
+- The player is still shown as the original ranger, and Q/W/E/R are prototype abilities, not Ahri. Dodge enemy AI, telegraphs, collision, resistance, allied minion simulation and the arena remain approximations; do not claim full fidelity. Legacy mode code is retained, but no longer exposed as separate menu cards.
+- Browser: confirmed three menu cards, default Ahri CS with wave 1/2 and AS 0.668, and launched Dodge Trial with a projectile telegraph. No complete human session after this change. `node --test tests/*.test.cjs`: **74/74 PASS**, including default settings and both spells in the shared drill.
+
 ## Current playable state
 
-Dodge Trial, Kite Arena, Last-Hit Lab, Skillshot Lab, Bait → Dodge → CS and Lane Scenario run locally at http://localhost:8080. The repository was cloned into the `League-Mechanics-God` subdirectory of the original workspace, whose parent contains separate historical Unity research. Work is on `codex/controls-and-dodge`, based on `7de3430`.
+Dodge Trial, Kite Arena and Last-Hit Lab are available in the visible menu locally at http://localhost:8080. The repository was cloned into the `League-Mechanics-God` subdirectory of the original workspace, whose parent contains separate historical Unity research. Work is on `codex/controls-and-dodge`, based on `7de3430`.
 
 ## Completed: controls and collision foundation
 
@@ -162,7 +169,7 @@ Commit: `89e7529`.
 
 ## Tests actually run
 
-- `node --test tests/*.test.cjs`: **72/72 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
+- `node --test tests/*.test.cjs`: **74/74 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
 - `node --check game.js` and `git diff --check`: PASS.
 - Python reference tools: `python3 -m unittest discover -s reference/league-of-dodge/tools -p 'test_*.py'`: **7/7 PASS**.
 - HTTP server logs: app, JS and CSS return 200/304; initial missing favicon fixed with an original SVG icon.

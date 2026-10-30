@@ -32,6 +32,10 @@ The game should develop skills that transfer to LoL:
 
 **The goal is a useful, polished game.** Documentation, references, assets, architecture and AI collaboration are tools to achieve that—not the product.
 
+## Product direction update: focus on quality (2026-10-30)
+
+The user explicitly wants a few excellent drills, not many separate modes. The visible menu now offers Dodge Trial, Kite Arena and Last-Hit Lab; preserve legacy implementations for regression coverage but do not add more menu modes without clear value. Make Ahri the default player baseline across these drills and integrate recognizable opponent spells into Dodge Trial. Continue toward accurate Ahri abilities, visuals and realistic CS waves; the current sprite and abilities are still placeholders.
+
 ## 2. What the game should actually look and feel like
 
 **Camera and world:** A readable top-down / three-quarter MOBA-like perspective, coherent arena or lane, ground textures or tiles, obstacles where appropriate, readable combat distance and safe/unsafe zones. Not a generic blank grid.

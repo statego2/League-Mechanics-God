@@ -18,13 +18,11 @@ For a public URL, enable **GitHub Pages** in the repository Settings → Pages �
 
 ## Modes
 
-- **Dodge Trial:** survive 60 seconds of enemy skillshots. Track damage and dodges.
-- **Lux Q / Ezreal Q Dodge:** survive 60 seconds against a stationary caster. Q projectiles use approximate scaled rank-1 cast, range, speed, width and damage against level-1 Ahri defenses; Lux roots for 2 seconds. Right-click to move, F to flash. A visible aim line and a fixed 3.5-second firing interval are training aids. No minion interception, accurate champion collision size, real cooldown or full ability effects yet; difficulty does not alter these two reference drills.
+- **Dodge Trial:** survive 60 seconds of Lux Q and Ezreal Q projectiles. Their values are scaled approximations and include Lux root; the aim line is a training aid.
 - **Kite Arena:** defeat 10 enemies using movement, autos and abilities.
-- **Lane Scenario:** farm five waves while one enemy attacks; avoid skillshots and trade using all abilities. Results distinguish CS, misses, enemy defeats and damage.
-- **Bait → Dodge → CS:** enter the moving enemy’s threat ring to draw a locked skillshot, evade it and last-hit a minion during the 3-second window while an ally damages it. Three rounds track baits, dodges, CS and damage. Q/E/R are disabled; W/F remain available.
-- **Skillshot Lab:** aim Q at moving targets for 45 seconds; results show hits, shots and accuracy. W/F reposition.
-- **Last-Hit Lab:** time auto attacks (28 damage by default; 53 in the experimental Ahri CS profile) across 5 simplified waves (15 possible CS), or 2 Ahri-profile waves (12 possible CS). Allied caster projectiles damage minions; only your killing blow earns CS. Gold health bars mark last-hit range. Q/E/R are disabled in this drill; W/F remain available.
+- **Last-Hit Lab:** practice Ahri autos against two six-minion waves (12 possible CS). Allied minion attacks are still scripted approximations.
+
+The default player uses level-1 Ahri's attack timing, base AD, health and scaled movement/projectile speed. The visual sprite and Q/W/E/R abilities are still prototype designs, not Ahri's model or abilities. Legacy drills remain in the code for regression coverage but are not offered in the menu.
 
 Optional synthesized combat cues are disabled by default. Use **SOUND OFF / ON** to toggle them; no audio files or external service are required.
 
@@ -52,9 +50,7 @@ The painted mid-lane-inspired arena is a visual approximation. Two marked stone 
 
 ## Repeatable encounters
 
-Choose Foundation, Standard or Expert and an attack speed (Ahri level-1 timing at 0.668, or 0.80, 1.39 or 2.00 attacks per second). The Ahri option changes attack cadence and windup in every drill. In Last-Hit Lab it also enables an experimental level-1 Ahri CS profile: 53 auto damage, 465-health / zero-armor melee targets, 330 movement speed and 1750 auto missile speed scaled to the canvas. Ahri waves contain three 465-HP melee and three 284-HP caster minions. Allied melee/caster damage and cadence use reference base values, but targeting, movement, allied deaths, wave upgrades, cannon minions, abilities, runes and items remain simplified before entering a drill. Restart reuses the same seed, so the same inputs produce the same encounter; the seed button changes the next run. Enemies lock their aim during a visible warning before firing line/fan missiles. Dodge Trial also includes delayed circular ground impacts and telegraphed sweeping walls with a marked safe gap. Move out before the ring fills or into the gap before the sweep arrives.
-
-Results store a local best for each drill, difficulty and attack-speed preset in this browser; Kite Arena prioritizes a completed run and the fastest winning time. Unavailable storage does not prevent play.
+Choose Foundation, Standard or Expert before entering a drill. Restart reuses the seed; the seed button changes the next run. Dodge Trial alternates Lux and Ezreal shots, with visible training telegraphs. Results store local records in this browser; unavailable storage does not prevent play.
 
 ## Mechanics and checks
 
