@@ -41,6 +41,10 @@ For a public URL, enable **GitHub Pages** in the repository Settings â†’ Pages â
 
 Vanilla HTML5 Canvas + JavaScript + CSS, no third-party libraries and no copied game assets. This is a first **alpha** playable prototype. It is not yet equivalent to the attack timing, animation states, exact damage or collision rules of League of Legends.
 
+## Repeatable encounters
+
+Choose Foundation, Standard or Expert before entering a drill. Restart reuses the same seed, so the same inputs produce the same encounter; the seed button changes the next run. Enemies lock their aim during a visible warning before firing line/fan missiles. Dodge Trial also includes delayed circular ground impacts. Move out before the ring fills.
+
 ## Mechanics and checks
 
 Right-click orders chase a moving target until it enters the 275-unit attack range. A + click keeps an attack-move order active while travelling, selecting an in-range enemy nearest the clicked point. Moving before the gold windup ring completes cancels the attack; after release you can move during recovery. Auto projectiles track their selected target. The ring shows when the next attack is ready.
@@ -55,6 +59,6 @@ node --test tests/game.test.cjs
 
 ## Next improvements
 
-Attack-move input refinement; projectile dodge feedback; audio; settings; difficulty curve; high scores; mobile support; accessibility; deterministic gameplay tests.
+Last-hit and skillshot drills; audio; local records; further enemy patterns; accessibility; cross-browser tuning.
 
 Independent fan-made practice project, **not affiliated with or endorsed by Riot Games**.

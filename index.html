@@ -13,7 +13,7 @@
   <main class="app">
     <header class="topbar">
       <div class="brand"><span class="logo" aria-hidden="true">◇</span><div><div class="eyebrow">BROWSER MECHANICS TRAINER</div><h1>LEAGUE <em>MECHANICS</em> GOD</h1></div></div>
-      <div class="top-actions"><span class="build">ALPHA · v0.2</span><button class="ghost-button" id="pauseBtn" type="button" disabled>PAUSE <kbd>P</kbd></button><button class="ghost-button" id="restartBtn" type="button" disabled>RESTART <kbd>↻</kbd></button></div>
+      <div class="top-actions"><span class="build">ALPHA · v0.3</span><button class="ghost-button" id="pauseBtn" type="button" disabled>PAUSE <kbd>P</kbd></button><button class="ghost-button" id="restartBtn" type="button" disabled>RESTART <kbd>↻</kbd></button></div>
     </header>
 
     <section class="game-shell" aria-label="Play area">
@@ -24,6 +24,7 @@
         <div class="hud-block"><span class="hud-label">DODGED</span><strong id="dodgedValue">0</strong></div>
         <div class="hud-health"><div class="health-top"><span>YOUR HEALTH</span><b id="healthText">160 / 160</b></div><div class="health-track"><div id="healthFill" class="health-fill"></div></div></div>
       </div>
+      <div id="encounterValue" class="encounter">NORMAL · SEED 73129</div>
       <canvas id="arena" aria-label="Real-time top-down training arena. Use mouse and keyboard to play."></canvas>
       <div class="toast" id="toast" aria-live="polite"></div>
       <div class="overlay" id="overlay">
@@ -31,6 +32,10 @@
           <div class="menu-kicker">THE PRACTICE GROUNDS</div>
           <h2 id="menuTitle">READ. REACT.<br><span>OUTPLAY.</span></h2>
           <p id="menuDescription">A fast, original browser combat arena built for League-style movement, skillshots and kiting. Choose a mode and jump straight in.</p>
+          <div class="settings" id="settings">
+            <label for="difficulty">DIFFICULTY <select id="difficulty"><option value="easy">Foundation</option><option value="normal" selected>Standard</option><option value="hard">Expert</option></select></label>
+            <button type="button" class="ghost-button" id="newSeed" title="Change the encounter for your next run"><span id="seedLabel">SEED 73129</span> ↻</button>
+          </div>
           <div class="mode-buttons" id="modeButtons">
             <button class="mode-card" data-mode="dodge" type="button"><span class="mode-icon">◎</span><span class="mode-info"><b>DODGE TRIAL</b><small>Survive 60 seconds of incoming skillshots</small></span><span class="mode-arrow">→</span></button>
             <button class="mode-card" data-mode="kite" type="button"><span class="mode-icon">⌁</span><span class="mode-info"><b>KITE ARENA</b><small>Orbwalk, attack-move and defeat 10 foes</small></span><span class="mode-arrow">→</span></button>

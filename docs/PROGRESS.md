@@ -16,11 +16,18 @@ Dodge Trial and Kite Arena run locally at http://localhost:8080. The repository 
 - Range, target, windup, cooldown/ready cues; results report released/cancelled autos, hits and blocks.
 - Blur/tab hiding pauses; restart clears state and restores the pause button label.
 
-Commit: first implementation commit immediately preceding the next feature commit (find with `git log --oneline`).
+Commit: `ce38142` — persistent attack orders, cancellable windups and truthful dodge scoring.
+
+## Completed: readable, reproducible encounters
+
+- Foundation/Standard/Expert presets and selectable encounter seed. Restart rewinds gameplay RNG; cosmetic particles use a separate RNG.
+- Locked-aim line/fan telegraphs, stationary casting enemies, delayed ground-circle impacts every third Dodge cast. Ground avoidance and invulnerability blocks respect threat accounting.
+- Original vector ranger/mage silhouettes, directional weapons, articulated steps, player health/hurtbox, floating damage and stone court. No third-party art.
+- Browser: Foundation selected, seed changed to 177858, Dodge Trial started; movement, seed HUD, new art and health displayed correctly.
 
 ## Tests actually run
 
-- `node --test tests/game.test.cjs`: **10/10 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions.
+- `node --test tests/game.test.cjs`: **13/13 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility.
 - `node --check game.js`: PASS.
 - Actual IAB browser at 1280×900: initial alpha started; revised Kite starts, accepts right-click/A+click/QWERF, shows all cooldowns, pauses and renders. Console warning/error capture empty. Additional dodge/browser verification follows next batch.
 - These automated tests are simulation regressions, not proof of cross-browser feel or a human 60-second playthrough.
@@ -29,12 +36,12 @@ Commit: first implementation commit immediately preceding the next feature commi
 
 - Original reference archives/art are absent from git by design. Read all reference docs/tools; use independent art and logic.
 - No public deployment verified. Local server only; no claims about GitHub Pages.
-- Current art remains primitive, hostile shots have no advance telegraph, no difficulty selection yet.
+- Visuals are original procedural vectors; further animation and sound polish remain.
 - No obstacles/pathfinding, audio, last-hit drill or skillshot lab yet.
 - Attack range is center-to-center and calibrated for this arena, not a claim of exact LoL data.
 
 ## Next three actions
 
-1. Telegraph and difficulty presets with reproducible seeds; line/fan and delayed ground AoE. Acceptance: readable fixed-direction warning before fire, deterministic retry and blocks distinct from movement dodges.
-2. Original character silhouettes, walking/attack motion, terrain and impact cues. Acceptance: direction and hostile intent legible without imported assets.
-3. Last-hit practice after existing drill regressions pass. Acceptance: real minion attrition, CS vs misses and repeatable timing pressure.
+1. Add Last-Hit Lab using existing attack mechanics. Acceptance: real minion attrition, CS vs misses, repeatable timing pressure.
+2. Improve kite results and add local best records. Acceptance: auto damage / attack cadence feedback, storage failure never breaks play.
+3. Add skillshot prediction drill and more patterns after regressions pass. Acceptance: accuracy reflects actual fired/hit counts; no unavoidable spawn overlaps.
