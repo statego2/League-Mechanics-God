@@ -9,6 +9,10 @@
 > **One product, four principal modes, a shared mechanics/training engine.**
 > Priorities as chosen by the owner: **(1) Pure Dodge, (2) Combined Mechanics, (3) Pure CS, (4) Mid-lane Bait + CS**. All four matter; the fourth is the long-term integration challenge. A polished small set beats a proliferation of unrelated mini-games.
 
+## Owner decision — Mode 2 is Combat Survival Arena (2026-10-30)
+
+**This overrides any earlier 5v5-teamfight / friendly-AI / single-target-drill interpretation of Mode #2.** The owner chose **B: solo Combat Survival Arena vs MANY enemy champions**. The default player-facing Standard combat aims for **5–6 concurrent enemies**, Foundation **3–4**, Expert **7–8+** when feasible and fair. **Two enemies are only an internal integration-test fixture**, not the actual target experience. The player uses Q/W/E/R, Flash, attacks, kiting, dodging, target switches and combos together in a continuously evolving fight, without forced mini-drill prompts and without friendly champion allies. See the authoritative [Mechanics Arena Design](MECHANICS_ARENA_DESIGN.md). Figures are design targets, not tested implementation status.
+
 ## 1. North star and honesty about learning
 
 We want a free, browser-based, mouse-and-keyboard MOBA mechanics accelerator. In one session, players encounter many more meaningful skillshot reads, attack-move cycles, target-selection decisions, last-hit attempts, reaction checks and punished positioning errors than a typical match offers them.
