@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,addWave,addTarget,get bait(){return bait},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,strokes,texts,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -561,4 +561,35 @@ test('higher-priority target does not interrupt a minion attack windup',()=>{
 
 test('successive melee waves receive the sourced 90-second health upgrade',()=>{
  const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();for(let i=0;i<7;i++)g.addWave();for(const [wave,hp] of [[1,465],[2,465],[3,465],[4,500],[6,500],[7,535]]){assert.ok(g.foes.filter(e=>e.wave===wave&&e.minionType==='melee').every(e=>e.maxHp===hp));assert.ok(g.allies.filter(e=>e.wave===wave&&e.minionType==='melee').every(e=>e.maxHp===hp));}
+});
+
+test('Dodge director sends single-cast visitors with deterministic Ezreal-heavy spell selection',()=>{
+ function run(){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,55);return [g.dodgeDirector.ezreal,g.dodgeDirector.lux,g.dodgeDirector.attempted];}
+ const a=run(),b=run();assert.deepEqual(a,b);assert.equal(a[0]+a[1],a[2]);assert.ok(a[0]>a[1]);assert.ok(a[2]>=10,`too few casts: ${a}`);
+});
+test('Dodge visitor enters, casts only once, then exits without deleting its missile',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,.02);const visitor=g.foes.find(e=>e.dodgeVisitor);assert.ok(visitor);advance(g,1.1);assert.equal(g.dodgeDirector.attempted,1);assert.equal(visitor.phase,'exit');advance(g,1);assert.ok(!g.foes.includes(visitor));assert.equal(g.dodgeDirector.attempted,1);
+});
+
+test('Dodge session duration is a setting and records are partitioned by length',()=>{
+ const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
+ node('dodgeLength').listeners.change({target:{value:'180'}});g.reset('dodge');g.disableSpawn();g.setTime(60);g.update(1/120);assert.equal(g.state,'playing');g.setTime(179.999);g.update(1/120);assert.equal(g.state,'ended');assert.ok([...values.keys()].some(k=>k.includes('.time_180')));
+ node('dodgeLength').listeners.change({target:{value:'60'}});g.reset('dodge');g.setTime(59.999);g.update(1/120);assert.equal(g.state,'ended');assert.ok([...values.keys()].some(k=>k.includes('.time_60')));
+});
+
+test('Dodge director does not grant artificial invulnerability after a hit',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.disableSpawn();g.fire(g.player.x-5,g.player.y,1,0,'enemy',10,8,1);g.fire(g.player.x+5,g.player.y,-1,0,'enemy',10,8,1);g.update(1/120);assert.equal(g.stats.hits,2);assert.equal(g.player.hp,570);assert.equal(g.player.invuln,0);
+});
+test('Dodge director completes a long session with bounded directed threats',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'normal'}});node('dodgeLength').listeners.change({target:{value:'720'}});g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
+ for(let i=0;i<720*120+2&&g.state==='playing';i++){
+  g.update(1/120);const active=g.foes.filter(e=>e.alive&&e.dodgeVisitor&&e.phase!=='exit').length+g.shots.filter(s=>s.alive&&s.directed).length;
+  assert.ok(active<=2,`directed threats exceeded cap: ${active}`);
+ }
+ assert.equal(g.state,'ended');assert.ok(g.dodgeDirector.attempted>100);assert.equal(g.dodgeDirector.attempted,g.dodgeDirector.ezreal+g.dodgeDirector.lux);
+});
+test('Dodge visitor uses distinct existing visual profiles and projectile colours',()=>{
+ const {g,node,draws,strokes}=boot('ahri');for(const id of ['mageArt','rangerArt']){node(id).complete=true;node(id).naturalWidth=100;}
+ g.drawChampion(500,300,0,false,false,0,0,'ezreal');g.drawChampion(500,300,0,false,false,0,0);assert.ok(draws.includes(node('rangerArt')));assert.ok(draws.includes(node('mageArt')));
+ const e=g.fire(200,200,100,0,'enemy',10,8,1);e.spellName='EZREAL Q';const l=g.fire(250,250,100,0,'enemy',10,8,1);l.spellName='LUX Q';g.render();assert.ok(strokes.includes('#7bd9ff99'));assert.ok(strokes.includes('#ffe4a099'));
 });

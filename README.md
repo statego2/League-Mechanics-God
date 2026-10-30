@@ -29,7 +29,7 @@ The finished **League Mechanics God** is intentionally focused on **exactly four
 
 ### What is actually playable today (alpha)
 
-- **Dodge Trial:** current 60-second approximation with Lux Q / Ezreal Q projectiles; this is the unfinished foundation for Dodge Gauntlet.
+- **Dodge Trial:** an unfinished Dodge Gauntlet foundation with Ezreal/Lux visits and selectable 1-, 3- or 12-minute sessions. The wider spell roster, fairness checks and adaptation are not yet implemented.
 - **Kite Arena:** movement, autos and abilities against enemies; this is **not yet** the approved solo-versus-many Combat Survival experience.
 - **CS Practice:** farm with Ahri across 20 waves over up to ten minutes (126 possible CS), with cannon on every third wave. Two-sided combat, wave placement and attack behavior remain approximations. Melee health grows every three early waves; other minion upgrades and turrets are not yet implemented. This is the unfinished foundation for CS Mastery.
 
@@ -61,7 +61,7 @@ The painted mid-lane arena is a visual approximation based on a user-provided ga
 
 ## Repeatable encounters
 
-Choose Foundation, Standard or Expert before entering a drill. Restart reuses the seed; the seed button changes the next run. Dodge Trial alternates Lux and Ezreal shots without drawing their aim lines; watch the enemy cast and launched missiles. Its separate synthetic sweep retains a visible safe-gap warning. Expert is selected by default. Results store local records in this browser; unavailable storage does not prevent play.
+Choose Foundation, Standard or Expert before entering a drill. Restart reuses the seed; the seed button changes the next run. In the Ahri profile, Dodge Trial uses a seeded Ezreal-heavy selection of single-cast enemy visits without drawing aim lines; watch the enemy cast and launched missiles. Individual missile values are approximate, and the complete planned roster and fair-combination scheduler are not yet implemented. Its separate synthetic sweep retains a visible safe-gap warning. Expert is selected by default. Results store local records in this browser; unavailable storage does not prevent play.
 
 ## Mechanics and checks
 
