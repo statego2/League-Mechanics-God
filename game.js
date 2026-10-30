@@ -31,7 +31,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v10":mode==="dodge"?(ahriBase()?".director_v13":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
+function recordSuffix(){return ahriCS()?".cs_ahri_v10":mode==="dodge"?(ahriBase()?".director_v14":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 function recordLabel(){return difficulty+(attackPreset==="standard"?"":", "+ATTACK_PRESETS[attackPreset].label+" AS");}
@@ -384,8 +384,10 @@ function spawnOriannaR(){
  const angle=rand(0,TAU),offset=210;
  for(let i=0;i<24;i++){
   const a=angle+i*TAU/24,ball={x:player.x+Math.cos(a)*offset,y:player.y+Math.sin(a)*offset,r:ORIANNA_R.radius};
+  const source={x:ball.x+Math.cos(a)*250,y:ball.y+Math.sin(a)*250};
   if(ball.x<55||ball.x>W-55||ball.y<95||ball.y>H-40||!world.pointWalkable(ball,8)||!oriannaEscape(ball))continue;
-  hazards.push({...ball,ttl:1.5,max:1.5,orianna:true,casting:false,directed:true,spellName:"ORIANNA R",threat:false});return true;
+  if(source.x<60||source.x>W-60||source.y<145||source.y>H-30||!world.pointWalkable(source,20))continue;
+  hazards.push({x:source.x,y:source.y,r:ball.r,source,destination:{x:ball.x,y:ball.y},travelDuration:250/SIMULATION.toCanvas(1400),ttl:1.5,max:1.5,orianna:true,casting:false,directed:true,spellName:"ORIANNA R",threat:false});return true;
  }
  return false;
 }
@@ -718,6 +720,7 @@ for(const h of hazards){
  }
  if(h.orianna){
   h.ttl-=dt;
+  if(!h.casting){const f=clamp((h.max-h.ttl)/h.travelDuration,0,1);h.x=h.source.x+(h.destination.x-h.source.x)*f;h.y=h.source.y+(h.destination.y-h.source.y)*f;}
   if(h.ttl<=0&&!h.casting){
    if(!oriannaEscape(h)){h.ttl=0;continue;}
    h.casting=true;h.ttl=ORIANNA_R.cast;h.threat=dist(player,h)<=h.r+player.hitRadius;
@@ -909,7 +912,7 @@ for(const wall of sweeps){
  ctx.beginPath();ctx.moveTo(0,top);ctx.lineTo(W,top);ctx.moveTo(0,bottom);ctx.lineTo(W,bottom);ctx.stroke();ctx.restore();
  ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="left";ctx.fillStyle="#ffe1b5";ctx.fillText("SAFE GAP",46,wall.gap+4);
 }
-for(const h of hazards){if(h.malphite){ctx.save();ctx.translate(h.x,h.y);ctx.fillStyle="#665f59";ctx.strokeStyle="#c1aa93";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-25,-16);ctx.lineTo(-22,-52);ctx.lineTo(0,-72);ctx.lineTo(23,-52);ctx.lineTo(27,-15);ctx.lineTo(10,0);ctx.lineTo(-12,0);ctx.closePath();ctx.fill();ctx.stroke();circle(-7,-45,3,"#aad4ee");circle(7,-45,3,"#aad4ee");ctx.restore();continue;}if(h.orianna){circle(h.x,h.y,12,h.casting?"#f4d5ff":"#a989d8");circle(h.x,h.y,5,"#f4e6ff");continue;}if(h.beam){circle(h.x,h.y,16,"#8bcfff44");circle(h.x,h.y,7,"#d0edff");continue;}if(h.xerath){circle(h.x,h.y,h.r,"#88bbec33");circle(h.x,h.y,h.r,"#96d4ff",false,2);circle(h.x,h.y,XERATH_W.center,"#c1e4ff66",false,1);continue;}circle(h.x,h.y,h.r,"#e58c6422");circle(h.x,h.y,h.r,"#ffbc80",false,2);circle(h.x,h.y,h.r*(1-h.ttl/h.max),"#ffc08d99",false,3);ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#ffd5aa";ctx.fillText("IMPACT",h.x,h.y+4);}
+for(const h of hazards){if(h.malphite){ctx.save();ctx.translate(h.x,h.y);ctx.fillStyle="#665f59";ctx.strokeStyle="#c1aa93";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-25,-16);ctx.lineTo(-22,-52);ctx.lineTo(0,-72);ctx.lineTo(23,-52);ctx.lineTo(27,-15);ctx.lineTo(10,0);ctx.lineTo(-12,0);ctx.closePath();ctx.fill();ctx.stroke();circle(-7,-45,3,"#aad4ee");circle(7,-45,3,"#aad4ee");ctx.restore();continue;}if(h.orianna){drawChampion(h.source.x,h.source.y,Math.atan2(h.y-h.source.y,h.x-h.source.x),false,false,h.casting?1:0,time*7);circle(h.x,h.y,12,h.casting?"#f4d5ff":"#a989d8");circle(h.x,h.y,5,"#f4e6ff");continue;}if(h.beam){circle(h.x,h.y,16,"#8bcfff44");circle(h.x,h.y,7,"#d0edff");continue;}if(h.xerath){circle(h.x,h.y,h.r,"#88bbec33");circle(h.x,h.y,h.r,"#96d4ff",false,2);circle(h.x,h.y,XERATH_W.center,"#c1e4ff66",false,1);continue;}circle(h.x,h.y,h.r,"#e58c6422");circle(h.x,h.y,h.r,"#ffbc80",false,2);circle(h.x,h.y,h.r*(1-h.ttl/h.max),"#ffc08d99",false,3);ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#ffd5aa";ctx.fillText("IMPACT",h.x,h.y+4);}
 if(mode==="bait"&&bait.phase==="approach"){const caster=foes.find(e=>e.baitCaster);if(caster){ctx.save();ctx.setLineDash([6,7]);circle(caster.x,caster.y,260,"#ffbb8890",false,2);ctx.restore();}}
 for(const e of foes)if(e.pending){
  ctx.save();if(mode!=="dodge")for(const offset of e.pending.fan?[-.23,0,.23]:[0]){

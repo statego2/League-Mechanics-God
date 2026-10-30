@@ -846,7 +846,7 @@ test('Orianna ball is shown before its shockwave, with no stun or pull on hit',(
 });
 test('Orianna cancels the shockwave if the player has no ordinary escape when it would cast',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;assert.ok(g.spawnOriannaR());const h=g.hazards[0];
- g.player.x=h.x;g.player.y=h.y;advance(g,1.6);assert.equal(g.dodgeDirector.orianna,0);assert.equal(g.stats.hits,0);assert.equal(g.hazards.length,0);
+ g.player.x=h.destination.x;g.player.y=h.destination.y;advance(g,1.6);assert.equal(g.dodgeDirector.orianna,0);assert.equal(g.stats.hits,0);assert.equal(g.hazards.length,0);
 });
 test('Orianna ball blocks other encounters and its preparation freezes while paused',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;assert.ok(g.spawnOriannaR());const h=g.hazards[0];
@@ -872,4 +872,18 @@ test('Malphite R has a walkable response after a 200ms reaction delay',()=>{
 });
 test('Malphite is not eligible in the first 150 seconds',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.player.hp=g.player.maxHp=1000000;assert.ok(g.dodgeDirector.malAt>=150&&g.dodgeDirector.malAt<=240);advance(g,149.9);assert.equal(g.dodgeDirector.malphite,0);
+});
+
+
+test('Orianna ball travels visibly from caster to its destination before Shockwave',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;assert.ok(g.spawnOriannaR());const h=g.hazards[0];
+ assert.equal(h.x,h.source.x);assert.equal(h.y,h.source.y);const initial=Math.hypot(h.destination.x-h.x,h.destination.y-h.y);
+ advance(g,.15);assert.ok(Math.hypot(h.destination.x-h.x,h.destination.y-h.y)<initial);assert.equal(g.dodgeDirector.orianna,0);
+ advance(g,.3);assert.ok(Math.hypot(h.destination.x-h.x,h.destination.y-h.y)<1e-6);assert.equal(g.dodgeDirector.orianna,0);
+ advance(g,1.1);assert.equal(h.casting,true);assert.equal(g.dodgeDirector.orianna,1);
+});
+
+test('Orianna encounter renders a caster and ball during setup',()=>{
+ const {g,node,draws}=boot('ahri');node('mageArt').complete=true;node('mageArt').naturalWidth=100;
+ g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;assert.ok(g.spawnOriannaR());g.render();assert.ok(draws.includes(node('mageArt')));
 });
