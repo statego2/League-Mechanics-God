@@ -1,0 +1,21 @@
+name: Reference importer tests
+on:
+  push:
+    paths:
+      - "reference/league-of-dodge/tools/**"
+      - ".github/workflows/reference-import-tests.yml"
+  pull_request:
+    paths:
+      - "reference/league-of-dodge/tools/**"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test-reference-importer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile Python sources
+        run: python3 -m py_compile reference/league-of-dodge/tools/import_local_refs.py reference/league-of-dodge/tools/test_import_local_refs.py
+      - name: Run local-only safe import tests
+        run: python3 -m unittest discover -s reference/league-of-dodge/tools -p 'test_*.py' -v
