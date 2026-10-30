@@ -2,6 +2,10 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Visual direction clarified by user
+
+The user expects the game to look and feel like League of Dodge / League: a convincing three-quarter, pseudo-3D MOBA camera, substantial champion-like characters and a cohesive lane environment. The current flat vector arena does not meet this bar. Treat this as a high-priority product requirement, not optional polish. Observe the reference in a browser and compare actual gameplay before implementing; retain functional controls and hitbox readability. The repository contains analysis and import tools, not a complete copied game or its original assets.
+
 ## Current playable state
 
 Dodge Trial, Kite Arena and Last-Hit Lab run locally at http://localhost:8080. The repository was cloned into the `League-Mechanics-God` subdirectory of the original workspace, whose parent contains separate historical Unity research. Work is on `codex/controls-and-dodge`, based on `7de3430`.
@@ -57,6 +61,7 @@ Commit: `89e7529`.
 
 ## Next three actions
 
-1. Build Bait → Dodge → CS on top of Last-Hit Lab. Acceptance: telegraphed enemy casts create a safe CS window; scoring distinguishes bait/dodge/CS and HP cost.
-2. Improve kite results and add local best records. Acceptance: auto damage / attack cadence feedback, storage failure never breaks play.
-3. Add skillshot prediction drill and more patterns after regressions pass. Acceptance: accuracy reflects actual fired/hit counts; no unavoidable spawn overlaps.
+1. Upgrade the camera, characters and environment to a convincing League-like three-quarter presentation, informed by direct gameplay observation; keep the three drills playable. Acceptance: visual depth, readable animated champion silhouettes, lane terrain and matching hitboxes.
+2. Build Bait → Dodge → CS on top of Last-Hit Lab. Acceptance: telegraphed enemy casts create a safe CS window; scoring distinguishes bait/dodge/CS and HP cost.
+3. Improve kite results and add local best records. Acceptance: auto damage / attack cadence feedback, storage failure never breaks play.
+
