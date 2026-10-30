@@ -1,6 +1,8 @@
 # Development handoff
 
-Do not load `historical/` as a live config. Fetch JSON files relative to the application's deployment base, select `champions. Ahri` or `champions.Tristana` from `riot-roster.json` (without the space), then read `.stats.movespeed.value`, `.stats.attackrange.value`, `.stats.attackspeed.value`, `.stats.attackdamage.value`. Overlay only reviewed entries from `featured.json`; explicit source records include metadata and are not bare numbers. `null` means unavailable; fail closed or use an explicitly marked training approximation. Avoid overwriting current gameplay defaults until testing and product-policy review are complete.
+For code-specific gap analysis, implementation contracts, tests and ranked tasks, use [ENGINEERING_SPEC.md](ENGINEERING_SPEC.md). This guide is a short data-access overview.
+
+Do not load `historical/` as a live config. Fetch JSON files relative to the application's deployment base, select `champions.Ahri` or `champions.Tristana` from `riot-roster.json`, then read `.stats.movespeed.value`, `.stats.attackrange.value`, `.stats.attackspeed.value`, `.stats.attackdamage.value`. Overlay only reviewed entries from `featured.json`; explicit source records include metadata and are not bare numbers. `null` means unavailable; fail closed or use an explicitly marked training approximation. Avoid overwriting current gameplay defaults until testing and product-policy review are complete.
 
 Recommended order:
 1. Use one world-unit scale consistently: movement is units/second, range and widths are units. Convert to canvas pixels only at rendering/input boundaries. Respect edge-range versus center distance and separate gameplay and pathing radii.
