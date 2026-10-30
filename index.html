@@ -26,8 +26,10 @@
         <div class="hud-health"><div class="health-top"><span>YOUR HEALTH</span><b id="healthText">160 / 160</b></div><div class="health-track"><div id="healthFill" class="health-fill"></div></div></div>
       </div>
       <div id="encounterValue" class="encounter">NORMAL · SEED 73129</div>
+      <img id="mageArt" src="assets/mage.png" hidden alt="">
+      <img id="minionArt" src="assets/minion.png" hidden alt="">
       <img id="rangerArt" src="assets/ranger.png" hidden alt="">
-      <img id="arenaArt" src="assets/arena-lane.png" hidden alt="">
+      <img id="arenaArt" src="assets/mid-lane.png" hidden alt="">
       <canvas id="arena" aria-label="Real-time top-down training arena. Use mouse and keyboard to play."></canvas>
       <div class="toast" id="toast" aria-live="polite"></div>
       <div class="overlay" id="overlay">
@@ -44,6 +46,7 @@
             <button class="mode-card" data-mode="kite" type="button"><span class="mode-icon">⌁</span><span class="mode-info"><b>KITE ARENA</b><small>Orbwalk, attack-move and defeat 10 foes</small></span><span class="mode-arrow">→</span></button>
             <button class="mode-card" data-mode="lastHit" type="button"><span class="mode-icon">♜</span><span class="mode-info"><b>LAST-HIT LAB</b><small>Time your autos · 5 waves · 15 possible CS</small></span><span class="mode-arrow">→</span></button>
             <button class="mode-card" data-mode="skillshot" type="button"><span class="mode-icon">✧</span><span class="mode-info"><b>SKILLSHOT LAB</b><small>Lead moving targets · 45 seconds · Q to fire</small></span><span class="mode-arrow">→</span></button>
+            <button class="mode-card" data-mode="bait" type="button"><span class="mode-icon">⚑</span><span class="mode-info"><b>BAIT → DODGE → CS</b><small>Draw a spell, evade, then secure the minion</small></span><span class="mode-arrow">→</span></button>
           </div>
           <p class="tiny-note" id="menuFooter">No installation · No login · Desktop mouse and keyboard</p>
           <button id="resumeBtn" type="button" class="primary-button" hidden>RESUME</button>

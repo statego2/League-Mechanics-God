@@ -20,6 +20,7 @@ For a public URL, enable **GitHub Pages** in the repository Settings → Pages �
 
 - **Dodge Trial:** survive 60 seconds of enemy skillshots. Track damage and dodges.
 - **Kite Arena:** defeat 10 enemies using movement, autos and abilities.
+- **Bait → Dodge → CS:** enter the enemy threat ring to draw a locked skillshot, evade it and last-hit a minion during the 3-second window. Three rounds track baits, dodges, CS and damage. Q/E/R are disabled; W/F remain available.
 - **Skillshot Lab:** aim Q at moving targets for 45 seconds; results show hits, shots and accuracy. W/F reposition.
 - **Last-Hit Lab:** time 28-damage auto attacks across 5 minion waves (15 possible CS). Allied caster projectiles damage minions; only your killing blow earns CS. Gold health bars mark last-hit range. Q/E/R are disabled in this drill; W/F remain available.
 
@@ -43,6 +44,8 @@ For a public URL, enable **GitHub Pages** in the repository Settings → Pages �
 
 Vanilla HTML5 Canvas + JavaScript + CSS, no third-party libraries and no copied game assets. This is a first **alpha** playable prototype. It is not yet equivalent to the attack timing, animation states, exact damage or collision rules of League of Legends.
 
+The painted mid-lane-inspired arena is a visual approximation. River, rocks and walls are decorative and currently do not block movement.
+
 ## Repeatable encounters
 
 Choose Foundation, Standard or Expert before entering a drill. Restart reuses the same seed, so the same inputs produce the same encounter; the seed button changes the next run. Enemies lock their aim during a visible warning before firing line/fan missiles. Dodge Trial also includes delayed circular ground impacts. Move out before the ring fills.
@@ -63,6 +66,6 @@ node --test tests/game.test.cjs
 
 ## Next improvements
 
-Skillshot prediction and bait/dodge/CS drills; audio; local records; further enemy patterns; accessibility; cross-browser tuning.
+Lane scenarios; audio; local records; further enemy patterns; accessibility; cross-browser tuning.
 
 Independent fan-made practice project, **not affiliated with or endorsed by Riot Games**.

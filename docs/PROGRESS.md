@@ -24,9 +24,16 @@ The user expects the game to look and feel like League of Dodge / League: a conv
 - Local personal bests are recorded per drill and difficulty: Dodge points, Kite kills, Last-Hit CS, Skillshot hits. Storage failures are caught and do not interrupt play; seed is not part of the record key.
 - Tests: `node --test tests/game.test.cjs` 22/22 pass including accuracy, timer and storage failures. Browser smoke: Skillshot selected, Q raised SHOTS to 1, pause froze counters; full manual run not yet done.
 
+## Mid lane and combined drill (2026-10-30)
+
+- Commit `5c07181` adds Skillshot Lab and local records. This session also adds Bait → Dodge → CS: three rounds; enter the ring to trigger a locked shot, evade or take damage, then last-hit within three seconds. Must leave the ring before triggering the next round; offensive abilities disabled. Bait, dodge, CS, misses and damage are reported separately. Dash/flash immunity does not count as a dodge.
+- Added `assets/mid-lane.png`, `mage.png` and `minion.png` via built-in image generation (full prompts in assets/README.md), retaining procedural fallbacks. The image evokes mid lane but is not an exact map: walls, river and trees are decorative, with no collision or pathfinding. Sprites are single poses, not directional animation sets.
+- Tests `node --test tests/game.test.cjs`: 27/27 pass, including successful bait/dodge/CS, failed rounds, spawn separation, early attack restriction and rendered asset/fallback paths. Browser verified new scene, Bait ring and enemy cast causing 18 damage and transition to round two. Complete human run not tested. Skillshot Q and pause verified in browser; no manual full accuracy run.
+- Next: implement actual lane topology and pathfinding with visible collision boundaries; create directional animated sprites and test a full run at varying performance; expand Bait scenarios with allied minion attrition and calibrate enemy timing.
+
 ## Current playable state
 
-Dodge Trial, Kite Arena, Last-Hit Lab and Skillshot Lab run locally at http://localhost:8080. The repository was cloned into the `League-Mechanics-God` subdirectory of the original workspace, whose parent contains separate historical Unity research. Work is on `codex/controls-and-dodge`, based on `7de3430`.
+Dodge Trial, Kite Arena, Last-Hit Lab, Skillshot Lab and Bait → Dodge → CS run locally at http://localhost:8080. The repository was cloned into the `League-Mechanics-God` subdirectory of the original workspace, whose parent contains separate historical Unity research. Work is on `codex/controls-and-dodge`, based on `7de3430`.
 
 ## Completed: controls and collision foundation
 
@@ -74,12 +81,12 @@ Commit: `89e7529`.
 - Gameplay CI workflow added for pushes/PRs; remote run status has not been verified.
 - No public deployment verified. Local server only; no claims about GitHub Pages.
 - Visuals are original procedural vectors; further animation and sound polish remain.
-- No obstacles/pathfinding, audio or combined lane pressure yet. Last-Hit Lab is timing practice without hostile enemy pressure.
+- No obstacles/pathfinding, audio or full lane scenario yet. Last-Hit Lab is timing practice without hostile enemy pressure.
 - Attack range is center-to-center and calibrated for this arena, not a claim of exact LoL data.
 
 ## Next three actions
 
 1. Upgrade the camera, characters and environment to a convincing League-like three-quarter presentation, informed by direct gameplay observation; keep the three drills playable. Acceptance: visual depth, readable animated champion silhouettes, lane terrain and matching hitboxes.
-2. Build Bait → Dodge → CS on top of Last-Hit Lab. Acceptance: telegraphed enemy casts create a safe CS window; scoring distinguishes bait/dodge/CS and HP cost.
+2. Extend Bait → Dodge → CS with moving opponents and allied minion attrition. Acceptance: distinct bait, dodge, CS and HP metrics remain trustworthy.
 3. Improve animation and combat feedback with directional sprite animations; check performance and visibility during a complete run.
 
