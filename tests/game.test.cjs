@@ -570,8 +570,8 @@ test('successive melee waves receive the sourced 90-second health upgrade',()=>{
 });
 
 test('Dodge director sends single-cast visitors with deterministic Ezreal-heavy spell selection',()=>{
- function run(){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,55);return [g.dodgeDirector.ezreal,g.dodgeDirector.lux,g.dodgeDirector.ahri,g.dodgeDirector.blitz,g.dodgeDirector.velkoz,g.dodgeDirector.xerath,g.dodgeDirector.xerathQ,g.dodgeDirector.orianna,g.dodgeDirector.malphite,g.dodgeDirector.attempted];}
- const a=run(),b=run();assert.deepEqual(a,b);assert.equal(a[0]+a[1]+a[2]+a[3]+a[4]+a[5]+a[6]+a[7]+a[8],a[9]);assert.ok(a[0]>a[1]);assert.ok(a[9]>=10,`too few casts: ${a}`);
+ function run(){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,55);return [g.dodgeDirector.ezreal,g.dodgeDirector.lux,g.dodgeDirector.ahri,g.dodgeDirector.blitz,g.dodgeDirector.velkoz,g.dodgeDirector.xerath,g.dodgeDirector.xerathQ,g.dodgeDirector.oriannaQ,g.dodgeDirector.orianna,g.dodgeDirector.malphite,g.dodgeDirector.attempted];}
+ const a=run(),b=run();assert.deepEqual(a,b);assert.equal(a[0]+a[1]+a[2]+a[3]+a[4]+a[5]+a[6]+a[7]+a[8]+a[9],a[10]);assert.ok(a[0]>a[1]);assert.ok(a[10]>=10,`too few casts: ${a}`);
 });
 test('Dodge visitor enters, casts only once, then exits without deleting its missile',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,.02);const visitor=g.foes.find(e=>e.dodgeVisitor);assert.ok(visitor);advance(g,1.1);assert.equal(g.dodgeDirector.attempted,1);assert.equal(visitor.phase,'exit');advance(g,1);assert.ok(!g.foes.includes(visitor));assert.equal(g.dodgeDirector.attempted,1);
@@ -592,7 +592,7 @@ test('Dodge director completes a long session with bounded directed threats',()=
   g.update(1/120);const active=g.foes.filter(e=>e.alive&&e.dodgeVisitor&&e.phase!=='exit'&&e.phase!=='orbFlight'&&e.phase!=='hookFlight').length+g.shots.filter(s=>s.alive&&s.directed).length+g.hazards.filter(h=>h.directed).length;
   assert.ok(active<=2,`directed threats exceeded cap: ${active}`);
  }
- assert.equal(g.state,'ended');assert.ok(g.dodgeDirector.attempted>100);assert.ok(g.dodgeDirector.xerathQ>0,'long session never scheduled Xerath Q');assert.ok(g.dodgeDirector.velkoz>0,'long session never scheduled Velkoz Q');assert.ok(g.dodgeDirector.orianna>0,'long session never scheduled Orianna R');assert.ok(g.dodgeDirector.malphite>0,'long session never scheduled Malphite R');assert.equal(g.dodgeDirector.attempted,g.dodgeDirector.ezreal+g.dodgeDirector.lux+g.dodgeDirector.ahri+g.dodgeDirector.blitz+g.dodgeDirector.velkoz+g.dodgeDirector.xerath+g.dodgeDirector.xerathQ+g.dodgeDirector.orianna+g.dodgeDirector.malphite);
+ assert.equal(g.state,'ended');assert.ok(g.dodgeDirector.attempted>100);assert.ok(g.dodgeDirector.xerathQ>0,'long session never scheduled Xerath Q');assert.ok(g.dodgeDirector.velkoz>0,'long session never scheduled Velkoz Q');assert.ok(g.dodgeDirector.orianna>0,'long session never scheduled Orianna R');assert.ok(g.dodgeDirector.malphite>0,'long session never scheduled Malphite R');assert.equal(g.dodgeDirector.attempted,g.dodgeDirector.ezreal+g.dodgeDirector.lux+g.dodgeDirector.ahri+g.dodgeDirector.blitz+g.dodgeDirector.velkoz+g.dodgeDirector.xerath+g.dodgeDirector.xerathQ+g.dodgeDirector.oriannaQ+g.dodgeDirector.orianna+g.dodgeDirector.malphite);
 });
 test('Dodge visitor uses distinct existing visual profiles and projectile colours',()=>{
  const {g,node,draws,strokes}=boot('ahri');for(const id of ['mageArt','rangerArt']){node(id).complete=true;node(id).naturalWidth=100;}
@@ -842,11 +842,11 @@ test('Orianna ball is shown before its shockwave, with no stun or pull on hit',(
  advance(g,1.55);assert.equal(h.casting,true);assert.equal(g.dodgeDirector.orianna,1);
  g.player.x=h.x;g.player.y=h.y;const pos={x:g.player.x,y:g.player.y};advance(g,.51);
  assert.equal(g.stats.hits,1);assert.equal(g.player.root,0);assert.equal(g.player.x,pos.x);assert.equal(g.player.y,pos.y);
- assert.ok(Math.abs(g.player.hp-(590-250/1.3))<1e-7);assert.equal(g.dodgeDirector.outcomes['ORIANNA R'].hit,1);
+ assert.ok(Math.abs(g.player.hp-(590-225/1.3))<1e-7);assert.equal(g.dodgeDirector.outcomes['ORIANNA R'].hit,1);
 });
 test('Orianna cancels the shockwave if the player has no ordinary escape when it would cast',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;assert.ok(g.spawnOriannaR());const h=g.hazards[0];
- g.player.x=h.destination.x;g.player.y=h.destination.y;advance(g,1.6);assert.equal(g.dodgeDirector.orianna,0);assert.equal(g.stats.hits,0);assert.equal(g.hazards.length,0);
+ advance(g,.45);g.player.x=h.destination.x;g.player.y=h.destination.y;advance(g,1.15);assert.equal(g.dodgeDirector.orianna,0);assert.equal(g.stats.hits,0);assert.equal(g.hazards.length,0);
 });
 test('Orianna ball blocks other encounters and its preparation freezes while paused',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;assert.ok(g.spawnOriannaR());const h=g.hazards[0];
@@ -886,4 +886,30 @@ test('Orianna ball travels visibly from caster to its destination before Shockwa
 test('Orianna encounter renders a caster and ball during setup',()=>{
  const {g,node,draws}=boot('ahri');node('mageArt').complete=true;node('mageArt').naturalWidth=100;
  g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;assert.ok(g.spawnOriannaR());g.render();assert.ok(draws.includes(node('mageArt')));
+});
+
+test('Orianna Q hits along its moving path once and records its own damage',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;assert.ok(g.spawnOriannaR());const h=g.hazards[0];
+ g.player.x=h.source.x+(h.destination.x-h.source.x)*.4;g.player.y=h.source.y+(h.destination.y-h.source.y)*.4;
+ advance(g,.5);assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.player.hp-(590-60/1.3))<1e-7);assert.equal(g.dodgeDirector.outcomes['ORIANNA Q'].hit,1);assert.equal(g.dodgeDirector.oriannaQ,1);
+});
+test('Orianna Q arrival area uses its own radius without applying a second hit',()=>{
+ for(const [offset,hit] of [[87.4,true],[87.6,false]]){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;assert.ok(g.spawnOriannaR());const h=g.hazards[0];
+  const dx=h.destination.x-h.source.x,dy=h.destination.y-h.source.y,d=Math.hypot(dx,dy);g.player.x=h.destination.x-dy/d*offset;g.player.y=h.destination.y+dx/d*offset;
+  advance(g,.5);assert.equal(g.stats.hits,hit?1:0,`offset ${offset}`);
+ }
+});
+test('a lethal Orianna Q is recorded before the result screen',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;assert.ok(g.spawnOriannaR());const h=g.hazards[0];g.player.hp=1;
+ g.player.x=h.source.x+(h.destination.x-h.source.x)*.4;g.player.y=h.source.y+(h.destination.y-h.source.y)*.4;advance(g,.3);
+ assert.equal(g.state,'ended');assert.match(node('menuDescription').textContent,/ORIANNA Q: 0 avoided \/ 1 hit/);assert.match(node('menuDescription').textContent,/0 unresolved phases/);
+});
+
+
+test('Orianna Q counts escape from its threatened arrival area',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;assert.ok(g.spawnOriannaR());const h=g.hazards[0];
+ const dx=h.destination.x-h.source.x,dy=h.destination.y-h.source.y,d=Math.hypot(dx,dy),nx=-dy/d,ny=dx/d;
+ g.player.x=h.destination.x+nx*80;g.player.y=h.destination.y+ny*80;g.update(1/120);g.moveTo(g.player.x+nx*100,g.player.y+ny*100);advance(g,.5);
+ assert.equal(g.stats.hits,0);assert.equal(g.dodgeDirector.outcomes['ORIANNA Q'].avoided,1);
 });

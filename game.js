@@ -31,7 +31,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v10":mode==="dodge"?(ahriBase()?".director_v14":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
+function recordSuffix(){return ahriCS()?".cs_ahri_v10":mode==="dodge"?(ahriBase()?".director_v15":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 function recordLabel(){return difficulty+(attackPreset==="standard"?"":", "+ATTACK_PRESETS[attackPreset].label+" AS");}
@@ -74,7 +74,7 @@ function cue(kind){
  }catch{/* audio must never interrupt the drill */}
 }
 let state="menu",mode="dodge",time=0,last=0,kills=0,dodged=0,spawn=0,aim={x:W/2+120,y:H/2},mouse={x:W/2,y:H/2},player,foes=[],allies=[],shots=[],fx=[],keys=new Set(),attackMove=false,stopHeldRight=false,toastTime=0,enemySeq=0,impactSeq=0,stats;
-function reset(nextMode){Object.assign(ATTACK,ATTACK_PRESETS[attackPreset]);mode=nextMode;time=0;kills=0;dodged=0;spawn=0;toastTime=0;ui.toast.classList.remove("show");enemySeq=0;impactSeq=0;rng=seed;hazards=[];sweeps=[];sweepTimer=14;waves=0;laneEnemyTimer=0;dodgeDirector=nextMode==="dodge"&&attackPreset==="ahri"?{next:0,attempted:0,ezreal:0,lux:0,ahri:0,blitz:0,velkoz:0,xerath:0,xerathQ:0,orianna:0,malphite:0,rareAt:90+(seed%6001)/100,malAt:150+((seed*31)%9001)/100,rareGuardUntil:0,outcomes:{}}:null;bait=nextMode==="bait"?{phase:"setup",round:0,casts:0,dodges:0,cs:0,missed:0,timer:0}:null;stats={released:0,cancelled:0,hits:0,blocked:0,damage:0,moving:0,autoDamage:0,readyIdle:0,missed:0,unresolved:0,cs:0,gold:0,missedGold:0,skillShots:0,skillHits:0};accumulator=0;foes=[];allies=[];shots=[];fx=[];keys.clear();attackMove=false;stopHeldRight=false;player={x:ahriCS()?420:W/2,y:ahriCS()?535:H/2,r:17,hitRadius:referenceSpell()||ahriBase()?AHRI.radius:12.75,hp:referenceSpell()||ahriBase()?AHRI.hp:160,maxHp:referenceSpell()||ahriBase()?AHRI.hp:160,speed:ahriBase()||referenceSpell()?AHRI.speed:270,target:null,route:[],routeGoal:null,focus:null,order:null,facing:0,motion:0,hitFlash:0,attackTimer:0,windup:0,windupTarget:null,casting:null,fox:null,boost:0,essence:0,rushWindow:0,rushCharges:0,rushLock:0,dashing:null,cd:{q:0,w:0,e:0,r:0,f:0},invuln:0,root:0,flashTrail:0};state="playing";ui.pause.textContent="PAUSE P";$("encounterValue").textContent=difficulty.toUpperCase()+" · AS "+ATTACK_PRESETS[attackPreset].label+" · SEED "+seed+(AHRI_DATA===AHRI_FALLBACK?" · DATA FALLBACK":"");ui.overlay.classList.add("hidden");ui.pause.disabled=false;ui.restart.disabled=false;$("settings").hidden=false;ui.mode.textContent=referenceSpell()?referenceSpell().name+" DODGE":mode==="dodge"?"DODGE TRIAL":mode==="lastHit"?"CS PRACTICE":mode==="lane"?"LANE SCENARIO":mode==="bait"?"BAIT · DODGE · CS":mode==="skillshot"?"SKILLSHOT LAB":"KITE ARENA";$("killsLabel").textContent=referenceSpell()?"HITS":(mode==="lastHit"||mode==="bait"||mode==="lane")?"CS":mode==="skillshot"?"HITS":"KILLS";$("dodgedLabel").textContent=mode==="bait"?"DODGES":mode==="lastHit"?"MISSED":mode==="skillshot"?"SHOTS":"DODGED";updateUI();}
+function reset(nextMode){Object.assign(ATTACK,ATTACK_PRESETS[attackPreset]);mode=nextMode;time=0;kills=0;dodged=0;spawn=0;toastTime=0;ui.toast.classList.remove("show");enemySeq=0;impactSeq=0;rng=seed;hazards=[];sweeps=[];sweepTimer=14;waves=0;laneEnemyTimer=0;dodgeDirector=nextMode==="dodge"&&attackPreset==="ahri"?{next:0,attempted:0,ezreal:0,lux:0,ahri:0,blitz:0,velkoz:0,xerath:0,xerathQ:0,orianna:0,oriannaQ:0,malphite:0,rareAt:90+(seed%6001)/100,malAt:150+((seed*31)%9001)/100,rareGuardUntil:0,outcomes:{}}:null;bait=nextMode==="bait"?{phase:"setup",round:0,casts:0,dodges:0,cs:0,missed:0,timer:0}:null;stats={released:0,cancelled:0,hits:0,blocked:0,damage:0,moving:0,autoDamage:0,readyIdle:0,missed:0,unresolved:0,cs:0,gold:0,missedGold:0,skillShots:0,skillHits:0};accumulator=0;foes=[];allies=[];shots=[];fx=[];keys.clear();attackMove=false;stopHeldRight=false;player={x:ahriCS()?420:W/2,y:ahriCS()?535:H/2,r:17,hitRadius:referenceSpell()||ahriBase()?AHRI.radius:12.75,hp:referenceSpell()||ahriBase()?AHRI.hp:160,maxHp:referenceSpell()||ahriBase()?AHRI.hp:160,speed:ahriBase()||referenceSpell()?AHRI.speed:270,target:null,route:[],routeGoal:null,focus:null,order:null,facing:0,motion:0,hitFlash:0,attackTimer:0,windup:0,windupTarget:null,casting:null,fox:null,boost:0,essence:0,rushWindow:0,rushCharges:0,rushLock:0,dashing:null,cd:{q:0,w:0,e:0,r:0,f:0},invuln:0,root:0,flashTrail:0};state="playing";ui.pause.textContent="PAUSE P";$("encounterValue").textContent=difficulty.toUpperCase()+" · AS "+ATTACK_PRESETS[attackPreset].label+" · SEED "+seed+(AHRI_DATA===AHRI_FALLBACK?" · DATA FALLBACK":"");ui.overlay.classList.add("hidden");ui.pause.disabled=false;ui.restart.disabled=false;$("settings").hidden=false;ui.mode.textContent=referenceSpell()?referenceSpell().name+" DODGE":mode==="dodge"?"DODGE TRIAL":mode==="lastHit"?"CS PRACTICE":mode==="lane"?"LANE SCENARIO":mode==="bait"?"BAIT · DODGE · CS":mode==="skillshot"?"SKILLSHOT LAB":"KITE ARENA";$("killsLabel").textContent=referenceSpell()?"HITS":(mode==="lastHit"||mode==="bait"||mode==="lane")?"CS":mode==="skillshot"?"HITS":"KILLS";$("dodgedLabel").textContent=mode==="bait"?"DODGES":mode==="lastHit"?"MISSED":mode==="skillshot"?"SHOTS":"DODGED";updateUI();}
 function showMenu(title,desc,finished=false){$("menu").scrollTop=0;attackMove=false;ui.pause.disabled=true;state=finished?"ended":"menu";ui.overlay.classList.remove("hidden");ui.title.innerHTML=title;ui.desc.textContent=desc;ui.buttons.hidden=false;ui.foot.hidden=false;ui.resume.hidden=true;$("settings").hidden=false;ui.pause.textContent="PAUSE P";}
 function pause(){attackMove=false;if(state==="playing"){$("menu").scrollTop=0;state="paused";ui.overlay.classList.remove("hidden");ui.title.innerHTML="PAUSED<span>.</span>";ui.desc.textContent="Take a moment, then return to the arena.";ui.buttons.hidden=true;ui.foot.hidden=true;ui.resume.hidden=false;$("settings").hidden=true;ui.pause.textContent="RESUME P";}else if(state==="paused"){state="playing";ui.overlay.classList.add("hidden");ui.pause.textContent="PAUSE P";}}
 // Records are local and partitioned by drill and difficulty; storage can be unavailable.
@@ -106,7 +106,7 @@ function recordDodgeOutcome(shot,outcome){
 }
 function dodgeOutcomeSummary(){
  const entries=Object.entries(dodgeDirector.outcomes).map(([name,v])=>`${name}: ${v.avoided} avoided / ${v.hit} hit / ${v.blocked} blocked / ${v.harmless} harmless`);
- const unresolved=shots.filter(s=>s.alive&&s.directed&&!s.phaseResolved).length+hazards.filter(h=>h.directed&&!h.phaseResolved&&(!(h.orianna||h.malphite)||h.casting)).length;
+ const unresolved=shots.filter(s=>s.alive&&s.directed&&!s.phaseResolved).length+hazards.filter(h=>h.directed&&!h.phaseResolved&&(!(h.orianna||h.malphite)||h.casting)).length+hazards.filter(h=>h.orianna&&h.q&&!h.q.phaseResolved).length;
  return ` · phase outcomes${entries.length?` (${entries.join('; ')})`:': none'} · ${unresolved} unresolved phase${unresolved===1?'':'s'}`;
 }
 function end(win){
@@ -119,7 +119,7 @@ function end(win){
  else if(mode==="bait")description=`${bait.casts} spells baited · ${bait.dodges} dodged · ${bait.cs} / 3 CS · ${bait.missed} missed · ${Number(stats.damage.toFixed(1))} damage taken.`;
  else if(mode==="skillshot")description=`${stats.skillHits} / ${stats.skillShots} skillshots hit · ${stats.skillShots?Math.round(stats.skillHits/stats.skillShots*100):0}% accuracy · ${kills} targets defeated.`;
  else if(mode==="lastHit")description=`${kills} / ${ahriCS()?126:15} CS · ${stats.missed} missed · ${stats.unresolved} unresolved${ahriCS()?` · ${stats.gold} gold earned · ${stats.missedGold} gold missed`:""} · ${stats.released} autos · ${stats.cancelled} cancelled. Auto damage: ${autoDamage()} damage.`;
- else if(mode==="dodge"||referenceSpell())description=`Survived ${time.toFixed(1)}s · ${dodged} threats avoided · ${stats.hits} hits · ${Number(stats.damage.toFixed(1))} damage · ${stats.blocked} blocked${dodgeDirector?` · ${dodgeDirector.attempted} casts (${dodgeDirector.ezreal} Ezreal, ${dodgeDirector.lux} Lux, ${dodgeDirector.ahri} Ahri, ${dodgeDirector.blitz} Blitz, ${dodgeDirector.velkoz} Vel’Koz, ${dodgeDirector.xerath} Xerath W, ${dodgeDirector.xerathQ} Xerath Q, ${dodgeDirector.orianna} Orianna R, ${dodgeDirector.malphite} Malphite R)${dodgeOutcomeSummary()}`:""} · ${score} points.`;
+ else if(mode==="dodge"||referenceSpell())description=`Survived ${time.toFixed(1)}s · ${dodged} threats avoided · ${stats.hits} hits · ${Number(stats.damage.toFixed(1))} damage · ${stats.blocked} blocked${dodgeDirector?` · ${dodgeDirector.attempted} casts (${dodgeDirector.ezreal} Ezreal, ${dodgeDirector.lux} Lux, ${dodgeDirector.ahri} Ahri, ${dodgeDirector.blitz} Blitz, ${dodgeDirector.velkoz} Vel’Koz, ${dodgeDirector.xerath} Xerath W, ${dodgeDirector.xerathQ} Xerath Q, ${dodgeDirector.oriannaQ} Orianna Q, ${dodgeDirector.orianna} Orianna R, ${dodgeDirector.malphite} Malphite R)${dodgeOutcomeSummary()}`:""} · ${score} points.`;
  else description=`Defeated ${kills} enemies · ${(stats.autoDamage/Math.max(time,1)).toFixed(1)} auto DPS · ${stats.released} autos · ${stats.cancelled} cancelled · ${Math.round(stats.moving/Math.max(time,1)*100)}% moving · ${stats.readyIdle.toFixed(1)}s ready but not attacking in range · ${stats.hits} hits taken.`;
  const recordValue=mode==="dodge"||referenceSpell()?score:mode==="lane"?stats.cs:(mode==="lastHit"||mode==="bait")?kills:mode==="skillshot"?stats.skillHits:kills;
  const best=mode==="kite"?saveKiteRecord(win):saveRecord(recordValue);
@@ -369,7 +369,9 @@ function spawnXerathQ(){
 }
 // Shockwave's ball is shown before the cast. No pull or stun in pure Dodge.
 // Placement, setup time, avoidance margin and MR are training choices.
-const ORIANNA_R={radius:SIMULATION.toCanvas(415),cast:.5,raw:250};
+const ORIANNA_Q={radius:SIMULATION.toCanvas(80),arrival:SIMULATION.toCanvas(175),raw:60};
+// Riot 26.12 changed rank-one Shockwave base damage to 225.
+const ORIANNA_R={radius:SIMULATION.toCanvas(415),cast:.5,raw:225};
 function oriannaEscape(ball){
  const dx=player.x-ball.x,dy=player.y-ball.y,d=Math.hypot(dx,dy),boundary=ball.r+player.hitRadius;
  if(d>boundary)return true;
@@ -387,7 +389,8 @@ function spawnOriannaR(){
   const source={x:ball.x+Math.cos(a)*250,y:ball.y+Math.sin(a)*250};
   if(ball.x<55||ball.x>W-55||ball.y<95||ball.y>H-40||!world.pointWalkable(ball,8)||!oriannaEscape(ball))continue;
   if(source.x<60||source.x>W-60||source.y<145||source.y>H-30||!world.pointWalkable(source,20))continue;
-  hazards.push({x:source.x,y:source.y,r:ball.r,source,destination:{x:ball.x,y:ball.y},travelDuration:250/SIMULATION.toCanvas(1400),ttl:1.5,max:1.5,orianna:true,casting:false,directed:true,spellName:"ORIANNA R",threat:false});return true;
+  const q={directed:true,spellName:"ORIANNA Q",phaseResolved:false,threat:false};
+  hazards.push({x:source.x,y:source.y,r:ball.r,source,destination:{x:ball.x,y:ball.y},travelDuration:250/SIMULATION.toCanvas(1400),ttl:1.5,max:1.5,orianna:true,casting:false,directed:true,spellName:"ORIANNA R",threat:false,q});dodgeDirector.attempted++;dodgeDirector.oriannaQ++;return true;
  }
  return false;
 }
@@ -720,7 +723,18 @@ for(const h of hazards){
  }
  if(h.orianna){
   h.ttl-=dt;
-  if(!h.casting){const f=clamp((h.max-h.ttl)/h.travelDuration,0,1);h.x=h.source.x+(h.destination.x-h.source.x)*f;h.y=h.source.y+(h.destination.y-h.source.y)*f;}
+  if(!h.casting){
+   const elapsed=h.max-h.ttl,priorX=h.x,priorY=h.y,f=clamp(elapsed/h.travelDuration,0,1);
+   h.x=h.source.x+(h.destination.x-h.source.x)*f;h.y=h.source.y+(h.destination.y-h.source.y)*f;
+   if(!h.q.phaseResolved){
+    const vx=(h.destination.x-h.source.x)/h.travelDuration,vy=(h.destination.y-h.source.y)/h.travelDuration;
+    if(threatening({x:priorX,y:priorY,vx,vy,r:ORIANNA_Q.radius,ttl:Math.max(0,h.travelDuration-(elapsed-dt))})||dist(player,h.destination)<=ORIANNA_Q.arrival)h.q.threat=true;
+    const pathHit=segmentDistance(priorX-oldX,priorY-oldY,h.x-player.x,h.y-player.y)<=ORIANNA_Q.radius+player.hitRadius;
+    const arrivalHit=f>=1&&dist(player,h.destination)<=ORIANNA_Q.arrival;
+    if(pathHit||arrivalHit){if(player.invuln>0){recordDodgeOutcome(h.q,"blocked");stats.blocked++;}else{recordDodgeOutcome(h.q,"hit");takeHit(physicalDamage(ORIANNA_Q.raw,30));}if(state!=="playing")return;}
+    else if(f>=1){recordDodgeOutcome(h.q,h.q.threat?"avoided":"harmless");if(h.q.threat){dodged++;cue("dodge");}}
+   }
+  }
   if(h.ttl<=0&&!h.casting){
    if(!oriannaEscape(h)){h.ttl=0;continue;}
    h.casting=true;h.ttl=ORIANNA_R.cast;h.threat=dist(player,h)<=h.r+player.hitRadius;
