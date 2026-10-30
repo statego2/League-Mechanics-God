@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnXerathW,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnXerathW,canEvadeDodgeCast,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,strokes,texts,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -705,4 +705,24 @@ test('Blitz hook expires at its configured range and retains first collision swe
  const s=g.fire(100,g.player.y,900,0,'enemy',110/1.3,35,510/900);Object.assign(s,{directed:true,spellName:'BLITZ Q'});
  g.update(.5);assert.equal(g.stats.hits,1);assert.equal(s.alive,false);
  g.reset('dodge');g.dodgeDirector.next=999;g.player.x=1000;const short=g.fire(100,g.player.y,900,0,'enemy',1,35,510/900);short.directed=true;short.spellName='BLITZ Q';advance(g,.7);assert.equal(g.stats.hits,0);assert.equal(g.dodgeDirector.outcomes['BLITZ Q'].harmless,1);
+});
+
+
+test('director rejects a point-blank cast and accepts a walkable long-range sidestep',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const spell=g.REFERENCE_SPELLS.ezrealDodge;
+ assert.equal(g.canEvadeDodgeCast({x:g.player.x-250,y:g.player.y},spell),false);
+ assert.equal(g.canEvadeDodgeCast({x:g.player.x-460,y:g.player.y},spell),true);
+});
+test('visitor abandons a cast if the player closes distance during its entry',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const e=g.enemy(400,300);Object.assign(e,{dodgeVisitor:true,spell:g.REFERENCE_SPELLS.ezrealDodge,phase:'enter',origin:{x:400,y:300},entry:{x:350,y:300},speed:120});g.setFoes([e]);
+ g.player.x=500;g.player.y=300;g.update(1/120);assert.equal(e.phase,'exit');assert.equal(g.dodgeDirector.attempted,0);assert.equal(g.shots.length,0);
+});
+
+test('accepted isolated Ezreal shot can be dodged after a 200ms delay by ordinary movement',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const e=g.enemy(140,g.player.y);Object.assign(e,{dodgeVisitor:true,spell:g.REFERENCE_SPELLS.ezrealDodge,phase:'enter',origin:{x:e.x,y:e.y},entry:{x:e.x,y:e.y},speed:120});g.setFoes([e]);
+ g.update(1/120);assert.equal(e.phase,'cast');advance(g,.2);g.moveTo(g.player.x,g.player.y+100);advance(g,.8);
+ assert.equal(g.stats.hits,0);assert.equal(g.dodgeDirector.outcomes['EZREAL Q'].avoided,1);
 });

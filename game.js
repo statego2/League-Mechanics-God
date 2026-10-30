@@ -31,7 +31,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v10":mode==="dodge"?(ahriBase()?".director_v5":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
+function recordSuffix(){return ahriCS()?".cs_ahri_v10":mode==="dodge"?(ahriBase()?".director_v6":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 function recordLabel(){return difficulty+(attackPreset==="standard"?"":", "+ATTACK_PRESETS[attackPreset].label+" AS");}
@@ -338,6 +338,20 @@ function spawnXerathW(){
  }
  return false;
 }
+// Conservative single-shot reachability check at the moment aim is locked.
+// This samples the two perpendicular straight escapes; it does not solve overlaps.
+function canEvadeDodgeCast(origin,spell){
+ const dx=player.x-origin.x,dy=player.y-origin.y,d=Math.hypot(dx,dy);
+ if(d<1)return false;
+ const clearance=spell.radius+player.hitRadius+8;
+ const available=spell.cast+Math.max(0,d-clearance)/spell.speed-.2;
+ if(available<=0||player.speed*available<clearance)return false;
+ for(const side of [-1,1]){
+  const destination={x:player.x-side*dy/d*clearance,y:player.y+side*dx/d*clearance};
+  if(world.pointWalkable(destination,player.r)&&world.segmentClear(player,destination,player.r))return true;
+ }
+ return false;
+}
 function spawnDodgeVisitor(){
  const active=foes.filter(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit"&&e.phase!=="orbFlight"&&e.phase!=="hookFlight").length+shots.filter(s=>s.alive&&s.directed).length+hazards.filter(h=>h.directed).length;
  if(active>=DODGE_DIRECTOR[difficulty].cap||hazards.some(h=>h.directed))return false;
@@ -345,12 +359,12 @@ function spawnDodgeVisitor(){
  if(time>=45&&roll>=83)return spawnXerathW();
  const spell=roll<45?REFERENCE_SPELLS.ezrealDodge:roll<60?REFERENCE_SPELLS.luxDodge:roll<71?REFERENCE_SPELLS.ahriDodge:REFERENCE_SPELLS.blitzDodge;
  let origin=null,entry=null;
- for(let i=0;i<20;i++){
+ for(let i=0;i<80;i++){
   const angle=rand(0,TAU),distance=rand(340,470),p={x:player.x+Math.cos(angle)*distance,y:player.y+Math.sin(angle)*distance};
   const start={x:p.x+Math.cos(angle)*65,y:p.y+Math.sin(angle)*65};
   // Keep the entire caster silhouette on screen, including its raised sprite.
   const visible=q=>q.x>=60&&q.x<=W-60&&q.y>=145&&q.y<=H-30;
-  if(visible(p)&&visible(start)&&world.pointWalkable(p,20)&&world.pointWalkable(start,20)&&world.segmentClear(start,p,20)){origin=p;entry=start;break;}
+  if(visible(p)&&visible(start)&&world.pointWalkable(p,20)&&world.pointWalkable(start,20)&&world.segmentClear(start,p,20)&&canEvadeDodgeCast(p,spell)){origin=p;entry=start;break;}
  }
  if(!origin)return false;
  const e=enemy(entry.x,entry.y);e.dodgeVisitor=true;e.spell=spell;e.phase="enter";e.origin=origin;e.entry=entry;e.speed=120;e.hp=e.maxHp=160;e.shoot=999;foes.push(e);
@@ -360,7 +374,7 @@ function updateDodgeVisitor(e,dt){
  if(e.phase==="enter"||e.phase==="exit"){
   const goal=e.phase==="enter"?e.origin:e.entry,dx=goal.x-e.x,dy=goal.y-e.y,d=Math.hypot(dx,dy),step=Math.min(d,e.speed*dt);
   if(d>0){const next=world.clip(e,{x:e.x+dx/d*step,y:e.y+dy/d*step},e.r);e.x=next.x;e.y=next.y;}
-  if(d<=step+.01){if(e.phase==="enter"){e.pending={angle:Math.atan2(player.y-e.y,player.x-e.x),fan:false,spell:e.spell};e.charge=e.spell.cast;e.phase="cast";}else e.alive=false;}
+  if(d<=step+.01){if(e.phase==="enter"){if(!canEvadeDodgeCast(e,e.spell)){e.phase="exit";}else{e.pending={angle:Math.atan2(player.y-e.y,player.x-e.x),fan:false,spell:e.spell};e.charge=e.spell.cast;e.phase="cast";}}else e.alive=false;}
  }else if(e.phase==="cast"){
   e.charge-=dt;if(e.charge<=0){releaseEnemy(e);e.phase=e.spell.returning?"orbFlight":e.spell.hook?"hookFlight":"exit";}
  }else if(e.phase==="orbFlight"||e.phase==="hookFlight"){
