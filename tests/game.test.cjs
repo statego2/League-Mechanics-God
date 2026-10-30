@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,addWave,addTarget,get bait(){return bait},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,addWave,addTarget,get gauntlet(){return gauntlet},get bait(){return bait},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,strokes,texts,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -362,10 +362,25 @@ test('Ahri back sprite appears when facing away and falls back to side',()=>{
 test('Ahri projectile hitbox uses scaled 65-unit gameplay radius at its boundary',()=>{
  for(const [offset,expected] of [[62.4,1],[62.6,0]]){const {g}=boot('ahri');g.reset('kite');g.disableSpawn();assert.equal(g.player.hitRadius,32.5);g.fire(400,g.player.y+offset,400,0,'enemy',18,30,1.5);advance(g,1);assert.equal(g.stats.hits,expected,`offset ${offset}`);}
 });
-test('default Ahri dodge includes sweeping pattern alongside reference casts',()=>{
- const {g}=boot('ahri');g.reset('dodge');g.disableSpawn();advance(g,14.1);assert.equal(g.sweeps.length,1);advance(g,1.5);assert.ok(g.shots.some(s=>s.kind==='enemy'&&s.r===9));
+test('default Ahri dodge runs seeded spell encounters instead of synthetic sweep',()=>{
+ const {g}=boot('ahri');g.reset('dodge');advance(g,14.1);assert.equal(g.sweeps.length,0);assert.ok(g.gauntlet.casts>0);
 });
 
+test('gauntlet projectiles use existing simulation and multi-phase casts resolve once',()=>{
+ for(const type of ['ahri','velkoz']){const {g}=boot('ahri');g.reset('dodge');g.gauntlet.next=999;const e=foe(g,250,g.player.y);e.gauntletCaster=true;e.gauntletType=type;g.shootEnemy(e);advance(g,.26);assert.equal(g.shots[0].gauntletType,type);const encounter=g.shots[0].encounter;advance(g,2);assert.equal(encounter.resolved,true,type);assert.equal(encounter.parts,0,type);}
+});
+test('gauntlet Ezreal stops on the first ally and Lux can hit the second',()=>{
+ for(const [type,hits] of [['ezreal',0],['lux',1]]){const {g}=boot('ahri');g.reset('dodge');g.gauntlet.next=999;const e=foe(g,250,g.player.y);e.gauntletCaster=true;e.gauntletType=type;const ally={id:999,x:420,y:g.player.y,r:15,hp:1000,maxHp:1000,alive:true,minion:true};g.setAllies([ally]);g.shootEnemy(e);advance(g,1.6);assert.ok(ally.hp<1000,type);assert.equal(g.stats.hits,hits,type);}
+});
+test('gauntlet results are deterministic at 30, 60 and 120 FPS',()=>{
+ const results=[];for(const fps of [30,60,120]){const {g}=boot('ahri');g.reset('dodge');g.player.hp=g.player.maxHp=100000;g.loop(1000);for(let i=1;i<=fps*20;i++)g.loop(1000+i*1000/fps);results.push([g.gauntlet.casts,g.stats.hits,g.dodged,JSON.stringify(g.gauntlet.bySpell)]);}assert.deepEqual(results[0],results[1]);assert.deepEqual(results[1],results[2]);
+});
+test('gauntlet Lux binding roots movement and Flash remains usable',()=>{
+ const {g,click}=boot('ahri');g.reset('dodge');g.gauntlet.next=999;const e=foe(g,250,g.player.y);e.gauntletCaster=true;e.gauntletType='lux';g.shootEnemy(e);advance(g,1);assert.ok(g.player.root>0);const x=g.player.x;g.moveTo(x+200,g.player.y);advance(g,.2);assert.equal(g.player.x,x);click(900,337,2);g.cast('f');assert.ok(g.player.x>x);
+});
+test('gauntlet off-axis missile does not earn a dodge',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.gauntlet.next=999;const e=foe(g,250,100);e.gauntletCaster=true;e.gauntletType='ezreal';g.shootEnemy(e);e.pending.angle=0;advance(g,2);assert.equal(g.dodged,0);
+});
 test('Ahri charm respects champion and minion gameplay-radius boundaries',()=>{
  for(const [minion,offset,hit] of [[false,62.4,true],[false,62.6,false],[true,53.9,true],[true,54.1,false]]){const {g}=boot('ahri');g.reset('kite');g.disableSpawn();const e=foe(g,800,g.player.y+offset);e.minion=minion;e.mr=0;e.hp=1000;if(minion){e.tick=999;e.destination=800;}g.cast('e');advance(g,.8);assert.equal(e.hp<1000,hit,`${minion?'minion':'champion'} at ${offset}`);}
 });
