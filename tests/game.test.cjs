@@ -5,7 +5,7 @@ const vm=require('node:vm');
 const fs=require('node:fs');
 function boot(){
  const nodes=new Map(),draws=[];
- function node(id){if(!nodes.has(id))nodes.set(id,{textContent:'',style:{},classList:{add(){},remove(){},toggle(){}},listeners:{},addEventListener(k,f){this.listeners[k]=f;},closest(){return this;},getBoundingClientRect(){return {left:0,top:0,width:1200,height:675};}});return nodes.get(id);}
+ function node(id){if(!nodes.has(id))nodes.set(id,{textContent:'',style:{},classList:{add(){},remove(){},toggle(){}},listeners:{},addEventListener(k,f){this.listeners[k]=f;},closest(){return this;},setAttribute(k,v){this[k]=v;},getBoundingClientRect(){return {left:0,top:0,width:1200,height:675};}});return nodes.get(id);}
  const ctx=new Proxy({drawImage(img){draws.push(img)},createRadialGradient(){return {addColorStop(){}};}},{get(o,k){return o[k]||(()=>{});}});
  node('arena').getContext=()=>ctx;
  const window={devicePixelRatio:1,listeners:{},addEventListener(k,f){this.listeners[k]=f;}};
@@ -178,4 +178,18 @@ test('all difficulty presets give a last-hit window after an allied hit',()=>{
   for(let i=0;i<360&&g.bait.phase!=='window';i++)g.update(1/120);assert.equal(g.bait.phase,'window',difficulty);
   advance(g,1.65);const minion=g.foes.find(e=>e.minion);assert.ok(minion&&minion.hp>0&&minion.hp<=28,`${difficulty}: ${minion?.hp}`);assert.ok(g.bait.timer>1);
  }
+});
+
+test('running away along a baited shot is not scored as a dodge before it catches up',()=>{
+ const {g}=boot();g.reset('bait');advance(g,.02);g.player.x=400;g.player.y=300;g.bait.phase='dodge';const s=g.fire(200,300,340,0,'enemy',18,7,4);s.bait=true;s.threat=true;g.moveTo(1000,300);advance(g,1);assert.equal(g.bait.dodges,0);assert.equal(g.stats.hits,0);advance(g,1.6);assert.equal(g.bait.dodges,0);assert.equal(g.stats.hits,1);
+});
+
+test('optional sound handles missing audio and never interrupts gameplay',()=>{
+ const {g,node}=boot();node('soundBtn').listeners.click();assert.equal(node('soundBtn').disabled,true);assert.equal(node('soundBtn').textContent,'SOUND UNAVAILABLE');const e=foe(g);g.attackOrder(e);advance(g,.25);assert.equal(g.stats.released,1);
+});
+test('enabled sound plays attack cues and the toggle mutes subsequent cues',()=>{
+ const {g,window,node}=boot();let plays=0;const param={setValueAtTime(){},exponentialRampToValueAtTime(){}};
+ window.AudioContext=class{constructor(){this.currentTime=10;this.destination={};}resume(){return Promise.resolve();}createOscillator(){return {frequency:param,connect(){},start(){plays++;},stop(){}};}createGain(){return {gain:param,connect(){}};}};
+ node('soundBtn').listeners.click();assert.equal(node('soundBtn').textContent,'SOUND ON');assert.equal(plays,1);
+ const e=foe(g);g.attackOrder(e);advance(g,.2);assert.equal(plays,2);node('soundBtn').listeners.click();assert.equal(node('soundBtn').textContent,'SOUND OFF');advance(g,1);assert.equal(plays,2);
 });

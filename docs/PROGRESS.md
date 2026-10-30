@@ -54,6 +54,12 @@ Kite records now prefer a completed run, then the fastest victory; before the fi
 - `node --test tests/*.test.cjs`: **42/42 PASS**. Tests cover caster moving/locking, a valid last-hit window for every difficulty, wall navigation and all existing drills.
 - Browser: in Bait, used mouse movement to enter threat radius and dodge, then selected the minion during the allied-damage window; HUD showed **1 dodge, 1 CS and 160/160 HP** at round 2. Browser console warnings/errors: none.
 
+## Threat scoring and optional sound (2026-10-30)
+
+- Fixed Bait avoidance resolution: the shot must actually pass the player (or leave the arena); running away on its line no longer causes an early false dodge while it is still approaching. Added a regression where it eventually catches the player.
+- Added optional synthesized Web Audio cues for attack release, impact, damage and avoidance; disabled by default and enabled by the SOUND button. Missing/failed audio never interrupts simulation. Browser checked ON/OFF button and no console warnings/errors; automated checks exercise missing audio and enabled/muted cues. Actual subjective audio quality and other browsers remain unverified.
+- `node --test tests/*.test.cjs`: **45/45 PASS**. CI runs both game and world suites.
+
 ## Current playable state
 
 Dodge Trial, Kite Arena, Last-Hit Lab, Skillshot Lab and Bait → Dodge → CS run locally at http://localhost:8080. The repository was cloned into the `League-Mechanics-God` subdirectory of the original workspace, whose parent contains separate historical Unity research. Work is on `codex/controls-and-dodge`, based on `7de3430`.
@@ -91,7 +97,7 @@ Commit: `89e7529`.
 
 ## Tests actually run
 
-- `node --test tests/game.test.cjs`: **42/42 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
+- `node --test tests/game.test.cjs`: **45/45 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
 - `node --check game.js` and `git diff --check`: PASS.
 - Python reference tools: `python3 -m unittest discover -s reference/league-of-dodge/tools -p 'test_*.py'`: **7/7 PASS**.
 - HTTP server logs: app, JS and CSS return 200/304; initial missing favicon fixed with an original SVG icon.
@@ -104,7 +110,7 @@ Commit: `89e7529`.
 - Gameplay CI workflow added for pushes/PRs; remote run status has not been verified.
 - No public deployment verified. Local server only; no claims about GitHub Pages.
 - Visuals are original procedural vectors; further animation and sound polish remain.
-- Only two approximate wall proxies have collision/pathfinding; the rest of the terrain is decorative. No audio or full lane scenario yet. Last-Hit Lab is timing practice without hostile enemy pressure.
+- Only two approximate wall proxies have collision/pathfinding; the rest of the terrain is decorative. No full lane scenario yet. Optional synthesized audio is available. Last-Hit Lab is timing practice without hostile enemy pressure.
 - Attack range is center-to-center and calibrated for this arena, not a claim of exact LoL data.
 
 ## Next three actions

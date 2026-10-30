@@ -24,6 +24,8 @@ For a public URL, enable **GitHub Pages** in the repository Settings â†’ Pages â
 - **Skillshot Lab:** aim Q at moving targets for 45 seconds; results show hits, shots and accuracy. W/F reposition.
 - **Last-Hit Lab:** time 28-damage auto attacks across 5 minion waves (15 possible CS). Allied caster projectiles damage minions; only your killing blow earns CS. Gold health bars mark last-hit range. Q/E/R are disabled in this drill; W/F remain available.
 
+Optional synthesized combat cues are disabled by default. Use **SOUND OFF / ON** to toggle them; no audio files or external service are required.
+
 ## Controls
 
 | Input | Action |
@@ -66,6 +68,6 @@ node --test tests/*.test.cjs
 
 ## Next improvements
 
-Lane scenarios; audio; further enemy patterns; accessibility; cross-browser tuning.
+Lane scenarios; further enemy patterns; accessibility; cross-browser tuning.
 
 Independent fan-made practice project, **not affiliated with or endorsed by Riot Games**.

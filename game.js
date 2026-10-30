@@ -14,6 +14,27 @@ const STEP=1/120;let accumulator=0;
 function segmentDistance(ax,ay,bx,by){const dx=bx-ax,dy=by-ay;const t=clamp(-(ax*dx+ay*dy)/(dx*dx+dy*dy||1),0,1);return Math.hypot(ax+dx*t,ay+dy*t);}
 function threatening(s){const v2=s.vx*s.vx+s.vy*s.vy;if(!v2)return false;const t=((player.x-s.x)*s.vx+(player.y-s.y)*s.vy)/v2;return t>0&&t<=Math.min(.8,s.ttl)&&Math.hypot(s.x+s.vx*t-player.x,s.y+s.vy*t-player.y)<=s.r+player.r*.75;}
 const CD={q:3,w:6,e:9,r:15,f:18};
+// Optional synthesized cues: created only after the player enables sound.
+const audio={enabled:false,context:null,last:{}};
+function toggleSound(){
+ if(audio.enabled){audio.enabled=false;$("soundBtn").textContent="SOUND OFF";$("soundBtn").setAttribute("aria-pressed","false");return;}
+ try{
+  const AudioContext=window.AudioContext||window.webkitAudioContext;if(!AudioContext)throw Error("unavailable");
+  audio.context=audio.context||new AudioContext();audio.enabled=true;$("soundBtn").textContent="SOUND ON";$("soundBtn").setAttribute("aria-pressed","true");
+  const resume=audio.context.resume();if(resume&&resume.catch)resume.catch(()=>{});cue("ready");
+ }catch{audio.enabled=false;$("soundBtn").textContent="SOUND UNAVAILABLE";$("soundBtn").disabled=true;}
+}
+function cue(kind){
+ if(!audio.enabled||!audio.context)return;
+ try{
+  const context=audio.context,t=context.currentTime;if(t-(audio.last[kind]??-1)<.08)return;audio.last[kind]=t;
+  const tones={attack:[560,390,.07],hit:[190,100,.12],impact:[320,185,.09],dodge:[720,940,.12],ready:[480,720,.1]};
+  const [start,end,duration]=tones[kind];const osc=context.createOscillator(),gain=context.createGain();
+  osc.type=kind==="hit"?"triangle":"sine";osc.frequency.setValueAtTime(start,t);osc.frequency.exponentialRampToValueAtTime(end,t+duration);
+  gain.gain.setValueAtTime(.0001,t);gain.gain.exponentialRampToValueAtTime(.035,t+.012);gain.gain.exponentialRampToValueAtTime(.0001,t+duration);
+  osc.connect(gain);gain.connect(context.destination);osc.start(t);osc.stop(t+duration+.01);
+ }catch{/* audio must never interrupt the drill */}
+}
 let state="menu",mode="dodge",time=0,last=0,kills=0,dodged=0,spawn=0,aim={x:W/2+120,y:H/2},mouse={x:W/2,y:H/2},player,foes=[],shots=[],fx=[],keys=new Set(),attackMove=false,toastTime=0,enemySeq=0,stats;
 function reset(nextMode){mode=nextMode;time=0;kills=0;dodged=0;spawn=0;enemySeq=0;rng=seed;hazards=[];waves=0;bait=nextMode==="bait"?{phase:"setup",round:0,casts:0,dodges:0,cs:0,missed:0,timer:0}:null;stats={released:0,cancelled:0,hits:0,blocked:0,damage:0,moving:0,autoDamage:0,missed:0,skillShots:0,skillHits:0};accumulator=0;foes=[];shots=[];fx=[];keys.clear();attackMove=false;player={x:W/2,y:H/2,r:17,hp:160,maxHp:160,speed:270,target:null,route:[],routeGoal:null,focus:null,order:null,facing:0,motion:0,hitFlash:0,attackTimer:0,windup:0,windupTarget:null,cd:{q:0,w:0,e:0,r:0,f:0},invuln:0,flashTrail:0};state="playing";ui.pause.textContent="PAUSE P";$("encounterValue").textContent=difficulty.toUpperCase()+" · SEED "+seed;ui.overlay.classList.add("hidden");ui.pause.disabled=false;ui.restart.disabled=false;$("settings").hidden=false;ui.mode.textContent=mode==="dodge"?"DODGE TRIAL":mode==="lastHit"?"LAST-HIT LAB":mode==="bait"?"BAIT · DODGE · CS":mode==="skillshot"?"SKILLSHOT LAB":"KITE ARENA";$("killsLabel").textContent=(mode==="lastHit"||mode==="bait")?"CS":mode==="skillshot"?"HITS":"KILLS";$("dodgedLabel").textContent=mode==="bait"?"DODGES":mode==="lastHit"?"MISSED":mode==="skillshot"?"SHOTS":"DODGED";updateUI();}
 function showMenu(title,desc,finished=false){attackMove=false;ui.pause.disabled=true;state=finished?"ended":"menu";ui.overlay.classList.remove("hidden");ui.title.innerHTML=title;ui.desc.textContent=desc;ui.buttons.hidden=false;ui.foot.hidden=false;ui.resume.hidden=true;$("settings").hidden=false;ui.pause.textContent="PAUSE P";}
@@ -97,7 +118,7 @@ function beginBaitRound(){
 }
 function resolveBait(didDodge){
  if(bait.phase!=="dodge")return;
- if(didDodge)bait.dodges++;
+ if(didDodge){bait.dodges++;cue("dodge");}
  bait.phase="window";bait.timer=3;
  notify(didDodge?"DODGED — LAST HIT NOW":"HIT — SECURE THE MINION");
 }
@@ -156,12 +177,12 @@ function releaseEnemy(e){
  const speed=(mode==="dodge"?340+Math.min(90,time*2):340)*PRESETS[difficulty].speed;
  for(const offset of p.fan?[-.23,0,.23]:[0]){
  const shot=fire(e.x,e.y,Math.cos(p.angle+offset)*speed,Math.sin(p.angle+offset)*speed,"enemy",18,7);
- if(e.baitCaster){shot.bait=true;shot.threat=true;shot.travel=0;shot.limit=dist(e,player)+70;}
+ if(e.baitCaster){shot.bait=true;shot.threat=true;}
 }
  e.pending=null;e.charge=0;e.shoot=rand(1.35,2.2)*PRESETS[difficulty].spawn*Math.max(.6,1-time/120);
 }
-function damageEnemy(e,d){if(!e.alive)return;e.hp-=d;e.hit=.18;number(e.x,e.y,d,"#b8fff0");burst(e.x,e.y,"#80f9eb",5);if(e.hp<=0){e.alive=false;kills++;burst(e.x,e.y,"#ffbd85",20);player.hp=Math.min(player.maxHp,player.hp+5);if(mode==="bait"&&e.minion){bait.cs++;bait.phase="next";bait.timer=.6;}if(mode==="kite"&&kills>=10)end(true);}}
-function takeHit(d){if(player.invuln>0||state!=="playing")return;player.hp-=d;stats.hits++;stats.damage+=d;player.hitFlash=.22;number(player.x,player.y,"−"+d,"#ff9c98");player.invuln=.14;burst(player.x,player.y,"#ff8e91",14);if(player.hp<=0){player.hp=0;end(false);}}
+function damageEnemy(e,d){if(!e.alive)return;cue("impact");e.hp-=d;e.hit=.18;number(e.x,e.y,d,"#b8fff0");burst(e.x,e.y,"#80f9eb",5);if(e.hp<=0){e.alive=false;kills++;burst(e.x,e.y,"#ffbd85",20);player.hp=Math.min(player.maxHp,player.hp+5);if(mode==="bait"&&e.minion){bait.cs++;bait.phase="next";bait.timer=.6;}if(mode==="kite"&&kills>=10)end(true);}}
+function takeHit(d){if(player.invuln>0||state!=="playing")return;cue("hit");player.hp-=d;stats.hits++;stats.damage+=d;player.hitFlash=.22;number(player.x,player.y,"−"+d,"#ff9c98");player.invuln=.14;burst(player.x,player.y,"#ff8e91",14);if(player.hp<=0){player.hp=0;end(false);}}
 // Orders persist until superseded. Movement cancels only the uncommitted windup.
 function cancelAttack(){if(player.windup>0){stats.cancelled++;player.windup=0;player.windupTarget=null;}}
 function startAttack(e){
@@ -199,7 +220,7 @@ for(const k of Object.keys(CD))player.cd[k]=Math.max(0,player.cd[k]-dt);player.h
 updateOrder();
 const oldX=player.x,oldY=player.y;
 if(player.windup>0){player.windup=Math.max(0,player.windup-dt);if(player.windup<1e-8){player.windup=0;const t=foes.find(e=>e.id===player.windupTarget&&e.alive);
- if(t&&dist(player,t)<=ATTACK.range+35){const a=Math.atan2(t.y-player.y,t.x-player.x);const shot=fire(player.x,player.y,Math.cos(a)*920,Math.sin(a)*920,"auto",28,5,1.1);shot.targetId=t.id;stats.released++;player.attackTimer=ATTACK.period-ATTACK.windup;}
+ if(t&&dist(player,t)<=ATTACK.range+35){const a=Math.atan2(t.y-player.y,t.x-player.x);const shot=fire(player.x,player.y,Math.cos(a)*920,Math.sin(a)*920,"auto",28,5,1.1);shot.targetId=t.id;stats.released++;cue("attack");player.attackTimer=ATTACK.period-ATTACK.windup;}
  player.windupTarget=null;
 }}
 if(player.target&&player.windup<=0){
@@ -230,7 +251,7 @@ if(state!=="playing")return;
 for(const h of hazards){
  if(dist(player,h)<=h.r+player.r*.75)h.threat=true;
  h.ttl-=dt;if(h.ttl<=0){
-  if(dist(player,h)<=h.r+player.r*.75){if(player.invuln>0)stats.blocked++;else takeHit(25);}else if(h.threat)dodged++;
+  if(dist(player,h)<=h.r+player.r*.75){if(player.invuln>0)stats.blocked++;else takeHit(25);}else if(h.threat){dodged++;cue("dodge");}
   if(state!=="playing")return;
   burst(h.x,h.y,"#f5b57d",24);
  }
@@ -247,7 +268,7 @@ for(const s of shots){if(!s.alive)continue;
  if(s.kind==="enemy"){
   const collision=segmentDistance(s.px-oldX,s.py-oldY,s.x-player.x,s.y-player.y)<=s.r+player.r*.75;
   if(collision){s.alive=false;if(player.invuln>0)stats.blocked++;else takeHit(s.damage);if(s.bait&&state==="playing")resolveBait(false);}
-  else if(s.ttl<=0||s.x<0||s.x>W||s.y<0||s.y>H||(s.bait&&(s.travel+=Math.hypot(s.vx,s.vy)*dt)>=s.limit)){s.alive=false;if(s.threat)dodged++;if(s.bait)resolveBait(true);}
+  else if(s.ttl<=0||s.x<0||s.x>W||s.y<0||s.y>H||(s.bait&&((player.x-s.x)*s.vx+(player.y-s.y)*s.vy)<=0)){s.alive=false;if(s.threat){dodged++;if(!s.bait)cue("dodge");}if(s.bait)resolveBait(true);}
  }else{
   let hit=null,first=Infinity;
   for(const e of foes){if(!e.alive||((s.kind==="auto"||s.kind==="allied")&&e.id!==s.targetId))continue;const prev=previousFoes.get(e.id)||e;
@@ -380,6 +401,7 @@ else if(e.button===0){if(attackMove){cancelAttack();player.order={type:"attackMo
 window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(e.repeat)return;if(["q","w","e","r","f","a","s","p","t","escape"].includes(k))e.preventDefault();if(k==="t"&&player&&state!=="menu"){reset(mode);return;}if(k==="p"||k==="escape"){if(state==="playing"||state==="paused")pause();return;}if(state!=="playing"||e.repeat)return;if(k==="s"){moveTo(player.x,player.y);return;}if(k==="a"&&mode==="skillshot"){notify("SKILLSHOT LAB — AIM WITH Q");return;}if(k==="a"){attackMove=true;notify("ATTACK MOVE — LEFT CLICK");return;}if(CD[k])cast(k);});
 window.addEventListener("blur",()=>{if(state==="playing")pause();});
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&state==="playing")pause();});
+$("soundBtn").addEventListener("click",toggleSound);
 $("difficulty").addEventListener("change",e=>{difficulty=e.target.value;});
 $("newSeed").addEventListener("click",()=>{seed=(seed+104729)%1000000;$("seedLabel").textContent="SEED "+seed;});
 document.querySelectorAll("[data-mode]").forEach(btn=>btn.addEventListener("click",()=>reset(btn.dataset.mode)));
