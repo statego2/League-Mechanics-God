@@ -352,3 +352,7 @@ test('Spirit Rush recast window freezes during pause and expires without refresh
 test('Ahri sprite is selected with a safe fallback when unavailable',()=>{
  const {g,node,draws}=boot('ahri');g.reset('kite');node('ahriArt').complete=true;node('ahriArt').naturalWidth=100;g.render();assert.ok(draws.includes(node('ahriArt')));draws.length=0;node('ahriArt').naturalWidth=0;node('rangerArt').complete=true;node('rangerArt').naturalWidth=100;g.render();assert.ok(draws.includes(node('rangerArt')));
 });
+
+test('Ahri back sprite appears when facing away and falls back to side',()=>{
+ const {g,node,draws}=boot('ahri');g.reset('kite');for(const id of ['ahriArt','ahriBackArt']){node(id).complete=true;node(id).naturalWidth=100;}g.player.facing=-Math.PI/2;g.render();assert.ok(draws.includes(node('ahriBackArt')));draws.length=0;node('ahriBackArt').naturalWidth=0;g.render();assert.ok(draws.includes(node('ahriArt')));
+});

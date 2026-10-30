@@ -146,6 +146,11 @@ Kite records now prefer a completed run, then the fastest victory; before the fi
 - Added generated transparent `assets/ahri-side.png`; default Ahri now renders this sprite anchored near the gameplay position, mirrored for horizontal facing. Original ranger images remain as fallback if loading fails. Prompt and provenance are in assets/README.md. One static pose with existing bob/tilt, not a 3D model or true directional animation.
 - Browser: opened Last-Hit Lab at desktop size and confirmed the Ahri sprite appears on the lane with visible health/range indicators and six minions. `node --test tests/*.test.cjs`: **85/85 PASS**, including sprite load and fallback. No full human run or cross-browser visual check.
 
+## Ahri back pose (2026-10-30)
+
+- Added `assets/ahri-back.png`, generated from the side sprite using the built-in imagegen tool. It appears when facing toward the upper part of the map; missing back art falls back to the side pose and missing side art falls back to the ranger. Both are static poses, not animated 3D models. Prompt and provenance are in assets/README.md.
+- Browser: moved toward the upper lane in Last-Hit and observed the rear pose. `node --test tests/*.test.cjs`: **86/86 PASS**, including directional selection and fallback plus Spirit Rush recast-window pause/expiry.
+
 ## Current playable state
 
 Dodge Trial, Kite Arena and Last-Hit Lab are available in the visible menu locally at http://localhost:8080. The repository was cloned into the `League-Mechanics-God` subdirectory of the original workspace, whose parent contains separate historical Unity research. Work is on `codex/controls-and-dodge`, based on `7de3430`.
@@ -193,7 +198,7 @@ Commit: `89e7529`.
 
 ## Tests actually run
 
-- `node --test tests/*.test.cjs`: **85/85 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
+- `node --test tests/*.test.cjs`: **86/86 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
 - `node --check game.js` and `git diff --check`: PASS.
 - Python reference tools: `python3 -m unittest discover -s reference/league-of-dodge/tools -p 'test_*.py'`: **7/7 PASS**.
 - HTTP server logs: app, JS and CSS return 200/304; initial missing favicon fixed with an original SVG icon.

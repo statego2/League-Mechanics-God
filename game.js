@@ -362,13 +362,14 @@ function circle(x,y,r,color,fill=true,width=1){ctx.beginPath();ctx.arc(x,y,r,0,T
 function polygon(x,y,r,n,rotation,fill,stroke){ctx.beginPath();for(let i=0;i<=n;i++){const a=rotation+i*TAU/n;const px=x+Math.cos(a)*r,py=y+Math.sin(a)*r;i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.closePath();ctx.fillStyle=fill;ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.fill();ctx.stroke();}
 // Original vector ranger and enemy mage silhouettes with facing and articulated steps.
 function drawChampion(x,y,a,friendly,hit,windup,motion){
- const ahriSprite=$("ahriArt"),useAhri=friendly&&ahriBase()&&ahriSprite.complete&&ahriSprite.naturalWidth;
- let sprite=useAhri?ahriSprite:$(friendly?"rangerArt":"mageArt");
+ const ahriSprite=$("ahriArt"),backSprite=$("ahriBackArt"),useAhri=friendly&&ahriBase()&&ahriSprite.complete&&ahriSprite.naturalWidth;
+ const useBack=useAhri&&Math.sin(a)<-.65&&backSprite.complete&&backSprite.naturalWidth;
+ let sprite=useBack?backSprite:useAhri?ahriSprite:$(friendly?"rangerArt":"mageArt");
  if(friendly&&!useAhri&&Math.abs(Math.sin(a))>.65){const directional=$(Math.sin(a)<0?"rangerBackArt":"rangerFrontArt");if(directional.complete&&directional.naturalWidth)sprite=directional;}
  if(sprite.complete&&sprite.naturalWidth){
   ctx.save();ctx.translate(x,y);ctx.save();ctx.scale(1,.43);circle(0,3,25,"#0009");ctx.restore();
   const side=Math.cos(a)>=0?1:-1;const bob=(friendly?player.target:!windup)?Math.abs(Math.sin(motion))*2:0;
-  ctx.translate(0,-bob);ctx.scale(side,1);ctx.rotate(windup*-.08);if(useAhri)ctx.drawImage(sprite,-85,-82,110,90);else ctx.drawImage(sprite,-37,-79,74,80);
+  ctx.translate(0,-bob);ctx.scale(side,1);ctx.rotate(windup*-.08);if(useAhri)ctx.drawImage(sprite,useBack?-47:-85,-82,110,90);else ctx.drawImage(sprite,-37,-79,74,80);
   if(hit){ctx.globalAlpha=.45;circle(0,-34,24,"#fff1dc");}ctx.restore();return;
  }
  const moving=friendly?!!player.target:!windup;
