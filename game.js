@@ -31,7 +31,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v10":mode==="dodge"?(ahriBase()?".director_v17":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
+function recordSuffix(){return ahriCS()?".cs_ahri_v11":mode==="dodge"?(ahriBase()?".director_v17":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 function recordLabel(){return difficulty+(attackPreset==="standard"?"":", "+ATTACK_PRESETS[attackPreset].label+" AS");}
@@ -587,7 +587,8 @@ function applyImpact(target,impact){
  const raw=impact.raw+(impact.minionBonus||0)*target.hp;
  const resistance=impact.damageType==="physical"?(target.armor||0):impact.damageType==="magic"?(target.mr||0):0;
  const damage=impact.damageType==="true"?raw:physicalDamage(raw,resistance);
- const applied=Math.min(target.hp,damage);target.hp-=damage;
+ const previousHp=target.hp;
+ const applied=Math.min(previousHp,damage);target.hp-=damage;
  if(impact.sourceTeam==="player"&&impact.kind==="auto")stats.autoDamage+=applied;
  if(target===player){
   cue("hit");stats.hits++;stats.damage+=damage;player.hitFlash=.22;number(player.x,player.y,"−"+displayDamage(damage),"#ff9c98");player.invuln=referenceSpell()||dodgeDirector?0:.14;burst(player.x,player.y,"#ff8e91",14);
@@ -595,7 +596,11 @@ function applyImpact(target,impact){
  }
  target.hit=impact.sourceTeam==="player"?.18:.08;
  if(impact.sourceTeam==="player"){cue("impact");number(target.x,target.y,displayDamage(damage),"#b8fff0");burst(target.x,target.y,"#80f9eb",5);}
- if(target.hp<=0)resolveDeath(target,impact);
+ // Community-documented minion death grace: only a minion's lethal hit on
+ // an already nearly dead lane minion can defer death; never refresh the timer.
+ if(target.hp<=0&&ahriCS()&&target.minion&&/^(minionMelee|minionProjectile)$/.test(impact.kind)&&damage<=190&&(target.deathGrace||previousHp<target.maxHp*.0035)){
+  target.hp=1;if(!target.deathGrace)target.deathGrace={until:time+.066,impact};
+ }else if(target.hp<=0)resolveDeath(target,impact);
  return applied;
 }
 function resolveDeath(e,impact){
@@ -841,6 +846,9 @@ for(const s of shots){if(!s.alive)continue;
  if(state!=="playing")break;
 }
 for(const split of newSplitShots){const child=fire(split.x,split.y,split.vx,split.vy,"enemy",split.damage,27.5,550/1050);child.directed=true;child.spellName="VELKOZ Q";child.velkoz="child";child.ignorePlayer=split.ignorePlayer;child.group=split.group;}
+// Resolve after this step's impacts, allowing a champion hit during the grace
+// window to receive credit. The fixed-step clock quantizes expiry by <= 1 tick.
+for(const unit of [...foes,...allies])if(unit.alive&&unit.deathGrace&&time>=unit.deathGrace.until){unit.hp=0;resolveDeath(unit,{...unit.deathGrace.impact,time});}
 foes=foes.filter(e=>e.alive);allies=allies.filter(e=>e.alive);if(mode==="lastHit"&&waves===(ahriCS()?20:5)&&foes.length===0){end(true);return;}shots=shots.filter(s=>s.alive);
 for(const f of fx){f.x+=f.vx*dt;f.y+=f.vy*dt;f.ttl-=dt;}fx=fx.filter(f=>f.ttl>0);
 if(toastTime>0){toastTime-=dt;if(toastTime<=0)ui.toast.classList.remove("show");}

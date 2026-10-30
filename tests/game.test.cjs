@@ -23,6 +23,22 @@ function boot(preset="standard", options={}){
 }
 function foe(g,x=800,y=337.5){const e=g.enemy(x,y);e.speed=0;e.shoot=999;e.hp=e.maxHp=10000;g.setFoes([e]);return e;}
 function advance(g,seconds){for(let i=0;i<Math.round(seconds*120);i++)g.update(1/120);}
+test('minion death grace preserves player last-hit credit and retargets only after death',()=>{
+ const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();
+ const a=g.allies[0],victim=g.foes[0],next=g.foes[1];g.setAllies([a]);g.setFoes([victim,next]);
+ Object.assign(a,{x:victim.x-30,y:victim.y,targetId:victim.id,tick:999});victim.hp=1;victim.tick=next.tick=999;
+ g.applyImpact(victim,{sourceId:a.id,sourceTeam:'ally',kind:'minionMelee',raw:11,damageType:'physical'});
+ assert.equal(victim.hp,1);assert.equal(victim.alive,true);advance(g,.025);assert.equal(a.targetId,victim.id);
+ g.applyImpact(victim,{sourceId:'player',sourceTeam:'player',kind:'auto',raw:53,damageType:'physical'});
+ assert.equal(victim.alive,false);assert.equal(g.stats.cs,1);assert.equal(g.stats.missed,0);advance(g,.025);assert.equal(a.targetId,next.id);
+});
+test('minion death grace expires without extending and excludes ordinary or large hits',()=>{
+ const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const [a,b,c]=g.foes;
+ const hit={sourceId:-1,sourceTeam:'ally',kind:'minionProjectile',raw:21,damageType:'physical'};
+ a.hp=1;g.applyImpact(a,hit);advance(g,.04);g.applyImpact(a,hit);advance(g,.035);assert.equal(a.alive,false);assert.equal(g.stats.missed,1);
+ b.hp=3;g.applyImpact(b,hit);assert.equal(b.alive,false);
+ c.hp=1;g.applyImpact(c,{...hit,raw:191});assert.equal(c.alive,false);
+});
 test('move cancels pre-release attack without consuming cooldown; post-release missile survives',()=>{
  const {g}=boot();const e=foe(g);g.attackOrder(e);advance(g,.1);assert.ok(g.player.windup>0);g.moveTo(500,400);advance(g,.2);assert.equal(g.stats.released,0);assert.equal(g.stats.cancelled,1);assert.equal(g.player.attackTimer,0);
  g.attackOrder(e);advance(g,.19);assert.equal(g.stats.released,1);g.moveTo(500,400);advance(g,.3);assert.ok(e.hp<e.maxHp);assert.equal(g.stats.cancelled,1);
@@ -262,7 +278,7 @@ test('Ahri timing uses level-one cadence and 20 percent windup',()=>{
 test('Ahri CS profile uses 53 damage and separates old timing-only records',()=>{
  const {g,node,window}=boot(),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
  node('attackSpeed').listeners.change({target:{value:'ahri'}});g.reset('lastHit');g.disableSpawn();g.addWave();g.setAllies([]);const e=g.foes[0];assert.equal(e.hp,465);assert.equal(g.player.speed,165);e.x=g.player.x+220;e.y=g.player.y;e.tick=999;e.hp=54;g.attackOrder(e);advance(g,.7);assert.equal(e.hp,1);assert.equal(g.stats.cs,0);
- g.moveTo(600,337.5);e.hp=53;g.attackOrder(e);advance(g,2);assert.equal(e.alive,false);assert.equal(node('killsValue').textContent,1);g.end(true);assert.equal(values.get('lmg.best.v1.lastHit.normal.cs_ahri_v10'),'1');assert.match(node('menuDescription').textContent,/53 damage/);
+ g.moveTo(600,337.5);e.hp=53;g.attackOrder(e);advance(g,2);assert.equal(e.alive,false);assert.equal(node('killsValue').textContent,1);g.end(true);assert.equal(values.get('lmg.best.v1.lastHit.normal.cs_ahri_v11'),'1');assert.match(node('menuDescription').textContent,/53 damage/);
 });
 test('Ahri CS unattended waves resolve without breaking the drill',()=>{
  for(const difficulty of ['easy','normal','hard']){const {g,node}=boot();node('attackSpeed').listeners.change({target:{value:'ahri'}});node('difficulty').listeners.change({target:{value:difficulty}});g.reset('lastHit');advance(g,600.02);assert.equal(g.state,'ended');assert.equal(g.stats.missed+g.stats.unresolved,126);}
@@ -400,7 +416,7 @@ test('CS waves fight both ways, stop attacking after death and retarget',()=>{
 });
 
 test('allied minions retarget after a target dies and player last hits retain credit',()=>{
- const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const a=g.allies[0],first=g.foes[0],second=g.foes[1];a.x=790;a.y=first.y;a.tick=0;first.x=first.destination;first.hp=1;second.x=second.destination;first.tick=second.tick=999;g.setAllies([a]);g.setFoes([first,second]);advance(g,.27);assert.equal(first.alive,false);assert.equal(g.stats.missed,1);advance(g,.1);assert.equal(a.targetId,second.id);second.hp=1;g.damageEnemy(second,1);assert.equal(g.stats.missed,1);assert.equal(g.player.essence,1);
+ const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const a=g.allies[0],first=g.foes[0],second=g.foes[1];a.x=790;a.y=first.y;a.tick=0;first.x=first.destination;first.hp=1;second.x=second.destination;first.tick=second.tick=999;g.setAllies([a]);g.setFoes([first,second]);advance(g,.35);assert.equal(first.alive,false);assert.equal(g.stats.missed,1);advance(g,.1);assert.equal(a.targetId,second.id);second.hp=1;g.damageEnemy(second,1);assert.equal(g.stats.missed,1);assert.equal(g.player.essence,1);
 });
 
 test('bidirectional waves remain deterministic across frame rates and freeze on pause',()=>{
@@ -474,7 +490,7 @@ test('same-step melee releases are committed on both sides before damage resolve
  const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const blue=g.allies[0],red=g.foes[0];
  Object.assign(blue,{x:610,y:300,hp:1,tick:0,windupLeft:.001,targetId:red.id,firstAcquired:true});
  Object.assign(red,{x:640,y:300,hp:1,tick:0,windupLeft:.001,targetId:blue.id,firstAcquired:true});
- g.setAllies([blue]);g.setFoes([red]);g.update(1/120);assert.equal(blue.alive,false);assert.equal(red.alive,false);assert.equal(g.stats.missed,1);
+ g.setAllies([blue]);g.setFoes([red]);g.update(1/120);assert.ok(blue.deathGrace&&red.deathGrace);advance(g,.075);assert.equal(blue.alive,false);assert.equal(red.alive,false);assert.equal(g.stats.missed,1);
 });
 test('minion projectiles hit identical allied and enemy gameplay radii',()=>{
  const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const blue=g.allies[0],red=g.foes[0];
