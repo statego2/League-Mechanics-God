@@ -4,7 +4,7 @@
 **Repository:** https://github.com/statego2/League-Mechanics-God  
 **Document role:** The project's main vision and execution document. Read this before deciding what to build next.  
 **Updated:** 30 October 2026  
-**Current reality:** An early HTML5 browser prototype exists. The intended game does not exist yet.
+**Current reality:** A browser alpha now includes Dodge Trial, Kite Arena and a foundational Last-Hit Lab. Controls, telegraphs and scoring have regression coverage; the full intended game remains in development. See docs/PROGRESS.md for verified scope.
 
 ---
 
@@ -57,7 +57,7 @@ The game should develop skills that transfer to LoL:
 | Bait → Dodge → CS | Invite enemy spell, evade, then last-hit safely | Correct bait, safe dodge, secured CS, time/HP cost |
 | Lane Scenario | Perform several mechanics while trading around a minion wave | Consistency across movement, trading, dodges, CS |
 
-**Only Dodge Trial and Kite Arena are represented in the current alpha.** The rest are future features; do not describe them as already implemented.
+**Current alpha:** Dodge Trial, Kite Arena and a foundational Last-Hit Lab (5 waves, 15 CS, allied projectile attrition). Skillshot Lab, Bait → Dodge → CS and Lane Scenario remain future features.
 
 ## 4. Constraints and product decisions
 
@@ -83,7 +83,7 @@ The game should develop skills that transfer to LoL:
 
 **Important qualification:** Source files were inspected, but a complete gameplay/browser test and a public deployment were not confirmed during this document's creation.
 
-**Known possible gameplay issue to verify:** `game.js` increments the `dodged` counter on enemy-projectile expiration/out-of-bounds, which may falsely credit attacks that were never threatening.
+**Resolved during development (30 October 2026):** Expiration-only dodge scoring was replaced with trajectory threat eligibility. Persistent attack orders, cancellable windups, swept collision, seeded difficulty and telegraphs were added. Read docs/PROGRESS.md for tests and remaining limitations.
 
 **Reality check:** This is a beginning, not the end product. The current primitive geometric visuals are insufficient for the intended LoL-like experience.
 

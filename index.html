@@ -13,15 +13,15 @@
   <main class="app">
     <header class="topbar">
       <div class="brand"><span class="logo" aria-hidden="true">◇</span><div><div class="eyebrow">BROWSER MECHANICS TRAINER</div><h1>LEAGUE <em>MECHANICS</em> GOD</h1></div></div>
-      <div class="top-actions"><span class="build">ALPHA · v0.3</span><button class="ghost-button" id="pauseBtn" type="button" disabled>PAUSE <kbd>P</kbd></button><button class="ghost-button" id="restartBtn" type="button" disabled>RESTART <kbd>↻</kbd></button></div>
+      <div class="top-actions"><span class="build">ALPHA · v0.4</span><button class="ghost-button" id="menuBtn" type="button">DRILLS</button><button class="ghost-button" id="pauseBtn" type="button" disabled>PAUSE <kbd>P</kbd></button><button class="ghost-button" id="restartBtn" type="button" disabled>RESTART <kbd>↻</kbd></button></div>
     </header>
 
     <section class="game-shell" aria-label="Play area">
       <div class="hud">
         <div class="hud-block"><span class="hud-label">MODE</span><strong id="modeValue">—</strong></div>
         <div class="hud-block"><span class="hud-label">TIME</span><strong id="timeValue">00:00</strong></div>
-        <div class="hud-block"><span class="hud-label">KILLS</span><strong id="killsValue">0</strong></div>
-        <div class="hud-block"><span class="hud-label">DODGED</span><strong id="dodgedValue">0</strong></div>
+        <div class="hud-block"><span class="hud-label" id="killsLabel">KILLS</span><strong id="killsValue">0</strong></div>
+        <div class="hud-block"><span class="hud-label" id="dodgedLabel">DODGED</span><strong id="dodgedValue">0</strong></div>
         <div class="hud-health"><div class="health-top"><span>YOUR HEALTH</span><b id="healthText">160 / 160</b></div><div class="health-track"><div id="healthFill" class="health-fill"></div></div></div>
       </div>
       <div id="encounterValue" class="encounter">NORMAL · SEED 73129</div>
@@ -39,6 +39,7 @@
           <div class="mode-buttons" id="modeButtons">
             <button class="mode-card" data-mode="dodge" type="button"><span class="mode-icon">◎</span><span class="mode-info"><b>DODGE TRIAL</b><small>Survive 60 seconds of incoming skillshots</small></span><span class="mode-arrow">→</span></button>
             <button class="mode-card" data-mode="kite" type="button"><span class="mode-icon">⌁</span><span class="mode-info"><b>KITE ARENA</b><small>Orbwalk, attack-move and defeat 10 foes</small></span><span class="mode-arrow">→</span></button>
+            <button class="mode-card" data-mode="lastHit" type="button"><span class="mode-icon">♜</span><span class="mode-info"><b>LAST-HIT LAB</b><small>Time your autos · 5 waves · 15 possible CS</small></span><span class="mode-arrow">→</span></button>
           </div>
           <p class="tiny-note" id="menuFooter">No installation · No login · Desktop mouse and keyboard</p>
           <button id="resumeBtn" type="button" class="primary-button" hidden>RESUME</button>

@@ -20,12 +20,13 @@ For a public URL, enable **GitHub Pages** in the repository Settings â†’ Pages â
 
 - **Dodge Trial:** survive 60 seconds of enemy skillshots. Track damage and dodges.
 - **Kite Arena:** defeat 10 enemies using movement, autos and abilities.
+- **Last-Hit Lab:** time 28-damage auto attacks across 5 minion waves (15 possible CS). Allied caster projectiles damage minions; only your killing blow earns CS. Gold health bars mark last-hit range. Q/E/R are disabled in this drill; W/F remain available.
 
 ## Controls
 
 | Input | Action |
 |---|---|
-| Right mouse button | Move; click enemy to attack |
+| Right mouse button | Move; click enemy to attack; hold and drag to retarget |
 | A, then left-click | Attack move toward cursor / nearest target |
 | Left-click enemy | Auto attack (when in range) |
 | Q | Bolt |
@@ -59,6 +60,6 @@ node --test tests/game.test.cjs
 
 ## Next improvements
 
-Last-hit and skillshot drills; audio; local records; further enemy patterns; accessibility; cross-browser tuning.
+Skillshot prediction and bait/dodge/CS drills; audio; local records; further enemy patterns; accessibility; cross-browser tuning.
 
 Independent fan-made practice project, **not affiliated with or endorsed by Riot Games**.
