@@ -726,3 +726,27 @@ test('accepted isolated Ezreal shot can be dodged after a 200ms delay by ordinar
  g.update(1/120);assert.equal(e.phase,'cast');advance(g,.2);g.moveTo(g.player.x,g.player.y+100);advance(g,.8);
  assert.equal(g.stats.hits,0);assert.equal(g.dodgeDirector.outcomes['EZREAL Q'].avoided,1);
 });
+
+
+test('new directed cast rejects crossing threats that block both sidesteps',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const origin={x:140,y:g.player.y},spell=g.REFERENCE_SPELLS.ezrealDodge;
+ assert.equal(g.canEvadeDodgeCast(origin,spell),true);
+ const a=g.fire(g.player.x,g.player.y+80,0,.01,'enemy',10,30,2);a.directed=true;
+ assert.equal(g.canEvadeDodgeCast(origin,spell),true,'other sidestep remains open');
+ const b=g.fire(g.player.x,g.player.y-80,0,-.01,'enemy',10,30,2);b.directed=true;
+ assert.equal(g.canEvadeDodgeCast(origin,spell),false,'both paths are obstructed');
+});
+test('new directed cast waits for returning-orb encounters to resolve',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const shot=g.fire(200,200,100,0,'enemyOrb',10,20,2);shot.directed=true;
+ assert.equal(g.canEvadeDodgeCast({x:140,y:g.player.y},g.REFERENCE_SPELLS.ezrealDodge),false);
+ shot.alive=false;assert.equal(g.canEvadeDodgeCast({x:140,y:g.player.y},g.REFERENCE_SPELLS.ezrealDodge),true);
+});
+
+test('escape forecast considers an enemy cast that has already locked its aim',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const origin={x:140,y:g.player.y},spell=g.REFERENCE_SPELLS.ezrealDodge;
+ const a=g.fire(g.player.x,g.player.y+80,0,.01,'enemy',10,30,2);a.directed=true;
+ const pending=g.enemy(g.player.x,g.player.y-80),spec={speed:.01,range:.02,radius:30};
+ Object.assign(pending,{dodgeVisitor:true,phase:'cast',charge:0,pending:{angle:-Math.PI/2,spell:spec}});g.setFoes([pending]);
+ assert.equal(g.canEvadeDodgeCast(origin,spell),false);
+ pending.pending=null;assert.equal(g.canEvadeDodgeCast(origin,spell),true);
+});

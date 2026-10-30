@@ -31,7 +31,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v10":mode==="dodge"?(ahriBase()?".director_v6":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
+function recordSuffix(){return ahriCS()?".cs_ahri_v10":mode==="dodge"?(ahriBase()?".director_v7":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 function recordLabel(){return difficulty+(attackPreset==="standard"?"":", "+ATTACK_PRESETS[attackPreset].label+" AS");}
@@ -338,8 +338,37 @@ function spawnXerathW(){
  }
  return false;
 }
-// Conservative single-shot reachability check at the moment aim is locked.
-// This samples the two perpendicular straight escapes; it does not solve overlaps.
+// Approximate straight-path forecast for existing, non-returning directed missiles
+// and already committed casts. This is deliberately conservative, not a solver.
+function dodgeEscapeClear(origin,spell,destination){
+ const incoming=[];
+ for(const shot of shots){
+  if(!shot.alive||!shot.directed)continue;
+  // The return orb changes direction; wait for it to resolve before new casts.
+  if(shot.kind==="enemyOrb")return false;
+  incoming.push({x:shot.x,y:shot.y,vx:shot.vx,vy:shot.vy,r:shot.r,start:0,end:shot.ttl});
+ }
+ for(const e of foes){
+  if(!e.alive||!e.dodgeVisitor||e.phase!=="cast"||!e.pending)continue;
+  const spec=e.pending.spell;if(spec.returning)return false;
+  incoming.push({x:e.x,y:e.y,vx:Math.cos(e.pending.angle)*spec.speed,vy:Math.sin(e.pending.angle)*spec.speed,r:spec.radius,start:e.charge,end:e.charge+spec.range/spec.speed});
+ }
+ const dx=player.x-origin.x,dy=player.y-origin.y,d=Math.hypot(dx,dy)||1;
+ incoming.push({x:origin.x,y:origin.y,vx:dx/d*spell.speed,vy:dy/d*spell.speed,r:spell.radius,start:spell.cast,end:spell.cast+spell.range/spell.speed});
+ const length=dist(player,destination),moveTime=length/player.speed;
+ const position=t=>{const f=clamp((t-.2)/moveTime,0,1);return {x:player.x+(destination.x-player.x)*f,y:player.y+(destination.y-player.y)*f};};
+ for(const shot of incoming){
+  const end=Math.min(shot.end,3);
+  for(let t=Math.max(0,shot.start);t<end;){
+   const next=Math.min(end,t+1/40),p=position(t),q=position(next);
+   const a=t-shot.start,b=next-shot.start;
+   if(segmentDistance(shot.x+shot.vx*a-p.x,shot.y+shot.vy*a-p.y,shot.x+shot.vx*b-q.x,shot.y+shot.vy*b-q.y)<=shot.r+player.hitRadius)return false;
+   t=next;
+  }
+ }
+ return true;
+}
+// Sample two perpendicular escapes and forecast existing directed missiles.
 function canEvadeDodgeCast(origin,spell){
  const dx=player.x-origin.x,dy=player.y-origin.y,d=Math.hypot(dx,dy);
  if(d<1)return false;
@@ -348,7 +377,7 @@ function canEvadeDodgeCast(origin,spell){
  if(available<=0||player.speed*available<clearance)return false;
  for(const side of [-1,1]){
   const destination={x:player.x-side*dy/d*clearance,y:player.y+side*dx/d*clearance};
-  if(world.pointWalkable(destination,player.r)&&world.segmentClear(player,destination,player.r))return true;
+  if(world.pointWalkable(destination,player.r)&&world.segmentClear(player,destination,player.r)&&dodgeEscapeClear(origin,spell,destination))return true;
  }
  return false;
 }
