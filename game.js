@@ -40,7 +40,7 @@ function end(win){
  else description=`Defeated ${kills} enemies · ${(stats.autoDamage/Math.max(time,1)).toFixed(1)} auto DPS · ${stats.released} autos · ${stats.cancelled} cancelled · ${Math.round(stats.moving/Math.max(time,1)*100)}% moving · ${stats.hits} hits taken.`;
  const recordValue=mode==="dodge"?score:(mode==="lastHit"||mode==="bait")?kills:mode==="skillshot"?stats.skillHits:kills;
  const best=saveRecord(recordValue);
- if(best!==null)description+=` · Local best (${difficulty}): ${best} ${mode==="dodge"?"points":(mode==="lastHit"||mode==="bait")?"CS":mode==="skillshot"?"hits":"kills"}.`;
+ if(best!==null)description=description.replace(/\.$/,"")+` · Local best (${difficulty}): ${best} ${mode==="dodge"?"points":(mode==="lastHit"||mode==="bait")?"CS":mode==="skillshot"?"hits":"kills"}.`;
  showMenu(win?"TRIAL <span>COMPLETE.</span>":"YOU <span>FELL.</span>",description,true);
 }
 function notify(s){ui.toast.textContent=s;ui.toast.classList.add("show");toastTime=1.35;}
