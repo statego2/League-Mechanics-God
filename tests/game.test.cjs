@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnXerathW,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnXerathW,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,strokes,texts,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -570,8 +570,8 @@ test('successive melee waves receive the sourced 90-second health upgrade',()=>{
 });
 
 test('Dodge director sends single-cast visitors with deterministic Ezreal-heavy spell selection',()=>{
- function run(){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,55);return [g.dodgeDirector.ezreal,g.dodgeDirector.lux,g.dodgeDirector.ahri,g.dodgeDirector.xerath,g.dodgeDirector.attempted];}
- const a=run(),b=run();assert.deepEqual(a,b);assert.equal(a[0]+a[1]+a[2]+a[3],a[4]);assert.ok(a[0]>a[1]);assert.ok(a[4]>=10,`too few casts: ${a}`);
+ function run(){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,55);return [g.dodgeDirector.ezreal,g.dodgeDirector.lux,g.dodgeDirector.ahri,g.dodgeDirector.blitz,g.dodgeDirector.xerath,g.dodgeDirector.attempted];}
+ const a=run(),b=run();assert.deepEqual(a,b);assert.equal(a[0]+a[1]+a[2]+a[3]+a[4],a[5]);assert.ok(a[0]>a[1]);assert.ok(a[5]>=10,`too few casts: ${a}`);
 });
 test('Dodge visitor enters, casts only once, then exits without deleting its missile',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,.02);const visitor=g.foes.find(e=>e.dodgeVisitor);assert.ok(visitor);advance(g,1.1);assert.equal(g.dodgeDirector.attempted,1);assert.equal(visitor.phase,'exit');advance(g,1);assert.ok(!g.foes.includes(visitor));assert.equal(g.dodgeDirector.attempted,1);
@@ -589,10 +589,10 @@ test('Dodge director does not grant artificial invulnerability after a hit',()=>
 test('Dodge director completes a long session with bounded directed threats',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'normal'}});node('dodgeLength').listeners.change({target:{value:'720'}});g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
  for(let i=0;i<720*120+2&&g.state==='playing';i++){
-  g.update(1/120);const active=g.foes.filter(e=>e.alive&&e.dodgeVisitor&&e.phase!=='exit'&&e.phase!=='orbFlight').length+g.shots.filter(s=>s.alive&&s.directed).length+g.hazards.filter(h=>h.directed).length;
+  g.update(1/120);const active=g.foes.filter(e=>e.alive&&e.dodgeVisitor&&e.phase!=='exit'&&e.phase!=='orbFlight'&&e.phase!=='hookFlight').length+g.shots.filter(s=>s.alive&&s.directed).length+g.hazards.filter(h=>h.directed).length;
   assert.ok(active<=2,`directed threats exceeded cap: ${active}`);
  }
- assert.equal(g.state,'ended');assert.ok(g.dodgeDirector.attempted>100);assert.equal(g.dodgeDirector.attempted,g.dodgeDirector.ezreal+g.dodgeDirector.lux+g.dodgeDirector.ahri+g.dodgeDirector.xerath);
+ assert.equal(g.state,'ended');assert.ok(g.dodgeDirector.attempted>100);assert.equal(g.dodgeDirector.attempted,g.dodgeDirector.ezreal+g.dodgeDirector.lux+g.dodgeDirector.ahri+g.dodgeDirector.blitz+g.dodgeDirector.xerath);
 });
 test('Dodge visitor uses distinct existing visual profiles and projectile colours',()=>{
  const {g,node,draws,strokes}=boot('ahri');for(const id of ['mageArt','rangerArt']){node(id).complete=true;node(id).naturalWidth=100;}
@@ -690,4 +690,19 @@ test('Xerath W uses center based edge and outside hits use base damage',()=>{
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnXerathW());const h=g.hazards[0];
   g.player.x=h.x+offset;g.player.y=h.y;advance(g,.8);assert.ok(Math.abs(590-g.player.hp-expected)<1e-7,`offset ${offset}`);
  }
+});
+
+
+test('Blitz Q visitor commits one hook, waits for its flight and does not stun or pull',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const e=g.enemy(300,g.player.y);Object.assign(e,{dodgeVisitor:true,spell:g.REFERENCE_SPELLS.blitzDodge,phase:'cast',charge:.001,pending:{angle:0,spell:g.REFERENCE_SPELLS.blitzDodge},entry:{x:250,y:g.player.y},speed:120});g.setFoes([e]);
+ g.update(1/120);assert.equal(e.phase,'hookFlight');assert.equal(g.dodgeDirector.blitz,1);assert.equal(g.shots[0].spellName,'BLITZ Q');
+ const start={x:g.player.x,y:g.player.y};advance(g,.1);assert.equal(e.phase,'hookFlight');advance(g,.4);
+ assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.player.hp-(590-110/1.3))<1e-7);assert.equal(g.player.root,0);assert.equal(g.player.x,start.x);assert.equal(g.player.y,start.y);assert.equal(g.dodgeDirector.outcomes['BLITZ Q'].hit,1);
+});
+test('Blitz hook expires at its configured range and retains first collision swept detection',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const s=g.fire(100,g.player.y,900,0,'enemy',110/1.3,35,510/900);Object.assign(s,{directed:true,spellName:'BLITZ Q'});
+ g.update(.5);assert.equal(g.stats.hits,1);assert.equal(s.alive,false);
+ g.reset('dodge');g.dodgeDirector.next=999;g.player.x=1000;const short=g.fire(100,g.player.y,900,0,'enemy',1,35,510/900);short.directed=true;short.spellName='BLITZ Q';advance(g,.7);assert.equal(g.stats.hits,0);assert.equal(g.dodgeDirector.outcomes['BLITZ Q'].harmless,1);
 });
