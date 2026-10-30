@@ -41,6 +41,12 @@ Optional: fetch **only** the nine named texture atlases and two named extension 
 
 The last command uses the original website and validates PNG signatures / rejects HTML error responses; it may fail if resources have moved or the site blocks requests. No automatic push follows.
 
+Next, audit every extracted HTML/CSS/JS game tree for missing local paths:
+
+    python3 reference/league-of-dodge/tools/audit_local_tree.py
+
+This creates local-only **local-audit.md**, grouped by referencing file and status (OK, MISSING, SERVER-ROOT, EXTERNAL/INLINE or ESCAPES-ROOT). It handles HTML src/href, CSS url() and the known compiled GameMaker atlas/extension metadata; it is not a dynamic browser/network test.
+
 Review the generated local-only file **local-inventory.md** for per-file size, SHA-256, expected normalized paths, missing dependencies and errors. Original ZIP content stays within originals/extracted/ZIP_STEM/ and is not flattened, so nested dependencies keep their ZIP-relative layout. If a ZIP contains separate games, inspect them as separate subtrees.
 
 ## How Codex should use this
