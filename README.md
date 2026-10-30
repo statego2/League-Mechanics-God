@@ -16,15 +16,26 @@ Visit **http://localhost:8080**.
 
 For a public URL, enable **GitHub Pages** in the repository Settings → Pages → Deploy from a branch → main / (root). Your URL should then be **https://statego2.github.io/League-Mechanics-God/** after GitHub publishes it. Do not assume Pages is enabled until verified.
 
-## Modes
+## Product vision: four main modes (planned)
 
-- **Dodge Trial:** survive 60 seconds of Lux Q and Ezreal Q projectiles. Their values are scaled approximations; hits deal damage without immobilizing the player in this drill. The aim line is a training aid.
-- **Kite Arena:** defeat 10 enemies using movement, autos and abilities.
-- **Last-Hit Lab:** practice Ahri autos against two six-minion waves (12 possible CS). Both sides have independent health, attacks and target selection; their positioning and behavior remain simplified.
+The finished **League Mechanics God** is intentionally focused on **exactly four challenging, continuous experiences**, rather than separate minigames for every skill:
 
-The default player uses level-1 Ahri's attack timing, base AD, health and scaled movement/projectile speed. Q, W, E and R are initial Ahri-inspired implementations; the player uses generated side and back Ahri poses with horizontal mirroring rather than full directional animation. Q/W/E are disabled in the auto-attack-only CS drill. Legacy drills remain in the code for regression coverage but are not offered in the menu.
+1. **Dodge Gauntlet** — intense continuous skillshot avoidance, especially frequent Ezreal Q and rare Malphite R; champion casts, returning Ahri Q, split Vel'Koz Q, ambient Xerath Q/W.
+2. **Mechanics Arena — Combat Survival** — solo player versus **many hostile champions simultaneously**, with full champion kit, combos, dodge, kite, targeting and Flash. No allied champion bots or scripted training steps.
+3. **CS Mastery** — one continuous pure minion-farming lane. As minions move naturally into a correctly implemented turret, under-turret CS belongs **inside the same mode**.
+4. **Mid Lane Mastery** — one extremely hard 1v1 lane with a bot that genuinely farms, tries to poke on your CS commitments and can itself be punished when farming. Bait, dodge, CS and poke happen organically in one lane.
 
-Optional synthesized combat cues are disabled by default. Use **SOUND OFF / ON** to toggle them; no audio files or external service are required.
+**Design documentation:** [Project Blueprint](PROJECT_BLUEPRINT.md), [Four-mode Vision](docs/MECHANICS_ACCELERATOR_VISION.md), [Dodge Rhythm](docs/DODGE_GAUNTLET_RHYTHM.md), [Combat Survival](docs/MECHANICS_ARENA_DESIGN.md) and [Mid Lane Mastery](docs/MID_LANE_MASTERY_DESIGN.md).
+
+### What is actually playable today (alpha)
+
+- **Dodge Trial:** current 60-second approximation with Lux Q / Ezreal Q projectiles; this is the unfinished foundation for Dodge Gauntlet.
+- **Kite Arena:** movement, autos and abilities against enemies; this is **not yet** the approved solo-versus-many Combat Survival experience.
+- **Last-Hit Lab:** Ahri last-hitting with two-sided minion combat in an approximate lane; this is the unfinished foundation for CS Mastery.
+
+**Mid Lane Mastery is not yet implemented.** Other earlier prototypes (Skillshot Lab, Bait → Dodge → CS, basic Lane Scenario) may remain in source for regression testing but are **not additional planned public menu modes**.
+
+The default player uses an approximate level-1 Ahri profile. Q, W, E and R are early Ahri-inspired implementations; current auto-only CS disables Q/W/E/R as documented in-game. Original art and simplified lane geometry are not claims of full LoL accuracy. Optional synthesized combat cues start disabled.
 
 ## Controls
 
