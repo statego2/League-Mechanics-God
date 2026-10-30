@@ -313,3 +313,10 @@ Next: human-play complete CS waves; add a separate opt-in combined lane with cha
 - Browser: launched Last-Hit, issued right click and S, saw the wave and missed gold update with no console warnings/errors. Reference: short unattended play only; no precise timing or full human CS run. `node --test tests/*.test.cjs`: 118/118, including stop and gold attribution.
 
 Next: measured minion attack/cadence and complete practice run; cannon wave and later scheduling, careful champion aggro and collision based on verified sources.
+
+## Minion static-wall routing and human CS check (30 October 2026)
+
+- Both idle lane advance and target chase now use the existing walkable-world visibility graph when a wall blocks their route. Paths are reused and recalculated as goals change; movement stays clipped against the two existing wall proxies. The diagonal lane endpoints remain approximate, and this is not the actual Rift navmesh or dynamic unit collision. The changed scenario uses Ahri CS record suffix `cs_ahri_v8`.
+- Added regression tests for chasing a target behind a wall and an unopposed wave bypassing a wall while remaining walkable.
+- Browser: manually right-clicked an enemy caster and observed a real hit/kill with **1 CS and 14 gold** displayed, plus allied misses; this was not a complete skill benchmark. Last-Hit with the new route code started and displayed both waves with no console warnings/errors. A complete uninterrupted manual session and exact LoL timing/aggro remain open.
+- `node --test tests/*.test.cjs`: 120/120 passed; generated Ahri data check, JS syntax and diff checks pass.

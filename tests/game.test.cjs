@@ -262,7 +262,7 @@ test('Ahri timing uses level-one cadence and 20 percent windup',()=>{
 test('Ahri CS profile uses 53 damage and separates old timing-only records',()=>{
  const {g,node,window}=boot(),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
  node('attackSpeed').listeners.change({target:{value:'ahri'}});g.reset('lastHit');g.disableSpawn();g.addWave();g.setAllies([]);const e=g.foes[0];assert.equal(e.hp,465);assert.equal(g.player.speed,165);e.x=820;e.tick=999;e.hp=54;g.attackOrder(e);advance(g,.7);assert.equal(e.hp,1);assert.equal(g.stats.cs,0);
- g.moveTo(600,337.5);e.hp=53;g.attackOrder(e);advance(g,2);assert.equal(e.alive,false);assert.equal(node('killsValue').textContent,1);g.end(true);assert.equal(values.get('lmg.best.v1.lastHit.normal.cs_ahri_v7'),'1');assert.match(node('menuDescription').textContent,/53 damage/);
+ g.moveTo(600,337.5);e.hp=53;g.attackOrder(e);advance(g,2);assert.equal(e.alive,false);assert.equal(node('killsValue').textContent,1);g.end(true);assert.equal(values.get('lmg.best.v1.lastHit.normal.cs_ahri_v8'),'1');assert.match(node('menuDescription').textContent,/53 damage/);
 });
 test('Ahri CS unattended waves resolve without breaking the drill',()=>{
  for(const difficulty of ['easy','normal','hard']){const {g,node}=boot();node('attackSpeed').listeners.change({target:{value:'ahri'}});node('difficulty').listeners.change({target:{value:difficulty}});g.reset('lastHit');advance(g,60.02);assert.equal(g.state,'ended');assert.equal(g.stats.missed+g.stats.unresolved,12);}
@@ -501,4 +501,15 @@ test('CS gold credits only player last hits; missed and unresolved stay separate
  const {g,node}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();g.setAllies([]);const melee=g.foes[0],caster=g.foes[3],alive=g.foes[4];
  g.damageEnemy(melee,9999);g.applyImpact(caster,{sourceId:-4,sourceTeam:'ally',kind:'minionProjectile',raw:9999,damageType:'true'});g.applyImpact(caster,{sourceId:'player',sourceTeam:'player',kind:'auto',raw:9999,damageType:'true'});
  assert.equal(g.stats.gold,20);assert.equal(g.stats.missedGold,14);assert.ok(alive.alive);g.end(true);assert.equal(g.stats.unresolved,4);assert.equal(g.stats.missedGold,14);assert.match(node('menuDescription').textContent,/20 gold earned · 14 gold missed/);
+});
+
+test('minion chases an acquired target around a solid wall rather than getting stuck',()=>{
+ const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const ally=g.allies[0],enemy=g.foes[0];
+ Object.assign(ally,{x:620,y:585,tick:999,targetId:enemy.id,firstAcquired:true});Object.assign(enemy,{x:830,y:585,tick:999,targetId:null});g.setAllies([ally]);g.setFoes([enemy]);
+ const before=Math.hypot(ally.x-enemy.x,ally.y-enemy.y);advance(g,4);assert.ok(Math.hypot(ally.x-enemy.x,ally.y-enemy.y)<before-80,`ally stuck at ${ally.x},${ally.y}`);
+});
+test('unopposed minion wave routes around walls and stays on walkable ground',()=>{
+ const world=require('../world.js');const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const ally=g.allies[0];Object.assign(ally,{x:620,y:600,tick:999,targetId:null});g.setAllies([ally]);g.setFoes([]);
+ for(let i=0;i<360;i++){g.update(1/120);assert.ok(world.pointWalkable(ally,ally.r));}
+ assert.ok(ally.x>775||ally.y<540,`minion stuck at ${ally.x},${ally.y}`);
 });

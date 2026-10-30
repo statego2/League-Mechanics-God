@@ -32,7 +32,7 @@ const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoThreshold=e=>physicalDamage(autoDamage(),e.armor||0);
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v7":mode==="dodge"?(ahriBase()?".ahri_spells_v3":".no_line_"+attackPreset):attackPreset==="standard"?"":".as_"+attackPreset;}
+function recordSuffix(){return ahriCS()?".cs_ahri_v8":mode==="dodge"?(ahriBase()?".ahri_spells_v3":".no_line_"+attackPreset):attackPreset==="standard"?"":".as_"+attackPreset;}
 const targetHitRadius=e=>ahriBase()?(e.minion?24:AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 function recordLabel(){return difficulty+(attackPreset==="standard"?"":", "+ATTACK_PRESETS[attackPreset].label+" AS");}
@@ -145,6 +145,22 @@ function updateMinion(e,dt){
 // Acquisition and speed use the research snapshot and provisional 0.5 scale.
 // Windup, attack ranges and target reevaluation remain training approximations.
 const MINION_TRAINING={acquire:250,windup:.25,speed:SIMULATION.toCanvas(350),meleeRange:65,casterRange:323,meleePeriod:.8,casterPeriod:1/.667,missileSpeed:380};
+// Route around our approximate static walls. This is not the Rift navmesh.
+function moveMinion(unit,goal,dt,maxTravel=Infinity){
+ const destination=world.nearestWalkable(goal,unit.r);
+ if(!unit.pathGoal||dist(unit.pathGoal,destination)>18||!unit.path||!unit.path.length){unit.path=world.path(unit,destination,unit.r);unit.pathGoal=destination;}
+ while(unit.path&&unit.path.length&&dist(unit,unit.path[0])<.5)unit.path.shift();
+ if(!unit.path||!unit.path.length){unit.moving=false;return;}
+ const waypoint=unit.path[0],dx=waypoint.x-unit.x,dy=waypoint.y-unit.y,d=Math.hypot(dx,dy)||1,step=Math.min(d,MINION_TRAINING.speed*dt,maxTravel);
+ const next=world.clip(unit,{x:unit.x+dx/d*step,y:unit.y+dy/d*step},unit.r);unit.moving=dist(unit,next)>.001;unit.x=next.x;unit.y=next.y;
+ if(dist(unit,waypoint)<.5)unit.path.shift();
+}
+function minionLaneGoal(unit){
+ const direction=unit.ally?1:-1,dx=direction*CS_LANE.ux,dy=direction*CS_LANE.uy,pad=unit.r;
+ const tx=dx>0?(world.bounds.right-pad-unit.x)/dx:(world.bounds.left+pad-unit.x)/dx;
+ const ty=dy>0?(world.bounds.bottom-pad-unit.y)/dy:(world.bounds.top+pad-unit.y)/dy;
+ const distance=Math.max(0,Math.min(tx,ty));return {x:unit.x+dx*distance,y:unit.y+dy*distance};
+}
 function updateCSWave(dt){
  const red=foes.filter(e=>e.alive&&e.minion),blue=allies.filter(e=>e.alive),meleeImpacts=[];
  for(const unit of [...blue,...red]){
@@ -172,12 +188,10 @@ function updateCSWave(dt){
   // With no valid enemy, continue along the simplified diagonal lane. This
   // keeps surviving waves moving; the terrain is not a measured Rift path.
   if(!target){
-   const direction=unit.ally?1:-1,step=MINION_TRAINING.speed*dt;
-   const goal=world.nearestWalkable({x:unit.x+direction*CS_LANE.ux*step,y:unit.y+direction*CS_LANE.uy*step},unit.r);
-   const next=world.clip(unit,goal,unit.r);unit.moving=dist(unit,next)>.001;unit.x=next.x;unit.y=next.y;continue;
+   moveMinion(unit,minionLaneGoal(unit),dt);continue;
   }
   const range=unit.minionType==="melee"?MINION_TRAINING.meleeRange:MINION_TRAINING.casterRange;
-  if(dist(unit,target)>range){unit.windupLeft=0;const dx=target.x-unit.x,dy=target.y-unit.y,d=Math.hypot(dx,dy)||1,step=Math.min(MINION_TRAINING.speed*dt,Math.max(0,d-range));const next=world.clip(unit,{x:unit.x+dx/d*step,y:unit.y+dy/d*step},unit.r);unit.moving=dist(unit,next)>.001;unit.x=next.x;unit.y=next.y;continue;}
+  if(dist(unit,target)>range){unit.windupLeft=0;moveMinion(unit,target,dt,Math.max(0,dist(unit,target)-range));continue;}
   if(unit.windupLeft>0){
    unit.windupLeft-=dt;if(unit.windupLeft>0)continue;
    unit.tick=(unit.minionType==="melee"?MINION_TRAINING.meleePeriod:MINION_TRAINING.casterPeriod)-MINION_TRAINING.windup;
