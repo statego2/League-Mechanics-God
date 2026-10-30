@@ -87,8 +87,12 @@ function baitLabel(){
 function beginBaitRound(){
  bait.round++;if(bait.round>3){end(true);return;}
  foes=[];shots=[];player.order=null;player.focus=null;cancelAttack();
- const caster=enemy(910,235);caster.baitCaster=true;caster.speed=0;foes.push(caster);
- const minion=enemy(720,380);minion.minion=true;minion.r=14;minion.hp=minion.maxHp=34;minion.destination=720;minion.tick=1.1;foes.push(minion);
+ const offset=bait.round-2;
+ const caster=enemy(910+offset*20,235+offset*10);caster.baitCaster=true;caster.speed=0;
+ caster.baitX=caster.x;caster.baitY=caster.y;caster.baitPhase=rand(0,TAU);foes.push(caster);
+ const minion=enemy(720+offset*20,380+offset*10);minion.minion=true;minion.r=14;
+ minion.hp=minion.maxHp=difficulty==="easy"?34:difficulty==="hard"?40:36;
+ minion.destination=minion.x;minion.tick=1.1+(.15*(bait.round-1));foes.push(minion);
  bait.phase="approach";bait.armed=dist(player,caster)>260;notify("ROUND "+bait.round+" — BAIT THE CAST");
 }
 function resolveBait(didDodge){
@@ -100,6 +104,10 @@ function resolveBait(didDodge){
 function updateBait(dt){
  if(bait.phase==="setup"){beginBaitRound();return;}
  const caster=foes.find(e=>e.baitCaster);
+ if(bait.phase==="approach"&&caster){
+  caster.baitPhase+=dt*(difficulty==="easy"?.7:difficulty==="hard"?1.4:1);
+  caster.x=caster.baitX+Math.sin(caster.baitPhase)*24;caster.y=caster.baitY+Math.cos(caster.baitPhase*.7)*12;
+ }
  if(bait.phase==="approach"&&caster&&dist(player,caster)>260)bait.armed=true;
  if(bait.phase==="approach"&&bait.armed&&caster&&dist(player,caster)<=260){
   shootEnemy(caster);bait.phase="cast";bait.casts++;notify("CAST BAITED — DODGE!");

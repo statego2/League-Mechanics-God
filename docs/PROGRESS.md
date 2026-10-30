@@ -48,6 +48,12 @@ Kite records now prefer a completed run, then the fastest victory; before the fi
 - `node --test tests/*.test.cjs`: **40/40 PASS**, including 500 seeded start/goal paths, click inside wall, dash/flash, retarget during detour, attack-move and enemy chase around a wall; existing gameplay suite remains green. Updated CI to run both files.
 - Browser: Last-Hit opened with wall outlines; a right-click sent the character across to the opposite side of the upper wall. An unattended five-wave run finished with 0/15 CS and 15 missed, with results displayed. No console warning/error was observed at start. Exact wall-to-art alignment, full user playthroughs and cross-browser behavior still need work.
 
+## Moving opponent and CS calibration (2026-10-30)
+
+- Bait caster now patrols a small seeded path, locks position and aim for the cast, and shifts its starting position each round. Minion HP is 34/36/40 for easy/normal/hard respectively; allied damage and timing create a last-hit window on every preset. The earlier constant-34 description records the prior implementation.
+- `node --test tests/*.test.cjs`: **42/42 PASS**. Tests cover caster moving/locking, a valid last-hit window for every difficulty, wall navigation and all existing drills.
+- Browser: in Bait, used mouse movement to enter threat radius and dodge, then selected the minion during the allied-damage window; HUD showed **1 dodge, 1 CS and 160/160 HP** at round 2. Browser console warnings/errors: none.
+
 ## Current playable state
 
 Dodge Trial, Kite Arena, Last-Hit Lab, Skillshot Lab and Bait → Dodge → CS run locally at http://localhost:8080. The repository was cloned into the `League-Mechanics-God` subdirectory of the original workspace, whose parent contains separate historical Unity research. Work is on `codex/controls-and-dodge`, based on `7de3430`.
@@ -85,7 +91,7 @@ Commit: `89e7529`.
 
 ## Tests actually run
 
-- `node --test tests/game.test.cjs`: **30/30 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
+- `node --test tests/game.test.cjs`: **42/42 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
 - `node --check game.js` and `git diff --check`: PASS.
 - Python reference tools: `python3 -m unittest discover -s reference/league-of-dodge/tools -p 'test_*.py'`: **7/7 PASS**.
 - HTTP server logs: app, JS and CSS return 200/304; initial missing favicon fixed with an original SVG icon.
@@ -104,6 +110,6 @@ Commit: `89e7529`.
 ## Next three actions
 
 1. Replace two rectangular wall proxies with a carefully traced, original mid-lane terrain mesh and navigation, including rivers and jungle entrances. Acceptance: visible walls match collision, no entity spawns inside obstacles, clicks and chase route around them.
-2. Extend Bait → Dodge → CS with moving opponents and more varied allied minion attrition. Acceptance: distinct bait, dodge, CS and HP metrics remain trustworthy.
+2. Expand Bait → Dodge → CS with varied readable skillshots and wave timing. Acceptance: distinct bait, dodge, CS and HP metrics remain trustworthy across presets.
 3. Improve animation and combat feedback with directional sprite animations; check performance and visibility during a complete run.
 

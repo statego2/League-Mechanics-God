@@ -20,7 +20,7 @@ For a public URL, enable **GitHub Pages** in the repository Settings → Pages �
 
 - **Dodge Trial:** survive 60 seconds of enemy skillshots. Track damage and dodges.
 - **Kite Arena:** defeat 10 enemies using movement, autos and abilities.
-- **Bait → Dodge → CS:** enter the enemy threat ring to draw a locked skillshot, evade it and last-hit a minion during the 3-second window while an ally damages it. Three rounds track baits, dodges, CS and damage. Q/E/R are disabled; W/F remain available.
+- **Bait → Dodge → CS:** enter the moving enemy’s threat ring to draw a locked skillshot, evade it and last-hit a minion during the 3-second window while an ally damages it. Three rounds track baits, dodges, CS and damage. Q/E/R are disabled; W/F remain available.
 - **Skillshot Lab:** aim Q at moving targets for 45 seconds; results show hits, shots and accuracy. W/F reposition.
 - **Last-Hit Lab:** time 28-damage auto attacks across 5 minion waves (15 possible CS). Allied caster projectiles damage minions; only your killing blow earns CS. Gold health bars mark last-hit range. Q/E/R are disabled in this drill; W/F remain available.
 

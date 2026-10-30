@@ -123,7 +123,7 @@ test('skillshot targets spawn away from the player and existing targets',()=>{
 });
 
 test('bait minion cannot be killed before the enemy spell resolves',()=>{
- const {g}=boot();g.reset('bait');advance(g,.02);const minion=g.foes.find(e=>e.minion);g.player.x=minion.x-50;g.player.y=minion.y;g.attackOrder(minion);advance(g,.2);assert.equal(g.stats.released,0);assert.equal(minion.hp,34);
+ const {g}=boot();g.reset('bait');advance(g,.02);const minion=g.foes.find(e=>e.minion);g.player.x=minion.x-50;g.player.y=minion.y;g.attackOrder(minion);advance(g,.2);assert.equal(g.stats.released,0);assert.equal(minion.hp,36);
 });
 test('painted assets and procedural fallback both render in all drills',()=>{
  const {g,node}=boot();for(const id of ['arenaArt','rangerArt','rangerBackArt','rangerFrontArt','mageArt','minionArt']){node(id).complete=true;node(id).naturalWidth=100;}for(const mode of ['dodge','kite','lastHit','skillshot','bait']){g.reset(mode);advance(g,.05);g.render();}node('arenaArt').naturalWidth=0;node('rangerArt').naturalWidth=0;node('mageArt').naturalWidth=0;node('minionArt').naturalWidth=0;g.render();
@@ -167,4 +167,15 @@ test('a fresh move order interrupts a detour immediately',()=>{
  const {g}=boot(),world=require('../world.js');g.player.x=120;g.player.y=150;g.moveTo(400,150);advance(g,.3);g.moveTo(100,350);
  for(let i=0;i<300;i++){g.update(1/120);assert.ok(world.pointWalkable(g.player));}
  assert.ok(Math.hypot(g.player.x-100,g.player.y-350)<2);
+});
+test('bait caster moves while waiting and stops to lock its spell',()=>{
+ const {g}=boot();g.reset('bait');advance(g,.02);const caster=g.foes.find(e=>e.baitCaster),initial={x:caster.x,y:caster.y};advance(g,1);
+ assert.ok(Math.hypot(caster.x-initial.x,caster.y-initial.y)>1);g.player.x=760;g.player.y=300;advance(g,.02);assert.equal(g.bait.phase,'cast');const locked={x:caster.x,y:caster.y};advance(g,.2);assert.equal(caster.x,locked.x);assert.equal(caster.y,locked.y);
+});
+test('all difficulty presets give a last-hit window after an allied hit',()=>{
+ for(const difficulty of ['easy','normal','hard']){
+  const {g,node}=boot();node('difficulty').listeners.change({target:{value:difficulty}});g.reset('bait');advance(g,.02);g.player.x=760;g.player.y=300;advance(g,.02);g.moveTo(760,450);
+  for(let i=0;i<360&&g.bait.phase!=='window';i++)g.update(1/120);assert.equal(g.bait.phase,'window',difficulty);
+  advance(g,1.65);const minion=g.foes.find(e=>e.minion);assert.ok(minion&&minion.hp>0&&minion.hp<=28,`${difficulty}: ${minion?.hp}`);assert.ok(g.bait.timer>1);
+ }
 });
