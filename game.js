@@ -51,7 +51,7 @@ function enemy(x,y){return {id:++enemySeq,x,y,r:20,hp:mode==="kite"?88:58,maxHp:
 function addWave(){
  if(waves>=5)return;waves++;
  for(let i=0;i<3;i++){
-  const e=enemy(910+i*8,245+i*90);e.minion=true;e.r=14;e.hp=e.maxHp=88;e.speed=65;e.tick=1+i*.32;e.destination=waves%2?820:875;foes.push(e);
+  const e=enemy(910+i*8,220+i*55);e.minion=true;e.r=14;e.hp=e.maxHp=88;e.speed=65;e.tick=1+i*.32;e.destination=waves%2?820:875;foes.push(e);
  }
  notify("WAVE "+waves+" / 5 — TIME YOUR LAST HITS");
 }
@@ -74,7 +74,7 @@ function beginBaitRound(){
  bait.round++;if(bait.round>3){end(true);return;}
  foes=[];shots=[];player.order=null;player.focus=null;cancelAttack();
  const caster=enemy(910,235);caster.baitCaster=true;caster.speed=0;foes.push(caster);
- const minion=enemy(720,380);minion.minion=true;minion.r=14;minion.hp=minion.maxHp=28;minion.destination=720;minion.tick=999;foes.push(minion);
+ const minion=enemy(720,380);minion.minion=true;minion.r=14;minion.hp=minion.maxHp=34;minion.destination=720;minion.tick=1.1;foes.push(minion);
  bait.phase="approach";bait.armed=dist(player,caster)>260;notify("ROUND "+bait.round+" — BAIT THE CAST");
 }
 function resolveBait(didDodge){
@@ -98,7 +98,7 @@ function updateBait(dt){
 function addTarget(){
  if(foes.filter(e=>e.targetDummy&&e.alive).length>=3)return;
  let point=null;
- for(let i=0;i<16;i++){const candidate={x:rand(780,1040),y:rand(145,530)};if(dist(candidate,player)>250&&foes.every(e=>!e.alive||dist(candidate,e)>85)){point=candidate;break;}}
+ for(let i=0;i<16;i++){const x=rand(720,1040);const candidate={x,y:clamp(610-x*.42+rand(-100,100),105,H-85)};if(dist(candidate,player)>250&&foes.every(e=>!e.alive||dist(candidate,e)>85)){point=candidate;break;}}
  if(!point)return;
  const e=enemy(point.x,point.y);e.targetDummy=true;e.hp=e.maxHp=45;e.r=20;
  e.anchorX=e.x;e.anchorY=e.y;e.phase=rand(0,TAU);e.speed=difficulty==="easy"?55:difficulty==="hard"?135:90;
@@ -109,7 +109,14 @@ function updateTarget(e,dt){
  e.x=clamp(e.anchorX+Math.sin(e.phase)*85,55,W-55);
  e.y=clamp(e.anchorY+Math.sin(e.phase*.57)*45,105,H-85);
 }
-function addEnemy(){if(foes.length>= (mode==="kite"?5:PRESETS[difficulty].cap))return;const edge=Math.floor(rand(0,4));let x=edge===0?-30:edge===1?W+30:rand(70,W-70),y=edge===2?-30:edge===3?H+30:rand(90,H-90);foes.push(enemy(x,y));}
+function addEnemy(){
+ if(foes.length>=(mode==="kite"?5:PRESETS[difficulty].cap))return;
+ // Enter from the two ends of the lane, not through the painted river and walls.
+ const blueEnd=random()<.5;
+ const x=blueEnd?rand(25,160):rand(W-160,W-25);
+ const y=blueEnd?rand(H-150,H-45):rand(70,180);
+ foes.push(enemy(x,y));
+}
 function fire(x,y,vx,vy,kind,damage,r=8,life=4){shots.push({x,y,px:x,py:y,vx,vy,kind,damage,r,ttl:life,alive:true,hit:false,threat:false});return shots[shots.length-1];}
 // Lock aim at telegraph start; players can read and bait the cast.
 function shootEnemy(e){
@@ -176,7 +183,7 @@ if(player.windup>0){player.windup=Math.max(0,player.windup-dt);if(player.windup<
 if(player.target&&player.windup<=0){const dx=player.target.x-player.x,dy=player.target.y-player.y,len=Math.hypot(dx,dy);if(len<1)player.target=null;else{const step=Math.min(player.speed*dt,len);player.x+=dx/len*step;player.y+=dy/len*step;player.facing=Math.atan2(dy,dx);stats.moving+=dt;player.motion+=dt*15;}}
 player.x=clamp(player.x,22,W-22);player.y=clamp(player.y,59,H-36);
 const previousFoes=new Map(foes.map(e=>[e.id,{x:e.x,y:e.y}]));
-for(const e of foes){if(!e.alive)continue;if(e.baitCaster)continue;if(e.minion){if(mode!=="bait")updateMinion(e,dt);continue;}if(e.targetDummy){updateTarget(e,dt);continue;}e.hit=Math.max(0,e.hit-dt);e.spin+=dt*e.strafe;const dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;let vx=0,vy=0;if(d>230){vx=dx/d;vy=dy/d;}else if(d<155){vx=-dx/d;vy=-dy/d;}vx+=(-dy/d)*Math.sin(e.spin)*.5;vy+=(dx/d)*Math.sin(e.spin)*.5;const mag=Math.hypot(vx,vy)||1;if(!e.pending){e.x=clamp(e.x+vx/mag*e.speed*dt,25,W-25);e.y=clamp(e.y+vy/mag*e.speed*dt,60,H-35);e.shoot-=dt;if(e.shoot<=0&&d<650)shootEnemy(e);}else{e.charge-=dt;if(e.charge<=0)releaseEnemy(e);}if(d<e.r+player.r+1)takeHit(11);}
+for(const e of foes){if(!e.alive)continue;if(e.baitCaster)continue;if(e.minion){if(mode!=="bait"||bait.phase==="window")updateMinion(e,dt);continue;}if(e.targetDummy){updateTarget(e,dt);continue;}e.hit=Math.max(0,e.hit-dt);e.spin+=dt*e.strafe;const dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;let vx=0,vy=0;if(d>230){vx=dx/d;vy=dy/d;}else if(d<155){vx=-dx/d;vy=-dy/d;}vx+=(-dy/d)*Math.sin(e.spin)*.5;vy+=(dx/d)*Math.sin(e.spin)*.5;const mag=Math.hypot(vx,vy)||1;if(!e.pending){e.x=clamp(e.x+vx/mag*e.speed*dt,25,W-25);e.y=clamp(e.y+vy/mag*e.speed*dt,60,H-35);e.shoot-=dt;if(e.shoot<=0&&d<650)shootEnemy(e);}else{e.charge-=dt;if(e.charge<=0)releaseEnemy(e);}if(d<e.r+player.r+1)takeHit(11);}
 if(state!=="playing")return;
 for(const h of hazards){
  if(dist(player,h)<=h.r+player.r*.75)h.threat=true;
@@ -220,7 +227,8 @@ function circle(x,y,r,color,fill=true,width=1){ctx.beginPath();ctx.arc(x,y,r,0,T
 function polygon(x,y,r,n,rotation,fill,stroke){ctx.beginPath();for(let i=0;i<=n;i++){const a=rotation+i*TAU/n;const px=x+Math.cos(a)*r,py=y+Math.sin(a)*r;i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.closePath();ctx.fillStyle=fill;ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.fill();ctx.stroke();}
 // Original vector ranger and enemy mage silhouettes with facing and articulated steps.
 function drawChampion(x,y,a,friendly,hit,windup,motion){
- const sprite=$(friendly?"rangerArt":"mageArt");
+ let sprite=$(friendly?"rangerArt":"mageArt");
+ if(friendly&&Math.abs(Math.sin(a))>.65){const directional=$(Math.sin(a)<0?"rangerBackArt":"rangerFrontArt");if(directional.complete&&directional.naturalWidth)sprite=directional;}
  if(sprite.complete&&sprite.naturalWidth){
   ctx.save();ctx.translate(x,y);ctx.save();ctx.scale(1,.43);circle(0,3,25,"#0009");ctx.restore();
   const side=Math.cos(a)>=0?1:-1;const bob=(friendly?player.target:!windup)?Math.abs(Math.sin(motion))*2:0;
@@ -275,7 +283,14 @@ ctx.restore();
 if(player){
 for(const h of hazards){circle(h.x,h.y,h.r,"#e58c6422");circle(h.x,h.y,h.r,"#ffbc80",false,2);circle(h.x,h.y,h.r*(1-h.ttl/h.max),"#ffc08d99",false,3);ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#ffd5aa";ctx.fillText("IMPACT",h.x,h.y+4);}
 if(mode==="bait"&&bait.phase==="approach"){const caster=foes.find(e=>e.baitCaster);if(caster){ctx.save();ctx.setLineDash([6,7]);circle(caster.x,caster.y,260,"#ffbb8890",false,2);ctx.restore();}}
-for(const e of foes)if(e.pending){ctx.save();ctx.strokeStyle="#ffc18488";ctx.lineWidth=2;ctx.setLineDash([9,7]);for(const offset of e.pending.fan?[-.23,0,.23]:[0]){const a=e.pending.angle+offset;ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(e.x+Math.cos(a)*740,e.y+Math.sin(a)*740);ctx.stroke();}ctx.restore();circle(e.x,e.y,29,"#ffcf87",false,2);}
+for(const e of foes)if(e.pending){
+ ctx.save();for(const offset of e.pending.fan?[-.23,0,.23]:[0]){
+  const a=e.pending.angle+offset;ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(e.x+Math.cos(a)*1400,e.y+Math.sin(a)*1400);
+  ctx.setLineDash([]);ctx.strokeStyle="#ff80634a";ctx.lineWidth=14;ctx.stroke();
+  ctx.setLineDash([9,7]);ctx.strokeStyle="#ffd1a4cc";ctx.lineWidth=2;ctx.stroke();
+ }
+ ctx.setLineDash([]);ctx.strokeStyle="#ffcf87";ctx.lineWidth=3;ctx.beginPath();ctx.arc(e.x,e.y,29,-Math.PI/2,-Math.PI/2+TAU*clamp(1-e.charge/PRESETS[difficulty].warning,0,1));ctx.stroke();ctx.restore();
+}
 }
 if(player){
 if(attackMove||player.order){ctx.save();ctx.setLineDash([5,7]);circle(player.x,player.y,ATTACK.range,"#8af0d755",false,1);ctx.restore();}
@@ -283,10 +298,19 @@ const focus=foes.find(e=>e.id===player.focus);if(focus)circle(focus.x,focus.y,fo
 ctx.strokeStyle=player.windup>0?"#f7d184":"#7ce8d0";ctx.lineWidth=4;ctx.beginPath();ctx.arc(player.x,player.y,32,-Math.PI/2,-Math.PI/2+TAU*(player.windup>0?1-player.windup/ATTACK.windup:1-player.attackTimer/(ATTACK.period-ATTACK.windup)));ctx.stroke();
 ctx.font="bold 10px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#c5eadf";ctx.fillText(player.windup>0?"WINDUP":player.attackTimer>0?"RECOVERY":"READY",player.x,player.y+49);
 if(player.target){circle(player.target.x,player.target.y,13,"#7ee7d288",false,2);ctx.strokeStyle="#7ee7d288";ctx.beginPath();ctx.moveTo(player.target.x-8,player.target.y);ctx.lineTo(player.target.x+8,player.target.y);ctx.moveTo(player.target.x,player.target.y-8);ctx.lineTo(player.target.x,player.target.y+8);ctx.stroke();}
-for(const e of foes){if(e.minion){
+const actors=[...foes,{isPlayer:true,x:player.x,y:player.y}].sort((a,b)=>a.y-b.y);
+for(const e of actors){
+ if(e.isPlayer){
+drawChampion(player.x,player.y,player.facing,true,player.hitFlash>0,player.windup/ATTACK.windup,player.motion);
+circle(player.x,player.y,player.r*.75,"#bcffe944",false,1);
+if(player.invuln>0)circle(player.x,player.y,25,"#ffe4ad",false,2);
+ctx.fillStyle="#102d27";ctx.fillRect(player.x-22,player.y-86,44,4);ctx.fillStyle="#8ceebd";ctx.fillRect(player.x-22,player.y-86,44*player.hp/player.maxHp,4);
+ continue;
+ }
+ if(e.minion){
  // Allied caster and enemy melee minion, with an auto-damage threshold on the bar.
  const minionArt=$("minionArt");
- if(mode!=="bait"){
+ {
   ctx.save();ctx.translate(e.destination-80,e.y);ctx.save();ctx.scale(1,.45);circle(0,3,15,"#0007");ctx.restore();
   if(minionArt.complete&&minionArt.naturalWidth){ctx.filter="hue-rotate(165deg) saturate(.8)";ctx.scale(-1,1);ctx.drawImage(minionArt,-24,-48,48,49);}else polygon(0,-10,12,5,0,"#317c78","#8ec9a5");ctx.restore();
  }
@@ -297,10 +321,6 @@ for(const e of foes){if(e.minion){
 }drawChampion(e.x,e.y,Math.atan2(player.y-e.y,player.x-e.x),false,e.hit>0,e.pending?1:0,time*7);
 ctx.fillStyle="#101e23";ctx.fillRect(e.x-25,e.y-86,50,5);ctx.fillStyle="#ff9290";ctx.fillRect(e.x-25,e.y-86,50*clamp(e.hp/e.maxHp,0,1),5);}
 for(const s of shots){ctx.strokeStyle=s.kind==="enemy"?"#f1797999":"#7bf4e899";ctx.lineWidth=s.r*1.5;ctx.beginPath();ctx.moveTo(s.x-s.vx*.04,s.y-s.vy*.04);ctx.lineTo(s.x,s.y);ctx.stroke();circle(s.x,s.y,s.r,s.kind==="enemy"?"#ff9c85":s.kind==="r"?"#f5d47d":"#81fdf1");circle(s.x,s.y,s.r*1.7,s.kind==="enemy"?"#fe626344":"#8df5dd44");}
-drawChampion(player.x,player.y,player.facing,true,player.hitFlash>0,player.windup/ATTACK.windup,player.motion);
-circle(player.x,player.y,player.r*.75,"#bcffe944",false,1);
-if(player.invuln>0)circle(player.x,player.y,25,"#ffe4ad",false,2);
-ctx.fillStyle="#102d27";ctx.fillRect(player.x-22,player.y-86,44,4);ctx.fillStyle="#8ceebd";ctx.fillRect(player.x-22,player.y-86,44*player.hp/player.maxHp,4);
 }
 for(const f of fx){ctx.globalAlpha=clamp(f.ttl/f.max,0,1);if(f.text){ctx.font="bold 15px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y);}else circle(f.x,f.y,f.r,f.color);}ctx.globalAlpha=1;
 if(state==="playing"&&(mode==="dodge"||mode==="lastHit"||mode==="skillshot"||mode==="bait")){ctx.font="700 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#b7d9d9aa";ctx.fillText(mode==="bait"?baitLabel():mode==="skillshot"?"AIM WITH THE CURSOR · Q TO FIRE · "+Math.max(0,45-Math.floor(time))+"s":mode==="lastHit"?"28 AUTO DAMAGE · GOLD HEALTH = LAST HIT · WAVE "+waves+" / 5":"SURVIVE "+Math.max(0,60-Math.floor(time))+"s",W/2,90);}
@@ -313,7 +333,7 @@ cv.addEventListener("pointerdown",e=>{if(state!=="playing")return;e.preventDefau
 if(e.button===2){attackMove=false;if(mode==="skillshot"){moveTo(mouse.x,mouse.y);return;}const t=nearestEnemy(mouse.x,mouse.y,30);if(t)attackOrder(t);else moveTo(mouse.x,mouse.y);}
 else if(e.button===0){if(attackMove){cancelAttack();player.order={type:"attackMove",x:clamp(mouse.x,22,W-22),y:clamp(mouse.y,59,H-36)};player.target=null;player.focus=null;attackMove=false;notify("ATTACK MOVE");}else{const t=nearestEnemy(mouse.x,mouse.y,24);if(t)attackOrder(t);}}
 });
-window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(e.repeat)return;if(["q","w","e","r","f","a","s","p","escape"].includes(k))e.preventDefault();if(k==="p"||k==="escape"){if(state==="playing"||state==="paused")pause();return;}if(state!=="playing"||e.repeat)return;if(k==="s"){moveTo(player.x,player.y);return;}if(k==="a"&&mode==="skillshot"){notify("SKILLSHOT LAB — AIM WITH Q");return;}if(k==="a"){attackMove=true;notify("ATTACK MOVE — LEFT CLICK");return;}if(CD[k])cast(k);});
+window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(e.repeat)return;if(["q","w","e","r","f","a","s","p","t","escape"].includes(k))e.preventDefault();if(k==="t"&&player&&state!=="menu"){reset(mode);return;}if(k==="p"||k==="escape"){if(state==="playing"||state==="paused")pause();return;}if(state!=="playing"||e.repeat)return;if(k==="s"){moveTo(player.x,player.y);return;}if(k==="a"&&mode==="skillshot"){notify("SKILLSHOT LAB — AIM WITH Q");return;}if(k==="a"){attackMove=true;notify("ATTACK MOVE — LEFT CLICK");return;}if(CD[k])cast(k);});
 window.addEventListener("blur",()=>{if(state==="playing")pause();});
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&state==="playing")pause();});
 $("difficulty").addEventListener("change",e=>{difficulty=e.target.value;});

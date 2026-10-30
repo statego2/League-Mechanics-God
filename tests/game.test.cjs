@@ -4,19 +4,19 @@ const assert=require('node:assert/strict');
 const vm=require('node:vm');
 const fs=require('node:fs');
 function boot(){
- const nodes=new Map();
+ const nodes=new Map(),draws=[];
  function node(id){if(!nodes.has(id))nodes.set(id,{textContent:'',style:{},classList:{add(){},remove(){},toggle(){}},listeners:{},addEventListener(k,f){this.listeners[k]=f;},closest(){return this;},getBoundingClientRect(){return {left:0,top:0,width:1200,height:675};}});return nodes.get(id);}
- const ctx=new Proxy({createRadialGradient(){return {addColorStop(){}};}},{get(o,k){return o[k]||(()=>{});}});
+ const ctx=new Proxy({drawImage(img){draws.push(img)},createRadialGradient(){return {addColorStop(){}};}},{get(o,k){return o[k]||(()=>{});}});
  node('arena').getContext=()=>ctx;
  const window={devicePixelRatio:1,listeners:{},addEventListener(k,f){this.listeners[k]=f;}};
  const document={getElementById:node,querySelectorAll:()=>[],addEventListener(){}};
  const sandbox={document,window,requestAnimationFrame(){},Math:Object.create(Math)};
  sandbox.Math.random=()=>.5;
  vm.createContext(sandbox);
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,enemy,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,addWave,addTarget,get bait(){return bait},get hazards(){return hazards},get player(){return player},get foes(){return foes},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,addWave,addTarget,get bait(){return bait},get hazards(){return hazards},get player(){return player},get foes(){return foes},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;g.reset('kite');g.disableSpawn();
- return {g,node,window,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
+ return {g,node,window,draws,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
 }
 function foe(g,x=800,y=337.5){const e=g.enemy(x,y);e.speed=0;e.shoot=999;e.hp=e.maxHp=10000;g.setFoes([e]);return e;}
 function advance(g,seconds){for(let i=0;i<Math.round(seconds*120);i++)g.update(1/120);}
@@ -111,7 +111,7 @@ test('personal best is saved per drill and difficulty; unavailable storage never
 });
 
 test('bait drill rewards a baited, avoided spell followed by a last-hit',()=>{
- const {g}=boot();g.reset('bait');advance(g,.02);g.player.x=760;g.player.y=300;advance(g,.02);assert.equal(g.bait.phase,'cast');g.moveTo(760,450);advance(g,2);assert.equal(g.bait.phase,'window');assert.equal(g.bait.dodges,1);assert.equal(g.stats.hits,0);const minion=g.foes.find(e=>e.minion);g.attackOrder(minion);advance(g,.7);assert.equal(g.bait.cs,1);advance(g,.7);assert.equal(g.bait.round,2);
+ const {g}=boot();g.reset('bait');advance(g,.02);g.player.x=760;g.player.y=300;advance(g,.02);assert.equal(g.bait.phase,'cast');g.moveTo(760,450);advance(g,2);assert.equal(g.bait.phase,'window');assert.equal(g.bait.dodges,1);assert.equal(g.stats.hits,0);const minion=g.foes.find(e=>e.minion);advance(g,1.2);assert.ok(minion.hp<=28);g.attackOrder(minion);advance(g,.7);assert.equal(g.bait.cs,1);advance(g,.7);assert.equal(g.bait.round,2);
 });
 test('bait drill tracks hits and missed minions across three rounds',()=>{
  const {g,node}=boot();g.reset('bait');g.player.hp=500;advance(g,.02);for(let round=1;round<=3;round++){g.player.x=600;g.player.y=337;g.player.target=null;advance(g,.02);g.player.x=800;g.player.y=300;advance(g,5.5);if(round<3)assert.equal(g.bait.round,round+1);}assert.equal(g.state,'ended');assert.equal(g.bait.casts,3);assert.equal(g.bait.dodges,0);assert.equal(g.bait.missed,3);assert.equal(g.stats.hits,3);assert.match(node('menuDescription').textContent,/3 spells baited · 0 dodged · 0 \/ 3 CS · 3 missed/);
@@ -122,8 +122,18 @@ test('skillshot targets spawn away from the player and existing targets',()=>{
 });
 
 test('bait minion cannot be killed before the enemy spell resolves',()=>{
- const {g}=boot();g.reset('bait');advance(g,.02);const minion=g.foes.find(e=>e.minion);g.player.x=minion.x-50;g.player.y=minion.y;g.attackOrder(minion);advance(g,.2);assert.equal(g.stats.released,0);assert.equal(minion.hp,28);
+ const {g}=boot();g.reset('bait');advance(g,.02);const minion=g.foes.find(e=>e.minion);g.player.x=minion.x-50;g.player.y=minion.y;g.attackOrder(minion);advance(g,.2);assert.equal(g.stats.released,0);assert.equal(minion.hp,34);
 });
 test('painted assets and procedural fallback both render in all drills',()=>{
- const {g,node}=boot();for(const id of ['arenaArt','rangerArt','mageArt','minionArt']){node(id).complete=true;node(id).naturalWidth=100;}for(const mode of ['dodge','kite','lastHit','skillshot','bait']){g.reset(mode);advance(g,.05);g.render();}node('arenaArt').naturalWidth=0;node('rangerArt').naturalWidth=0;node('mageArt').naturalWidth=0;node('minionArt').naturalWidth=0;g.render();
+ const {g,node}=boot();for(const id of ['arenaArt','rangerArt','rangerBackArt','rangerFrontArt','mageArt','minionArt']){node(id).complete=true;node(id).naturalWidth=100;}for(const mode of ['dodge','kite','lastHit','skillshot','bait']){g.reset(mode);advance(g,.05);g.render();}node('arenaArt').naturalWidth=0;node('rangerArt').naturalWidth=0;node('mageArt').naturalWidth=0;node('minionArt').naturalWidth=0;g.render();
+});
+
+test('T instantly retries from play, pause and results with a fresh score',()=>{
+ const {g,key}=boot();for(const state of ['playing','paused','ended']){g.reset('skillshot');g.stats.skillShots=7;if(state==='paused')g.pause();if(state==='ended')g.end(true);key('t');assert.equal(g.state,'playing');assert.equal(g.time,0);assert.equal(g.stats.skillShots,0);}
+});
+
+test('ranger changes sprite with vertical facing and falls back if a direction fails to load',()=>{
+ const {g,node,draws}=boot();for(const id of ['rangerArt','rangerBackArt','rangerFrontArt']){node(id).complete=true;node(id).naturalWidth=100;}
+ for(const [angle,id] of [[-Math.PI/2,'rangerBackArt'],[Math.PI/2,'rangerFrontArt'],[0,'rangerArt']]){draws.length=0;g.drawChampion(600,300,angle,true,false,0,0);assert.equal(draws[0],node(id));}
+ node('rangerBackArt').naturalWidth=0;draws.length=0;g.drawChampion(600,300,-Math.PI/2,true,false,0,0);assert.equal(draws[0],node('rangerArt'));
 });

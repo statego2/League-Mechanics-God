@@ -14,7 +14,7 @@
   <main class="app">
     <header class="topbar">
       <div class="brand"><span class="logo" aria-hidden="true">◇</span><div><div class="eyebrow">BROWSER MECHANICS TRAINER</div><h1>LEAGUE <em>MECHANICS</em> GOD</h1></div></div>
-      <div class="top-actions"><span class="build">ALPHA · v0.4</span><button class="ghost-button" id="menuBtn" type="button">DRILLS</button><button class="ghost-button" id="pauseBtn" type="button" disabled>PAUSE <kbd>P</kbd></button><button class="ghost-button" id="restartBtn" type="button" disabled>RESTART <kbd>↻</kbd></button></div>
+      <div class="top-actions"><span class="build">ALPHA · v0.5</span><button class="ghost-button" id="menuBtn" type="button">DRILLS</button><button class="ghost-button" id="pauseBtn" type="button" disabled>PAUSE <kbd>P</kbd></button><button class="ghost-button" id="restartBtn" type="button" disabled>RESTART <kbd>↻</kbd></button></div>
     </header>
 
     <section class="game-shell" aria-label="Play area">
@@ -28,6 +28,8 @@
       <div id="encounterValue" class="encounter">NORMAL · SEED 73129</div>
       <img id="mageArt" src="assets/mage.png" hidden alt="">
       <img id="minionArt" src="assets/minion.png" hidden alt="">
+      <img id="rangerBackArt" src="assets/ranger-back.png" hidden alt="">
+      <img id="rangerFrontArt" src="assets/ranger-front.png" hidden alt="">
       <img id="rangerArt" src="assets/ranger.png" hidden alt="">
       <img id="arenaArt" src="assets/mid-lane.png" hidden alt="">
       <canvas id="arena" aria-label="Real-time top-down training arena. Use mouse and keyboard to play."></canvas>
@@ -64,7 +66,7 @@
       <span><kbd>RIGHT CLICK</kbd> Move / attack target</span>
       <span><kbd>A</kbd> + left click Attack move</span>
       <span><kbd>Q W E R F</kbd> Abilities toward cursor</span>
-      <span><kbd>S</kbd> Stop · <kbd>P</kbd> Pause</span>
+      <span><kbd>S</kbd> Stop · <kbd>P</kbd> Pause · <kbd>T</kbd> Retry</span>
       <span class="help-tag">An independent fan-made mechanics trainer. Not affiliated with Riot Games.</span>
     </footer>
   </main>
