@@ -256,3 +256,12 @@ test('skillshot targets spawn and move outside physical walls',()=>{
 test('Ahri timing uses level-one cadence and 20 percent windup',()=>{
  for(const fps of [30,60,120]){const {g,node}=boot();node('attackSpeed').listeners.change({target:{value:'ahri'}});g.reset('kite');g.disableSpawn();const e=foe(g);g.attackOrder(e);advance(g,.28);assert.equal(g.stats.released,0);advance(g,.04);assert.equal(g.stats.released,1);g.loop(1000);for(let i=1;i<=fps*4;i++)g.loop(1000+i*1000/fps);assert.equal(g.stats.released,3);assert.match(node('encounterValue').textContent,/AS 0.668/);}
 });
+
+test('Ahri CS profile uses 53 damage and separates old timing-only records',()=>{
+ const {g,node,window}=boot(),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
+ node('attackSpeed').listeners.change({target:{value:'ahri'}});g.reset('lastHit');g.disableSpawn();g.addWave();const e=g.foes[0];assert.equal(e.hp,465);assert.equal(g.player.speed,165);e.x=820;e.tick=999;e.hp=54;g.attackOrder(e);advance(g,.7);assert.equal(e.hp,1);assert.equal(g.stats.cs,0);
+ g.moveTo(600,337.5);e.hp=53;g.attackOrder(e);advance(g,2);assert.equal(e.alive,false);assert.equal(node('killsValue').textContent,1);g.end(true);assert.equal(values.get('lmg.best.v1.lastHit.normal.cs_ahri_v1'),'1');assert.match(node('menuDescription').textContent,/53 damage/);
+});
+test('Ahri CS unattended waves resolve without breaking the drill',()=>{
+ for(const difficulty of ['easy','normal','hard']){const {g,node}=boot();node('attackSpeed').listeners.change({target:{value:'ahri'}});node('difficulty').listeners.change({target:{value:difficulty}});g.reset('lastHit');advance(g,60);assert.equal(g.state,'ended');assert.equal(g.stats.missed,15);}
+});
