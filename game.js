@@ -31,11 +31,21 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v10":mode==="dodge"?(ahriBase()?".director_v8":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
+function recordSuffix(){return ahriCS()?".cs_ahri_v10":mode==="dodge"?(ahriBase()?".director_v9":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 function recordLabel(){return difficulty+(attackPreset==="standard"?"":", "+ATTACK_PRESETS[attackPreset].label+" AS");}
 const STEP=1/120;let accumulator=0;
+// Circle against an oriented rectangle, including rounded contact from the
+// champion radius at its corners (the beam itself has flat ends).
+function beamTouchesPlayer(beam,point,radius){
+ const vx=beam.endX-beam.x,vy=beam.endY-beam.y,length=Math.hypot(vx,vy);
+ if(!length)return false;
+ const dx=point.x-beam.x,dy=point.y-beam.y;
+ const along=(dx*vx+dy*vy)/length,across=Math.abs(dx*vy-dy*vx)/length;
+ const outsideAlong=Math.max(0,-along,along-length),outsideAcross=Math.max(0,across-beam.r);
+ return outsideAlong*outsideAlong+outsideAcross*outsideAcross<=radius*radius;
+}
 // Closest approach of two moving circles, also used for fast missiles.
 function segmentDistance(ax,ay,bx,by){const dx=bx-ax,dy=by-ay;const t=clamp(-(ax*dx+ay*dy)/(dx*dx+dy*dy||1),0,1);return Math.hypot(ax+dx*t,ay+dy*t);}
 // Earliest swept-circle contact, in [0,1], or Infinity when paths miss.
@@ -601,7 +611,7 @@ if(state!=="playing")return;
 if(ahriCS())updateCSWave(dt);
 for(const h of hazards){
  if(h.beam){
-  const collision=segmentDistance(h.x-player.x,h.y-player.y,h.endX-player.x,h.endY-player.y)<=h.r+player.hitRadius;
+  const collision=beamTouchesPlayer(h,player,player.hitRadius);
   if(collision)h.threat=true;
   h.ttl-=dt;if(h.ttl<=0){
    fx.push({x:h.x,y:h.y,endX:h.endX,endY:h.endY,vx:0,vy:0,ttl:.2,max:.2,color:"#b5e5ff",beam:true});
@@ -811,7 +821,7 @@ if(e.charm>0){ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="center"
 ctx.fillStyle="#101e23";ctx.fillRect(e.x-25,e.y-86,50,5);ctx.fillStyle="#ff9290";ctx.fillRect(e.x-25,e.y-86,50*clamp(e.hp/e.maxHp,0,1),5);}
 for(const s of shots){if(s.spellName==="BLITZ Q"&&s.anchor){ctx.beginPath();ctx.moveTo(s.anchor.x,s.anchor.y-25);ctx.lineTo(s.x,s.y);ctx.lineWidth=4;ctx.strokeStyle="#d0ba86";ctx.stroke();}const visualRadius=(s.kind==="orb"||s.kind==="enemyOrb")?13:s.kind==="charm"?10:s.kind==="enemy"&&s.r>15?11:s.r;const blitz=s.spellName==="BLITZ Q",ez=s.spellName==="EZREAL Q",lux=s.spellName==="LUX Q",orb=s.spellName==="AHRI Q";ctx.strokeStyle=blitz?"#e6cb8199":orb?"#d9abff99":ez?"#7bd9ff99":lux?"#ffe4a099":(s.kind==="enemy"||s.kind==="enemyMinion")?"#f1797999":s.kind==="charm"?"#ffa8d999":"#7bf4e899";ctx.lineWidth=visualRadius*1.5;ctx.beginPath();ctx.moveTo(s.x-s.vx*.04,s.y-s.vy*.04);ctx.lineTo(s.x,s.y);ctx.stroke();circle(s.x,s.y,visualRadius,blitz?"#ead7a2":orb?"#f1d0ff":ez?"#b2f0ff":lux?"#ffe8aa":(s.kind==="enemy"||s.kind==="enemyMinion")?"#ff9c85":s.kind==="charm"?"#ffb1df":s.kind==="r"?"#f5d47d":"#81fdf1");circle(s.x,s.y,visualRadius*1.7,blitz?"#ebc87244":orb?"#d39aff44":ez?"#6bcfff44":lux?"#ffe09c44":(s.kind==="enemy"||s.kind==="enemyMinion")?"#fe626344":"#8df5dd44");}
 }
-for(const f of fx){ctx.globalAlpha=clamp(f.ttl/f.max,0,1);if(f.beam){ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(f.endX,f.endY);ctx.strokeStyle=f.color;ctx.lineWidth=14;ctx.stroke();}else if(f.text){ctx.font="bold 15px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y);}else circle(f.x,f.y,f.r,f.color);}ctx.globalAlpha=1;
+for(const f of fx){ctx.globalAlpha=clamp(f.ttl/f.max,0,1);if(f.beam){ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(f.endX,f.endY);ctx.strokeStyle=f.color;ctx.lineWidth=XERATH_Q.radius*2;ctx.lineCap="butt";ctx.stroke();}else if(f.text){ctx.font="bold 15px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y);}else circle(f.x,f.y,f.r,f.color);}ctx.globalAlpha=1;
 if(state==="playing"&&(referenceSpell()||mode==="dodge"||mode==="lastHit"||mode==="lane"||mode==="skillshot"||mode==="bait")){ctx.font="700 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#b7d9d9aa";ctx.fillText(referenceSpell()?`${referenceSpell().name} · MOVE OR FLASH · ${Math.max(0,60-Math.floor(time))}s`:mode==="lane"?"FARM, EVADE AND TRADE · "+Math.max(0,60-Math.floor(time))+"s":mode==="bait"?baitLabel():mode==="skillshot"?"AIM WITH THE CURSOR · Q TO FIRE · "+Math.max(0,45-Math.floor(time))+"s":mode==="lastHit"?`${autoDamage()} AUTO DAMAGE · WAVE `+waves+(ahriCS()?` / 20 · GOLD ${stats.gold} · GOLD MISSED ${stats.missedGold}`:" / 5"):"SURVIVE "+Math.max(0,dodgeDuration-Math.floor(time))+"s",W/2,90);}
 }
 function loop(ts){const dt=last?Math.min((ts-last)/1000,.25):0;last=ts;if(state==="playing"){accumulator+=dt;while(accumulator>=STEP&&state==="playing"){update(STEP);accumulator-=STEP;}}else accumulator=0;render();requestAnimationFrame(loop);}

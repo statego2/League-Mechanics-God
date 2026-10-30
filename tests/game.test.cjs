@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnXerathW,spawnXerathQ,canEvadeDodgeCast,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnXerathW,spawnXerathQ,canEvadeDodgeCast,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,strokes,texts,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -772,4 +772,13 @@ test('Xerath Q uses the projectile-width and champion hitbox at its beam boundar
   const dx=h.endX-h.x,dy=h.endY-h.y,d=Math.hypot(dx,dy);g.player.x=h.x+dx/d*350+dy/d*offset;g.player.y=h.y+dy/d*350-dx/d*offset;
   advance(g,.55);assert.equal(g.stats.hits,hit?1:0,`offset ${offset}`);
  }
+});
+
+
+test('Xerath beam uses a flat-ended rectangle against the champion circle',()=>{
+ const {g}=boot('ahri');const beam={x:100,y:100,endX:200,endY:100,r:10};
+ for(const [x,y,expected] of [[150,115,true],[150,115.1,false],[96,113,true],[96,114,false],[204,113,true],[204,114,false],[94.9,100,false],[205.1,100,false]]){
+  assert.equal(g.beamTouchesPlayer(beam,{x,y},5),expected,`${x},${y}`);
+ }
+ const rotated={x:100,y:100,endX:100,endY:200,r:10};assert.equal(g.beamTouchesPlayer(rotated,{x:114,y:96},5),false);assert.equal(g.beamTouchesPlayer(rotated,{x:113,y:96},5),true);
 });
