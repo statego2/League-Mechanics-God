@@ -83,7 +83,7 @@ test('last-hit auto earns CS while an allied projectile kill earns only a miss',
  const {g,node}=boot();g.reset('lastHit');g.disableSpawn();g.addWave();const a=g.foes[0];a.x=820;a.hp=28;a.tick=99;g.attackOrder(a);advance(g,.6);assert.equal(node('killsValue').textContent,1);assert.equal(g.stats.missed,0);
  const b=g.foes[0];b.x=820;b.hp=6;b.tick=0;g.moveTo(600,337.5);advance(g,.5);assert.equal(g.stats.missed,1);assert.equal(node('killsValue').textContent,1);
 });
-test('last-hit offensive spells are disabled and health threshold renders',()=>{
+test('CS offensive spells are disabled and health bars render',()=>{
  const {g,node}=boot();g.reset('lastHit');g.addWave();for(const key of ['q','e','r']){g.cast(key);assert.equal(g.player.cd[key],0);}assert.equal(g.shots.length,0);assert.equal(node('cdQ').textContent,'—');g.render();
 });
 test('holding right mouse retargets movement immediately',()=>{
@@ -455,9 +455,9 @@ test('mirrored first waves move together and meet around the lane centre',()=>{
  advance(g,1);const mx=(blue.x+red.x)/2,my=(blue.y+red.y)/2;assert.ok(Math.abs(mx-650)<35&&Math.abs(my-325)<35,`meeting ${mx}, ${my}`);assert.equal(blue.targetId,red.id);assert.equal(red.targetId,blue.id);
 });
 
-test('Dodge hides cast trajectory while retaining the cast cue and launched projectile',()=>{
+test('Dodge hides cast trajectory and countdown while retaining launched projectile',()=>{
  const {g,strokes}=boot('ahri');g.reset('dodge');g.disableSpawn();const e=foe(g,900);g.shootEnemy(e);g.render();
- assert.ok(e.pending);assert.ok(!strokes.includes('#ff80634a'));assert.ok(strokes.includes('#ffcf87'));
+ assert.ok(e.pending);assert.ok(!strokes.includes('#ff80634a'));assert.ok(!strokes.includes('#ffcf87'));
  g.releaseEnemy(e);assert.equal(g.shots.length,1);assert.ok(g.shots[0].alive);
 });
 test('non-Dodge training modes retain their trajectory guide',()=>{
@@ -537,4 +537,9 @@ test('both teams spawn cannon on waves 3, 6, 9, 12, 15 and 18',()=>{
 });
 test('opening minion formation keeps rows visibly separated',()=>{
  const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();for(const units of [g.allies,g.foes])for(const group of ['melee','caster']){const rows=units.filter(e=>e.minionType===group);assert.ok(Math.hypot(rows[0].x-rows[1].x,rows[0].y-rows[1].y)>70);}
+});
+
+test('champion has no attack timing or permanent hitbox overlays',()=>{
+ const {g,texts,strokes}=boot('ahri');g.reset('kite');g.disableSpawn();const e=foe(g,800);g.attackOrder(e);advance(g,.1);g.render();
+ assert.ok(g.player.windup>0);assert.ok(!texts.some(t=>['READY','WINDUP','RECOVERY'].includes(t)));assert.ok(!strokes.includes('#bcffe944'));assert.ok(!strokes.includes('#7ce8d0'));
 });
