@@ -14,7 +14,7 @@ function boot(){
  sandbox.Math.random=()=>.5;
  vm.createContext(sandbox);
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,addWave,addTarget,get bait(){return bait},get hazards(){return hazards},get player(){return player},get foes(){return foes},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,addWave,addTarget,get bait(){return bait},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -227,4 +227,13 @@ test('personal bests are separated by attack-speed preset',()=>{
 
 test('target escaping during windup is reported as a cancelled attack, without consuming cooldown',()=>{
  const {g}=boot();const e=foe(g,800);g.attackOrder(e);advance(g,.05);e.x=1100;advance(g,.2);assert.equal(g.stats.cancelled,1);assert.equal(g.stats.released,0);assert.equal(g.player.attackTimer,0);
+});
+
+test('telegraphed sweep has a safe corridor and does not award unrelated dodges',()=>{
+ const {g}=boot();g.reset('dodge');g.disableSpawn();advance(g,14.05);assert.equal(g.sweeps.length,1);const gap=g.sweeps[0].gap;g.player.y=gap;advance(g,1.5);assert.equal(g.sweeps.length,0);assert.ok(g.shots.length>0);for(const shot of g.shots)assert.ok(Math.abs(shot.y-gap)>=75);advance(g,5);assert.equal(g.player.hp,160);assert.equal(g.dodged,0);
+});
+test('sweep warning pauses, resets, and its centre corridor is walkable across the arena',()=>{
+ const {g}=boot(),world=require('../world.js');g.reset('dodge');g.disableSpawn();advance(g,14.05);const wall=g.sweeps[0],remaining=wall.remaining;
+ for(let x=22;x<=1178;x+=20)assert.ok(world.pointWalkable({x,y:wall.gap}));
+ g.pause();advance(g,2);assert.equal(wall.remaining,remaining);g.pause();g.reset('dodge');assert.equal(g.sweeps.length,0);g.disableSpawn();advance(g,13);assert.equal(g.sweeps.length,0);
 });

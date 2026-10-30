@@ -51,7 +51,7 @@ The painted mid-lane-inspired arena is a visual approximation. Two marked stone 
 
 ## Repeatable encounters
 
-Choose Foundation, Standard or Expert and one of three attack speeds (0.80, 1.39 or 2.00 attacks per second) before entering a drill. Restart reuses the same seed, so the same inputs produce the same encounter; the seed button changes the next run. Enemies lock their aim during a visible warning before firing line/fan missiles. Dodge Trial also includes delayed circular ground impacts. Move out before the ring fills.
+Choose Foundation, Standard or Expert and one of three attack speeds (0.80, 1.39 or 2.00 attacks per second) before entering a drill. Restart reuses the same seed, so the same inputs produce the same encounter; the seed button changes the next run. Enemies lock their aim during a visible warning before firing line/fan missiles. Dodge Trial also includes delayed circular ground impacts and telegraphed sweeping walls with a marked safe gap. Move out before the ring fills or into the gap before the sweep arrives.
 
 Results store a local best for each drill, difficulty and attack-speed preset in this browser; Kite Arena prioritizes a completed run and the fastest winning time. Unavailable storage does not prevent play.
 
