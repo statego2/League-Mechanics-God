@@ -944,3 +944,22 @@ test('CS deaths do not draw an artificial MISSED label',()=>{
  const {g,texts}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const e=g.foes[0];
  g.applyImpact(e,{sourceId:-1,sourceTeam:'ally',kind:'minionMelee',raw:10000,damageType:'true'});assert.equal(g.stats.missed,1);g.render();assert.ok(!texts.includes('MISSED'));
 });
+
+
+test('result counts a pending Velkoz split as unresolved when it can still hit',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
+ const e=g.enemy(200,150),spec=g.REFERENCE_SPELLS.velkozDodge;Object.assign(e,{dodgeVisitor:true,pending:{angle:0,spell:spec,splitDistance:spec.speed*.25}});g.releaseEnemy(e);advance(g,.27);
+ assert.ok(g.shots.some(s=>s.velkoz==='delay'));g.end(true);assert.match(node('menuDescription').textContent,/1 unresolved phase/);
+});
+test('result excludes an already-ineligible Velkoz split branch',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
+ const e=g.enemy(400,g.player.y),spec=g.REFERENCE_SPELLS.velkozDodge;Object.assign(e,{dodgeVisitor:true,pending:{angle:0,spell:spec}});g.releaseEnemy(e);advance(g,.25);
+ assert.ok(g.shots.some(s=>s.velkoz==='delay'&&s.ignorePlayer));g.end(true);assert.match(node('menuDescription').textContent,/0 unresolved phases/);
+});
+
+test('pause freezes a pending Velkoz split and restart clears it and its outcomes',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
+ const e=g.enemy(200,150),spec=g.REFERENCE_SPELLS.velkozDodge;Object.assign(e,{dodgeVisitor:true,pending:{angle:0,spell:spec,splitDistance:spec.speed*.25}});g.releaseEnemy(e);advance(g,.27);
+ const pending=g.shots.find(s=>s.velkoz==='delay');assert.ok(pending);const ttl=pending.ttl;g.pause();advance(g,1);assert.equal(pending.ttl,ttl);assert.equal(g.shots.filter(s=>s.velkoz==='child').length,0);
+ g.pause();advance(g,.3);assert.equal(g.shots.filter(s=>s.velkoz==='child').length,2);g.reset('dodge');assert.equal(g.shots.length,0);assert.equal(g.dodgeDirector.attempted,0);assert.equal(Object.keys(g.dodgeDirector.outcomes).length,0);
+});

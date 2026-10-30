@@ -106,7 +106,9 @@ function recordDodgeOutcome(shot,outcome){
 }
 function dodgeOutcomeSummary(){
  const entries=Object.entries(dodgeDirector.outcomes).map(([name,v])=>`${name}: ${v.avoided} avoided / ${v.hit} hit / ${v.blocked} blocked / ${v.harmless} harmless`);
- const unresolved=shots.filter(s=>s.alive&&s.directed&&!s.phaseResolved).length+hazards.filter(h=>h.directed&&!h.phaseResolved&&(!(h.orianna||h.malphite)||h.casting)).length+hazards.filter(h=>h.orianna&&h.q&&!h.q.phaseResolved).length;
+ // A split delay is a live phase only if its children can still hit the player.
+ // Once one branch hits, its sibling is no longer a possible player outcome.
+ const unresolved=shots.filter(s=>s.alive&&s.directed&&!s.ignorePlayer&&!(s.group&&s.group.hit)&&(s.velkoz==="delay"||!s.phaseResolved)).length+hazards.filter(h=>h.directed&&!h.phaseResolved&&(!(h.orianna||h.malphite)||h.casting)).length+hazards.filter(h=>h.orianna&&h.q&&!h.q.phaseResolved).length;
  return ` · phase outcomes${entries.length?` (${entries.join('; ')})`:': none'} · ${unresolved} unresolved phase${unresolved===1?'':'s'}`;
 }
 function end(win){
