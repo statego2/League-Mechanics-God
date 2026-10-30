@@ -13,6 +13,8 @@ const ATTACK_PRESETS={ahri:{period:1/.668,windup:.2/.668,label:"0.668"},slow:{pe
 let attackPreset="standard";
 const ahriCS=()=>mode==="lastHit"&&attackPreset==="ahri";
 const autoDamage=()=>ahriCS()?53:28;
+const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
+const autoThreshold=e=>physicalDamage(autoDamage(),e.armor||0);
 const autoSpeed=()=>ahriCS()?875:920; // 0.5 canvas units per League unit, an initial approximation.
 function recordSuffix(){return ahriCS()?".cs_ahri_v1":attackPreset==="standard"?"":".as_"+attackPreset;}
 function recordLabel(){return difficulty+(attackPreset==="standard"?"":", "+ATTACK_PRESETS[attackPreset].label+" AS");}
@@ -308,7 +310,7 @@ for(const s of shots){if(!s.alive)continue;
   }
   if(hit){
    if(s.kind==="allied"){hit.hp-=s.damage;hit.hit=.08;if(hit.hp<=0){hit.alive=false;stats.missed++;number(hit.x,hit.y,"MISSED","#eaa7a1");}}
-   else{if(s.kind==="q"&&mode==="skillshot")stats.skillHits++;if(s.kind==="auto")stats.autoDamage+=Math.min(hit.hp,s.damage);damageEnemy(hit,s.damage);}s.alive=false;
+   else{if(s.kind==="q"&&mode==="skillshot")stats.skillHits++;const damage=s.kind==="auto"?physicalDamage(s.damage,hit.armor||0):s.damage;if(s.kind==="auto")stats.autoDamage+=Math.min(hit.hp,damage);damageEnemy(hit,damage);}s.alive=false;
   }
   if(s.ttl<=0||s.x<0||s.x>W||s.y<0||s.y>H)s.alive=false;
  }
@@ -420,7 +422,7 @@ ctx.fillStyle="#102d27";ctx.fillRect(player.x-22,player.y-86,44,4);ctx.fillStyle
  }
  ctx.save();ctx.translate(e.x,e.y);ctx.save();ctx.scale(1,.45);circle(0,3,17,"#0007");ctx.restore();
  if(minionArt.complete&&minionArt.naturalWidth){ctx.drawImage(minionArt,-24,-48,48,49);if(e.hit>0){ctx.globalAlpha=.4;circle(0,-26,16,"#fff0dc");}}else polygon(0,-10,14,5,Math.PI/2,e.hit?"#fff0dc":"#ac6a57","#dfb68c");ctx.restore();
- const threshold=autoDamage();const last=e.hp<=threshold;ctx.fillStyle="#13252b";ctx.fillRect(e.x-25,e.y-57,50,6);ctx.fillStyle=last?"#f8cf77":"#d9827d";ctx.fillRect(e.x-25,e.y-57,50*Math.max(0,e.hp/e.maxHp),6);ctx.fillStyle="#fff3bf";ctx.fillRect(e.x-25+50*threshold/e.maxHp,e.y-58,1,8);
+ const threshold=autoThreshold(e);const last=e.hp<=threshold;ctx.fillStyle="#13252b";ctx.fillRect(e.x-25,e.y-57,50,6);ctx.fillStyle=last?"#f8cf77":"#d9827d";ctx.fillRect(e.x-25,e.y-57,50*Math.max(0,e.hp/e.maxHp),6);ctx.fillStyle="#fff3bf";ctx.fillRect(e.x-25+50*threshold/e.maxHp,e.y-58,1,8);
  ctx.font="bold 11px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=last?"#ffe09b":"#d6cec1";ctx.fillText(Math.ceil(e.hp)+(last?" • LAST HIT":""),e.x,e.y-65);continue;
 }drawChampion(e.x,e.y,Math.atan2(player.y-e.y,player.x-e.x),false,e.hit>0,e.pending?1:0,time*7);
 ctx.fillStyle="#101e23";ctx.fillRect(e.x-25,e.y-86,50,5);ctx.fillStyle="#ff9290";ctx.fillRect(e.x-25,e.y-86,50*clamp(e.hp/e.maxHp,0,1),5);}

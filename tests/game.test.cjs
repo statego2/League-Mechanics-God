@@ -265,3 +265,7 @@ test('Ahri CS profile uses 53 damage and separates old timing-only records',()=>
 test('Ahri CS unattended waves resolve without breaking the drill',()=>{
  for(const difficulty of ['easy','normal','hard']){const {g,node}=boot();node('attackSpeed').listeners.change({target:{value:'ahri'}});node('difficulty').listeners.change({target:{value:difficulty}});g.reset('lastHit');advance(g,60);assert.equal(g.state,'ended');assert.equal(g.stats.missed,15);}
 });
+
+test('auto attacks apply armor mitigation at impact and CS lethal boundary',()=>{
+ for(const [hp,lethal] of [[26.5,true],[26.6,false]]){const {g,node}=boot();node('attackSpeed').listeners.change({target:{value:'ahri'}});g.reset('lastHit');g.disableSpawn();g.addWave();const e=g.foes[0];e.x=820;e.tick=999;e.armor=100;e.hp=hp;g.attackOrder(e);advance(g,.7);assert.equal(!e.alive,lethal);assert.equal(node('killsValue').textContent,lethal?1:0);if(!lethal)assert.ok(Math.abs(e.hp-.1)<1e-7);g.render();}
+});
