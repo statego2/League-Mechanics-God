@@ -337,3 +337,10 @@ test('Ahri Fox-Fire boosts movement and its three flames deal reduced repeat dam
 test('Ahri Fox-Fire does not cancel an auto windup and is locked in auto-only CS',()=>{
  const {g,node}=boot('ahri');g.reset('kite');g.disableSpawn();const e=foe(g,800);g.attackOrder(e);advance(g,.1);const windup=g.player.windup;g.cast('w');assert.equal(g.player.windup,windup);advance(g,.25);assert.equal(g.stats.released,1);g.reset('lastHit');g.cast('w');assert.equal(g.player.cd.w,0);assert.equal(node('cdW').textContent,'—');
 });
+
+test('Ahri Spirit Rush has three timed charges and fires magic bolts',()=>{
+ const {g,node}=boot('ahri');g.reset('kite');g.disableSpawn();const e=foe(g,800);e.mr=100;const x=g.player.x;g.cast('r');assert.equal(g.player.rushCharges,2);assert.equal(g.player.cd.r,140);g.cast('r');assert.equal(g.player.rushCharges,2);advance(g,.7);assert.ok(g.player.x>x);assert.ok(Math.abs(e.hp-9962.5)<1e-8);advance(g,.4);assert.match(node('cdR').textContent,/×2/);g.cast('r');assert.equal(g.player.rushCharges,1);advance(g,1.1);g.cast('r');assert.equal(g.player.rushCharges,0);advance(g,1.1);g.cast('r');assert.equal(g.player.rushCharges,0);assert.ok(g.player.cd.r>130);
+});
+test('Spirit Rush cannot ignore enemy collisions or cast while rooted',()=>{
+ const {g}=boot('ahri');g.reset('kite');g.disableSpawn();g.player.root=1;g.cast('r');assert.equal(g.player.cd.r,0);g.player.root=0;g.fire(670,g.player.y,0,0,'enemy',18,5,1);g.cast('r');advance(g,.3);assert.equal(g.stats.hits,1);assert.equal(g.player.invuln,0);
+});

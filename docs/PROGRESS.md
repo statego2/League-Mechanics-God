@@ -135,6 +135,12 @@ Kite records now prefer a completed run, then the fastest victory; before the fi
 - Reference: [Ahri](https://wiki.leagueoflegends.com/en-us/Ahri), community V26.06 snapshot. Target priorities, exact flame timing/targeting, minion interactions, AP, mana and LoL speed caps are simplified. R and the ranger sprite remain placeholders.
 - Browser: Fox-Fire rendered three orbiting flames and a 9-second cooldown in Kite. `node --test tests/*.test.cjs`: **81/81 PASS**, including boost, damage/mitigation, windup preservation and CS restriction. No full human playthrough.
 
+## Ahri Spirit Rush (2026-10-30)
+
+- Default Ahri R now starts a 140 s cooldown and a 15 s, three-charge window, with 1 s between casts; each cast dashes up to 250 canvas units and fires up to three homing 75-magic-damage bolts after movement. Dash is continuous, checked against enemy missiles using swept player movement, and is not invulnerable. Root blocks starting it; Q/W/E/R remain disabled in the auto-only CS drill.
+- Source: [Ahri Spirit Rush](https://wiki.leagueoflegends.com/en-us/Ahri), community V26.06 snapshot. Not full fidelity: simplified targeting and fixed dash speed, no kill-based charge extension, spell levels, AP, mana, full wall traversal, exact cast interactions or allied/minion targeting. The character sprite is still the old ranger.
+- `node --test tests/*.test.cjs`: **83/83 PASS**, including charges, cooldown, homing damage, root and dash collision. Browser started Kite, used R, observed movement and ×2 charges. No full human run or real-client comparison.
+
 ## Current playable state
 
 Dodge Trial, Kite Arena and Last-Hit Lab are available in the visible menu locally at http://localhost:8080. The repository was cloned into the `League-Mechanics-God` subdirectory of the original workspace, whose parent contains separate historical Unity research. Work is on `codex/controls-and-dodge`, based on `7de3430`.
@@ -182,7 +188,7 @@ Commit: `89e7529`.
 
 ## Tests actually run
 
-- `node --test tests/*.test.cjs`: **81/81 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
+- `node --test tests/*.test.cjs`: **83/83 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
 - `node --check game.js` and `git diff --check`: PASS.
 - Python reference tools: `python3 -m unittest discover -s reference/league-of-dodge/tools -p 'test_*.py'`: **7/7 PASS**.
 - HTTP server logs: app, JS and CSS return 200/304; initial missing favicon fixed with an original SVG icon.
