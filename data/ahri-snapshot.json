@@ -1,0 +1,118 @@
+{
+  "version": "16.21.1",
+  "source_sha256": "7798228cb92447d19270f5d106559ba4f7f47a6ae3c37c9bdf6c2eda226a3306",
+  "roster": {
+    "hp": {
+      "value": 590,
+      "unit": "riot_stat_units",
+      "source_url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/en_US/champion.json",
+      "json_path": "$.data.Ahri.stats.hp",
+      "patch": "16.21.1",
+      "conditions": "base champion stat or growth, no items/runes",
+      "confidence": "direct_source",
+      "status": "direct"
+    },
+    "movespeed": {
+      "value": 330,
+      "unit": "game_units_per_second",
+      "source_url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/en_US/champion.json",
+      "json_path": "$.data.Ahri.stats.movespeed",
+      "patch": "16.21.1",
+      "conditions": "base champion stat or growth, no items/runes",
+      "confidence": "direct_source",
+      "status": "direct"
+    },
+    "attackrange": {
+      "value": 550,
+      "unit": "game_units",
+      "source_url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/en_US/champion.json",
+      "json_path": "$.data.Ahri.stats.attackrange",
+      "patch": "16.21.1",
+      "conditions": "base champion stat or growth, no items/runes",
+      "confidence": "direct_source",
+      "status": "direct"
+    },
+    "attackspeed": {
+      "value": 0.668,
+      "unit": "attacks_per_second",
+      "source_url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/en_US/champion.json",
+      "json_path": "$.data.Ahri.stats.attackspeed",
+      "patch": "16.21.1",
+      "conditions": "base champion stat or growth, no items/runes",
+      "confidence": "direct_source",
+      "status": "direct"
+    },
+    "attackdamage": {
+      "value": 53,
+      "unit": "riot_stat_units",
+      "source_url": "https://ddragon.leagueoflegends.com/cdn/16.21.1/data/en_US/champion.json",
+      "json_path": "$.data.Ahri.stats.attackdamage",
+      "patch": "16.21.1",
+      "conditions": "base champion stat or growth, no items/runes",
+      "confidence": "direct_source",
+      "status": "direct"
+    }
+  },
+  "featured": {
+    "attack_windup_percent": {
+      "value": 20,
+      "unit": "percent",
+      "source_url": "https://www.leagueoflegends.com/en-gb/news/game-updates/patch-13-22-notes/",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "base; scaling and modifiers need verification",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "attack_missile_speed": {
+      "value": 1750,
+      "unit": "game_units_per_second",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Ahri",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner\u2019s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "q_range": {
+      "value": 900,
+      "unit": "game_units",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Ahri",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner\u2019s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "q_cast_time": {
+      "value": 0.25,
+      "unit": "seconds",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Ahri",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner\u2019s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "q_outbound_speed": {
+      "value": 1550,
+      "unit": "game_units_per_second",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Ahri",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner\u2019s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "q_width": {
+      "value": 200,
+      "unit": "game_units",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Ahri",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner\u2019s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    }
+  }
+}
