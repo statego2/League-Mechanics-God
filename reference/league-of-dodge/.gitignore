@@ -3,6 +3,7 @@
 /archives/*
 !/archives/.gitkeep
 /local-inventory.md
+/local-audit.md
 __pycache__/
 *.pyc
 .DS_Store
