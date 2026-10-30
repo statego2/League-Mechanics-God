@@ -18,9 +18,9 @@ For a public URL, enable **GitHub Pages** in the repository Settings â†’ Pages â
 
 ## Modes
 
-- **Dodge Trial:** survive 60 seconds of Lux Q and Ezreal Q projectiles. Their values are scaled approximations and include Lux root; the aim line is a training aid.
+- **Dodge Trial:** survive 60 seconds of Lux Q and Ezreal Q projectiles. Their values are scaled approximations; hits deal damage without immobilizing the player in this drill. The aim line is a training aid.
 - **Kite Arena:** defeat 10 enemies using movement, autos and abilities.
-- **Last-Hit Lab:** practice Ahri autos against two six-minion waves (12 possible CS). Allied minion attacks are still scripted approximations.
+- **Last-Hit Lab:** practice Ahri autos against two six-minion waves (12 possible CS). Both sides have independent health, attacks and target selection; their positioning and behavior remain simplified.
 
 The default player uses level-1 Ahri's attack timing, base AD, health and scaled movement/projectile speed. Q, W, E and R are initial Ahri-inspired implementations; the player uses generated side and back Ahri poses with horizontal mirroring rather than full directional animation. Q/W/E are disabled in the auto-attack-only CS drill. Legacy drills remain in the code for regression coverage but are not offered in the menu.
 
