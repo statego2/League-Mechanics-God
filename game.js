@@ -27,6 +27,17 @@ function saveRecord(value){
   window.localStorage.setItem(key,String(best));return best;
  }catch{return null;}
 }
+function saveKiteRecord(win){
+ try{
+  const key="lmg.best.v2.kite."+difficulty;
+  const raw=window.localStorage.getItem(key);let old=null;
+  try{old=JSON.parse(raw);}catch{/* discard invalid stored data */}
+  if(!old||typeof old.won!=="boolean"||!Number.isFinite(old.kills)||!Number.isFinite(old.time))old=null;
+  const run={won:win,kills,time:Math.round(time*10)/10};
+  const better=!old||(run.won&&!old.won)||(run.won===old.won&&(run.won?run.time<old.time:(run.kills>old.kills||(run.kills===old.kills&&run.time>old.time))));
+  const best=better?run:old;window.localStorage.setItem(key,JSON.stringify(best));return best;
+ }catch{return null;}
+}
 function end(win){
  if(state!=="playing")return;
  if(mode==="lastHit"){for(const e of foes)if(e.alive&&e.minion){e.alive=false;stats.missed++;}}
@@ -39,8 +50,11 @@ function end(win){
  else if(mode==="dodge")description=`Survived ${time.toFixed(1)}s · ${dodged} threats avoided · ${stats.hits} hits · ${stats.blocked} blocked · ${score} points.`;
  else description=`Defeated ${kills} enemies · ${(stats.autoDamage/Math.max(time,1)).toFixed(1)} auto DPS · ${stats.released} autos · ${stats.cancelled} cancelled · ${Math.round(stats.moving/Math.max(time,1)*100)}% moving · ${stats.hits} hits taken.`;
  const recordValue=mode==="dodge"?score:(mode==="lastHit"||mode==="bait")?kills:mode==="skillshot"?stats.skillHits:kills;
- const best=saveRecord(recordValue);
- if(best!==null)description=description.replace(/\.$/,"")+` · Local best (${difficulty}): ${best} ${mode==="dodge"?"points":(mode==="lastHit"||mode==="bait")?"CS":mode==="skillshot"?"hits":"kills"}.`;
+ const best=mode==="kite"?saveKiteRecord(win):saveRecord(recordValue);
+ if(best!==null){
+  const label=mode==="kite"?(best.won?`win in ${best.time.toFixed(1)}s`:`${best.kills} kills, ${best.time.toFixed(1)}s`):`${best} ${mode==="dodge"?"points":(mode==="lastHit"||mode==="bait")?"CS":"hits"}`;
+  description=description.replace(/\.$/,"")+` · Local best (${difficulty}): ${label}.`;
+ }
  showMenu(win?"TRIAL <span>COMPLETE.</span>":"YOU <span>FELL.</span>",description,true);
 }
 function notify(s){ui.toast.textContent=s;ui.toast.classList.add("show");toastTime=1.35;}

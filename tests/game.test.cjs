@@ -137,3 +137,9 @@ test('ranger changes sprite with vertical facing and falls back if a direction f
  for(const [angle,id] of [[-Math.PI/2,'rangerBackArt'],[Math.PI/2,'rangerFrontArt'],[0,'rangerArt']]){draws.length=0;g.drawChampion(600,300,angle,true,false,0,0);assert.equal(draws[0],node(id));}
  node('rangerBackArt').naturalWidth=0;draws.length=0;g.drawChampion(600,300,-Math.PI/2,true,false,0,0);assert.equal(draws[0],node('rangerArt'));
 });
+
+test('kite records prefer a win, then the fastest win, over earlier partial runs',()=>{
+ const {g,window,node}=boot();const values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
+ g.reset('kite');g.setTime(100);g.end(false);g.reset('kite');g.setTime(30);g.end(true);assert.match(node('menuDescription').textContent,/win in 30.0s/);
+ g.reset('kite');g.setTime(40);g.end(true);assert.match(node('menuDescription').textContent,/win in 30.0s/);g.reset('kite');g.setTime(25);g.end(true);assert.match(node('menuDescription').textContent,/win in 25.0s/);
+});

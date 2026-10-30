@@ -50,7 +50,7 @@ The painted mid-lane-inspired arena is a visual approximation. River, rocks and 
 
 Choose Foundation, Standard or Expert before entering a drill. Restart reuses the same seed, so the same inputs produce the same encounter; the seed button changes the next run. Enemies lock their aim during a visible warning before firing line/fan missiles. Dodge Trial also includes delayed circular ground impacts. Move out before the ring fills.
 
-Results store a local best for each drill and difficulty in this browser; unavailable storage does not prevent play.
+Results store a local best for each drill and difficulty in this browser; Kite Arena prioritizes a completed run and the fastest winning time. Unavailable storage does not prevent play.
 
 ## Mechanics and checks
 
