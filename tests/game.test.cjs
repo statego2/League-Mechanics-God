@@ -14,7 +14,7 @@ function boot(){
  sandbox.Math.random=()=>.5;
  vm.createContext(sandbox);
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,addWave,addTarget,get bait(){return bait},get hazards(){return hazards},get player(){return player},get foes(){return foes},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,addWave,addTarget,get bait(){return bait},get hazards(){return hazards},get player(){return player},get foes(){return foes},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -205,4 +205,15 @@ test('lane scenario resolves all 15 minions and ends at 60 seconds',()=>{
 });
 test('lane minions do not heal the player, champion defeats still do',()=>{
  const {g}=boot();g.reset('lane');advance(g,.02);g.player.hp=100;const minion=g.foes.find(e=>e.minion),opponent=g.foes.find(e=>!e.minion);g.damageEnemy(minion,100);assert.equal(g.player.hp,100);g.damageEnemy(opponent,100);assert.equal(g.player.hp,105);
+});
+
+test('a finishing pulse does not damage further enemies or block missiles after the game ends',()=>{
+ const {g,node}=boot();g.setKills(9);const a=g.enemy(620,337.5),b=g.enemy(640,337.5);a.hp=b.hp=1;g.setFoes([a,b]);const shot=g.fire(610,337.5,0,0,'enemy',18,8,2);g.cast('e');assert.equal(g.state,'ended');assert.equal(b.hp,1);assert.equal(shot.alive,true);assert.equal(g.stats.blocked,0);assert.match(node('menuDescription').textContent,/Defeated 10 enemies/);
+});
+test('retry removes stale toast feedback',()=>{
+ const {g,node,key}=boot(),active=new Set();node('toast').classList={add:k=>active.add(k),remove:k=>active.delete(k)};key('a');assert.ok(active.has('show'));g.reset('kite');assert.equal(g.time,0);assert.equal(active.has('show'),false);
+});
+
+test('fatal contact stops later enemies from acting in the same simulation step',()=>{
+ const {g}=boot();g.player.hp=1;const a=g.enemy(g.player.x,g.player.y),b=g.enemy(g.player.x+100,g.player.y);a.speed=b.speed=0;a.shoot=999;b.shoot=-1;g.setFoes([a,b]);advance(g,.02);assert.equal(g.state,'ended');assert.equal(g.shots.length,0);
 });
