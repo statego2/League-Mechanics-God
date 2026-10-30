@@ -31,7 +31,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v9":mode==="dodge"?(ahriBase()?".ahri_spells_v3":".no_line_"+attackPreset):attackPreset==="standard"?"":".as_"+attackPreset;}
+function recordSuffix(){return ahriCS()?".cs_ahri_v10":mode==="dodge"?(ahriBase()?".ahri_spells_v3":".no_line_"+attackPreset):attackPreset==="standard"?"":".as_"+attackPreset;}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 function recordLabel(){return difficulty+(attackPreset==="standard"?"":", "+ATTACK_PRESETS[attackPreset].label+" AS");}
@@ -121,14 +121,17 @@ function csSpawn(ally,caster,row){
  const direction=ally?-1:1,along=direction*(CS_LANE.frontOffset+(caster?CS_LANE.backOffset:0)),across=(row-1)*CS_LANE.spacing;
  return {x:CS_LANE.x+along*CS_LANE.ux-across*CS_LANE.uy,y:CS_LANE.y+along*CS_LANE.uy+across*CS_LANE.ux};
 }
+// Riot 26.9: 430 base + 35 per 90-second upgrade. Wave 1 includes
+// the 0:30 upgrade, so early melee starts at 465; later waves grow.
+function meleeWaveHealth(wave){return 465+35*Math.floor((wave-1)/3);}
 function addWave(){
  if(waves>=(ahriCS()?20:5))return;waves++;
  for(let i=0;i<(ahriCS()?6:3);i++){
   const caster=ahriCS()&&i>=3,row=i%3,pos=ahriCS()?csSpawn(false,caster,row):{x:910,y:200+row*100};
-  const e=enemy(pos.x,pos.y);e.minion=true;e.minionType=caster?"caster":"melee";e.wave=waves;e.row=row;e.firstAttackDelay=ahriCS()?row*.14:0;e.r=14;e.hp=e.maxHp=ahriCS()?(caster?284:465):88;e.speed=65;e.tick=1+i*.12;e.meleeTick=1+i*.12;e.destination=waves%2?820:875;foes.push(e);
+  const e=enemy(pos.x,pos.y);e.minion=true;e.minionType=caster?"caster":"melee";e.wave=waves;e.row=row;e.firstAttackDelay=ahriCS()?row*.14:0;e.r=14;e.hp=e.maxHp=ahriCS()?(caster?284:meleeWaveHealth(waves)):88;e.speed=65;e.tick=1+i*.12;e.meleeTick=1+i*.12;e.destination=waves%2?820:875;foes.push(e);
  }
  if(ahriCS())for(let i=0;i<6;i++){
-  const caster=i>=3,row=i%3,hp=caster?284:465,pos=csSpawn(true,caster,row);
+  const caster=i>=3,row=i%3,hp=caster?284:meleeWaveHealth(waves),pos=csSpawn(true,caster,row);
   allies.push({id:-(waves*10+i+1),x:pos.x,y:pos.y,r:14,hp,maxHp:hp,armor:0,minion:true,ally:true,minionType:caster?"caster":"melee",wave:waves,row,firstAttackDelay:row*.14,alive:true,hit:0,tick:1+i*.12,targetId:null});
  }
  if(ahriCS()&&waves%3===0){
@@ -155,7 +158,7 @@ function updateMinion(e,dt){
 // Acquisition and movement speed use the research snapshot and provisional 0.5 scale.
 // Siege base damage 39 follows Riot 26.1; the current community source conflicts.
 // Other attack timing, melee/caster range and target reevaluation are approximations.
-const MINION_TRAINING={acquire:250,windup:.25,speed:SIMULATION.toCanvas(350),meleeRange:40,casterRange:255,siegeRange:150,meleePeriod:.8,casterPeriod:1/.667,siegePeriod:1,missileSpeed:380};
+const MINION_TRAINING={acquire:250,windup:.25,speed:SIMULATION.toCanvas(350),meleeRange:40,casterRange:255,siegeRange:150,meleePeriod:.8,casterPeriod:1/.667,siegePeriod:1,missileSpeed:380,retargetInterval:2,ingressHold:130};
 // Route around our approximate static walls. This is not the Rift navmesh.
 function moveMinion(unit,goal,dt,maxTravel=Infinity){
  const destination=world.nearestWalkable(goal,unit.r);
@@ -170,7 +173,11 @@ function minionLaneGoal(unit){
  const direction=unit.ally?1:-1,dx=direction*CS_LANE.ux,dy=direction*CS_LANE.uy,pad=unit.r;
  const tx=dx>0?(world.bounds.right-pad-unit.x)/dx:(world.bounds.left+pad-unit.x)/dx;
  const ty=dy>0?(world.bounds.bottom-pad-unit.y)/dy:(world.bounds.top+pad-unit.y)/dy;
- const distance=Math.max(0,Math.min(tx,ty));return {x:unit.x+dx*distance,y:unit.y+dy*distance};
+ // The finite practice map has no turrets or nexus. Do not run past the
+ // opposing wave's spawn plane while unopposed, or later waves spawn behind us.
+ const along=(unit.x-CS_LANE.x)*CS_LANE.ux+(unit.y-CS_LANE.y)*CS_LANE.uy;
+ const ingressDistance=MINION_TRAINING.ingressHold-direction*along;
+ const distance=Math.max(0,Math.min(tx,ty,ingressDistance));return {x:unit.x+dx*distance,y:unit.y+dy*distance};
 }
 function updateCSWave(dt){
  const red=foes.filter(e=>e.alive&&e.minion),blue=allies.filter(e=>e.alive),meleeImpacts=[];
@@ -194,12 +201,16 @@ function updateCSWave(dt){
    return firstWaveRank(a)-firstWaveRank(b)||priority(a)-priority(b)||dist(unit,a)-dist(unit,b)||a.id-b.id;
   });
   const candidate=choices[0];
+  unit.targetRecheck=Math.max(0,(unit.targetRecheck||0)-dt);
   if(bot&&unit.targetId===bot.id)target=bot;
   else if(hostile&&unit.targetId===player.id)target=player;
-  else if(!target||(candidate&&priority(candidate)<priority(target))){
-   if(!target||target.id!==candidate?.id)unit.windupLeft=0;
-   target=candidate;unit.targetId=target?target.id:null;
-   if(target)unit.firstAcquired=true;
+  else if(!target){
+   // Preserve the base branch's immediate reacquisition and windup rules.
+   unit.windupLeft=0;target=candidate;unit.targetId=target?target.id:null;
+   if(target){unit.firstAcquired=true;unit.targetRecheck=MINION_TRAINING.retargetInterval;}
+  }else if(unit.targetRecheck<=0&&!(unit.windupLeft>0)){
+   if(candidate&&priority(candidate)<priority(target)){target=candidate;unit.targetId=target.id;}
+   unit.targetRecheck=MINION_TRAINING.retargetInterval;
   }
   unit.tick=Math.max(0,unit.tick-dt);
   // With no valid enemy, continue along the simplified diagonal lane. This

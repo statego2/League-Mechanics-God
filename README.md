@@ -31,7 +31,7 @@ The finished **League Mechanics God** is intentionally focused on **exactly four
 
 - **Dodge Trial:** current 60-second approximation with Lux Q / Ezreal Q projectiles; this is the unfinished foundation for Dodge Gauntlet.
 - **Kite Arena:** movement, autos and abilities against enemies; this is **not yet** the approved solo-versus-many Combat Survival experience.
-- **CS Practice:** farm with Ahri across 20 waves over up to ten minutes (126 possible CS), with cannon on every third wave. Two-sided combat, wave placement, attack behavior and late minion stats remain approximations; turrets and upgrades are not yet implemented. This is the unfinished foundation for CS Mastery.
+- **CS Practice:** farm with Ahri across 20 waves over up to ten minutes (126 possible CS), with cannon on every third wave. Two-sided combat, wave placement and attack behavior remain approximations. Melee health grows every three early waves; other minion upgrades and turrets are not yet implemented. This is the unfinished foundation for CS Mastery.
 
 **Mid Lane Mastery is not yet implemented.** Other earlier prototypes (Skillshot Lab, Bait → Dodge → CS, basic Lane Scenario) may remain in source for regression testing but are **not additional planned public menu modes**.
 

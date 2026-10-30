@@ -263,7 +263,7 @@ test('Ahri timing uses level-one cadence and 20 percent windup',()=>{
 test('Ahri CS profile uses 53 damage and separates old timing-only records',()=>{
  const {g,node,window}=boot(),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
  node('attackSpeed').listeners.change({target:{value:'ahri'}});g.reset('lastHit');g.disableSpawn();g.addWave();g.setAllies([]);const e=g.foes[0];assert.equal(e.hp,465);assert.equal(g.player.speed,165);e.x=g.player.x+220;e.y=g.player.y;e.tick=999;e.hp=54;g.attackOrder(e);advance(g,.7);assert.equal(e.hp,1);assert.equal(g.stats.cs,0);
- g.moveTo(600,337.5);e.hp=53;g.attackOrder(e);advance(g,2);assert.equal(e.alive,false);assert.equal(node('killsValue').textContent,1);g.end(true);assert.equal(values.get('lmg.best.v1.lastHit.normal.cs_ahri_v9'),'1');assert.match(node('menuDescription').textContent,/53 damage/);
+ g.moveTo(600,337.5);e.hp=53;g.attackOrder(e);advance(g,2);assert.equal(e.alive,false);assert.equal(node('killsValue').textContent,1);g.end(true);assert.equal(values.get('lmg.best.v1.lastHit.normal.cs_ahri_v10'),'1');assert.match(node('menuDescription').textContent,/53 damage/);
 });
 test('Ahri CS unattended waves resolve without breaking the drill',()=>{
  for(const difficulty of ['easy','normal','hard']){const {g,node}=boot();node('attackSpeed').listeners.change({target:{value:'ahri'}});node('difficulty').listeners.change({target:{value:difficulty}});g.reset('lastHit');advance(g,600.02);assert.equal(g.state,'ended');assert.equal(g.stats.missed+g.stats.unresolved,126);}
@@ -441,7 +441,7 @@ test('CS count and kill identity remain consistent across impacts and reset',()=
 test('minion retains equal-priority target but switches to a higher-priority attacker',()=>{
  const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const a=g.allies[0],other=g.allies[1],first=g.foes[0],second=g.foes[1];
  Object.assign(a,{x:790,y:300,tick:999,targetId:first.id});Object.assign(other,{x:700,y:300,tick:999});Object.assign(first,{x:820,y:300,destination:820,tick:999,targetId:null});Object.assign(second,{x:800,y:300,destination:800,tick:999,targetId:null});g.setAllies([a,other]);g.setFoes([first,second]);
- g.update(1/120);assert.equal(a.targetId,first.id);first.targetId=null;second.targetId=other.id;g.update(1/120);assert.equal(a.targetId,second.id);
+ g.update(1/120);assert.equal(a.targetId,first.id);first.targetId=null;second.targetId=other.id;a.targetRecheck=0;g.update(1/120);assert.equal(a.targetId,second.id);
 });
 test('caster missile survives source death and calculates bonus from health at impact',()=>{
  const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const caster=g.allies[3],target=g.foes[0];
@@ -572,4 +572,23 @@ test('real lane retaliation is reciprocal and delayed bot decisions do not cast 
 });
 test('integrated bot reacts to visible projectile after delay and moves through the real world',async()=>{
  const brain=await import('../modules/laning-opponent-ai/brain.mjs'),adapter=await import('../modules/laning-opponent-ai/adapter.mjs');const {g}=boot('ahri',{laneApi:{...brain,...adapter}});g.reset('middev');g.update(1/120);g.disableSpawn();g.setAllies([]);const bot=g.foes.find(e=>e.laneBot);g.setFoes([bot]);bot.x=600;bot.y=300;g.player.x=200;g.player.y=600;const shot=g.fire(800,300,-150,0,'charm',80,10,3);const y=bot.y;advance(g,.1);assert.equal(bot.y,y);advance(g,.5);assert.notEqual(bot.y,y);assert.equal(shot.alive,true);
+});
+
+test('survivors wait before opposing ingress and meet the next wave after a long push',()=>{
+ for(const allySide of [true,false]){
+  const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const survivor=allySide?g.allies[0]:g.foes[0];
+  if(allySide){g.setAllies([survivor]);g.setFoes([]);}else{g.setAllies([]);g.setFoes([survivor]);}
+  advance(g,20);const oldX=survivor.x,oldY=survivor.y;advance(g,2);assert.ok(Math.hypot(survivor.x-oldX,survivor.y-oldY)<1);
+  g.addWave();if(allySide)g.setAllies([survivor]);else g.setFoes([survivor]);advance(g,.05);const enemies=allySide?g.foes:g.allies;assert.ok(enemies.some(e=>e.id===survivor.targetId),`${allySide?'blue':'red'} survivor failed to acquire wave two`);
+  const victim=enemies.find(e=>e.id===survivor.targetId),hp=victim.hp;advance(g,2);assert.ok(!victim.alive||victim.hp<hp,`${allySide?'blue':'red'} survivor failed to attack wave two`);
+ }
+});
+test('higher-priority target does not interrupt a minion attack windup',()=>{
+ const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const a=g.allies[0],ally=g.allies[1],first=g.foes[0],higher=g.foes[1];
+ Object.assign(a,{x:700,y:300,tick:0,windupLeft:.1,targetId:first.id,firstAcquired:true,targetRecheck:0});Object.assign(ally,{x:650,y:300,tick:999});Object.assign(first,{x:735,y:300,tick:999,targetId:null});Object.assign(higher,{x:750,y:300,tick:999,targetId:ally.id});
+ g.setAllies([a,ally]);g.setFoes([first,higher]);advance(g,.05);assert.equal(a.targetId,first.id);advance(g,.1);assert.ok(first.hp<465);first.targetId=null;higher.targetId=ally.id;a.targetRecheck=0;advance(g,.05);assert.equal(a.targetId,higher.id);
+});
+
+test('successive melee waves receive the sourced 90-second health upgrade',()=>{
+ const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();for(let i=0;i<7;i++)g.addWave();for(const [wave,hp] of [[1,465],[2,465],[3,465],[4,500],[6,500],[7,535]]){assert.ok(g.foes.filter(e=>e.wave===wave&&e.minionType==='melee').every(e=>e.maxHp===hp));assert.ok(g.allies.filter(e=>e.wave===wave&&e.minionType==='melee').every(e=>e.maxHp===hp));}
 });
