@@ -132,6 +132,8 @@ function end(win){
 function notify(s){ui.toast.textContent=s;ui.toast.classList.add("show");toastTime=1.35;}
 function updateUI(){ui.time.textContent=String(Math.floor(time/60)).padStart(2,"0")+":"+String(Math.floor(time%60)).padStart(2,"0");ui.kills.textContent=referenceSpell()?stats.hits:mode==="skillshot"?stats.skillHits:mode==="lane"?stats.cs:kills;ui.dodged.textContent=mode==="bait"?bait.dodges:mode==="skillshot"?stats.skillShots:mode==="lastHit"?stats.missed:dodged;ui.health.textContent=Math.max(0,Math.ceil(player.hp))+" / "+player.maxHp;ui.fill.style.width=(100*clamp(player.hp/player.maxHp,0,1))+"%";for(const key of Object.keys(CD)){const locked=(referenceSpell()&&key!=="f"||((mode==="lastHit"||mode==="bait")&&(["q","e","r"].includes(key)||(mode==="lastHit"&&ahriBase()&&key==="w"))||mode==="skillshot"&&["e","r"].includes(key)));const cd=player.cd[key],el=$("cd"+key.toUpperCase());el.textContent=locked?"—":key==="r"&&ahriBase()&&player.rushWindow>0&&player.rushCharges>0?(player.rushLock>0?player.rushLock.toFixed(1):"×"+player.rushCharges):cd>0?cd.toFixed(cd<1?1:0):"";el.closest(".ability").classList.toggle("on-cd",locked||(cd>0&&!(key==="r"&&ahriBase()&&player.rushWindow>0&&player.rushCharges>0&&player.rushLock<=0)));}}
 function burst(x,y,color,n=11){for(let i=0;i<n;i++){const a=cosmetic(0,TAU),v=cosmetic(50,200);fx.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,ttl:cosmetic(.25,.55),max:.55,color,r:cosmetic(1,3.8)});}}
+// Keep fractional damage in the simulation; combat text displays whole numbers.
+function displayDamage(value){return value>0?Math.max(1,Math.round(value)):0;}
 function number(x,y,value,color){fx.push({x,y:y-30,vx:0,vy:-38,ttl:.7,max:.7,color,text:String(value)});}
 function enemy(x,y){return {id:++enemySeq,x,y,r:20,hp:mode==="kite"?88:58,maxHp:mode==="kite"?88:58,speed:mode==="kite"?rand(75,108):rand(85,135),shoot:rand(.5,1.1),strafe:random()<.5?-1:1,spin:rand(0,TAU),hit:0,castCount:0,charge:0,pending:null,alive:true};}
 // Short pre-positioned practice scenario, not a nexus-to-lane travel simulation.
@@ -586,11 +588,11 @@ function applyImpact(target,impact){
  const applied=Math.min(target.hp,damage);target.hp-=damage;
  if(impact.sourceTeam==="player"&&impact.kind==="auto")stats.autoDamage+=applied;
  if(target===player){
-  cue("hit");stats.hits++;stats.damage+=damage;player.hitFlash=.22;number(player.x,player.y,"−"+damage,"#ff9c98");player.invuln=referenceSpell()||dodgeDirector?0:.14;burst(player.x,player.y,"#ff8e91",14);
+  cue("hit");stats.hits++;stats.damage+=damage;player.hitFlash=.22;number(player.x,player.y,"−"+displayDamage(damage),"#ff9c98");player.invuln=referenceSpell()||dodgeDirector?0:.14;burst(player.x,player.y,"#ff8e91",14);
   if(player.hp<=0){player.hp=0;player.alive=false;player.death={victimId:"player",killerId:impact.sourceId??null,killerTeam:impact.sourceTeam,cause:impact.kind,time:impact.time,eventId:impact.eventId};end(false);}return applied;
  }
  target.hit=impact.sourceTeam==="player"?.18:.08;
- if(impact.sourceTeam==="player"){cue("impact");number(target.x,target.y,damage,"#b8fff0");burst(target.x,target.y,"#80f9eb",5);}
+ if(impact.sourceTeam==="player"){cue("impact");number(target.x,target.y,displayDamage(damage),"#b8fff0");burst(target.x,target.y,"#80f9eb",5);}
  if(target.hp<=0)resolveDeath(target,impact);
  return applied;
 }
@@ -599,7 +601,7 @@ function resolveDeath(e,impact){
  // Source identity is carried with the impact; later impacts cannot change credit.
  e.death={victimId:e.id,killerId:impact.sourceId??null,killerTeam:impact.sourceTeam,cause:impact.kind,time:impact.time,eventId:impact.eventId};
  if(impact.sourceTeam!=="player"){
-  if(e.minion&&!e.ally&&(mode==="lastHit"||mode==="lane")){stats.missed++;if(ahriCS())stats.missedGold+=e.minionType==="siege"?50:e.minionType==="caster"?14:20;number(e.x,e.y,"MISSED","#eaa7a1");}return;
+  if(e.minion&&!e.ally&&(mode==="lastHit"||mode==="lane")){stats.missed++;if(ahriCS())stats.missedGold+=e.minionType==="siege"?50:e.minionType==="caster"?14:20;}return;
  }
  if(ahriCS()&&e.minion&&!e.ally){const gold=e.minionType==="siege"?50:e.minionType==="caster"?14:20;stats.gold+=gold;number(e.x,e.y-20,"+"+gold+"g","#ffe08a");}
  if(e.minion&&(mode==="lane"||mode==="lastHit"))stats.cs++;

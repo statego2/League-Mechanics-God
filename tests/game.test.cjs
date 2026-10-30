@@ -933,3 +933,14 @@ test('an interrupted visitor routes back around terrain before despawning',()=>{
  const e=g.enemy(600,600);Object.assign(e,{dodgeVisitor:true,spell:g.REFERENCE_SPELLS.ezrealDodge,phase:'exit',entry:{x:850,y:600},speed:120});g.setFoes([e]);
  advance(g,5);assert.ok(!e.alive,'visitor remained stuck against the wall');
 });
+
+
+test('damage text is rounded without changing fractional damage or health',()=>{
+ const {g,texts}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
+ const damage=98/1.21;g.fire(g.player.x-20,g.player.y,100,0,'enemy',damage,8,1);g.update(1/120);g.render();
+ assert.ok(Math.abs(g.player.hp-(590-damage))<1e-9);assert.ok(texts.includes('−81'));assert.ok(!texts.some(t=>t.startsWith('−81.')));
+});
+test('CS deaths do not draw an artificial MISSED label',()=>{
+ const {g,texts}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const e=g.foes[0];
+ g.applyImpact(e,{sourceId:-1,sourceTeam:'ally',kind:'minionMelee',raw:10000,damageType:'true'});assert.equal(g.stats.missed,1);g.render();assert.ok(!texts.includes('MISSED'));
+});
