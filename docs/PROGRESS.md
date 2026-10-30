@@ -84,7 +84,7 @@ Kite records now prefer a completed run, then the fastest victory; before the fi
 ## Kiting timing feedback (2026-10-30)
 
 - Kite results show the time the auto was ready with at least one enemy in range and no active windup, alongside auto DPS, release/cancel count, movement percentage and damage received. This is descriptive: waiting can be intentional while dodging or spacing.
-- `node --test tests/*.test.cjs`: **57/57 PASS**; the timing metric increases while idle and remains near zero during continuous attacks in a controlled fixture. No human calibration of this feedback yet.
+- `node --test tests/*.test.cjs`: **58/58 PASS**; the timing metric increases while idle and remains near zero during continuous attacks in a controlled fixture. No human calibration of this feedback yet.
 
 ## Current playable state
 
@@ -121,9 +121,14 @@ Commit: `89e7529`.
 - Hold right mouse while moving the cursor to update orders. DRILLS button returns to selection without reload; held pause keys no longer toggle repeatedly.
 - Real browser verified: right-click selected the middle minion, displayed windup, released autos and earned **1 CS**; allied kills then increased MISSED to **2**. No console errors/warnings captured. Pause displayed the correct frozen counters.
 
+## Latest continuation: complete Bait run and narrow-screen results
+
+- A manual browser run completed all three Bait → Dodge → CS rounds on normal difficulty: 3 spells baited, 3 dodged, 3/3 CS, 0 missed and 0 damage. The elapsed time included pauses between manual inputs and is not a performance benchmark.
+- The drill menu can be scrolled on narrow screens. Results and pause now reset its scroll position so the title and score are visible; a regression test covers both transitions.
+
 ## Tests actually run
 
-- `node --test tests/game.test.cjs`: **57/57 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
+- `node --test tests/game.test.cjs`: **58/58 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
 - `node --check game.js` and `git diff --check`: PASS.
 - Python reference tools: `python3 -m unittest discover -s reference/league-of-dodge/tools -p 'test_*.py'`: **7/7 PASS**.
 - HTTP server logs: app, JS and CSS return 200/304; initial missing favicon fixed with an original SVG icon.

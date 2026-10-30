@@ -241,3 +241,7 @@ test('sweep warning pauses, resets, and its centre corridor is walkable across t
 test('kite feedback measures time ready in range without an active attack',()=>{
  const {g}=boot();const e=foe(g);advance(g,1);assert.ok(g.stats.readyIdle>.99);g.attackOrder(e);const baseline=g.stats.readyIdle;advance(g,2);assert.ok(g.stats.readyIdle-baseline<.03);
 });
+
+test('results and pause reopen the menu at the top',()=>{
+ const {g,node}=boot();node('menu').scrollTop=200;g.pause();assert.equal(node('menu').scrollTop,0);g.pause();node('menu').scrollTop=180;g.end(false);assert.equal(node('menu').scrollTop,0);
+});
