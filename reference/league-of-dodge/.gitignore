@@ -1,0 +1,8 @@
+/originals/*
+!/originals/.gitkeep
+/archives/*
+!/archives/.gitkeep
+/local-inventory.md
+__pycache__/
+*.pyc
+.DS_Store
