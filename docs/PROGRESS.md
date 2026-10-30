@@ -50,6 +50,15 @@
 2. **Repair the mechanic accuracy bottleneck.** Implement meaningful threat-based dodge counts and explicit attack windup/release/cancel/recovery, including targeting and range cues; add reproducible scenarios at 30/60/120 FPS. **Acceptance:** non-threatening shots do not count as dodges; pre-release move cancels damage; post-release move does not cancel committed projectile.
 3. **Import full Mac-side reference inventory when accessible.** Run the committed import_local_refs.py on the Mac with loldodge-all-updated.zip, check private local-inventory.md, compare ZIP game roots and missing files, and update the public manifest with verified *metadata*. **Acceptance:** every discovered ZIP entry inventoried, each missing dependency honestly marked and no unlicensed originals committed.
 
+
+## Importer/auditor verification addendum (2026-10-30)
+
+- The GitHub Actions workflow [Reference importer tests](https://github.com/statego2/League-Mechanics-God/actions/runs/41071003224) **completed successfully** after adding the dependency auditor tests. This ran Python compilation/unit tests on GitHub CI, **not on the user's Mac**.
+- A private, session-local partial ZIP was created from the two uploaded files preserving originals/dodge/game.html and originals/dodge/loldoge/dodge.js. ZIP integrity check passed. It was **not published to GitHub**.
+- Static relative-path check of the partial ZIP: the game.html script src resolves to the included loldoge/dodge.js; the nine sprite atlases named by GameMaker metadata are absent; both named extension scripts are absent.
+- Committed tools/audit_local_tree.py writes a private local-audit.md mapping HTML/CSS/known GameMaker dependencies to OK/MISSING/SERVER-ROOT/EXTERNAL/ESCAPES-ROOT. This can catalog additional games **after** the missing source ZIP is imported on the Mac.
+- A successful CI check is not equivalent to successful local ZIP retrieval, successful external downloads or playable browser testing.
+
 ## Hard constraints for Codex
 
 - NO UNITY. Browser game first, free static hosting.
