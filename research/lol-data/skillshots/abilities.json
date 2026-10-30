@@ -1,0 +1,135 @@
+{
+  "Blitzcrank.Q": {
+    "cast_time": {
+      "value": 0.25,
+      "unit": "seconds",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Blitzcrank",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "missile_range": {
+      "value": 1080,
+      "unit": "game_units",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Blitzcrank",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "plus special terminal area check; effective displayed range 1115",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "width": {
+      "value": 140,
+      "unit": "game_units",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Blitzcrank",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "outgoing missile; terminal check differs",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "speed": {
+      "value": 1800,
+      "unit": "game_units_per_second",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Blitzcrank",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "collision": {
+      "value": "first enemy; pulls and stuns; terminal lollipop uses distinct geometry",
+      "unit": "rule",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Blitzcrank",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "caster_lock": {
+      "value": "cannot move or attack during flight and 0.25 s after hit",
+      "unit": "rule",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Blitzcrank",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    }
+  },
+  "Velkoz.Q": {
+    "cast_time": {
+      "value": 0.25,
+      "unit": "seconds",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Vel%27Koz",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "ranges": {
+      "value": [
+        1100,
+        1100
+      ],
+      "unit": "game_units",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Vel%27Koz",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "initial and each split",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "widths": {
+      "value": [
+        100,
+        90
+      ],
+      "unit": "game_units",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Vel%27Koz",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "initial and split; width is diameter, not radius",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "speeds": {
+      "value": [
+        1300,
+        2100
+      ],
+      "unit": "game_units_per_second",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Vel%27Koz",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "initial and split",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "split": {
+      "value": "recast available after 0.25 s in flight; automatic on collision or max range; split over 0.25 s at perpendicular opposite angles",
+      "unit": "rule",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Vel%27Koz",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "collision": {
+      "value": "initial projectile hits first enemy; split projectiles apply same effects",
+      "unit": "rule",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Vel%27Koz",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    }
+  }
+}
