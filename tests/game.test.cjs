@@ -262,7 +262,7 @@ test('Ahri timing uses level-one cadence and 20 percent windup',()=>{
 test('Ahri CS profile uses 53 damage and separates old timing-only records',()=>{
  const {g,node,window}=boot(),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
  node('attackSpeed').listeners.change({target:{value:'ahri'}});g.reset('lastHit');g.disableSpawn();g.addWave();g.setAllies([]);const e=g.foes[0];assert.equal(e.hp,465);assert.equal(g.player.speed,165);e.x=820;e.tick=999;e.hp=54;g.attackOrder(e);advance(g,.7);assert.equal(e.hp,1);assert.equal(g.stats.cs,0);
- g.moveTo(600,337.5);e.hp=53;g.attackOrder(e);advance(g,2);assert.equal(e.alive,false);assert.equal(node('killsValue').textContent,1);g.end(true);assert.equal(values.get('lmg.best.v1.lastHit.normal.cs_ahri_v6'),'1');assert.match(node('menuDescription').textContent,/53 damage/);
+ g.moveTo(600,337.5);e.hp=53;g.attackOrder(e);advance(g,2);assert.equal(e.alive,false);assert.equal(node('killsValue').textContent,1);g.end(true);assert.equal(values.get('lmg.best.v1.lastHit.normal.cs_ahri_v7'),'1');assert.match(node('menuDescription').textContent,/53 damage/);
 });
 test('Ahri CS unattended waves resolve without breaking the drill',()=>{
  for(const difficulty of ['easy','normal','hard']){const {g,node}=boot();node('attackSpeed').listeners.change({target:{value:'ahri'}});node('difficulty').listeners.change({target:{value:difficulty}});g.reset('lastHit');advance(g,60.02);assert.equal(g.state,'ended');assert.equal(g.stats.missed+g.stats.unresolved,12);}
@@ -462,4 +462,27 @@ test('Dodge hides cast trajectory while retaining the cast cue and launched proj
 });
 test('non-Dodge training modes retain their trajectory guide',()=>{
  const {g,strokes}=boot();g.reset('kite');g.disableSpawn();const e=foe(g,900);g.shootEnemy(e);g.render();assert.ok(strokes.includes('#ff80634a'));
+});
+
+test('same-step melee releases are committed on both sides before damage resolves',()=>{
+ const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const blue=g.allies[0],red=g.foes[0];
+ Object.assign(blue,{x:600,y:300,hp:1,tick:0,windupLeft:.001,targetId:red.id,firstAcquired:true});
+ Object.assign(red,{x:640,y:300,hp:1,tick:0,windupLeft:.001,targetId:blue.id,firstAcquired:true});
+ g.setAllies([blue]);g.setFoes([red]);g.update(1/120);assert.equal(blue.alive,false);assert.equal(red.alive,false);assert.equal(g.stats.missed,1);
+});
+test('minion projectiles hit identical allied and enemy gameplay radii',()=>{
+ const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const blue=g.allies[0],red=g.foes[0];
+ Object.assign(blue,{x:500,y:300,tick:999});Object.assign(red,{x:800,y:300,tick:999});g.setAllies([blue]);g.setFoes([red]);
+ const a=g.fire(770,300,380,0,'allied',21,3,2);a.targetId=red.id;a.minionBonus=.035;
+ const b=g.fire(530,300,-380,0,'enemyMinion',21,3,2);b.targetId=blue.id;b.minionBonus=.035;g.update(1/120);
+ assert.equal(a.alive,false);assert.equal(b.alive,false);assert.ok(Math.abs(blue.hp-red.hp)<1e-9);
+});
+
+test('caster minions have distinct visible team-coloured staffs',()=>{
+ const {g,strokes}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();g.render();assert.ok(strokes.includes('#9de4ff'));assert.ok(strokes.includes('#ffb78a'));
+});
+
+test('initial formation staggers attack readiness rather than synchronizing all three lanes',()=>{
+ const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();assert.ok(g.allies[0].firstAttackDelay<g.allies[1].firstAttackDelay);assert.ok(g.allies[1].firstAttackDelay<g.allies[2].firstAttackDelay);
+ let distinct=false;for(let i=0;i<360;i++){g.update(1/120);const hp=g.foes.filter(e=>e.minionType==='melee').map(e=>e.hp);if(hp.length===3&&new Set(hp).size>1)distinct=true;}assert.ok(distinct,'initial attacks never staggered');
 });
