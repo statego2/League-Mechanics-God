@@ -3,7 +3,7 @@
 // The visual background is illustrative, not an exact Summoner's Rift collision mesh.
 (function(root){
 const bounds={left:22,right:1178,top:59,bottom:639};
-const walls=[{left:85,top:115,right:164,bottom:214},{left:669,top:464,right:763,bottom:599}];
+const walls=[{left:85,top:115,right:164,bottom:214},{left:670,top:555,right:775,bottom:620}];
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const expanded=(r,pad)=>({left:r.left-pad,right:r.right+pad,top:r.top-pad,bottom:r.bottom+pad});
 function inside(p,r){return p.x>r.left&&p.x<r.right&&p.y>r.top&&p.y<r.bottom;}

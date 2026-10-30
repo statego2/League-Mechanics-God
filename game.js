@@ -399,9 +399,8 @@ function render(){const vw=cv.width,vh=cv.height;ctx.setTransform(vw/W,0,0,vh/H,
 const g=ctx.createRadialGradient(W/2,H/2,80,W/2,H/2,700);g.addColorStop(0,"#173d4b");g.addColorStop(.65,"#0f2938");g.addColorStop(1,"#081522");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
 ctx.save();
 // Painted, oblique lane: all marks remain on the same world plane as hitboxes.
-// Frame the existing painted lane slightly farther toward its upper-right end.
 const arenaArt=$("arenaArt");
-if(arenaArt.complete&&arenaArt.naturalWidth){ctx.drawImage(arenaArt,arenaArt.naturalWidth*.04,0,arenaArt.naturalWidth*.96,arenaArt.naturalHeight*.96,0,0,W,H);ctx.fillStyle="#0a1a0d35";ctx.fillRect(0,0,W,H);}else{
+if(arenaArt.complete&&arenaArt.naturalWidth){ctx.drawImage(arenaArt,0,0,W,H);ctx.fillStyle="#0a1a0d35";ctx.fillRect(0,0,W,H);}else{
 ctx.fillStyle="#233d2c";ctx.fillRect(0,0,W,H);
 for(let i=0;i<220;i++){
  const x=((i*197)%W),y=((i*113)%H),n=(Math.sin(i*83.1)+1)/2;
