@@ -1,322 +1,256 @@
-# Mechanics Arena — Combat Under Pressure
-## Gameplay, encounter rhythm, coaching metrics, architecture and implementation plan
+# Mechanics Arena — Continuous Teamfight Chaos
 
-**Project:** League Mechanics God — Mechanics Accelerator  
-**Prepared:** 2026-10-30  
-**Status:** Proposed gameplay specification, **not implemented** by this document. Numerical cadence/balance targets below are initial tuning hypotheses, **not official LoL values**.  
-**Code branch at inspection:** `codex/controls-and-dodge`  
-**Related:** `PROJECT_BLUEPRINT.md`, `docs/MECHANICS_ACCELERATOR_VISION.md`, `docs/DODGE_GAUNTLET_RHYTHM.md`, `docs/PROGRESS.md`, `research/lol-data/ENGINEERING_SPEC.md` (research branch / PR #1).
+**Project:** League Mechanics God / Mechanics Accelerator  
+**Date:** 2026-10-30  
+**Status:** Revised owner-led **vision and implementation specification**, not an implemented feature.  
+**Development branch:** `codex/controls-and-dodge`
 
-> **Product promise:** A concentrated, continuous teamfight-like training environment where surviving is necessary but **not sufficient**. The player must dodge *and* aim *and* move/attack *and* choose targets *and* make real resource decisions. The world keeps changing and the player has to maintain mechanical performance under divided attention.
+> **THE CORE EXPERIENCE:** A continuous, fast-changing, chaotic MOBA fight where the player must use **all useful combat mechanics together**: movement, dodges, autos, Q/W/E/R, Flash, target switching, spacing, combos, mobility and positioning. **Not** a sequence of disconnected scripted "now hit E / now dodge Q" lessons. The arena creates situations; the player chooses how to solve them.
 
-## 1. Relationship to the other modes
+The owner corrected the previous direction: they want **opponents, chaos and teamfights, many combos and full-kit practice together**. The former one-moving-target / one-spell-at-a-time exercise design was too laboratory-like. Isolated drills are optional side tools, **not** the default game loop.
 
-- **Pure Dodge Gauntlet:** dense defensive movement, many Ezreal Q events, rare big ultimates.
-- **Mechanics Arena:** medium-high defensive pressure **plus** offensive objectives. Lower projectile density than Pure Dodge because there must be time to aim, auto, chase, land spells and make decisions.
-- **CS Mastery:** last-hit timing, wave and tower fundamentals.
-- **Mid Lane Mastery:** integrates CS + enemy lane trading/positioning + bait/dodge/punish. Do **not** import minion simulation into Mechanics Arena by default; train fighting here.
+---
 
-**Do not create 15 new top-level menu modes.** Mechanics Arena is ONE mode with selectable champion profile, difficulty and practice emphasis. A scenario director mixes individual tasks in continuous play.
+## 1. Player fantasy: a real battle that never settles
 
-## 2. Player fantasy: a 60-second excerpt
+Imagine:
+- You are **Ahri** in a large, readable MOBA arena.
+- Multiple enemies are already alive and moving. A frontliner advances, a ranged carry kites, a mage looks for angles, and a diver waits for a committed attack/cast. Friendly AI units can participate to create credible allied/enemy geometry and target choices.
+- You land E on a moving carry, Q through two enemies, step to line up the returning orb, dodge Ezreal Q during reposition, auto once, change target to the approaching diver and use R to reposition before being caught.
+- A Blitzcrank comes into hook range, an enemy mage attempts to zone the escape angle, your allies reposition, and the enemy frontline becomes low health. You decide whether to finish the kill, disengage, or turn.
+- Rarely, **Malphite R** creates a high-stakes engage/Flash moment. It must arrive from a believable champion with readable setup, not a scripted explosion on top of the player.
+- The fight keeps moving. Targets die and are replaced, enemy formations rotate and pressure rises. **No forced pause after every successful E, kill, combo or dodge**. A short reset only when the player dies, voluntarily restarts, or enters the next session segment.
 
-- 0:00–0:08 — A mobile target strafes in and out of Ahri E range. Player must land E, then Q, while an Ezreal Q crosses the arena. Enemy may juke, but cannot read the player's hidden mouse cursor or react instantly.
-- 0:08–0:15 — A dangerous pursuer enters. Player should kite out with well-timed autos and reposition, not spend the whole encounter running.
-- 0:15–0:23 — Two targets become available: a fragile, low-health ranged target and a high-threat diver. Target switching matters; a narrow incoming line spell forces a micro-dodge during attack recovery.
-- 0:23–0:28 — Short recovery-in-motion: simple shots continue, no hard reset; a completed target exits, a new opponent enters.
-- 0:28–0:39 — Cast E near true effective maximum range, but moving enemy changes direction during the projectile's travel. The player must lead aim and commit without requiring impossible prediction.
-- 0:39–0:49 — Ahri Q outbound misses narrowly; movement can line up its **return** pass for a second chance. Don't auto-count both passes as one hit.
-- 0:49–1:00 — One readable threat introduces an engagement/Flash decision; if it is a Malphite-type engage, the opponent must appear, act and obey distance-specific reactability; a no-Flash solution or avoidance-by-positioning must be possible when Flash unavailable.
+**It should feel like multiple challenging teamfight moments compressed into 5–15 minutes**, with a much higher rate of meaningful actions than waiting through real match downtime.
 
-This is **illustrative**, not a deterministic schedule. Seeds, opponents and target paths vary. The director changes *when* and *from where* decisions happen, never secret-aims at impossible positions.
+## 2. Core product rule — EMERGENT COMBAT, NOT CHECKLIST COMBAT
 
-## 3. Primary combat tracks
+Wrong approach:
+- "Now press E at max range."
+- "Now dodge this shot."
+- "Now switch targets."
+- The enemies stand still while the activity changes.
+- The game gives you one correct combo and forces you to execute it.
 
-### A. Ahri — skillshot precision while dodging (launch priority)
-The initial Mechanics Arena profile uses the **existing Ahri kit** from the game:
-- **E / Charm:** hit moving targets, aim just ahead of lateral motion, control the distance. An E is blocked on first eligible target. Evaluate successful CC + subsequent opportunity independently; a near-max-range E is a more advanced skill, not automatically better than a correct closer hit.
-- **Q / Orb of Deception:** one outward and one returning passage. Count hits and their pass identity. A good player can reposition to make return hit even if the outbound path was imperfect. Q can pierce eligible enemies. The moving return anchor is player position.
-- **E → Q follow-up:** use the CC window to connect one or both Q passes, then reposition before nearby attacks hit. Reward both execution and avoiding unnecessary damage.
-- **Q + E while under threat:** player has to maintain spatial awareness and input precision. Training-only overlays (range rings, pause-to-review shot line) may be offered in Foundation, not as constant aim assists in Expert.
-- **W / R / Flash:** tactical use under pressure and escape; cast interactions and cooldown must be consistent with the current code and documented assumptions. Flash is not a free generic invulnerability. Preserve realistic cooldown/resource trade-offs.
+Right approach:
+- The enemies fight continuously with believable positions, ranges, cooldowns and decisions.
+- Situations **naturally create** long-range E opportunities, returning Q angles, Flash checks, attack-move windows and target-switch incentives.
+- A player who finds a different valid way to win should succeed.
+- A coaching system can *observe* what happened and identify missed opportunities **after the moment**, without overriding the player's decisions.
 
-Use the pinned LoL data and `ENGINEERING_SPEC.md` where verified. For illustration only, community data describes Ahri Q as outbound magic and returning true damage, each target once per pass; E is a first-target charm. Exact current patch conditions must be checked before claiming complete in-client fidelity.
+We still need explicit mechanics tests for each skill (engineering validation), but the core PLAY experience should feel emergent.
 
-### B. Tristana — fast-attack-speed kiting (second champion track)
-User wants a **fast-attacking ADC track**, especially Tristana. Make this an optional profile inside Mechanics Arena, not a replacement for Ahri in skillshot practice.
+## 3. Top-level structure: one Mechanics Arena, evolving battle
 
-- Train attack-release → move → release cadence, attack range edge, windup cancel, attack-moving under chase, target changing and Flash/jump decisions.
-- **Tristana Q is an attack-speed steroid, not an aimed skillshot**; do not reuse Ahri Q/E scoring or treat every champion Q as a missile.
-- Later: E/Explosive Charge stacks and W/R positioning can make kiting meaningful, but only after the basic high-AS timing/drill feels right; source data distinguishes these from Ahri mechanics.
-- Keep per-profile stats and records separate. Do not silently port Ahri windup/range/hitbox assumptions to Tristana.
+The main game is a continuously running arena, not separate minigames for Q, E, Dodge, Kite or Flash.
 
-### C. Future champions
-Only add if they teach a meaningfully distinct action, not to inflate a champion roster. The same enemy/spell director should support other LoL-like moves without copying the whole game.
+### Encounter population — proposed staged implementation targets
+These are suggested engineering scale points, **not** mandatory permanent limits:
+- **Foundation:** an active combat situation with roughly 2 hostile champions and possibly 1 friendly AI. Already enough to combine offense and defense.
+- **Standard:** roughly 3–4 opponents plus 1–3 active friendly AI; teamfight-style interaction and staggered replacement.
+- **Expert:** target genuine **4v4 or 5v5-like situations** (player counts as one allied champion); enemy frontline, backline, diver, and AoE caster can pressure simultaneously. Performance budget and quality of AI matter more than arbitrary exact headcount.
 
-## 4. Enemy roles — fewer, smarter opponents
+**Do not interpret 1–3 opponents as the final cap.** The eventual 5v5-like teamfight is a product target. Build toward it incrementally while keeping the current game playable.
 
-**Do not simulate 5v5 randomly from day one.** Start with one to three meaningful enemy actors, each with a clear training job. First release can use original silhouettes with data-driven spell modules; later recognizable champion appearances can be polished.
+### No downtime model
+- Enemy actors have individual HP, cooldown, targeting, cast, movement and death.
+- A dead actor can be replaced after a short, variable delay; a replacement **enters from an arena edge**, not from nowhere in melee range.
+- Allied AI (when enabled) provides real targets, CC opportunities, pressure and cover; avoid immortal, decorative bots.
+- No health-reset teleport after every combo. Replacements and occasional healing/recovery are training systems whose effects must be visible and bounded.
+- If player dies, show a fast summary + same-seed retry. Survival and damage both matter.
+- The arena should be traversable, with meaningful terrain, open space and some occlusion/obstacles—not a tiny court filled with overlapping particles.
 
-| Role | Movement / combat intent | What it teaches |
+## 4. The mechanics player practices ALL AT ONCE
+
+| Skill | What emerges during the fight | Feedback after combat |
 | --- | --- | --- |
-| **Strafing target** | Move laterally at changing intervals; sometimes commit or hesitate | Long-range Q/E prediction, lead and timing |
-| **Kite pursuer / diver** | Advance, step in/out of attack range, threaten melee engage | Orbwalk cadence, backward kiting, resource discipline |
-| **Fragile priority target** | Opens short damage windows; retreats if pressured | Accurate target switching, burst conversion |
-| **Caster / disruptor** | Fires credible spells from varied angles | Dodging while aiming or attacking |
-| **Major engager** | Appears rarely, telegraphs meaningful commit | Malphite-type Flash/mobility judgment |
-| **Ball / special object** | Independent ball anchor for Orianna-style threat | Tracking a second object instead of only champions |
+| **Dodge while attacking** | Enemy casts while player is winding up an auto or aiming E | Threat-qualified avoidance; avoidable damage vs useful outgoing attacks |
+| **Ahri E precision** | Moving carries/divers cross multiple distances and angles | E hit %, distance bucket, target motion at cast, interception and value |
+| **Ahri Q two-pass** | Player can reposition as orb returns while enemies move | Outbound, return and double-pass hits, damage conversion |
+| **Combo decisions** | E→Q, Q+R reposition, W chase, autos between spells, R retreat/engage | Safe damage windows converted, unnecessary resources, CC follow-up |
+| **Kiting / attack-move** | Enemy pursuer challenges spacing while other opponents threaten | Attack release uptime, correct windup cancels, spacing and damage |
+| **Target switching** | Priority target becomes vulnerable; a diver suddenly reaches you | Switching efficiency and credible outcome, not one scripted "correct" choice |
+| **Flash reaction** | Malphite-style engage or other lethal CC appears in a realistic fight | Successful protection/escape, wasted Flash, predicted vs visually reactable |
+| **Positioning and flanks** | Enemy backline and frontline reposition, bad angles open | Enemy danger-zone exposure; ability to hit without overcommitting |
+| **Multi-threat awareness** | One enemy ults, one hooks, one kites, one AoEs | Hit avoidance and offensive contribution under divided attention |
+| **Mobility resource management** | Ahri R charges / Flash must be preserved or spent at judgment time | Valid utility, wasted charges, survival and damage trade-offs |
 
-#### Enemy AI behavior requirements
-- Use a simple, **visible, bounded** state machine: `enter → reposition/strafe → prepare/cast/attack → react/retreat → exit`.
-- Use a variety of authored moving-target patterns: strafe left/right, change direction, short stop, accelerate within the chosen champion rules, approach/retreat. Do not just oscillate perfectly on a sine wave forever.
-- Aim policies: current-position, plausible lead/prediction from recent movement, static choke point, occasional bait/feint. Randomize within plausible competence, never track the player's future input.
-- AI reaction latency should be bounded and explicit; it cannot read a player's unreleased mouse-click or change direction on the same frame a missile would hit without rationale.
-- If a target breaks line/range or dies, clear orders/projectiles according to the actual interaction rules.
-- Prevent permanent kiting loops where enemy moves too fast, invulnerable, or outside meaningful range.
+### Champion tracks
+- **Ahri** is the primary complete-kit profile, especially Q/E aiming + returning Q + Charm + R multi-dash.
+- **Tristana** is a later dedicated high-attack-speed ADC profile for actual orbwalking and kiting. Her Q is an AS buff, **not** a skillshot. Preserve her genuine attack cadence, range and E/W/R mechanics as they become verified.
+- Don't force every champion to use Ahri's "Q+E combo" rubric. Each profile uses its own skill kit and goals.
 
-## 5. Training modules inside continuous combat
+## 5. How enemies fight (real team roles, not random bullets)
 
-| ID | Practice module | Player action | Evidence / coaching metric |
+Create lightweight readable enemies with **role-based utility AI**, not instant perfect aim. Examples:
+
+| Role | Core behavior | Combat pressure |
+| --- | --- | --- |
+| Frontline/tank | Move forward, pressure space, protect backline, commit/retreat | Forces spacing and target positioning |
+| Diver/assassin | Wait for vulnerability, commit on backline, use mobility/cooldown | Forces instant defensive reaction and target switch |
+| Ranged carry | Kite, attack nearest viable target, reposition to safety | Forces long-range E prediction and kill-window recognition |
+| Mage/control | Zone paths, use line/AoE casts from credible distance | Forces micro-dodge while aiming |
+| Hook engager | Threaten from edge/range, cast if line-of-fire is plausible | Forces movement discipline and minion/ally cover decisions |
+| Support/disruptor | Peel and briefly CC or protect targets | Forces combo change and opportunity management |
+
+**Enemy behavior should have multiple plausible tactics**, with constrained reaction times:
+- Distinct micro-movement patterns (short strafe, juke, retreat, chase) and cooldown-aware choices.
+- Abilities have windup/committed release; opponent cannot read future mouse input and dodge instantly.
+- Low HP, local team advantage and target risk cause retreats or re-engages, not a permanent suicide march.
+- Enemy priority and attack target vary by circumstance; not all five target the player all the time.
+- Cast decisions respect line-of-fire/collision, range and cooldowns. Never generate impossible animation cancels.
+- Friendly AI is basic but participates, creating credible teamfight lines and target choice—not simply visual decoration.
+
+### Teamfight logic: actions produce consequences
+- A landed Charm holds a meaningful target briefly and may open Q/auto or ally damage.
+- Using R to reposition changes actual range, incoming trajectories and Q return anchor.
+- Flash can change whether a major engage hits, but it isn't invulnerability and should not always be necessary.
+- A low-HP target may be finished or saved; surviving longer is not the only goal.
+- Terrain changes movement and skillshot paths when that interaction is part of the spell rule; visual walls and actual collision must align.
+
+## 6. Rhythm: continuous chaotic flow, with natural peaks
+
+No rigid "10 seconds of Q practice, then target switching" timetable. **The world keeps fighting throughout.** A director controls **combat population, resource budget and threat density**, not the sequence of user button presses.
+
+### Initial intensity tuning proposals
+
+| Difficulty | Opponents active | Important incoming casts per minute | Fight feel |
 | --- | --- | --- | --- |
-| M1 | **Dodge + E** | Sidestep an incoming projectile, land E on a moving target | E attempts/hits, distance bucket, exposure and health cost |
-| M2 | **Max-range Q/E** | Land **separately** measured Ahri Q or E near the true range | Hit rate at 60–80%, 80–95%, 95–100% normalized range; lead error and range violations |
-| M3 | **Q return engineering** | Reposition after Ahri Q so return connects | Outbound hits vs returning hits, double hits and exposure |
-| M4 | **Kite under fire** | Auto while retreating and dodging real spells | Useful auto releases in safe range, avoidable attack cancels, damage taken |
-| M5 | **Target switches** | Shift priority when a diver arrives / low-HP threat appears | Decision delay, target priority success for authored scenarios, lost uptime |
-| M6 | **E → Q punish** | Convert charm into meaningful follow-up without eating counterfire | Valid charm hits, Q passes after CC, safe exits |
-| M7 | **Flash check** | Recognize Malphite R-type engage and decide walk/Flash/mobility | Legitimate hit avoidance, resource waste, timing, false-reactability flags |
-| M8 | **Threat triage** | Choose dodge path among two attacks without surrendering all offense | Qualified avoided hits, damage/goal trade-off |
-| M9 | **Position / spacing** | Hold advantageous attack/cast distance and avoid dangerous path | Time in meaningful range, time exposed to credible hostile threat |
-| M10 | **Burst into exit** | Secure a priority target and move out before counter-attack | Takedown/CC conversion and HP cost, valid escape window |
+| Foundation | ~2 | 6–9 | Full-kit practice while learning simultaneous defense/offense |
+| Standard | ~3–4 | 10–16 | Busy skirmishes, changing target priority |
+| Expert | target ~4–5 | 16–23, only when safe and playable | Teamfight chaos with real multi-spell decisions |
 
-**Max-range rule:** aim for meaningful accuracy *near* a spell's actual effective range, not just reward maximum distance. Normalize by the specific spell's range and collision geometry. E and Q have different maximums. A good decision to take a reliable 70%-range E should not be scored as failure. Never grant a hit by extending its range to make a task feasible.
+**These are provisional training design targets, not LoL game statistics.** When an opponent's ability is on cooldown it cannot be cast; a high cast rate results from multiple independent champions, rotation and replacement—not arbitrarily cheating the same champion's cooldown.
 
-## 6. Encounter rhythm and difficulty
+### Rhythm inside a 10-minute run
+- **0:00–1:30 — Fight establishes itself:** 2–3 opponents (tier-scaled) with meaningful offensive targets; no huge surprise ultimate in the first seconds.
+- **1:30–3:00 — More active team pressure:** replacing defeated opponents, overlapping credible attacks; you must Q/E and kite while dodging.
+- **3:00–5:00 — First major battle:** more team actors, cooldown interactions and a possible rare major engage; not every run includes Malphite R here.
+- **5:00–5:30 — Relative breathing room:** existing fight continues; one or two opponents may be retreating/recovering, not a forced "pause and choose the next drill".
+- **5:30–8:30 — High-intensity freeform TF:** 3–5 active foes depending on tier, varied roles, player initiative matters. Some rare event may appear if fair.
+- **8:30–10:00 — Unseen benchmark:** difficulty parameters lock, unseen seed for encounter choices and enemy behavior; compare performance fairly.
 
-**Core principle:** Pressure is persistent, but offensive windows must remain. Mechanics Arena has lower *hostile cast density* than Pure Dodge, plus more simultaneous **player decisions**.
+The absolute time boundaries are **director pacing guidelines**, not forced transitions. Enemy deaths, position and cooldown states dictate the actual action.
 
-### Starting tuning targets (not measurements)
+### Spell mix inside TF (different from Pure Dodge)
+- **Ezreal Q** remains a fairly common background threat but should not dominate the battle as much as Pure Dodge; the player's main task is to fight, not just sidestep shots.
+- Lux Q, Blitz Q, Ahri Q return, Vel'Koz split and ambient Xerath Q/W can occur depending on actor presence/source and spell implementation.
+- **Orianna R** is rare and anchored to the actual ball.
+- **Malphite R** is a **rare, high-stakes engage**, with readable opponent setup and credible Flash/movement answer; not a guaranteed event every minute.
+- A great TF scene may involve Orianna ball + diver + Ezreal Q + enemy carry, but not all five spells necessarily casting at once.
+- The director should vary **team composition and positions**, not turn every hero into a spell turret.
 
-| Tier | Hostile meaningful casts/min | Simultaneous major hazards | Active targets | Design focus |
-| --- | ---: | ---: | ---: | --- |
-| Foundation | 5–8 | 1 | 1–2 | Learn combos while dodging visible threats |
-| Standard | 9–14 | 1–2 | 2 | Maintain aim and attacks under pressure |
-| Expert | 14–19 | 2–3, only if fair | 2–3 | Target prioritization, rapid reposition and earned Flash decisions |
+## 7. What "chaos" should mean here
 
-Count *qualified threatening casts* separately from raw casts. If spell geometry leaves no attack window or reachable safe path, defer a threat. **These are candidate intensity values to tune by human playtests**, not strict quotas.
+**GOOD CHAOS**
+- 3–5 moving enemies with independent intentions and cooldowns.
+- Two threats arriving from different angles as the player tries to land E.
+- Three targets at different HP with genuine kill and survival trade-offs.
+- One teammate landing CC that creates a brief burst window.
+- A hostile frontline suddenly committing; the player must change target or use R.
+- A rare big engage that forces decision under incomplete certainty.
 
-### Threat composition
-- **Ordinary backbone:** frequent Ezreal Q, plus Lux Q, Blitz Q, Ahri-return threat and Vel'Koz split. Weight toward Ezreal Q as in Dodge, but less dominant to keep varied tasks; an initial candidate is ~35–40% of regular enemy casts being Ezreal Q.
-- **Ambient layer:** occasional Xerath Q/W without visible Xerath; make angle/impact signaled enough to play fairly.
-- **Rare commits:** Malphite R-type engage and Orianna ball/R should be deliberately rare, preferably 1 per several minutes when safe; they should **replace**, not stack blindly on top of, the worst ordinary threat peak.
-- Make the player aim and auto between hostile casts. Do not throw a spell every 0.2 seconds just because the game is called "Mechanics Accelerator."
+**BAD CHAOS**
+- Every enemy perfectly focuses the player from frame zero.
+- Offscreen, untelegraphed guaranteed hits.
+- A Malphite R every 10 seconds merely because the mode is difficult.
+- All opponents casting synchronized abilities for spectacular but non-interactive effects.
+- Player can't press Q/E/auto because every frame requires emergency dodging.
+- RNG determines survival regardless of micro decisions.
 
-### 10-minute full session design (prototype)
-| Window | Feel | Intensity emphasis |
-| --- | --- | --- |
-| 0:00–1:00 | Calibration | One moving target, ordinary Ez Q pressure, Q/E accuracy |
-| 1:00–3:00 | Offensive flow | More moving targets, dodge + E/Q and first kiting |
-| 3:00–4:30 | Target-choice phase | Pursuer enters, real target-switch tradeoffs |
-| 4:30–5:30 | Spike | Short combinations and possibly one rare engage with fair setup |
-| 5:30–6:00 | Recovery in motion | Simple enemy threats continue, shorter overlap |
-| 6:00–8:30 | Mixed advanced | High-precision Q/E, Q return, kite and punish opportunities |
-| 8:30–10:00 | **Unseen benchmark** | Fixed difficulty/seed, no adaptive tuning or perfect aim hints |
+High difficulty should increase **decision density and teamfight complexity**, not make the simulation incoherent.
 
-**Do not** guarantee a Malphite R in every run. In a separate opt-in Flash reaction emphasis, events may be concentrated while preserving true distance/timing. In a long Mechanics Arena, randomize rare event windows so players cannot memorize them.
+## 8. Scoring: "fight effectiveness under pressure"
 
-### Micro-cycle / encounter grammar
+Do not score by spell count or survival time alone. Show **multiple independent skill dimensions**:
 
-```text
-Engage setup (2–4 s)
-→ Offensive opportunity with ordinary fire (8–15 s)
-→ Pressure spike with a second objective (4–8 s)
-→ Recover / reposition (2–5 s, not idle)
-→ Enemy exits or rotates; fresh target context
-```
+1. **SURVIVAL & DEFENSE:** qualified threats, avoided/hit, damage taken per threatening cast, unnecessary CC/engage hits.
+2. **OFFENSE:** real damage, kills/assists, damage in valid offensive windows, Q and E accuracy, outbound/return Q, conversion of CC into damage.
+3. **MICRO & UPTIME:** attacks released versus cancelled, useful attack-move cadence, time safely in range, movement during recovery.
+4. **DECISIONS:** valid target changes, E/Q opportunities taken, resource conservation/spending with consequences, positioning after attacks.
+5. **CONSISTENCY:** repeat-seed vs unrehearsed encounters, benchmarks and session improvement.
 
-**All seconds are training pacing hypotheses.** Real spell cast and missile physics remain governed by the calibrated ability definition, not by the stage clock.
+Example: **90% dodges + zero outgoing damage is a poor Mechanics Arena result.** Similarly huge damage with constant avoidable hits isn't mastery.
 
-The director can let simple/complex beats overlap; the cycle is a design rhythm, not a fixed memorized script.
+Be cautious with "mistakes" that are not objectively identifiable from the fight. A missed E on an intentionally juking opponent is not always a bad decision. No unsupported "you should have flashed" coaching when no clearly viable alternative was known.
 
-## 7. Mechanics Arena Director
+## 9. Practice preferences inside ONE mode
 
-Use one shared engine with Pure Dodge, but with a distinct **Combat Director** controlling both `enemyThreatBudget` and `offensiveOpportunityBudget`.
+The default should be **FREEFORM TEAMFIGHT** with full kit and continuous combat.
 
-### Main structures
-```text
-MechanicsArenaDirector {
-  seed,
-  playerProfile: "ahri" | "tristana",
-  tier: "foundation" | "standard" | "expert",
-  emphasis: "balanced" | "aim" | "kite" | "flash",
-  phase: "setup" | "flow" | "spike" | "recovery" | "benchmark",
-  activeActors: [],
-  activeThreats: [],
-  objectiveWindows: [],
-  scenarioCards: [],
-  scoreEvents: [],
-  difficultyController: ...
-}
-```
+Optional, not new top-level modes:
+- **Combo Focus:** same fight, more enemy conditions that make Ahri E/Q returns and spell chaining relevant.
+- **Kite Focus / Tristana:** same fight, higher-AS enemy chase/spacing situations and meaningful autos.
+- **Flash Focus:** more frequent legitimate engage threats while still fighting (separate from the default rare-Malphite policy).
+- **Balanced:** ordinary combined mechanical skills, the recommended default.
 
-### Example reusable scenario cards
-- `ahri_dodge_e_maxrange`: mobile target with long-range E window plus one simple incoming shot.
-- `ahri_outbound_return`: one moving target placed to make return tracking meaningful.
-- `ahri_e_q_trade`: E-then-Q conversion under incoming angle pressure.
-- `kite_pursuer_under_fire`: in-range pursuer, attack-move and a readable secondary missile.
-- `switch_diver_to_priority`: several targets with an authored, objectively meaningful target-choice change.
-- `malphite_flash_check`: rare engage with real telegraph, range geometry and a viable defensive answer.
-- `orianna_ball_spot`: ball-bearing threat while a target requires offensive precision.
-- `ambient_xerath_w_plus_attack`: leave delayed ground zone without canceling all offense.
+There is **no forced order** of "now Q, now dodge, now kite". Focus changes encounter composition only, not whether player is allowed to use the full kit.
 
-Each scenario card declares:
-1. **Player objective** (what the player should learn).
-2. Enemy actors and spawn / departure lifecycle.
-3. Offensive opportunities (realistic target HP/range/path).
-4. Threat ability definitions and movement constraints.
-5. Valid objectives and counterplay families (walk, move early, Flash, hold position, E cancel).
-6. Eligibility/measurement rules, cooldown/resource assumptions.
-7. Incompatibilities (patterns that would be unfair together).
-8. Seeded variants, difficulty flags, acceptance tests.
+## 10. Implementation architecture on current code
 
-### Fairness contract
-Before adding a new event, test whether the player has *plausible* response paths and whether the stated offensive objective remains achievable; do not make automatic impossibility appear as "Expert".
+Reuse the existing production code rather than making a second disconnected engine.
 
-- No unavoidable spawn-on-player hits.
-- No 0-information Malphite R when it is billed as a **reaction** challenge; near-range engages may be **prediction/spacing** challenges and should be labeled as such.
-- No forced E hit when a blocker is guaranteed to intercept it unless that is the intended lesson.
-- No Q/E requirement while both spells are on cooldown or while player is legitimately hard-CCed, unless the card explicitly tests a recoverable failure.
-- No animation prediction cheating by enemy AI or fake response advantage.
-- Don't cause offscreen danger without a cue or planned map-awareness mode.
-- A "correct" Flash does not require invulnerability assumptions the game does not implement.
-- Enemy deaths, new spawns, cooldowns and HP resets must avoid trivial scoring farming.
+Current branch has vanilla JS / Canvas, 120 Hz fixed step, Ahri Q/W/E/R, Flash, auto attacks, target orders, enemy entities, projectiles, impact/CS work and tests. They are a **starting point**, not already a true multi-agent teamfight.
 
-**Implementation shortcut:** start with hand-authored, valid scenario cards and a deterministic selector. Reachability and fairness checks can be incremental; do not block shipping on a perfect optimal-play solver.
+Suggested modules, incrementally:
+- `TeamfightDirector`: ongoing enemy role mixture, lifecycle, respawns, pacing, pressure/complexity budgets and seeded plans.
+- `ChampionBehavior`: shared state transitions and role-specific target selection, movement and ability decision. Bounded AI reaction latency.
+- `CombatEvents`: source/target IDs, casts, hits, CC, damage, healing, death, assisted takedowns and valid opportunity events; reuse impact pipeline.
+- `AbilityCatalog`: per-spell definitions, hit policies and phases; use research data where verified, mark other settings approximations.
+- `CombatTelemetry`: post-session score dimensions with robust denominators, reproducible benchmark seeds.
+- `Renderer`: visual readability, team identification, projectile/CC effects and range cues, with low-latency inputs.
 
-## 8. Scoring / coaching: evaluate combat quality, not just kills
+Keep the core fixed-step architecture and preserve mouse input, Ahri data adapter and minion simulation for other modes. A development-mode toggle can hide unfinished teamfight logic until it is playable.
 
-Track distinct dimensions instead of a single high number that hides weaknesses:
+### Roadmap — ship the combat feeling in small increments
 
-**Defensive**
-- Qualified incoming threats → avoided, hit, blocked, Flash-evaded, unresolved.
-- Damage received; damage per threat; awareness of dangerous area.
-- Explicit label for timing/prediction when a near-range engage was not visually reactable.
+**Milestone 1: Real fight, not a target dummy**
+- Evolve Kite Arena into a continuous Ahri full-kit battle, no forced phase resets.
+- Two independent hostile actors active simultaneously (one mobile ranged carry and one closer pursuer/diver).
+- Each has health, movement, real targeting, attacks and at least one readable spell.
+- Enemies die, replace from arena edges and continue fighting.
+- Browser-play to confirm Ahri can E, Q outbound/return, R reposition, dodge, attack and switch targets **during one continuous engagement**.
+- Tests for actor life cycle, target changes, deterministic outcomes and no regressions.
 
-**Offensive**
-- E casts/hits and range-bucket accuracy, E hits converted into Q/auto.
-- Q fired, outbound hit, return hit, double-pass hit, target movement context.
-- Autos released/cancelled; effective time-on-target while safely within range; missed attack windows.
-- Damage to valid enemy targets and takedowns, without overstating raw DPS from damage on irrelevant targets.
+**Milestone 2: True skirmish chaos**
+- 3–4 active enemy actors, 1–2 allied AI entities with credible HP, movement, attacks.
+- Role-based AI with readable intentions (carry, tank/diver, caster).
+- Multiple overlapping but fair cooldown-dependent spells.
+- Simple team damage/kill attribution and score dimensions.
+- One 5-minute completed human browser run, plus seed reruns and FPS stability checks.
 
-**Decision**
-- Target switches in context (do not assign false "mistake" labels in ambiguous fights).
-- Resources used/unused: Flash and Ahri R, successful hit prevention and opportunity cost.
-- Position and exposure during casts/windup.
-- Whether the player maintained offensive contribution without taking avoidable damage.
+**Milestone 3: Teamfight scaling**
+- Move to ~4–5 hostile and ~3–4 friendly combatants at Expert.
+- Add engage/peel decisions, health-dependent retreat, flanks and real high-impact ability events; avoid "all bots focus the player".
+- Rare Malphite R, ball-centered Orianna R; preserve realistic timing/response rules.
+- Keep complexity manageable at 30/60/120 render FPS.
+- Validate at least one 10-minute run, different seeds and champions.
 
-**Suggested end-of-run dashboard**
-- `DEFENSE`: Qualified threats avoided and damage taken
-- `PRECISION`: E hit %, Q outbound/return %, long-range attempts
-- `UPTIME`: Attack-release cadence and safe damaging windows
-- `DECISIONS`: Flash checks, target changes and successful CC-to-damage conversion
-- `CONSISTENCY`: repeat seed vs held-out seed performance
+**Milestone 4: Champion specialization and progression**
+- Add verified Tristana fast-AS kite profile inside same arena, not a fake speed modifier to Ahri.
+- Calibrate champion movement/cooldown/attack rules against latest available source data.
+- Add optional focus toggles without replacing default freeform TF.
+- Tune adaptive encounter intensity and unseen benchmark, preserving spell fidelity.
 
-For first release, show only metrics we actually measure. Never claim a precise reaction-time result from a weak proxy. A successful dodge is not the same as an intercepted or harmless projectile. An E hit at long range must use the real target-collision event, not proximity to cursor.
+**Key engineering constraint:** Do not block the first compelling fight on implementing exact full 5v5 League AI or fully authentic Summoner's Rift navmesh. Start with a fun, testable two-opponent fight and add complexity while preserving working gameplay.
 
-### Composite score — optional, not sole success criterion
-A training score may summarize aspects, but keep raw dimensions visible. Normalize by **eligible opportunities**, protect against trivial idle/revive farming, and only define weights after playtesting. A player who runs in circles and never attempts Q/E must **not** receive a high Mechanics score solely for survival.
+## 11. Acceptance tests — what must become true
 
-## 9. Adaptive training and progression
+- Default gameplay is a **persistent combat scene** with enemies acting independently: no mandatory Q/E-specific phase and no HUD instruction required to drive action.
+- Player may use Ahri **Q/W/E/R, autos, movement, Flash** in a normal encounter without artificial skill locks.
+- Two and then multiple enemy actors can exist simultaneously, each with independent state, cooldowns, target and position.
+- On kills, outgoing projectiles, damage and score attribution remain valid; replacements enter visibly and don't spawn on player.
+- Enemy casts respect committed positions/animations, target-range and cooldowns.
+- Enemy target priorities don't always perfectly focus player; allied AI can be attacked and can influence the battle.
+- A skilled player can finish a ten-minute scenario through different valid playstyles; offensive contribution is necessary.
+- Rare Malphite R is **not** spammed; no impossible Flash-reaction demands.
+- Ezreal Q and map-origin threats add pressure but do not crowd out actual attacking and positioning.
+- Q outbound and returning passes are distinguished; valid E interception is preserved.
+- 30/60/120 FPS simulation, pause/restart, seed reuse, fallback images/audio, CS and Dodge modes pass tests.
+- Actual human playthrough confirms the result **feels like a chaotic teamfight**, not multiple scripted skillshot practice stations.
 
-Adapt between engagements, not while a spell is in flight:
-- Increase **frequency**, target movement variety, number of simultaneous decisions, and reduction of *training overlay* if performance remains high.
-- Lower overlap or simplify one task when performance collapses.
-- Retain genuine timings/speeds/hitboxes for a given calibrated profile and patch.
-- No opponents that perfectly dodge input-dependent future shots.
+## 12. Status and handoff rules
 
-### Modes of evaluation
-- **Practice:** visible useful range and telegraph hints; small coaching messages on missed opportunities.
-- **Challenge:** almost no future aim guides; calibrated game cues only.
-- **Benchmark:** unseen seed and locked intensity, per-spell/target scenario versioning. Track delayed retest and optionally user-reported real-match improvement; never assert unmeasured rank gain.
+This document changes **the gameplay direction**, not verified development state. Do not claim that continuous 5v5 exists or that the above pacing values are validated. Start by reading `PROJECT_BLUEPRINT.md`, `docs/PROGRESS.md` and current branch source; coordinate with existing Codex changes. Implement, run browser tests, commit, and update progress.
 
-### Avoid anti-training
-Don't incentivize spam-casting E at full cooldown if there is no good shot. Don't call "miss" a deliberately withheld poor opportunity. Don't reward cancels as inherently bad when dodging a lethal threat matters more. Health and reset policy must be explicit: health lost matters, but reset/recovery should keep the drill playable. Avoid making invulnerability, free cooldown resets or enemy deletion routine without a clear training-only label.
-
-## 10. Player experience & UI
-
-- One menu entry **MECHANICS ARENA** with **Ahri / Tristana** (Tristana enabled only once implemented), tier and practice emphasis. Existing **Kite Arena** can evolve into this; don't create a competing disconnected combat implementation.
-- In-game: preserve large canvas and clear HUD, QWERF, attack range and cooldowns. Highlight only a current high-level training cue (e.g. `LAND E ON MOVING TARGET`) and a subtle next-situation indicator.
-- During attacks: readable enemy silhouettes, facing, spells, ground effect hitboxes. Never overwhelm canvas with instructional text.
-- Optional Foundation-only overlay: cast/attack range, success feedback and unobtrusive post-fail explanation.
-- Results: five stat categories; click a weakness to replay a short controlled scenario using the same seed.
-- Restart and pause preserve deterministic seed behavior; any local records are versioned when scoring rules materially change.
-
-## 11. Technical integration with the checked game.js
-
-At inspection on 2026-10-30:
-- Existing root `game.js` already contains `attackOrder`, `updateOrder`, `startAttack`, player cast Q/W/E/R, impact/death handling, `foes` and `shots`, seeded random, 120 Hz fixed-step update and per-mode results.
-- `Kite Arena` is already playable, and `skillshot`/other legacy modes exist in code; they are not a finished combined Mechanics Arena.
-- `REFERENCE_SPELLS` includes simplified Lux/Ezreal examples for reference Dodge.
-- The research PR and Ahri data adapter exist; avoid blindly adding a new incompatible configuration or overwriting minion work.
-- The reported gameplay test suite was **118/118** in the last inspected `docs/PROGRESS.md`, but newer commits or working-tree code may differ. Re-run current tests rather than trusting historic numbers.
-
-**Preferred path:** Add a new mode flag or evolve Kite Arena behind a clearly named feature switch while retaining the old Kite behavior for regression. Extract a scenario director only when needed, consume existing simulation/events, and keep visual changes separate from physics. No engine migration or Unity.
-
-### Implementation milestones
-
-**A — Combative aim vertical slice (highest immediate value)**
-1. Make a **continuous 3–5 min Ahri** variant with one moving, intentionally juke-capable target.
-2. Spawn repeated Ezreal Q pressure from readable angles while player has full Ahri Q/E access.
-3. Give the target different seeded movement patterns with committed decisions and reaction delays.
-4. Track separate Q outbound/return, E accuracy by range bucket, qualified defensive dodges, HP, auto releases.
-5. Add repeat-seed control, failure/score screen, actual browser-play smoke and tests. **Exit:** Player can meaningfully move, aim E/Q and avoid harm simultaneously without being forced into spam.
-
-**B — Kite & switches**
-1. A threatening pursuer that enters/exits, proper attack target order/windup/cadence.
-2. Two concurrent enemies; identify a target-switch objective in some scenario cards.
-3. Track attack uptime, actual damage and safe movement. **Exit:** Switching and attacking during dodge is trainable and scores appropriately.
-
-**C — Defensive reaction and Flash**
-1. Rare Malphite-style engager with explicit cue and range-dependent opportunity.
-2. Optional Orianna ball/R tracking or Xerath ambient W for spatial multitasking.
-3. Flash resource tracking; don't require impossible reactions or trivially reward never pressing Flash.
-4. **Exit:** Meaningful and fair Flash decisions under offensive load.
-
-**D — Tristana ADC high-AS specialization**
-1. Data-verified champion profile separate from Ahri, not a fake fast Ahri skin.
-2. Attack-speed steroid Q, accurate autos/windup/range; simple kite pursuer card.
-3. Then add E-charge and W escape/reset mechanics after verifying interaction.
-4. **Exit:** High-AS kite rhythm materially differs from Ahri, with no auto-cancelling bugs.
-
-**E — Full 10-minute adaptive loop**
-1. Directed flow/spike/recovery and random but bounded scenario sequencing.
-2. Preset tiers, seed replay, unseen benchmark, local records.
-3. 3–5 and 10-minute actual playthroughs to tune real intensity and performance.
-4. **Exit:** Fun, sustainable, intense, fair and readable across several player skill levels.
-
-### Required acceptance/regression tests
-- Q cast on a strafing target: outbound and returning hits are counted per pass, no double-hit on one pass, target changes after orb launch affect return.
-- E stops on first valid collision and not on an invalid/untargetable enemy; hit and miss range thresholds use independent Q/E ranges.
-- Scenario rotation doesn't delete in-flight missiles or trigger phantom damage, kill/score or invulnerability.
-- 30/60/120 render FPS gives comparable aim/collision and attack counts on fixed seeds; deterministic combat with fixed simulation step.
-- A mid-windup dodge command can cancel an auto; post-release movement cannot retroactively cancel its projectile. Legitimate cancels are not universally labeled poor decisions.
-- An enemy AI cannot dodge at impossible latency and can't read future player inputs.
-- Long-range E attempts with no line-of-fire don't become guaranteed "miss" opportunities or unrealistic scored hits.
-- Under high pressure the player has reachable safe spots and at least some meaningful offense windows.
-- Flash is consumed on cast, does not grant arbitrary invulnerability and cooldown/reset policies are explicit.
-- A player who avoids everything but never casts/attacks fails the offensive objectives, while a player who hits everything but takes excessive avoidable damage fails defensive benchmarks.
-- Restart/pause/storage failures/controls/CS and Dodge modes remain functional; `node --test tests/*.test.cjs`, data generation checks and a browser-play pass verify the implementation.
-
-## 12. What not to do
-
-- Do not create an exact-timing cosplay of LoL by making up unsupported spell numbers.
-- Do not collapse all enemy AIs into instant pixel-perfect aimbots.
-- Do not equate high cast density with better training if aiming becomes impossible.
-- Do not force Q/E to always be max-range: train sensible shot selection, and **separately** benchmark long-range precision.
-- Do not hardcode one optimal target for every ambiguous teamfight and punish reasonable alternatives.
-- Do not transform this into another passive Dodge Trial without combat objectives.
-- Do not reimplement existing Ahri attack/cast/collision logic from scratch for a new mode.
-- Do not let new Mechanics Arena work silently damage CS, minions or the current Dodge Gauntlet.
-- Do not claim "hours of training equals rank gains" without actual real-game transfer measurement.
-
-**Success definition:** At the end of a ten-minute Mechanics Arena run, the player has faced many **fair, distinct combinations of dodge + offensive aiming/kiting/targeting/resource decisions** and receives reliable feedback to improve next time.
+**ONE SENTENCE NORTH STAR:** "Let me fight in chaotic, constantly evolving teamfights so I naturally practice ALL LoL combat mechanics together, at exceptionally high repetition density."
