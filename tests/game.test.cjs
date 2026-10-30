@@ -245,3 +245,10 @@ test('kite feedback measures time ready in range without an active attack',()=>{
 test('results and pause reopen the menu at the top',()=>{
  const {g,node}=boot();node('menu').scrollTop=200;g.pause();assert.equal(node('menu').scrollTop,0);g.pause();node('menu').scrollTop=180;g.end(false);assert.equal(node('menu').scrollTop,0);
 });
+
+test('skillshot targets spawn and move outside physical walls',()=>{
+ const world=require('../world.js');const {g}=boot();g.reset('skillshot');g.disableSpawn();
+ for(let i=0;i<100;i++){g.setFoes([]);g.addTarget();for(const e of g.foes)assert.ok(world.pointWalkable(e,e.r));}
+ const e=foe(g,730,550);e.targetDummy=true;e.anchorX=700;e.anchorY=550;e.phase=0;e.speed=90;
+ for(let i=0;i<1200;i++){g.update(1/120);assert.ok(world.pointWalkable(e,e.r),`target entered a wall at ${e.x}, ${e.y}`);}
+});

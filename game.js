@@ -160,7 +160,7 @@ function updateSweeps(dt){
 function addTarget(){
  if(foes.filter(e=>e.targetDummy&&e.alive).length>=3)return;
  let point=null;
- for(let i=0;i<16;i++){const x=rand(720,1040);const candidate={x,y:clamp(610-x*.42+rand(-100,100),105,H-85)};if(dist(candidate,player)>250&&foes.every(e=>!e.alive||dist(candidate,e)>85)){point=candidate;break;}}
+ for(let i=0;i<16;i++){const x=rand(720,1040);const candidate={x,y:clamp(610-x*.42+rand(-100,100),105,H-85)};if(world.pointWalkable(candidate,20)&&dist(candidate,player)>250&&foes.every(e=>!e.alive||dist(candidate,e)>85)){point=candidate;break;}}
  if(!point)return;
  const e=enemy(point.x,point.y);e.targetDummy=true;e.hp=e.maxHp=45;e.r=20;
  e.anchorX=e.x;e.anchorY=e.y;e.phase=rand(0,TAU);e.speed=difficulty==="easy"?55:difficulty==="hard"?135:90;
@@ -168,8 +168,8 @@ function addTarget(){
 }
 function updateTarget(e,dt){
  e.hit=Math.max(0,e.hit-dt);e.phase+=dt*e.speed/65;
- e.x=clamp(e.anchorX+Math.sin(e.phase)*85,55,W-55);
- e.y=clamp(e.anchorY+Math.sin(e.phase*.57)*45,105,H-85);
+ const desired={x:clamp(e.anchorX+Math.sin(e.phase)*85,55,W-55),y:clamp(e.anchorY+Math.sin(e.phase*.57)*45,105,H-85)};
+ const next=world.clip(e,desired,e.r);e.x=next.x;e.y=next.y;
 }
 function addEnemy(){
  if(foes.length>=(mode==="kite"?5:PRESETS[difficulty].cap))return;
