@@ -913,3 +913,23 @@ test('Orianna Q counts escape from its threatened arrival area',()=>{
  g.player.x=h.destination.x+nx*80;g.player.y=h.destination.y+ny*80;g.update(1/120);g.moveTo(g.player.x+nx*100,g.player.y+ny*100);advance(g,.5);
  assert.equal(g.stats.hits,0);assert.equal(g.dodgeDirector.outcomes['ORIANNA Q'].avoided,1);
 });
+
+
+test('Ahri charm interrupts a Dodge visitor before release and moves it toward her',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
+ const e=g.enemy(800,g.player.y),spec=g.REFERENCE_SPELLS.ezrealDodge;Object.assign(e,{hp:1000,maxHp:1000,dodgeVisitor:true,spell:spec,phase:'cast',charge:.2,pending:{angle:Math.PI,spell:spec},entry:{x:850,y:e.y},speed:120});g.setFoes([e]);
+ g.fire(790,e.y,200,0,'charm',80,10,1);g.update(1/120);assert.equal(e.phase,'exit');assert.equal(e.pending,null);const before=e.x;advance(g,.2);assert.ok(e.x<before);assert.equal(g.dodgeDirector.attempted,0);assert.equal(g.shots.filter(s=>s.directed).length,0);
+ advance(g,1.5);assert.equal(g.dodgeDirector.attempted,0);
+});
+test('charming a Dodge visitor preserves an already-fired projectile',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
+ const e=g.enemy(900,200),spec=g.REFERENCE_SPELLS.blitzDodge;Object.assign(e,{hp:1000,maxHp:1000,dodgeVisitor:true,spell:spec,phase:'hookFlight',entry:{x:950,y:200},speed:120});g.setFoes([e]);
+ const bolt=g.fire(850,150,-100,0,'enemy',10,10,2);bolt.directed=true;bolt.spellName='BLITZ Q';e.orbShot=bolt;g.fire(890,200,200,0,'charm',80,10,1);g.update(1/120);assert.ok(e.charm>0);advance(g,.1);assert.ok(bolt.alive);assert.ok(e.charm>0);assert.equal(e.phase,'hookFlight');
+});
+
+
+test('an interrupted visitor routes back around terrain before despawning',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
+ const e=g.enemy(600,600);Object.assign(e,{dodgeVisitor:true,spell:g.REFERENCE_SPELLS.ezrealDodge,phase:'exit',entry:{x:850,y:600},speed:120});g.setFoes([e]);
+ advance(g,5);assert.ok(!e.alive,'visitor remained stuck against the wall');
+});

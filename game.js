@@ -31,7 +31,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v10":mode==="dodge"?(ahriBase()?".director_v15":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
+function recordSuffix(){return ahriCS()?".cs_ahri_v10":mode==="dodge"?(ahriBase()?".director_v16":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 function recordLabel(){return difficulty+(attackPreset==="standard"?"":", "+ATTACK_PRESETS[attackPreset].label+" AS");}
@@ -509,15 +509,25 @@ function spawnDodgeVisitor(){
  return true;
 }
 function updateDodgeVisitor(e,dt){
+ e.hit=Math.max(0,e.hit-dt);
+ if(e.charm>0){
+  e.charm=Math.max(0,e.charm-dt);
+  const dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1,step=Math.min(d,e.speed*.35*dt);
+  const next=world.clip(e,{x:e.x+dx/d*step,y:e.y+dy/d*step},e.r);e.x=next.x;e.y=next.y;
+  return;
+ }
  if(e.phase==="enter"||e.phase==="exit"){
-  const goal=e.phase==="enter"?e.origin:e.entry,dx=goal.x-e.x,dy=goal.y-e.y,d=Math.hypot(dx,dy),step=Math.min(d,e.speed*dt);
+  const finalGoal=e.phase==="enter"?e.origin:e.entry;
+  let goal=finalGoal;
+  if(e.phase==="exit"&&!world.segmentClear(e,finalGoal,e.r)){const route=world.path(e,finalGoal,e.r);if(route.length)goal=route[0];}
+  const dx=goal.x-e.x,dy=goal.y-e.y,d=Math.hypot(dx,dy),step=Math.min(d,e.speed*dt);
   if(d>0){const next=world.clip(e,{x:e.x+dx/d*step,y:e.y+dy/d*step},e.r);e.x=next.x;e.y=next.y;}
   if(d<=step+.01){if(e.phase==="enter"){
   const offset=e.spell.split?(random()<.5?-.32:.32):0,angle=Math.atan2(player.y-e.y,player.x-e.x)+offset,splitDistance=e.spell.split?dist(e,player)*Math.cos(offset):undefined;
   const isolated=!e.spell.split||(!shots.some(s=>s.alive&&s.directed)&&!hazards.some(h=>h.directed)&&!foes.some(other=>other!==e&&other.alive&&other.dodgeVisitor&&(other.phase==="enter"||other.phase==="cast")));
   const safe=isolated&&canEvadeDodgeCast(e,e.spell)&&(!e.spell.split||canEvadeVelkoz(e,angle,splitDistance,e.spell));
   if(!safe)e.phase="exit";else{e.pending={angle,fan:false,spell:e.spell,splitDistance};e.charge=e.spell.cast;e.phase="cast";}
- }else e.alive=false;}
+ }else if(dist(e,finalGoal)<.1)e.alive=false;}
  }else if(e.phase==="cast"){
   e.charge-=dt;if(e.charge<=0){releaseEnemy(e);e.phase=e.spell.returning?"orbFlight":e.spell.hook?"hookFlight":"exit";}
  }else if(e.phase==="orbFlight"||e.phase==="hookFlight"){
@@ -820,7 +830,7 @@ for(const s of shots){if(!s.alive)continue;
   }
   if(hit){
    if(s.kind==="allied"){applyImpact(hit,{sourceId:s.sourceId??null,sourceTeam:"ally",kind:"minionProjectile",raw:s.damage,damageType:"physical",minionBonus:s.minionBonus});}
-   else{if(s.kind==="q"&&mode==="skillshot")stats.skillHits++;if(s.kind==="charm"){hit.charm=1.2;hit.pending=null;hit.charge=0;hit.shoot=Math.max(hit.shoot,1.2);}const foxHits=s.kind==="fox"?(s.foxCast.hits[hit.id]||0):0;if(s.kind==="fox")s.foxCast.hits[hit.id]=foxHits+1;const raw=s.kind==="fox"&&foxHits?s.damage*.4:s.damage;applyImpact(hit,{sourceId:"player",sourceTeam:"player",kind:s.kind,raw,damageType:s.kind==="auto"?"physical":s.kind==="charm"||s.kind==="fox"||s.kind==="rush"?"magic":"true"});}s.alive=false;
+   else{if(s.kind==="q"&&mode==="skillshot")stats.skillHits++;if(s.kind==="charm"){hit.charm=1.2;hit.pending=null;hit.charge=0;hit.shoot=Math.max(hit.shoot,1.2);if(hit.dodgeVisitor&&(hit.phase==="enter"||hit.phase==="cast"))hit.phase="exit";}const foxHits=s.kind==="fox"?(s.foxCast.hits[hit.id]||0):0;if(s.kind==="fox")s.foxCast.hits[hit.id]=foxHits+1;const raw=s.kind==="fox"&&foxHits?s.damage*.4:s.damage;applyImpact(hit,{sourceId:"player",sourceTeam:"player",kind:s.kind,raw,damageType:s.kind==="auto"?"physical":s.kind==="charm"||s.kind==="fox"||s.kind==="rush"?"magic":"true"});}s.alive=false;
   }
   if(s.ttl<=0||s.x<0||s.x>W||s.y<0||s.y>H)s.alive=false;
  }
