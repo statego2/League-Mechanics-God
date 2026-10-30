@@ -157,33 +157,48 @@ function circle(x,y,r,color,fill=true,width=1){ctx.beginPath();ctx.arc(x,y,r,0,T
 function polygon(x,y,r,n,rotation,fill,stroke){ctx.beginPath();for(let i=0;i<=n;i++){const a=rotation+i*TAU/n;const px=x+Math.cos(a)*r,py=y+Math.sin(a)*r;i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.closePath();ctx.fillStyle=fill;ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.fill();ctx.stroke();}
 // Original vector ranger and enemy mage silhouettes with facing and articulated steps.
 function drawChampion(x,y,a,friendly,hit,windup,motion){
- const walk=friendly?!!player.target:!windup;const stride=walk?Math.sin(motion)*4:0;
- ctx.save();ctx.translate(x,y);ctx.scale(1,.62);circle(0,22,24,"#0006");ctx.restore();
- ctx.save();ctx.translate(x,y);ctx.rotate(a);
- ctx.fillStyle="#122a30";ctx.fillRect(-8,-10+stride,17,7);ctx.fillRect(-8,3-stride,17,7);
- ctx.beginPath();ctx.moveTo(9,-10);ctx.lineTo(-21,-16+stride*.4);ctx.quadraticCurveTo(-14,0,-21,16+stride*.4);ctx.lineTo(9,10);ctx.closePath();ctx.fillStyle=friendly?"#1a6668":"#673951";ctx.fill();ctx.strokeStyle=friendly?"#58b9ad":"#b86a81";ctx.lineWidth=1.5;ctx.stroke();
- polygon(0,0,14,6,0,hit?"#fff3dc":friendly?"#327d88":"#883f58",friendly?"#8eebcf":"#db8d9e");
- circle(3,0,8,hit?"#fff":friendly?"#c3d4b1":"#d4b5b6");
- ctx.fillStyle=friendly?"#2f586b":"#482e48";ctx.fillRect(-3,-8,8,16);ctx.fillStyle="#c6fff0";ctx.fillRect(5,-5,3,10);
- ctx.strokeStyle=friendly?"#edce89":"#bf91dc";ctx.lineWidth=3;ctx.beginPath();
- if(friendly){ctx.arc(13+windup*5,0,18,-1.15,1.15);ctx.stroke();ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(20,-16);ctx.lineTo(13-windup*9,0);ctx.lineTo(20,16);ctx.stroke();ctx.beginPath();ctx.moveTo(6-windup*9,0);ctx.lineTo(34,0);ctx.stroke();}
- else{ctx.moveTo(-4,21);ctx.lineTo(25,15);ctx.stroke();circle(25,15,5,windup?"#ffe0a5":"#e1a3de");}
+ const moving=friendly?!!player.target:!windup;
+ const stride=moving?Math.sin(motion)*4:0;
+ const teal=friendly, cloth=hit?"#fff1d6":teal?"#286c72":"#793e50", edge=teal?"#8dc4ad":"#c88888";
+ ctx.save();ctx.translate(x,y);
+ // The ground anchor is the collision centre; the body rises above it.
+ ctx.save();ctx.scale(1,.43);circle(2,4,25,"#0009");ctx.restore();
+ ctx.lineWidth=7;ctx.lineCap="round";ctx.strokeStyle="#222e32";
+ ctx.beginPath();ctx.moveTo(-6,-13);ctx.lineTo(-8+stride,1);ctx.moveTo(7,-13);ctx.lineTo(9-stride,1);ctx.stroke();
+ ctx.fillStyle="#1c3130";ctx.beginPath();ctx.moveTo(-12,-30);ctx.lineTo(-17,-8);ctx.lineTo(0,-12);ctx.lineTo(15,-7);ctx.lineTo(11,-31);ctx.closePath();ctx.fill();
+ ctx.fillStyle=cloth;ctx.strokeStyle=edge;ctx.lineWidth=2;
+ ctx.beginPath();ctx.moveTo(-13,-38);ctx.lineTo(10,-38);ctx.lineTo(14,-18);ctx.lineTo(0,-12);ctx.lineTo(-14,-18);ctx.closePath();ctx.fill();ctx.stroke();
+ ctx.fillStyle=teal?"#a58c5e":"#9a7460";ctx.fillRect(-11,-23,22,4);
+ circle(0,-43,10,hit?"#fff3dc":teal?"#c7b690":"#d4aea0");
+ ctx.fillStyle=teal?"#324c4e":"#543543";ctx.beginPath();ctx.arc(0,-46,10,Math.PI,TAU);ctx.lineTo(10,-43);ctx.lineTo(-10,-43);ctx.closePath();ctx.fill();
+ const side=Math.cos(a)>=0?1:-1;ctx.strokeStyle=edge;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(side*9,-33);ctx.lineTo(side*(18+windup*4),-25);ctx.stroke();
+ ctx.strokeStyle=teal?"#e3bd79":"#c293d2";ctx.lineWidth=3;ctx.beginPath();
+ if(teal){ctx.arc(side*(20+windup*4),-24,14,side>0?-1.2:Math.PI-1.2,side>0?1.2:Math.PI+1.2);ctx.stroke();ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(side*25,-37);ctx.lineTo(side*(17-windup*5),-24);ctx.lineTo(side*25,-11);ctx.stroke();}
+ else{ctx.moveTo(side*12,-16);ctx.lineTo(side*25,-39);ctx.stroke();circle(side*25,-39,4,windup?"#ffe0a5":"#dba6df");}
  ctx.restore();
 }
 function render(){const vw=cv.width,vh=cv.height;ctx.setTransform(vw/W,0,0,vh/H,0,0);ctx.fillStyle="#091b29";ctx.fillRect(0,0,W,H);
 const g=ctx.createRadialGradient(W/2,H/2,80,W/2,H/2,700);g.addColorStop(0,"#173d4b");g.addColorStop(.65,"#0f2938");g.addColorStop(1,"#081522");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
 ctx.save();
-// A stone practice court surrounded by grass and carved boundary markers.
-ctx.fillStyle="#142e30";ctx.fillRect(0,0,W,H);
-for(let y=0;y<H;y+=42)for(let x=0;x<W;x+=70){const n=(Math.sin(x*13+y*7)+1)/2;ctx.fillStyle=`rgba(91,116,95,${.055+n*.075})`;ctx.fillRect(x+(y%84?35:0),y,68,40);}
-ctx.fillStyle="#44534a55";ctx.beginPath();ctx.moveTo(100,H);ctx.lineTo(0,H-110);ctx.lineTo(W-100,45);ctx.lineTo(W,140);ctx.closePath();ctx.fill();
-ctx.strokeStyle="#9b9c7855";ctx.lineWidth=6;ctx.strokeRect(34,55,W-68,H-94);
-ctx.strokeStyle="#d4bc7d33";ctx.lineWidth=1;ctx.strokeRect(42,63,W-84,H-110);
-for(let i=0;i<22;i++){const x=15+i*57;for(const y of [43,H-26]){ctx.fillStyle="#284236";polygon(x,y,14,5,i,"#253e34","#385747");}}
-circle(W/2,H/2,115,"#aecba011",false,3);circle(W/2,H/2,120,"#aecba011",false,1);
-polygon(W/2,H/2,34,4,Math.PI/4,"#49665a22","#a3bd9b22");
-for(const [x,y] of [[34,55],[W-34,55],[34,H-39],[W-34,H-39]]){circle(x,y,16,"#152e30");polygon(x,y,12,4,Math.PI/4,"#576b5c","#adad7c");circle(x,y,4,"#95dcc6");}
+// Painted, oblique lane: all marks remain on the same world plane as hitboxes.
+ctx.fillStyle="#233d2c";ctx.fillRect(0,0,W,H);
+for(let i=0;i<220;i++){
+ const x=((i*197)%W),y=((i*113)%H),n=(Math.sin(i*83.1)+1)/2;
+ ctx.fillStyle=n>.5?"#35543a55":"#172d2055";
+ ctx.beginPath();ctx.ellipse(x,y,22+n*34,7+n*12,(n-.5)*.6,0,TAU);ctx.fill();
+}
+ctx.fillStyle="#4b493c";ctx.beginPath();ctx.moveTo(-80,540);ctx.bezierCurveTo(120,450,170,350,380,335);ctx.bezierCurveTo(520,300,510,210,760,200);ctx.bezierCurveTo(920,185,1040,100,1280,90);ctx.lineTo(1280,260);ctx.bezierCurveTo(1040,250,970,330,790,344);ctx.bezierCurveTo(610,355,565,440,405,465);ctx.bezierCurveTo(225,500,150,620,-80,690);ctx.closePath();ctx.fill();
+ctx.strokeStyle="#7d756055";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,614);ctx.bezierCurveTo(250,490,290,430,450,407);ctx.bezierCurveTo(650,370,660,267,900,260);ctx.bezierCurveTo(1040,250,1100,190,1200,190);ctx.stroke();
+for(let i=0;i<75;i++){
+ const x=(i*193+41)%W,y=(i*97+67)%H,n=(Math.sin(i*17)+1)/2;
+ if(i%3===0){ctx.save();ctx.translate(x,y);ctx.scale(1,.55);polygon(0,0,8+n*11,5,n,"#3c5041","#62746255");ctx.restore();}
+ else{ctx.strokeStyle=i%2?"#72905a55":"#98a56c44";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x-4,y);ctx.lineTo(x,y-8-n*5);ctx.lineTo(x+2,y);ctx.moveTo(x,y-3);ctx.lineTo(x+6,y-8);ctx.stroke();}
+}
+// Soft arena boundary, kept clear for combat readability.
+ctx.strokeStyle="#b7c79a55";ctx.lineWidth=2;ctx.strokeRect(34,55,W-68,H-94);
+for(const [x,y] of [[34,55],[W-34,55],[34,H-39],[W-34,H-39]]){ctx.save();ctx.translate(x,y);ctx.scale(1,.6);polygon(0,0,16,5,.2,"#536556","#9caa86");circle(0,0,4,"#92c9a8");ctx.restore();}
 ctx.restore();
+
 if(player){
 for(const h of hazards){circle(h.x,h.y,h.r,"#e58c6422");circle(h.x,h.y,h.r,"#ffbc80",false,2);circle(h.x,h.y,h.r*(1-h.ttl/h.max),"#ffc08d99",false,3);ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#ffd5aa";ctx.fillText("IMPACT",h.x,h.y+4);}
 for(const e of foes)if(e.pending){ctx.save();ctx.strokeStyle="#ffc18488";ctx.lineWidth=2;ctx.setLineDash([9,7]);for(const offset of e.pending.fan?[-.23,0,.23]:[0]){const a=e.pending.angle+offset;ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(e.x+Math.cos(a)*740,e.y+Math.sin(a)*740);ctx.stroke();}ctx.restore();circle(e.x,e.y,29,"#ffcf87",false,2);}
@@ -201,12 +216,12 @@ for(const e of foes){if(e.minion){
  const last=e.hp<=28;ctx.fillStyle="#13252b";ctx.fillRect(e.x-25,e.y-30,50,6);ctx.fillStyle=last?"#f8cf77":"#d9827d";ctx.fillRect(e.x-25,e.y-30,50*Math.max(0,e.hp/e.maxHp),6);ctx.fillStyle="#fff3bf";ctx.fillRect(e.x-25+50*28/e.maxHp,e.y-31,1,8);
  ctx.font="bold 11px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=last?"#ffe09b":"#d6cec1";ctx.fillText(Math.ceil(e.hp)+(last?" • LAST HIT":""),e.x,e.y-39);continue;
 }drawChampion(e.x,e.y,Math.atan2(player.y-e.y,player.x-e.x),false,e.hit>0,e.pending?1:0,time*7);
-ctx.fillStyle="#101e23";ctx.fillRect(e.x-25,e.y-39,50,5);ctx.fillStyle="#ff9290";ctx.fillRect(e.x-25,e.y-39,50*clamp(e.hp/e.maxHp,0,1),5);}
+ctx.fillStyle="#101e23";ctx.fillRect(e.x-25,e.y-61,50,5);ctx.fillStyle="#ff9290";ctx.fillRect(e.x-25,e.y-61,50*clamp(e.hp/e.maxHp,0,1),5);}
 for(const s of shots){ctx.strokeStyle=s.kind==="enemy"?"#f1797999":"#7bf4e899";ctx.lineWidth=s.r*1.5;ctx.beginPath();ctx.moveTo(s.x-s.vx*.04,s.y-s.vy*.04);ctx.lineTo(s.x,s.y);ctx.stroke();circle(s.x,s.y,s.r,s.kind==="enemy"?"#ff9c85":s.kind==="r"?"#f5d47d":"#81fdf1");circle(s.x,s.y,s.r*1.7,s.kind==="enemy"?"#fe626344":"#8df5dd44");}
 drawChampion(player.x,player.y,player.facing,true,player.hitFlash>0,player.windup/ATTACK.windup,player.motion);
 circle(player.x,player.y,player.r*.75,"#bcffe944",false,1);
 if(player.invuln>0)circle(player.x,player.y,25,"#ffe4ad",false,2);
-ctx.fillStyle="#102d27";ctx.fillRect(player.x-22,player.y-38,44,4);ctx.fillStyle="#8ceebd";ctx.fillRect(player.x-22,player.y-38,44*player.hp/player.maxHp,4);
+ctx.fillStyle="#102d27";ctx.fillRect(player.x-22,player.y-63,44,4);ctx.fillStyle="#8ceebd";ctx.fillRect(player.x-22,player.y-63,44*player.hp/player.maxHp,4);
 }
 for(const f of fx){ctx.globalAlpha=clamp(f.ttl/f.max,0,1);if(f.text){ctx.font="bold 15px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y);}else circle(f.x,f.y,f.r,f.color);}ctx.globalAlpha=1;
 if(state==="playing"&&(mode==="dodge"||mode==="lastHit")){ctx.font="700 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#b7d9d9aa";ctx.fillText(mode==="lastHit"?"28 AUTO DAMAGE · GOLD HEALTH = LAST HIT · WAVE "+waves+" / 5":"SURVIVE "+Math.max(0,60-Math.floor(time))+"s",W/2,90);}
