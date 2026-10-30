@@ -8,6 +8,10 @@
 
 ---
 
+## Owner decision — Mechanics Arena is solo-vs-many (2026-10-30)
+
+**Binding product clarification:** Mechanics Arena (Mode #2) is **COMBAT SURVIVAL ARENA: one player vs MANY independently acting, damageable enemy champions**. Do not implement friendly AI champions or a symmetric 5v5 teamfight as the default. **Player-facing Standard targets 5–6 simultaneous opponents, Foundation 3–4, Expert 7–8+ if fair and performant.** A 2-opponent scenario is acceptable only as an **internal integration test**, not as the launched experience. The player has full Ahri Q/W/E/R, Flash and autos, practicing dodge, movement, combo execution, kiting and target switching simultaneously in freeform continuous combat. Dead opponents are replaced; battles do not pause for forced button prompts. See the authoritative [Mechanics Arena Design](docs/MECHANICS_ARENA_DESIGN.md). This is an approved design target, **not a claim that it has already been implemented**.
+
 ## 1. Our vision
 
 **Create the best accessible, free, browser-based League of Legends-style mechanics training game.**
