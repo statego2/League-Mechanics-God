@@ -22,7 +22,7 @@ For a public URL, enable **GitHub Pages** in the repository Settings â†’ Pages â
 - **Kite Arena:** defeat 10 enemies using movement, autos and abilities.
 - **Last-Hit Lab:** practice Ahri autos against two six-minion waves (12 possible CS). Allied minion attacks are still scripted approximations.
 
-The default player uses level-1 Ahri's attack timing, base AD, health and scaled movement/projectile speed. Q, W, E and R are initial Ahri-inspired implementations; the visual sprite remains a prototype design. Q/W/E are disabled in the auto-attack-only CS drill. Legacy drills remain in the code for regression coverage but are not offered in the menu.
+The default player uses level-1 Ahri's attack timing, base AD, health and scaled movement/projectile speed. Q, W, E and R are initial Ahri-inspired implementations; the player uses a generated static Ahri sprite with horizontal mirroring rather than full directional animation. Q/W/E are disabled in the auto-attack-only CS drill. Legacy drills remain in the code for regression coverage but are not offered in the menu.
 
 Optional synthesized combat cues are disabled by default. Use **SOUND OFF / ON** to toggle them; no audio files or external service are required.
 

@@ -17,3 +17,9 @@ The new background evokes mid lane but is not an exact recreation of its layout.
 - `ranger-front.png` — using `ranger.png` as reference, prompt: "Create a matching game sprite of the exact same teal-hooded ranger in the input image, viewed from front and slightly above, looking toward the lower edge of the game screen. Preserve outfit, blonde braid, bow, colors, proportions, and painterly game-art style. Full body, one character centered, ready stance, transparent background; no text, floor or shadow."
 
 The ranger has three directional illustrations with left/right mirroring and procedural bob/tilt. They are static illustrations, not frame-by-frame animation.
+
+
+## Ahri sprite (2026-10-30)
+
+- `ahri-side.png`: generated using the built-in imagegen tool, transparent output. Prompt: "Use case: stylized-concept. Asset type: transparent single game character sprite for a top-down three-quarter MOBA arena. Create Ahri from League of Legends as a compact full-body in-game champion: dark long hair, fox ears, red and ivory outfit and clearly recognizable fan of nine pale fox tails. High-angle isometric view as seen in actual gameplay, facing right, feet grounded, small legible silhouette, painted fantasy game look. Entire figure and all tails fully inside canvas, centered, transparent background, no ground shadow, no text, no interface, no border. A single character and single pose, no sprite sheet."
+- One generated static pose, mirrored horizontally; it is not a Riot asset or animated model. The old ranger is retained as a loading fallback. Verify project policy for League fan content before public release.

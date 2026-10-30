@@ -344,3 +344,11 @@ test('Ahri Spirit Rush has three timed charges and fires magic bolts',()=>{
 test('Spirit Rush cannot ignore enemy collisions or cast while rooted',()=>{
  const {g}=boot('ahri');g.reset('kite');g.disableSpawn();g.player.root=1;g.cast('r');assert.equal(g.player.cd.r,0);g.player.root=0;g.fire(670,g.player.y,0,0,'enemy',18,5,1);g.cast('r');advance(g,.3);assert.equal(g.stats.hits,1);assert.equal(g.player.invuln,0);
 });
+
+test('Spirit Rush recast window freezes during pause and expires without refreshing cooldown',()=>{
+ const {g}=boot('ahri');g.reset('kite');g.disableSpawn();g.cast('r');advance(g,.5);g.pause();const remaining=g.player.rushWindow;advance(g,3);assert.equal(g.player.rushWindow,remaining);g.pause();advance(g,15);assert.equal(g.player.rushWindow,0);const charges=g.player.rushCharges;g.cast('r');assert.equal(g.player.rushCharges,charges);assert.ok(g.player.cd.r>120);
+});
+
+test('Ahri sprite is selected with a safe fallback when unavailable',()=>{
+ const {g,node,draws}=boot('ahri');g.reset('kite');node('ahriArt').complete=true;node('ahriArt').naturalWidth=100;g.render();assert.ok(draws.includes(node('ahriArt')));draws.length=0;node('ahriArt').naturalWidth=0;node('rangerArt').complete=true;node('rangerArt').naturalWidth=100;g.render();assert.ok(draws.includes(node('rangerArt')));
+});
