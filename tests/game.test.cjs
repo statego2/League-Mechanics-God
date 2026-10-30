@@ -313,3 +313,20 @@ test('Ahri is the selected default and visible menu has three focused drills',()
 test('Ahri dodge integrates Lux and Ezreal casts in one drill',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.disableSpawn();const e=foe(g,900);g.shootEnemy(e);assert.equal(e.pending.spell.name,'LUX Q');g.releaseEnemy(e);assert.equal(g.shots[0].r,35);g.shootEnemy(e);assert.equal(e.pending.spell.name,'EZREAL Q');g.releaseEnemy(e);assert.equal(g.shots[1].r,30);
 });
+
+test('Ahri Charm casts for 0.25 seconds and hits the first unit with magic damage and crowd control',()=>{
+ const {g}=boot('ahri');g.reset('kite');g.disableSpawn();const e=foe(g,800);e.hp=200;e.mr=100;e.speed=0;const b={...e,id:99,x:900,hp:200};g.setFoes([e,b]);g.cast('e');assert.equal(g.player.cd.e,12);assert.ok(g.player.casting);advance(g,.2);assert.equal(g.shots.length,0);g.pause();advance(g,1);assert.ok(g.player.casting);g.pause();advance(g,.4);assert.equal(e.hp,160);assert.equal(b.hp,200);assert.ok(e.charm>0);assert.equal(g.shots.length,0);
+});
+test('Ahri Charm interrupts an enemy cast and forces movement toward Ahri',()=>{
+ const {g}=boot('ahri');g.reset('kite');g.disableSpawn();const e=foe(g,800);e.hp=200;e.speed=100;e.shoot=999;g.shootEnemy(e);assert.ok(e.pending);g.cast('e');advance(g,.55);assert.ok(e.charm>0);assert.equal(e.pending,null);const x=e.x;advance(g,.25);assert.ok(e.x<x);
+});
+test('Charm cast locks movement but accepts a queued move',()=>{
+ const {g}=boot('ahri');g.reset('kite');g.disableSpawn();const x=g.player.x;g.cast('e');g.moveTo(400,g.player.y);advance(g,.2);assert.equal(g.player.x,x);advance(g,.2);assert.ok(g.player.x<x);
+});
+
+test('Ahri orb pierces units once each way and returns true damage',()=>{
+ const {g}=boot('ahri');g.reset('kite');g.disableSpawn();const e=foe(g,800);e.hp=200;e.mr=100;const b={...e,id:99,x:900,hp:200};g.setFoes([e,b]);g.cast('q');assert.equal(g.player.cd.q,7);advance(g,.2);assert.equal(g.shots.length,0);advance(g,1.8);assert.ok(Math.abs(e.hp-147.5)<1e-7);assert.ok(Math.abs(b.hp-147.5)<1e-7);assert.equal(g.shots.length,0);
+});
+test('Ahri orb follows the player on return after they move',()=>{
+ const {g}=boot('ahri');g.reset('kite');g.disableSpawn();g.cast('q');advance(g,.9);assert.equal(g.shots[0].phase,'return');g.moveTo(400,500);advance(g,2);assert.equal(g.shots.length,0);assert.ok(g.player.x<600);
+});

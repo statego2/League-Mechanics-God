@@ -122,6 +122,13 @@ Kite records now prefer a completed run, then the fastest victory; before the fi
 - The player is still shown as the original ranger, and Q/W/E/R are prototype abilities, not Ahri. Dodge enemy AI, telegraphs, collision, resistance, allied minion simulation and the arena remain approximations; do not claim full fidelity. Legacy mode code is retained, but no longer exposed as separate menu cards.
 - Browser: confirmed three menu cards, default Ahri CS with wave 1/2 and AS 0.668, and launched Dodge Trial with a projectile telegraph. No complete human session after this change. `node --test tests/*.test.cjs`: **74/74 PASS**, including default settings and both spells in the shared drill.
 
+## Ahri Q and E foundation (2026-10-30)
+
+- Implemented rank-1 Charm (E) for the default Ahri player: 0.25 s cast, 12 s cooldown, scaled 1550 speed / 1000 range / 120 width, 80 magic damage before target MR, first target only, and 1.2 s charm that interrupts enemy casts and makes enemies move toward the player at 35% speed. Movement commands queue during the cast. Training enemies currently have no explicit MR unless set, and the CC AI is an approximation; no mana, AP scaling, tenacity, spell shields or all League cast interactions.
+- Implemented rank-1 Orb of Deception (Q): 0.25 s cast, 7 s cooldown, scaled 1550 outbound speed / 900 range / 200 width; 35 magic damage outbound and 35 true damage returning, once per target per pass. Orb returns toward the moving player and pierces enemies. Its fixed 700 canvas units/s return speed approximates League's variable acceleration; turning-point splash, mana, AP, full collision/range effects and ability ranking remain unimplemented. Q/E are intentionally disabled in current CS drill.
+- Parameters sourced from [Ahri reference](https://wiki.leagueoflegends.com/en-us/Ahri), community snapshot last changed V26.06; compare against current game client. W, R and the ranger sprite are placeholders.
+- Browser smoke: Q in Kite showed the orb and cooldown; E showed the Charm label and cooldown in a separate smoke. Tests exercise delayed casts, pause, interruption, first-target collision, multi-target orb and return tracking: `node --test tests/*.test.cjs` **79/79 PASS**. No human full run or in-client feel comparison yet.
+
 ## Current playable state
 
 Dodge Trial, Kite Arena and Last-Hit Lab are available in the visible menu locally at http://localhost:8080. The repository was cloned into the `League-Mechanics-God` subdirectory of the original workspace, whose parent contains separate historical Unity research. Work is on `codex/controls-and-dodge`, based on `7de3430`.
@@ -169,7 +176,7 @@ Commit: `89e7529`.
 
 ## Tests actually run
 
-- `node --test tests/*.test.cjs`: **74/74 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
+- `node --test tests/*.test.cjs`: **79/79 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
 - `node --check game.js` and `git diff --check`: PASS.
 - Python reference tools: `python3 -m unittest discover -s reference/league-of-dodge/tools -p 'test_*.py'`: **7/7 PASS**.
 - HTTP server logs: app, JS and CSS return 200/304; initial missing favicon fixed with an original SVG icon.
