@@ -50,7 +50,7 @@ The painted mid-lane-inspired arena is a visual approximation. Two marked stone 
 
 ## Repeatable encounters
 
-Choose Foundation, Standard or Expert before entering a drill. Restart reuses the seed; the seed button changes the next run. Dodge Trial alternates Lux and Ezreal shots, with visible training telegraphs. Results store local records in this browser; unavailable storage does not prevent play.
+Choose Foundation, Standard or Expert before entering a drill. Restart reuses the seed; the seed button changes the next run. Dodge Trial alternates Lux and Ezreal shots and adds a telegraphed synthetic sweep. Expert is selected by default. Results store local records in this browser; unavailable storage does not prevent play.
 
 ## Mechanics and checks
 

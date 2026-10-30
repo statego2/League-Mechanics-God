@@ -16,7 +16,7 @@ function boot(preset="standard"){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,addWave,addTarget,get bait(){return bait},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
- const g=sandbox.g;node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
+ const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
 }
 function foe(g,x=800,y=337.5){const e=g.enemy(x,y);e.speed=0;e.shoot=999;e.hp=e.maxHp=10000;g.setFoes([e]);return e;}
@@ -355,4 +355,19 @@ test('Ahri sprite is selected with a safe fallback when unavailable',()=>{
 
 test('Ahri back sprite appears when facing away and falls back to side',()=>{
  const {g,node,draws}=boot('ahri');g.reset('kite');for(const id of ['ahriArt','ahriBackArt']){node(id).complete=true;node(id).naturalWidth=100;}g.player.facing=-Math.PI/2;g.render();assert.ok(draws.includes(node('ahriBackArt')));draws.length=0;node('ahriBackArt').naturalWidth=0;g.render();assert.ok(draws.includes(node('ahriArt')));
+});
+
+test('Ahri projectile hitbox uses scaled 65-unit gameplay radius at its boundary',()=>{
+ for(const [offset,expected] of [[62.4,1],[62.6,0]]){const {g}=boot('ahri');g.reset('kite');g.disableSpawn();assert.equal(g.player.hitRadius,32.5);g.fire(400,g.player.y+offset,400,0,'enemy',18,30,1.5);advance(g,1);assert.equal(g.stats.hits,expected,`offset ${offset}`);}
+});
+test('default Ahri dodge includes sweeping pattern alongside reference casts',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.disableSpawn();advance(g,14.1);assert.equal(g.sweeps.length,1);advance(g,1.5);assert.ok(g.shots.some(s=>s.kind==='enemy'&&s.r===9));
+});
+
+test('Ahri charm respects champion and minion gameplay-radius boundaries',()=>{
+ for(const [minion,offset,hit] of [[false,62.4,true],[false,62.6,false],[true,53.9,true],[true,54.1,false]]){const {g}=boot('ahri');g.reset('kite');g.disableSpawn();const e=foe(g,800,g.player.y+offset);e.minion=minion;e.mr=0;e.hp=1000;if(minion){e.tick=999;e.destination=800;}g.cast('e');advance(g,.8);assert.equal(e.hp<1000,hit,`${minion?'minion':'champion'} at ${offset}`);}
+});
+
+test('non-piercing skillshot hits the first collision, not the closest center',()=>{
+ const {g}=boot('ahri');g.reset('kite');g.disableSpawn();const a=foe(g,790,g.player.y+62);a.hp=1000;const b={...a,id:99,x:800,y:g.player.y,hp:1000};g.setFoes([a,b]);g.fire(600,g.player.y,1000,0,'charm',80,30,1);g.update(.5);assert.equal(a.hp,1000);assert.equal(b.hp,920);assert.ok(b.charm>0);
 });
