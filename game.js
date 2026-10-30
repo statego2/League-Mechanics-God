@@ -19,7 +19,8 @@ const autoDamage=()=>ahriCS()?53:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoThreshold=e=>physicalDamage(autoDamage(),e.armor||0);
 const autoSpeed=()=>ahriCS()?875:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v1":attackPreset==="standard"?"":".as_"+attackPreset;}
+function recordSuffix(){return ahriCS()?".cs_ahri_v2":attackPreset==="standard"?"":".as_"+attackPreset;}
+const attackReach=e=>ahriCS()?275+32.5+(e.minion?24:e.r):ATTACK.range;
 function recordLabel(){return difficulty+(attackPreset==="standard"?"":", "+ATTACK_PRESETS[attackPreset].label+" AS");}
 const STEP=1/120;let accumulator=0;
 // Closest approach of two moving circles, also used for fast missiles.
@@ -80,7 +81,7 @@ function end(win){
  if(mode==="lane")description=`${stats.cs} / 15 CS · ${stats.missed} missed · ${kills} enemies defeated · ${dodged} threats avoided · ${stats.hits} hits · ${Number(stats.damage.toFixed(1))} damage taken.`;
  else if(mode==="bait")description=`${bait.casts} spells baited · ${bait.dodges} dodged · ${bait.cs} / 3 CS · ${bait.missed} missed · ${Number(stats.damage.toFixed(1))} damage taken.`;
  else if(mode==="skillshot")description=`${stats.skillHits} / ${stats.skillShots} skillshots hit · ${stats.skillShots?Math.round(stats.skillHits/stats.skillShots*100):0}% accuracy · ${kills} targets defeated.`;
- else if(mode==="lastHit")description=`${kills} / 15 CS · ${stats.missed} missed · ${stats.released} autos · ${stats.cancelled} cancelled. Gold bars mark last-hit health (${autoDamage()} damage).`;
+ else if(mode==="lastHit")description=`${kills} / ${ahriCS()?12:15} CS · ${stats.missed} missed · ${stats.released} autos · ${stats.cancelled} cancelled. Gold bars mark last-hit health (${autoDamage()} damage).`;
  else if(mode==="dodge"||referenceSpell())description=`Survived ${time.toFixed(1)}s · ${dodged} threats avoided · ${stats.hits} hits · ${Number(stats.damage.toFixed(1))} damage · ${stats.blocked} blocked · ${score} points.`;
  else description=`Defeated ${kills} enemies · ${(stats.autoDamage/Math.max(time,1)).toFixed(1)} auto DPS · ${stats.released} autos · ${stats.cancelled} cancelled · ${Math.round(stats.moving/Math.max(time,1)*100)}% moving · ${stats.readyIdle.toFixed(1)}s ready but not attacking in range · ${stats.hits} hits taken.`;
  const recordValue=mode==="dodge"||referenceSpell()?score:mode==="lane"?stats.cs:(mode==="lastHit"||mode==="bait")?kills:mode==="skillshot"?stats.skillHits:kills;
@@ -97,17 +98,23 @@ function burst(x,y,color,n=11){for(let i=0;i<n;i++){const a=cosmetic(0,TAU),v=co
 function number(x,y,value,color){fx.push({x,y:y-30,vx:0,vy:-38,ttl:.7,max:.7,color,text:String(value)});}
 function enemy(x,y){return {id:++enemySeq,x,y,r:20,hp:mode==="kite"?88:58,maxHp:mode==="kite"?88:58,speed:mode==="kite"?rand(75,108):rand(85,135),shoot:rand(.5,1.1),strafe:random()<.5?-1:1,spin:rand(0,TAU),hit:0,castCount:0,charge:0,pending:null,alive:true};}
 function addWave(){
- if(waves>=5)return;waves++;
- for(let i=0;i<3;i++){
-  const e=enemy(910+i*8,200+i*65);e.minion=true;e.r=14;e.hp=e.maxHp=ahriCS()?465:88;e.speed=65;e.tick=1+i*.32;e.destination=waves%2?820:875;foes.push(e);
+ if(waves>=(ahriCS()?2:5))return;waves++;
+ for(let i=0;i<(ahriCS()?6:3);i++){
+  const caster=ahriCS()&&i>=3;const row=i%3;const e=enemy(910+(caster?45:0),200+row*100+(caster?35:0));e.minion=true;e.minionType=caster?"caster":"melee";e.wave=waves;e.row=row;e.r=14;e.hp=e.maxHp=ahriCS()?(caster?284:465):88;e.speed=65;e.tick=1+i*.12;e.meleeTick=1+i*.12;e.destination=waves%2?820:875;foes.push(e);
  }
- notify("WAVE "+waves+" / 5 — TIME YOUR LAST HITS");
+ notify("WAVE "+waves+" / "+(ahriCS()?2:5)+" — TIME YOUR LAST HITS");
 }
 function updateMinion(e,dt){
  e.hit=Math.max(0,e.hit-dt);
  if(e.x>e.destination){e.x=Math.max(e.destination,e.x-e.speed*dt);return;}
+ if(ahriCS()){
+  if(e.minionType==="caster"&&foes.some(other=>other.alive&&other.wave===e.wave&&other.row===e.row&&other.minionType==="melee"))return;
+  e.meleeTick-=dt;if(e.meleeTick<=0){e.meleeTick+=.8;e.hp-=11+e.hp*.02;e.hit=.08;if(e.hp<=0){e.alive=false;stats.missed++;number(e.x,e.y,"MISSED","#eaa7a1");return;}}
+  e.tick-=dt;if(e.tick<=0){e.tick+=1/.667;const shot=fire(e.destination-80,e.y,380,0,"allied",21,3,1);shot.targetId=e.id;shot.minionBonus=.035;}
+  return;
+ }
  e.tick-=dt;if(e.tick<=0){
-  const damage=ahriCS()?(difficulty==="easy"?40:difficulty==="hard"?60:50):(difficulty==="easy"?6:difficulty==="hard"?12:8);e.tick=.85;
+  const damage=difficulty==="easy"?6:difficulty==="hard"?12:8;e.tick=.85;
   const shot=fire(e.destination-80,e.y,380,0,"allied",damage,3,1);shot.targetId=e.id;
 
  }
@@ -216,7 +223,7 @@ function takeHit(d){if(player.invuln>0||state!=="playing")return;cue("hit");play
 // Orders persist until superseded. Movement cancels only the uncommitted windup.
 function cancelAttack(){if(player.windup>0){stats.cancelled++;player.windup=0;player.windupTarget=null;}}
 function startAttack(e){
-if(!e||!e.alive||(mode==="bait"&&(!e.minion||bait.phase!=="window"))||player.attackTimer>0||player.windup>0||dist(player,e)>ATTACK.range)return;
+if(!e||!e.alive||(mode==="bait"&&(!e.minion||bait.phase!=="window"))||player.attackTimer>0||player.windup>0||dist(player,e)>attackReach(e))return;
 player.target=null;player.windup=ATTACK.windup;player.windupTarget=e.id;
 player.facing=Math.atan2(e.y-player.y,e.x-player.x);
 }
@@ -227,11 +234,11 @@ if(order.type==="attack"){
  const t=foes.find(e=>e.id===order.id&&e.alive);
  if(!t){player.order=null;player.focus=null;player.target=null;cancelAttack();return;}
  player.focus=t.id;
- if(dist(player,t)>ATTACK.range){player.target={x:t.x,y:t.y};}else{player.target=null;startAttack(t);}
+ if(dist(player,t)>attackReach(t)){player.target={x:t.x,y:t.y};}else{player.target=null;startAttack(t);}
 }else if(order.type==="attackMove"){
  // Prefer a unit near the clicked point among units already inside attack range.
  let t=null,best=Infinity;
- for(const e of foes)if(e.alive&&!e.baitCaster&&!e.referenceCaster&&dist(player,e)<=ATTACK.range){const d=dist(e,order);if(d<best){best=d;t=e;}}
+ for(const e of foes)if(e.alive&&!e.baitCaster&&!e.referenceCaster&&dist(player,e)<=attackReach(e)){const d=dist(e,order);if(d<best){best=d;t=e;}}
  player.focus=t?t.id:null;
  if(t){player.target=null;startAttack(t);}else player.target=dist(player,order)>1?{x:order.x,y:order.y}:null;
 }
@@ -245,7 +252,7 @@ updateUI();}
 function moveTo(x,y){cancelAttack();attackMove=false;player.order=null;player.target=world.nearestWalkable({x,y});player.route=[];player.routeGoal=null;player.focus=null;}
 function update(dt){if(state!=="playing")return;time+=dt;if(((mode==="dodge"||mode==="lastHit"||mode==="lane"||referenceSpell())&&time>=60)||(mode==="skillshot"&&time>=45)){end(true);return;}
 if(referenceSpell()&&!foes.length){const caster=enemy(970,337.5);caster.referenceCaster=true;caster.shoot=1.5;foes.push(caster);}
-spawn-=dt;if(spawn<=0&&!referenceSpell()){if(mode==="lastHit"||mode==="lane")addWave();else if(mode==="bait"){}else if(mode==="skillshot")addTarget();else addEnemy();spawn=(mode==="dodge"?Math.max(1.35,3.5-time*.026):Math.max(.9,1.6-time*.015))*PRESETS[difficulty].spawn;if(mode==="lastHit"||mode==="lane")spawn=10;else if(mode==="bait")spawn=999;else if(mode==="skillshot")spawn=.8;}
+spawn-=dt;if(spawn<=0&&!referenceSpell()){if(mode==="lastHit"||mode==="lane")addWave();else if(mode==="bait"){}else if(mode==="skillshot")addTarget();else addEnemy();spawn=(mode==="dodge"?Math.max(1.35,3.5-time*.026):Math.max(.9,1.6-time*.015))*PRESETS[difficulty].spawn;if(mode==="lastHit"||mode==="lane")spawn=ahriCS()?30:10;else if(mode==="bait")spawn=999;else if(mode==="skillshot")spawn=.8;}
 if(mode==="dodge")updateSweeps(dt);
 if(mode==="lane"){
  laneEnemyTimer-=dt;
@@ -258,10 +265,10 @@ for(const k of Object.keys(CD))player.cd[k]=Math.max(0,player.cd[k]-dt);player.h
 updateOrder();
 // Time with a target in range and the attack ready, but no windup. This is
 // descriptive feedback; positioning or dodging can make waiting intentional.
-if(mode==="kite"&&player.attackTimer<=0&&player.windup<=0&&foes.some(e=>e.alive&&dist(player,e)<=ATTACK.range))stats.readyIdle+=dt;
+if(mode==="kite"&&player.attackTimer<=0&&player.windup<=0&&foes.some(e=>e.alive&&dist(player,e)<=attackReach(e)))stats.readyIdle+=dt;
 const oldX=player.x,oldY=player.y;
 if(player.windup>0){player.windup=Math.max(0,player.windup-dt);if(player.windup<1e-8){player.windup=0;const t=foes.find(e=>e.id===player.windupTarget&&e.alive);
- if(t&&dist(player,t)<=ATTACK.range+35){const a=Math.atan2(t.y-player.y,t.x-player.x);const shot=fire(player.x,player.y,Math.cos(a)*autoSpeed(),Math.sin(a)*autoSpeed(),"auto",autoDamage(),5,1.5);shot.targetId=t.id;stats.released++;cue("attack");player.attackTimer=ATTACK.period-ATTACK.windup;}else stats.cancelled++;
+ if(t&&dist(player,t)<=attackReach(t)+35){const a=Math.atan2(t.y-player.y,t.x-player.x);const shot=fire(player.x,player.y,Math.cos(a)*autoSpeed(),Math.sin(a)*autoSpeed(),"auto",autoDamage(),5,1.5);shot.targetId=t.id;stats.released++;cue("attack");player.attackTimer=ATTACK.period-ATTACK.windup;}else stats.cancelled++;
  player.windupTarget=null;
 }}
 if(player.target&&player.windup<=0&&player.root<=0){
@@ -316,14 +323,14 @@ for(const s of shots){if(!s.alive)continue;
    if(segmentDistance(s.px-prev.x,s.py-prev.y,s.x-e.x,s.y-e.y)<=s.r+e.r){const d=dist({x:s.px,y:s.py},prev);if(d<first){first=d;hit=e;}}
   }
   if(hit){
-   if(s.kind==="allied"){hit.hp-=s.damage;hit.hit=.08;if(hit.hp<=0){hit.alive=false;stats.missed++;number(hit.x,hit.y,"MISSED","#eaa7a1");}}
+   if(s.kind==="allied"){hit.hp-=s.damage+(s.minionBonus||0)*hit.hp;hit.hit=.08;if(hit.hp<=0){hit.alive=false;stats.missed++;number(hit.x,hit.y,"MISSED","#eaa7a1");}}
    else{if(s.kind==="q"&&mode==="skillshot")stats.skillHits++;const damage=s.kind==="auto"?physicalDamage(s.damage,hit.armor||0):s.damage;if(s.kind==="auto")stats.autoDamage+=Math.min(hit.hp,damage);damageEnemy(hit,damage);}s.alive=false;
   }
   if(s.ttl<=0||s.x<0||s.x>W||s.y<0||s.y>H)s.alive=false;
  }
  if(state!=="playing")break;
 }
-foes=foes.filter(e=>e.alive);if(mode==="lastHit"&&waves===5&&foes.length===0){end(true);return;}shots=shots.filter(s=>s.alive);
+foes=foes.filter(e=>e.alive);if(mode==="lastHit"&&waves===(ahriCS()?2:5)&&foes.length===0){end(true);return;}shots=shots.filter(s=>s.alive);
 for(const f of fx){f.x+=f.vx*dt;f.y+=f.vy*dt;f.ttl-=dt;}fx=fx.filter(f=>f.ttl>0);
 if(toastTime>0){toastTime-=dt;if(toastTime<=0)ui.toast.classList.remove("show");}
 updateUI();}
@@ -406,7 +413,7 @@ for(const e of foes)if(e.pending){
 }
 }
 if(player){
-if(attackMove||player.order){ctx.save();ctx.setLineDash([5,7]);circle(player.x,player.y,ATTACK.range,"#8af0d755",false,1);ctx.restore();}
+if(attackMove||player.order){ctx.save();ctx.setLineDash([5,7]);circle(player.x,player.y,ahriCS()?331.5:ATTACK.range,"#8af0d755",false,1);ctx.restore();}
 const focus=foes.find(e=>e.id===player.focus);if(focus)circle(focus.x,focus.y,focus.r+9,"#f7d184",false,2);
 ctx.strokeStyle=player.windup>0?"#f7d184":"#7ce8d0";ctx.lineWidth=4;ctx.beginPath();ctx.arc(player.x,player.y,32,-Math.PI/2,-Math.PI/2+TAU*(player.windup>0?1-player.windup/ATTACK.windup:1-player.attackTimer/(ATTACK.period-ATTACK.windup)));ctx.stroke();
 ctx.font="bold 10px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#c5eadf";ctx.fillText(player.root>0?`ROOTED ${player.root.toFixed(1)}s`:referenceSpell()?"DODGE":player.windup>0?"WINDUP":player.attackTimer>0?"RECOVERY":"READY",player.x,player.y+49);
@@ -436,7 +443,7 @@ ctx.fillStyle="#101e23";ctx.fillRect(e.x-25,e.y-86,50,5);ctx.fillStyle="#ff9290"
 for(const s of shots){ctx.strokeStyle=s.kind==="enemy"?"#f1797999":"#7bf4e899";ctx.lineWidth=s.r*1.5;ctx.beginPath();ctx.moveTo(s.x-s.vx*.04,s.y-s.vy*.04);ctx.lineTo(s.x,s.y);ctx.stroke();circle(s.x,s.y,s.r,s.kind==="enemy"?"#ff9c85":s.kind==="r"?"#f5d47d":"#81fdf1");circle(s.x,s.y,s.r*1.7,s.kind==="enemy"?"#fe626344":"#8df5dd44");}
 }
 for(const f of fx){ctx.globalAlpha=clamp(f.ttl/f.max,0,1);if(f.text){ctx.font="bold 15px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y);}else circle(f.x,f.y,f.r,f.color);}ctx.globalAlpha=1;
-if(state==="playing"&&(referenceSpell()||mode==="dodge"||mode==="lastHit"||mode==="lane"||mode==="skillshot"||mode==="bait")){ctx.font="700 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#b7d9d9aa";ctx.fillText(referenceSpell()?`${referenceSpell().name} · MOVE OR FLASH · ${Math.max(0,60-Math.floor(time))}s`:mode==="lane"?"FARM, EVADE AND TRADE · "+Math.max(0,60-Math.floor(time))+"s":mode==="bait"?baitLabel():mode==="skillshot"?"AIM WITH THE CURSOR · Q TO FIRE · "+Math.max(0,45-Math.floor(time))+"s":mode==="lastHit"?`${autoDamage()} AUTO DAMAGE · GOLD HEALTH = LAST HIT · WAVE `+waves+" / 5":"SURVIVE "+Math.max(0,60-Math.floor(time))+"s",W/2,90);}
+if(state==="playing"&&(referenceSpell()||mode==="dodge"||mode==="lastHit"||mode==="lane"||mode==="skillshot"||mode==="bait")){ctx.font="700 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#b7d9d9aa";ctx.fillText(referenceSpell()?`${referenceSpell().name} · MOVE OR FLASH · ${Math.max(0,60-Math.floor(time))}s`:mode==="lane"?"FARM, EVADE AND TRADE · "+Math.max(0,60-Math.floor(time))+"s":mode==="bait"?baitLabel():mode==="skillshot"?"AIM WITH THE CURSOR · Q TO FIRE · "+Math.max(0,45-Math.floor(time))+"s":mode==="lastHit"?`${autoDamage()} AUTO DAMAGE · GOLD HEALTH = LAST HIT · WAVE `+waves+(ahriCS()?" / 2":" / 5"):"SURVIVE "+Math.max(0,60-Math.floor(time))+"s",W/2,90);}
 }
 function loop(ts){const dt=last?Math.min((ts-last)/1000,.25):0;last=ts;if(state==="playing"){accumulator+=dt;while(accumulator>=STEP&&state==="playing"){update(STEP);accumulator-=STEP;}}else accumulator=0;render();requestAnimationFrame(loop);}
 function coords(e){const b=cv.getBoundingClientRect();return{x:(e.clientX-b.left)*W/b.width,y:(e.clientY-b.top)*H/b.height};}

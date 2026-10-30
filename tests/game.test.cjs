@@ -260,10 +260,10 @@ test('Ahri timing uses level-one cadence and 20 percent windup',()=>{
 test('Ahri CS profile uses 53 damage and separates old timing-only records',()=>{
  const {g,node,window}=boot(),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
  node('attackSpeed').listeners.change({target:{value:'ahri'}});g.reset('lastHit');g.disableSpawn();g.addWave();const e=g.foes[0];assert.equal(e.hp,465);assert.equal(g.player.speed,165);e.x=820;e.tick=999;e.hp=54;g.attackOrder(e);advance(g,.7);assert.equal(e.hp,1);assert.equal(g.stats.cs,0);
- g.moveTo(600,337.5);e.hp=53;g.attackOrder(e);advance(g,2);assert.equal(e.alive,false);assert.equal(node('killsValue').textContent,1);g.end(true);assert.equal(values.get('lmg.best.v1.lastHit.normal.cs_ahri_v1'),'1');assert.match(node('menuDescription').textContent,/53 damage/);
+ g.moveTo(600,337.5);e.hp=53;g.attackOrder(e);advance(g,2);assert.equal(e.alive,false);assert.equal(node('killsValue').textContent,1);g.end(true);assert.equal(values.get('lmg.best.v1.lastHit.normal.cs_ahri_v2'),'1');assert.match(node('menuDescription').textContent,/53 damage/);
 });
 test('Ahri CS unattended waves resolve without breaking the drill',()=>{
- for(const difficulty of ['easy','normal','hard']){const {g,node}=boot();node('attackSpeed').listeners.change({target:{value:'ahri'}});node('difficulty').listeners.change({target:{value:difficulty}});g.reset('lastHit');advance(g,60);assert.equal(g.state,'ended');assert.equal(g.stats.missed,15);}
+ for(const difficulty of ['easy','normal','hard']){const {g,node}=boot();node('attackSpeed').listeners.change({target:{value:'ahri'}});node('difficulty').listeners.change({target:{value:difficulty}});g.reset('lastHit');advance(g,60.02);assert.equal(g.state,'ended');assert.equal(g.stats.missed,12);}
 });
 
 test('auto attacks apply armor mitigation at impact and CS lethal boundary',()=>{
@@ -295,4 +295,13 @@ test('reference flash does not grant invulnerability',()=>{
 
 test('both reference drills complete a full simulated survival and report correct score',()=>{
  for(const mode of ['luxDodge','ezrealDodge']){const {g,node}=boot();g.reset(mode);g.player.x=100;advance(g,60.02);assert.equal(g.state,'ended');assert.equal(g.stats.hits,0);assert.equal(g.dodged,0);assert.match(node('menuTitle').innerHTML,/COMPLETE/);assert.match(node('menuDescription').textContent,/0 hits/);}
+});
+
+test('Ahri waves contain three melee and three caster minions and use edge attack range',()=>{
+ const {g,node}=boot();node('attackSpeed').listeners.change({target:{value:'ahri'}});g.reset('lastHit');g.disableSpawn();g.addWave();assert.equal(g.foes.length,6);assert.equal(g.foes.filter(e=>e.minionType==='melee'&&e.hp===465).length,3);assert.equal(g.foes.filter(e=>e.minionType==='caster'&&e.hp===284).length,3);
+ const e=g.foes[0];e.x=931;e.y=g.player.y;e.tick=e.meleeTick=999;g.attackOrder(e);advance(g,.31);assert.equal(g.stats.released,1);
+});
+test('Ahri CS allied melee and caster damage use minion ratios',()=>{
+ const {g,node}=boot();node('attackSpeed').listeners.change({target:{value:'ahri'}});g.reset('lastHit');g.disableSpawn();g.addWave();const e=g.foes[0];e.x=e.destination;e.tick=999;e.meleeTick=0;g.update(1/120);assert.ok(Math.abs(e.hp-(465-11-465*.02))<1e-8);
+ e.tick=0;e.meleeTick=999;advance(g,.5);const hpAfterMelee=465-11-465*.02;assert.ok(Math.abs(e.hp-(hpAfterMelee-21-hpAfterMelee*.035))<1e-7);
 });

@@ -109,6 +109,12 @@ Kite records now prefer a completed run, then the fastest victory; before the fi
 - These are approximations, not full LoL implementations: visible telegraph, fixed 3.5-second interval, locked caster, simplified player radius, no minion interception, Lux two-target interaction, tenacity, items, runes, on-hit effects or precise Flash cooldown. Difficulty does not change these drills. A screenshot/feel comparison and a full human survival run remain open.
 - Browser: started both drills, each registered a hit; Lux root was visible. `node --test tests/*.test.cjs`: **69/69 PASS**, including cast delay, range, damage, root/pause, Flash and 30/60/120 FPS. A further full-duration automated survival test covers both result screens from outside missile range; this is not a human playthrough.
 
+## Ahri CS wave recalibration (2026-10-30)
+
+- Ahri Last-Hit profile now contains two 30-second-spaced waves, each with three 465-HP melee and three 284-HP caster minions (12 possible CS). Each row first focuses melee, then caster. Allied damage uses base melee 11 + 2% of current HP at 1.25 attacks/s, and caster 21 + 3.5% current HP at 0.667 attacks/s, using [melee](https://wiki.leagueoflegends.com/en-us/Melee_minion) and [caster](https://wiki.leagueoflegends.com/en-us/Caster_minion) reference statistics. Ahri attack reach uses 550 range plus source and target gameplay radii at the provisional 0.5 scale, per [edge range](https://wiki.leagueoflegends.com/en-us/Attack_range). Local records are partitioned from the earlier approximation.
+- This is still not a full League wave: allied minions are scripted attackers rather than independently targetable units and cannot die; enemy attacks, pathing/aggro, real windups, wave upgrades, siege minions and exact projectile behavior are missing. W/F remain the prototype abilities. The waves start at drill time zero rather than the actual match clock. Difficulty does not change the Ahri wave. Browser smoke showed six minions and WAVE 1/2; no complete human run yet.
+- `node --test tests/*.test.cjs`: **72/72 PASS**, including composition, damage ratios, attack reach and two-wave resolution.
+
 ## Current playable state
 
 Dodge Trial, Kite Arena, Last-Hit Lab, Skillshot Lab, Bait → Dodge → CS and Lane Scenario run locally at http://localhost:8080. The repository was cloned into the `League-Mechanics-God` subdirectory of the original workspace, whose parent contains separate historical Unity research. Work is on `codex/controls-and-dodge`, based on `7de3430`.
@@ -156,7 +162,7 @@ Commit: `89e7529`.
 
 ## Tests actually run
 
-- `node --test tests/*.test.cjs`: **70/70 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
+- `node --test tests/*.test.cjs`: **72/72 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
 - `node --check game.js` and `git diff --check`: PASS.
 - Python reference tools: `python3 -m unittest discover -s reference/league-of-dodge/tools -p 'test_*.py'`: **7/7 PASS**.
 - HTTP server logs: app, JS and CSS return 200/304; initial missing favicon fixed with an original SVG icon.
@@ -174,7 +180,7 @@ Commit: `89e7529`.
 
 ## Next three actions
 
-1. Implement a consistent League unit scale and selectable level-1 Ahri CS profile (53 AD, timing, missile travel, minion armor and truthful lethal threshold); validate with controlled tests and a human run. See Blueprint §11.
+1. Replace scripted allied CS attackers with independently simulated melee and caster minions, target selection, damage and death; compare a human full-wave run against League first-wave timing. See Blueprint §11.
 2. Expand Lux Q and Ezreal Q training with accurate collision sizes and minion interception, complete relevant effects and validate against real gameplay; distinguish training warnings from authentic cast time.
 3. Replace two rectangular wall proxies with a carefully traced, original mid-lane terrain mesh and navigation, including rivers and jungle entrances. Acceptance: visible walls match collision, no entity spawns inside obstacles, clicks and chase route around them.
 
