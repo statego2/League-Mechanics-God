@@ -60,9 +60,14 @@ Kite records now prefer a completed run, then the fastest victory; before the fi
 - Added optional synthesized Web Audio cues for attack release, impact, damage and avoidance; disabled by default and enabled by the SOUND button. Missing/failed audio never interrupts simulation. Browser checked ON/OFF button and no console warnings/errors; automated checks exercise missing audio and enabled/muted cues. Actual subjective audio quality and other browsers remain unverified.
 - `node --test tests/*.test.cjs`: **45/45 PASS**. CI runs both game and world suites.
 
+## Initial Lane Scenario (2026-10-30)
+
+- Added a 60-second combined drill: five allied/minion waves and one enemy champion that attacks the player. The enemy respawns after a 12-second timer if dead. All Q/W/E/R/F abilities are available. Results distinguish player CS, allied misses, enemy defeats, avoided threats, hits and damage; a minion last-hit does not heal the player. Local best is CS by difficulty.
+- `node --test tests/*.test.cjs`: **48/48 PASS**, including 60 seconds/15 minions, CS vs champion attribution, health behavior and all previous wall/control/scoring tests. Browser: Lane Scenario started with enemy/minions and abilities, enemy dealt 18 damage, an unattended run ended after death and showed 0 CS, 6 missed and 9 hits. This is a basic single-opponent scenario; no complete human victory/balance evaluation has been performed.
+
 ## Current playable state
 
-Dodge Trial, Kite Arena, Last-Hit Lab, Skillshot Lab and Bait → Dodge → CS run locally at http://localhost:8080. The repository was cloned into the `League-Mechanics-God` subdirectory of the original workspace, whose parent contains separate historical Unity research. Work is on `codex/controls-and-dodge`, based on `7de3430`.
+Dodge Trial, Kite Arena, Last-Hit Lab, Skillshot Lab, Bait → Dodge → CS and Lane Scenario run locally at http://localhost:8080. The repository was cloned into the `League-Mechanics-God` subdirectory of the original workspace, whose parent contains separate historical Unity research. Work is on `codex/controls-and-dodge`, based on `7de3430`.
 
 ## Completed: controls and collision foundation
 
@@ -97,7 +102,7 @@ Commit: `89e7529`.
 
 ## Tests actually run
 
-- `node --test tests/game.test.cjs`: **45/45 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
+- `node --test tests/game.test.cjs`: **48/48 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
 - `node --check game.js` and `git diff --check`: PASS.
 - Python reference tools: `python3 -m unittest discover -s reference/league-of-dodge/tools -p 'test_*.py'`: **7/7 PASS**.
 - HTTP server logs: app, JS and CSS return 200/304; initial missing favicon fixed with an original SVG icon.
@@ -110,7 +115,7 @@ Commit: `89e7529`.
 - Gameplay CI workflow added for pushes/PRs; remote run status has not been verified.
 - No public deployment verified. Local server only; no claims about GitHub Pages.
 - Visuals are original procedural vectors; further animation and sound polish remain.
-- Only two approximate wall proxies have collision/pathfinding; the rest of the terrain is decorative. No full lane scenario yet. Optional synthesized audio is available. Last-Hit Lab is timing practice without hostile enemy pressure.
+- Only two approximate wall proxies have collision/pathfinding; the rest of the terrain is decorative. Lane Scenario is an early single-opponent drill, not a full lane simulation. Optional synthesized audio is available. Last-Hit Lab is timing practice without hostile enemy pressure.
 - Attack range is center-to-center and calibrated for this arena, not a claim of exact LoL data.
 
 ## Next three actions

@@ -14,7 +14,7 @@ function boot(){
  sandbox.Math.random=()=>.5;
  vm.createContext(sandbox);
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,addWave,addTarget,get bait(){return bait},get hazards(){return hazards},get player(){return player},get foes(){return foes},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,addWave,addTarget,get bait(){return bait},get hazards(){return hazards},get player(){return player},get foes(){return foes},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -126,7 +126,7 @@ test('bait minion cannot be killed before the enemy spell resolves',()=>{
  const {g}=boot();g.reset('bait');advance(g,.02);const minion=g.foes.find(e=>e.minion);g.player.x=minion.x-50;g.player.y=minion.y;g.attackOrder(minion);advance(g,.2);assert.equal(g.stats.released,0);assert.equal(minion.hp,36);
 });
 test('painted assets and procedural fallback both render in all drills',()=>{
- const {g,node}=boot();for(const id of ['arenaArt','rangerArt','rangerBackArt','rangerFrontArt','mageArt','minionArt']){node(id).complete=true;node(id).naturalWidth=100;}for(const mode of ['dodge','kite','lastHit','skillshot','bait']){g.reset(mode);advance(g,.05);g.render();}node('arenaArt').naturalWidth=0;node('rangerArt').naturalWidth=0;node('mageArt').naturalWidth=0;node('minionArt').naturalWidth=0;g.render();
+ const {g,node}=boot();for(const id of ['arenaArt','rangerArt','rangerBackArt','rangerFrontArt','mageArt','minionArt']){node(id).complete=true;node(id).naturalWidth=100;}for(const mode of ['dodge','kite','lastHit','skillshot','bait','lane']){g.reset(mode);advance(g,.05);g.render();}node('arenaArt').naturalWidth=0;node('rangerArt').naturalWidth=0;node('mageArt').naturalWidth=0;node('minionArt').naturalWidth=0;g.render();
 });
 
 test('T instantly retries from play, pause and results with a fresh score',()=>{
@@ -192,4 +192,17 @@ test('enabled sound plays attack cues and the toggle mutes subsequent cues',()=>
  window.AudioContext=class{constructor(){this.currentTime=10;this.destination={};}resume(){return Promise.resolve();}createOscillator(){return {frequency:param,connect(){},start(){plays++;},stop(){}};}createGain(){return {gain:param,connect(){}};}};
  node('soundBtn').listeners.click();assert.equal(node('soundBtn').textContent,'SOUND ON');assert.equal(plays,1);
  const e=foe(g);g.attackOrder(e);advance(g,.2);assert.equal(plays,2);node('soundBtn').listeners.click();assert.equal(node('soundBtn').textContent,'SOUND OFF');advance(g,1);assert.equal(plays,2);
+});
+
+test('lane scenario separates player CS, enemy kills and allied misses',()=>{
+ const {g,node}=boot();g.reset('lane');advance(g,.02);const minion=g.foes.find(e=>e.minion),opponent=g.foes.find(e=>!e.minion);assert.ok(minion&&opponent);
+ g.damageEnemy(minion,100);assert.equal(g.stats.cs,1);assert.equal(g.stats.missed,0);g.damageEnemy(opponent,100);assert.equal(g.stats.cs,1);
+ advance(g,.02);assert.equal(node('killsValue').textContent,1);g.setTime(59.99);advance(g,.02);assert.equal(g.state,'ended');assert.match(node('menuDescription').textContent,/1 \/ 15 CS · 2 missed · 1 enemies defeated/);
+});
+
+test('lane scenario resolves all 15 minions and ends at 60 seconds',()=>{
+ const {g,node}=boot();g.reset('lane');g.player.hp=g.player.maxHp=10000;advance(g,60.1);assert.equal(g.state,'ended');assert.equal(g.stats.cs,0);assert.equal(g.stats.missed,15);assert.match(node('menuDescription').textContent,/0 \/ 15 CS · 15 missed/);
+});
+test('lane minions do not heal the player, champion defeats still do',()=>{
+ const {g}=boot();g.reset('lane');advance(g,.02);g.player.hp=100;const minion=g.foes.find(e=>e.minion),opponent=g.foes.find(e=>!e.minion);g.damageEnemy(minion,100);assert.equal(g.player.hp,100);g.damageEnemy(opponent,100);assert.equal(g.player.hp,105);
 });

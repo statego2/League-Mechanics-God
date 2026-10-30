@@ -4,7 +4,7 @@ const cv=document.getElementById("arena"),ctx=cv.getContext("2d"),world=LaneWorl
 const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTitle"),desc:$("menuDescription"),buttons:$("modeButtons"),foot:$("menuFooter"),resume:$("resumeBtn"),mode:$("modeValue"),time:$("timeValue"),kills:$("killsValue"),dodged:$("dodgedValue"),health:$("healthText"),fill:$("healthFill"),pause:$("pauseBtn"),restart:$("restartBtn"),toast:$("toast")};
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
-let difficulty="normal",seed=73129,rng=seed,hazards=[],waves=0,bait=null;
+let difficulty="normal",seed=73129,rng=seed,hazards=[],waves=0,bait=null,laneEnemyTimer=0;
 function random(){rng=(Math.imul(1664525,rng)+1013904223)>>>0;return rng/4294967296;}
 const cosmetic=(a,b)=>a+Math.random()*(b-a);
 const COLORS={player:"#6ff5df",enemy:"#ff858d",bullet:"#ffb17f"};
@@ -36,7 +36,7 @@ function cue(kind){
  }catch{/* audio must never interrupt the drill */}
 }
 let state="menu",mode="dodge",time=0,last=0,kills=0,dodged=0,spawn=0,aim={x:W/2+120,y:H/2},mouse={x:W/2,y:H/2},player,foes=[],shots=[],fx=[],keys=new Set(),attackMove=false,toastTime=0,enemySeq=0,stats;
-function reset(nextMode){mode=nextMode;time=0;kills=0;dodged=0;spawn=0;enemySeq=0;rng=seed;hazards=[];waves=0;bait=nextMode==="bait"?{phase:"setup",round:0,casts:0,dodges:0,cs:0,missed:0,timer:0}:null;stats={released:0,cancelled:0,hits:0,blocked:0,damage:0,moving:0,autoDamage:0,missed:0,skillShots:0,skillHits:0};accumulator=0;foes=[];shots=[];fx=[];keys.clear();attackMove=false;player={x:W/2,y:H/2,r:17,hp:160,maxHp:160,speed:270,target:null,route:[],routeGoal:null,focus:null,order:null,facing:0,motion:0,hitFlash:0,attackTimer:0,windup:0,windupTarget:null,cd:{q:0,w:0,e:0,r:0,f:0},invuln:0,flashTrail:0};state="playing";ui.pause.textContent="PAUSE P";$("encounterValue").textContent=difficulty.toUpperCase()+" · SEED "+seed;ui.overlay.classList.add("hidden");ui.pause.disabled=false;ui.restart.disabled=false;$("settings").hidden=false;ui.mode.textContent=mode==="dodge"?"DODGE TRIAL":mode==="lastHit"?"LAST-HIT LAB":mode==="bait"?"BAIT · DODGE · CS":mode==="skillshot"?"SKILLSHOT LAB":"KITE ARENA";$("killsLabel").textContent=(mode==="lastHit"||mode==="bait")?"CS":mode==="skillshot"?"HITS":"KILLS";$("dodgedLabel").textContent=mode==="bait"?"DODGES":mode==="lastHit"?"MISSED":mode==="skillshot"?"SHOTS":"DODGED";updateUI();}
+function reset(nextMode){mode=nextMode;time=0;kills=0;dodged=0;spawn=0;enemySeq=0;rng=seed;hazards=[];waves=0;laneEnemyTimer=0;bait=nextMode==="bait"?{phase:"setup",round:0,casts:0,dodges:0,cs:0,missed:0,timer:0}:null;stats={released:0,cancelled:0,hits:0,blocked:0,damage:0,moving:0,autoDamage:0,missed:0,cs:0,skillShots:0,skillHits:0};accumulator=0;foes=[];shots=[];fx=[];keys.clear();attackMove=false;player={x:W/2,y:H/2,r:17,hp:160,maxHp:160,speed:270,target:null,route:[],routeGoal:null,focus:null,order:null,facing:0,motion:0,hitFlash:0,attackTimer:0,windup:0,windupTarget:null,cd:{q:0,w:0,e:0,r:0,f:0},invuln:0,flashTrail:0};state="playing";ui.pause.textContent="PAUSE P";$("encounterValue").textContent=difficulty.toUpperCase()+" · SEED "+seed;ui.overlay.classList.add("hidden");ui.pause.disabled=false;ui.restart.disabled=false;$("settings").hidden=false;ui.mode.textContent=mode==="dodge"?"DODGE TRIAL":mode==="lastHit"?"LAST-HIT LAB":mode==="lane"?"LANE SCENARIO":mode==="bait"?"BAIT · DODGE · CS":mode==="skillshot"?"SKILLSHOT LAB":"KITE ARENA";$("killsLabel").textContent=(mode==="lastHit"||mode==="bait"||mode==="lane")?"CS":mode==="skillshot"?"HITS":"KILLS";$("dodgedLabel").textContent=mode==="bait"?"DODGES":mode==="lastHit"?"MISSED":mode==="skillshot"?"SHOTS":"DODGED";updateUI();}
 function showMenu(title,desc,finished=false){attackMove=false;ui.pause.disabled=true;state=finished?"ended":"menu";ui.overlay.classList.remove("hidden");ui.title.innerHTML=title;ui.desc.textContent=desc;ui.buttons.hidden=false;ui.foot.hidden=false;ui.resume.hidden=true;$("settings").hidden=false;ui.pause.textContent="PAUSE P";}
 function pause(){attackMove=false;if(state==="playing"){state="paused";ui.overlay.classList.remove("hidden");ui.title.innerHTML="PAUSED<span>.</span>";ui.desc.textContent="Take a moment, then return to the arena.";ui.buttons.hidden=true;ui.foot.hidden=true;ui.resume.hidden=false;$("settings").hidden=true;ui.pause.textContent="RESUME P";}else if(state==="paused"){state="playing";ui.overlay.classList.add("hidden");ui.pause.textContent="PAUSE P";}}
 // Records are local and partitioned by drill and difficulty; storage can be unavailable.
@@ -61,25 +61,26 @@ function saveKiteRecord(win){
 }
 function end(win){
  if(state!=="playing")return;
- if(mode==="lastHit"){for(const e of foes)if(e.alive&&e.minion){e.alive=false;stats.missed++;}}
+ if(mode==="lastHit"||mode==="lane"){for(const e of foes)if(e.alive&&e.minion){e.alive=false;stats.missed++;}}
  updateUI();
  const score=mode==="dodge"?Math.round(time*10+dodged*15):kills*100+Math.round(player.hp);
  let description;
- if(mode==="bait")description=`${bait.casts} spells baited · ${bait.dodges} dodged · ${bait.cs} / 3 CS · ${bait.missed} missed · ${stats.damage} damage taken.`;
+ if(mode==="lane")description=`${stats.cs} / 15 CS · ${stats.missed} missed · ${kills} enemies defeated · ${dodged} threats avoided · ${stats.hits} hits · ${stats.damage} damage taken.`;
+ else if(mode==="bait")description=`${bait.casts} spells baited · ${bait.dodges} dodged · ${bait.cs} / 3 CS · ${bait.missed} missed · ${stats.damage} damage taken.`;
  else if(mode==="skillshot")description=`${stats.skillHits} / ${stats.skillShots} skillshots hit · ${stats.skillShots?Math.round(stats.skillHits/stats.skillShots*100):0}% accuracy · ${kills} targets defeated.`;
  else if(mode==="lastHit")description=`${kills} / 15 CS · ${stats.missed} missed · ${stats.released} autos · ${stats.cancelled} cancelled. Gold bars mark last-hit health (28 damage).`;
  else if(mode==="dodge")description=`Survived ${time.toFixed(1)}s · ${dodged} threats avoided · ${stats.hits} hits · ${stats.blocked} blocked · ${score} points.`;
  else description=`Defeated ${kills} enemies · ${(stats.autoDamage/Math.max(time,1)).toFixed(1)} auto DPS · ${stats.released} autos · ${stats.cancelled} cancelled · ${Math.round(stats.moving/Math.max(time,1)*100)}% moving · ${stats.hits} hits taken.`;
- const recordValue=mode==="dodge"?score:(mode==="lastHit"||mode==="bait")?kills:mode==="skillshot"?stats.skillHits:kills;
+ const recordValue=mode==="dodge"?score:mode==="lane"?stats.cs:(mode==="lastHit"||mode==="bait")?kills:mode==="skillshot"?stats.skillHits:kills;
  const best=mode==="kite"?saveKiteRecord(win):saveRecord(recordValue);
  if(best!==null){
-  const label=mode==="kite"?(best.won?`win in ${best.time.toFixed(1)}s`:`${best.kills} kills, ${best.time.toFixed(1)}s`):`${best} ${mode==="dodge"?"points":(mode==="lastHit"||mode==="bait")?"CS":"hits"}`;
+  const label=mode==="kite"?(best.won?`win in ${best.time.toFixed(1)}s`:`${best.kills} kills, ${best.time.toFixed(1)}s`):`${best} ${mode==="dodge"?"points":(mode==="lastHit"||mode==="bait"||mode==="lane")?"CS":"hits"}`;
   description=description.replace(/\.$/,"")+` · Local best (${difficulty}): ${label}.`;
  }
  showMenu(win?"TRIAL <span>COMPLETE.</span>":"YOU <span>FELL.</span>",description,true);
 }
 function notify(s){ui.toast.textContent=s;ui.toast.classList.add("show");toastTime=1.35;}
-function updateUI(){ui.time.textContent=String(Math.floor(time/60)).padStart(2,"0")+":"+String(Math.floor(time%60)).padStart(2,"0");ui.kills.textContent=mode==="skillshot"?stats.skillHits:kills;ui.dodged.textContent=mode==="bait"?bait.dodges:mode==="skillshot"?stats.skillShots:mode==="lastHit"?stats.missed:dodged;ui.health.textContent=Math.max(0,Math.ceil(player.hp))+" / "+player.maxHp;ui.fill.style.width=(100*clamp(player.hp/player.maxHp,0,1))+"%";for(const key of Object.keys(CD)){const locked=((mode==="lastHit"||mode==="bait")&&["q","e","r"].includes(key)||mode==="skillshot"&&["e","r"].includes(key));const cd=player.cd[key],el=$("cd"+key.toUpperCase());el.textContent=locked?"—":cd>0?cd.toFixed(cd<1?1:0):"";el.closest(".ability").classList.toggle("on-cd",locked||cd>0);}}
+function updateUI(){ui.time.textContent=String(Math.floor(time/60)).padStart(2,"0")+":"+String(Math.floor(time%60)).padStart(2,"0");ui.kills.textContent=mode==="skillshot"?stats.skillHits:mode==="lane"?stats.cs:kills;ui.dodged.textContent=mode==="bait"?bait.dodges:mode==="skillshot"?stats.skillShots:mode==="lastHit"?stats.missed:dodged;ui.health.textContent=Math.max(0,Math.ceil(player.hp))+" / "+player.maxHp;ui.fill.style.width=(100*clamp(player.hp/player.maxHp,0,1))+"%";for(const key of Object.keys(CD)){const locked=((mode==="lastHit"||mode==="bait")&&["q","e","r"].includes(key)||mode==="skillshot"&&["e","r"].includes(key));const cd=player.cd[key],el=$("cd"+key.toUpperCase());el.textContent=locked?"—":cd>0?cd.toFixed(cd<1?1:0):"";el.closest(".ability").classList.toggle("on-cd",locked||cd>0);}}
 function burst(x,y,color,n=11){for(let i=0;i<n;i++){const a=cosmetic(0,TAU),v=cosmetic(50,200);fx.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,ttl:cosmetic(.25,.55),max:.55,color,r:cosmetic(1,3.8)});}}
 function number(x,y,value,color){fx.push({x,y:y-30,vx:0,vy:-38,ttl:.7,max:.7,color,text:String(value)});}
 function enemy(x,y){return {id:++enemySeq,x,y,r:20,hp:mode==="kite"?88:58,maxHp:mode==="kite"?88:58,speed:mode==="kite"?rand(75,108):rand(85,135),shoot:rand(.5,1.1),strafe:random()<.5?-1:1,spin:rand(0,TAU),hit:0,castCount:0,charge:0,pending:null,alive:true};}
@@ -181,7 +182,7 @@ function releaseEnemy(e){
 }
  e.pending=null;e.charge=0;e.shoot=rand(1.35,2.2)*PRESETS[difficulty].spawn*Math.max(.6,1-time/120);
 }
-function damageEnemy(e,d){if(!e.alive)return;cue("impact");e.hp-=d;e.hit=.18;number(e.x,e.y,d,"#b8fff0");burst(e.x,e.y,"#80f9eb",5);if(e.hp<=0){e.alive=false;kills++;burst(e.x,e.y,"#ffbd85",20);player.hp=Math.min(player.maxHp,player.hp+5);if(mode==="bait"&&e.minion){bait.cs++;bait.phase="next";bait.timer=.6;}if(mode==="kite"&&kills>=10)end(true);}}
+function damageEnemy(e,d){if(!e.alive)return;cue("impact");e.hp-=d;e.hit=.18;number(e.x,e.y,d,"#b8fff0");burst(e.x,e.y,"#80f9eb",5);if(e.hp<=0){e.alive=false;if(mode==="lane"&&e.minion)stats.cs++;else kills++;burst(e.x,e.y,"#ffbd85",20);if(!e.minion)player.hp=Math.min(player.maxHp,player.hp+5);if(mode==="bait"&&e.minion){bait.cs++;bait.phase="next";bait.timer=.6;}if(mode==="kite"&&kills>=10)end(true);}}
 function takeHit(d){if(player.invuln>0||state!=="playing")return;cue("hit");player.hp-=d;stats.hits++;stats.damage+=d;player.hitFlash=.22;number(player.x,player.y,"−"+d,"#ff9c98");player.invuln=.14;burst(player.x,player.y,"#ff8e91",14);if(player.hp<=0){player.hp=0;end(false);}}
 // Orders persist until superseded. Movement cancels only the uncommitted windup.
 function cancelAttack(){if(player.windup>0){stats.cancelled++;player.windup=0;player.windupTarget=null;}}
@@ -213,8 +214,14 @@ if(key==="e"){for(const foe of foes)if(foe.alive&&dist(player,foe)<175)damageEne
 if(key==="r"){for(const offset of [-.35,-.18,0,.18,.35]){const v=a+offset;fire(player.x+Math.cos(v)*25,player.y+Math.sin(v)*25,Math.cos(v)*630,Math.sin(v)*630,"r",32,8,1.4);}}
 updateUI();}
 function moveTo(x,y){cancelAttack();attackMove=false;player.order=null;player.target=world.nearestWalkable({x,y});player.route=[];player.routeGoal=null;player.focus=null;}
-function update(dt){if(state!=="playing")return;time+=dt;if(((mode==="dodge"||mode==="lastHit")&&time>=60)||(mode==="skillshot"&&time>=45)){end(true);return;}
-spawn-=dt;if(spawn<=0){if(mode==="lastHit")addWave();else if(mode==="bait"){}else if(mode==="skillshot")addTarget();else addEnemy();spawn=(mode==="dodge"?Math.max(1.35,3.5-time*.026):Math.max(.9,1.6-time*.015))*PRESETS[difficulty].spawn;if(mode==="lastHit")spawn=10;else if(mode==="bait")spawn=999;else if(mode==="skillshot")spawn=.8;}
+function update(dt){if(state!=="playing")return;time+=dt;if(((mode==="dodge"||mode==="lastHit"||mode==="lane")&&time>=60)||(mode==="skillshot"&&time>=45)){end(true);return;}
+spawn-=dt;if(spawn<=0){if(mode==="lastHit"||mode==="lane")addWave();else if(mode==="bait"){}else if(mode==="skillshot")addTarget();else addEnemy();spawn=(mode==="dodge"?Math.max(1.35,3.5-time*.026):Math.max(.9,1.6-time*.015))*PRESETS[difficulty].spawn;if(mode==="lastHit"||mode==="lane")spawn=10;else if(mode==="bait")spawn=999;else if(mode==="skillshot")spawn=.8;}
+if(mode==="lane"){
+ laneEnemyTimer-=dt;
+ if(laneEnemyTimer<=0&&!foes.some(e=>e.alive&&!e.minion)){
+  const opponent=enemy(1050,160);opponent.hp=opponent.maxHp=88;opponent.speed=75;opponent.shoot=2.5;foes.push(opponent);laneEnemyTimer=12;
+ }
+}
 if(mode==="bait")updateBait(dt);if(state!=="playing")return;
 for(const k of Object.keys(CD))player.cd[k]=Math.max(0,player.cd[k]-dt);player.hitFlash=Math.max(0,player.hitFlash-dt);player.invuln=Math.max(0,player.invuln-dt);player.attackTimer=Math.max(0,player.attackTimer-dt);
 updateOrder();
@@ -388,7 +395,7 @@ ctx.fillStyle="#101e23";ctx.fillRect(e.x-25,e.y-86,50,5);ctx.fillStyle="#ff9290"
 for(const s of shots){ctx.strokeStyle=s.kind==="enemy"?"#f1797999":"#7bf4e899";ctx.lineWidth=s.r*1.5;ctx.beginPath();ctx.moveTo(s.x-s.vx*.04,s.y-s.vy*.04);ctx.lineTo(s.x,s.y);ctx.stroke();circle(s.x,s.y,s.r,s.kind==="enemy"?"#ff9c85":s.kind==="r"?"#f5d47d":"#81fdf1");circle(s.x,s.y,s.r*1.7,s.kind==="enemy"?"#fe626344":"#8df5dd44");}
 }
 for(const f of fx){ctx.globalAlpha=clamp(f.ttl/f.max,0,1);if(f.text){ctx.font="bold 15px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y);}else circle(f.x,f.y,f.r,f.color);}ctx.globalAlpha=1;
-if(state==="playing"&&(mode==="dodge"||mode==="lastHit"||mode==="skillshot"||mode==="bait")){ctx.font="700 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#b7d9d9aa";ctx.fillText(mode==="bait"?baitLabel():mode==="skillshot"?"AIM WITH THE CURSOR · Q TO FIRE · "+Math.max(0,45-Math.floor(time))+"s":mode==="lastHit"?"28 AUTO DAMAGE · GOLD HEALTH = LAST HIT · WAVE "+waves+" / 5":"SURVIVE "+Math.max(0,60-Math.floor(time))+"s",W/2,90);}
+if(state==="playing"&&(mode==="dodge"||mode==="lastHit"||mode==="lane"||mode==="skillshot"||mode==="bait")){ctx.font="700 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#b7d9d9aa";ctx.fillText(mode==="lane"?"FARM, EVADE AND TRADE · "+Math.max(0,60-Math.floor(time))+"s":mode==="bait"?baitLabel():mode==="skillshot"?"AIM WITH THE CURSOR · Q TO FIRE · "+Math.max(0,45-Math.floor(time))+"s":mode==="lastHit"?"28 AUTO DAMAGE · GOLD HEALTH = LAST HIT · WAVE "+waves+" / 5":"SURVIVE "+Math.max(0,60-Math.floor(time))+"s",W/2,90);}
 }
 function loop(ts){const dt=last?Math.min((ts-last)/1000,.25):0;last=ts;if(state==="playing"){accumulator+=dt;while(accumulator>=STEP&&state==="playing"){update(STEP);accumulator-=STEP;}}else accumulator=0;render();requestAnimationFrame(loop);}
 function coords(e){const b=cv.getBoundingClientRect();return{x:(e.clientX-b.left)*W/b.width,y:(e.clientY-b.top)*H/b.height};}
