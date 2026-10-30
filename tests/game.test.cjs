@@ -564,8 +564,8 @@ test('successive melee waves receive the sourced 90-second health upgrade',()=>{
 });
 
 test('Dodge director sends single-cast visitors with deterministic Ezreal-heavy spell selection',()=>{
- function run(){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,55);return [g.dodgeDirector.ezreal,g.dodgeDirector.lux,g.dodgeDirector.attempted];}
- const a=run(),b=run();assert.deepEqual(a,b);assert.equal(a[0]+a[1],a[2]);assert.ok(a[0]>a[1]);assert.ok(a[2]>=10,`too few casts: ${a}`);
+ function run(){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,55);return [g.dodgeDirector.ezreal,g.dodgeDirector.lux,g.dodgeDirector.ahri,g.dodgeDirector.attempted];}
+ const a=run(),b=run();assert.deepEqual(a,b);assert.equal(a[0]+a[1]+a[2],a[3]);assert.ok(a[0]>a[1]);assert.ok(a[3]>=10,`too few casts: ${a}`);
 });
 test('Dodge visitor enters, casts only once, then exits without deleting its missile',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,.02);const visitor=g.foes.find(e=>e.dodgeVisitor);assert.ok(visitor);advance(g,1.1);assert.equal(g.dodgeDirector.attempted,1);assert.equal(visitor.phase,'exit');advance(g,1);assert.ok(!g.foes.includes(visitor));assert.equal(g.dodgeDirector.attempted,1);
@@ -583,13 +583,45 @@ test('Dodge director does not grant artificial invulnerability after a hit',()=>
 test('Dodge director completes a long session with bounded directed threats',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'normal'}});node('dodgeLength').listeners.change({target:{value:'720'}});g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
  for(let i=0;i<720*120+2&&g.state==='playing';i++){
-  g.update(1/120);const active=g.foes.filter(e=>e.alive&&e.dodgeVisitor&&e.phase!=='exit').length+g.shots.filter(s=>s.alive&&s.directed).length;
+  g.update(1/120);const active=g.foes.filter(e=>e.alive&&e.dodgeVisitor&&e.phase!=='exit'&&e.phase!=='orbFlight').length+g.shots.filter(s=>s.alive&&s.directed).length;
   assert.ok(active<=2,`directed threats exceeded cap: ${active}`);
  }
- assert.equal(g.state,'ended');assert.ok(g.dodgeDirector.attempted>100);assert.equal(g.dodgeDirector.attempted,g.dodgeDirector.ezreal+g.dodgeDirector.lux);
+ assert.equal(g.state,'ended');assert.ok(g.dodgeDirector.attempted>100);assert.equal(g.dodgeDirector.attempted,g.dodgeDirector.ezreal+g.dodgeDirector.lux+g.dodgeDirector.ahri);
 });
 test('Dodge visitor uses distinct existing visual profiles and projectile colours',()=>{
  const {g,node,draws,strokes}=boot('ahri');for(const id of ['mageArt','rangerArt']){node(id).complete=true;node(id).naturalWidth=100;}
  g.drawChampion(500,300,0,false,false,0,0,'ezreal');g.drawChampion(500,300,0,false,false,0,0);assert.ok(draws.includes(node('rangerArt')));assert.ok(draws.includes(node('mageArt')));
  const e=g.fire(200,200,100,0,'enemy',10,8,1);e.spellName='EZREAL Q';const l=g.fire(250,250,100,0,'enemy',10,8,1);l.spellName='LUX Q';g.render();assert.ok(strokes.includes('#7bd9ff99'));assert.ok(strokes.includes('#ffe4a099'));
+});
+
+test('surviving minions meet later waves in front of the ingress without spawning on top of them',()=>{
+ for(const allySide of [true,false]){
+  const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();
+  const survivor=allySide?g.allies[1]:g.foes[1];
+  if(allySide){g.setAllies([survivor]);g.setFoes([]);}else{g.setAllies([]);g.setFoes([survivor]);}
+  advance(g,12);g.addWave();
+  const incoming=(allySide?g.foes:g.allies).filter(e=>e.wave===2);
+  const front=incoming.filter(e=>e.minionType==='melee');
+  assert.ok(Math.min(...front.map(e=>Math.hypot(e.x-survivor.x,e.y-survivor.y)))>130);
+  if(allySide)g.setAllies([survivor]);else g.setFoes([survivor]);
+  advance(g,1);assert.ok(incoming.some(e=>e.id===survivor.targetId));
+  const target=incoming.find(e=>e.id===survivor.targetId);g.applyImpact(target,{sourceId:'player',sourceTeam:'player',kind:'auto',raw:9999,damageType:'true'});
+  advance(g,.1);assert.notEqual(survivor.targetId,target.id);assert.ok(incoming.some(e=>e.alive&&e.id===survivor.targetId));
+ }
+});
+
+test('enemy Ahri orb can hit once on each leg with true damage on its return',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.disableSpawn();g.dodgeDirector.next=999;
+ const shot=g.fire(400,g.player.y,775,0,'enemyOrb',35,50,450/775);
+ Object.assign(shot,{phase:'out',phaseHit:false,anchor:{x:400,y:g.player.y},casterId:-999});
+ advance(g,1.5);
+ assert.equal(g.stats.hits,2);assert.ok(Math.abs(g.player.hp-(590-35/1.3-35))<1e-7);assert.ok(!shot.alive);
+});
+test('enemy Ahri return orb homes toward its still-living caster',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.disableSpawn();g.dodgeDirector.next=999;
+ const caster=g.enemy(400,200);caster.referenceCaster=true;caster.shoot=999;g.setFoes([caster]);
+ const shot=g.fire(400,200,775,0,'enemyOrb',35,50,450/775);
+ Object.assign(shot,{phase:'out',phaseHit:false,anchor:{x:400,y:200},casterId:caster.id});
+ advance(g,.6);assert.equal(shot.phase,'return');caster.y=300;advance(g,.02);
+ assert.equal(shot.anchor.y,300);assert.ok(shot.vy>0);
 });
