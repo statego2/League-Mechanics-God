@@ -269,3 +269,9 @@ test('Ahri CS unattended waves resolve without breaking the drill',()=>{
 test('auto attacks apply armor mitigation at impact and CS lethal boundary',()=>{
  for(const [hp,lethal] of [[26.5,true],[26.6,false]]){const {g,node}=boot();node('attackSpeed').listeners.change({target:{value:'ahri'}});g.reset('lastHit');g.disableSpawn();g.addWave();const e=g.foes[0];e.x=820;e.tick=999;e.armor=100;e.hp=hp;g.attackOrder(e);advance(g,.7);assert.equal(!e.alive,lethal);assert.equal(node('killsValue').textContent,lethal?1:0);if(!lethal)assert.ok(Math.abs(e.hp-.1)<1e-7);g.render();}
 });
+
+test('Ahri can secure a minion after allied damage on each difficulty',()=>{
+ for(const difficulty of ['easy','normal','hard']){const {g,node}=boot();node('attackSpeed').listeners.change({target:{value:'ahri'}});node('difficulty').listeners.change({target:{value:difficulty}});g.reset('lastHit');g.disableSpawn();g.addWave();const e=g.foes[1];g.player.x=650;g.player.y=e.y;
+ for(let i=0;i<1800&&e.alive&&e.hp>53;i++)g.update(1/120);assert.ok(e.alive&&e.hp>0&&e.hp<=53,`${difficulty} has a last-hit window`);g.attackOrder(e);
+ for(let i=0;i<120&&e.alive;i++)g.update(1/120);assert.equal(node('killsValue').textContent,1,`${difficulty} secures CS`);}
+});
