@@ -94,3 +94,7 @@ test('drill menu exits simulation and repeated pause keys never toggle twice',()
 test('death from contact freezes later hazards and the final result immediately',()=>{
  const {g,node}=boot();g.player.hp=1;const e=foe(g,g.player.x,g.player.y);e.speed=0;g.hazards.push({x:100,y:100,r:50,ttl:.001,max:1,threat:true});advance(g,.01);assert.equal(g.state,'ended');assert.equal(g.dodged,0);assert.equal(g.stats.hits,1);assert.match(node('menuDescription').textContent,/1 hits taken/);
 });
+
+test('clicking the elevated enemy silhouette selects its ground-anchored unit',()=>{
+ const {g,click}=boot();const e=foe(g,800,337.5);click(800,297);assert.equal(g.player.order.id,e.id);
+});

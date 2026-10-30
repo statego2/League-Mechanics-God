@@ -94,7 +94,7 @@ if(order.type==="attack"){
  if(t){player.target=null;startAttack(t);}else player.target=dist(player,order)>1?{x:order.x,y:order.y}:null;
 }
 }
-function nearestEnemy(x,y,r=Infinity){let best=null,bd=r;for(const e of foes)if(e.alive){const d=Math.hypot(e.x-x,e.y-y);if(d<bd){best=e;bd=d;}}return best;}
+function nearestEnemy(x,y,r=Infinity){let best=null,bd=r;for(const e of foes)if(e.alive){const ground=Math.hypot(e.x-x,e.y-y);const body=e.minion?ground:Math.hypot(e.x-x,e.y-31-y);const d=Math.min(ground,body);if(d<bd){best=e;bd=d;}}return best;}
 function cast(key){if(state!=="playing"||player.cd[key]>0)return;if(mode==="lastHit"&&["q","e","r"].includes(key)){notify("LAST-HIT LAB — USE AUTO ATTACKS (28 DAMAGE)");return;}const a=Math.atan2(aim.y-player.y,aim.x-player.x),d={x:Math.cos(a),y:Math.sin(a)};cancelAttack();player.cd[key]=CD[key];if(key==="q"){fire(player.x+d.x*24,player.y+d.y*24,d.x*770,d.y*770,"q",45,10,1);burst(player.x,player.y,"#76ffff",7);}
 if(key==="w"||key==="f"){const len=key==="w"?135:240;const x=player.x,y=player.y;player.x=clamp(player.x+d.x*len,25,W-25);player.y=clamp(player.y+d.y*len,65,H-38);player.target=null;player.focus=null;player.order=null;player.windup=0;player.invuln=key==="w"?.26:.16;for(let i=0;i<13;i++)fx.push({x:x+(player.x-x)*i/13,y:y+(player.y-y)*i/13,vx:cosmetic(-20,20),vy:cosmetic(-20,20),ttl:.35,max:.35,color:key==="f"?"#f8cf7c":"#74f0eb",r:cosmetic(2,6)});}
 if(key==="e"){for(const foe of foes)if(foe.alive&&dist(player,foe)<175)damageEnemy(foe,38);for(const s of shots)if(s.kind==="enemy"&&dist(player,s)<165){s.alive=false;stats.blocked++;}burst(player.x,player.y,"#85fbe4",28);}
@@ -157,6 +157,13 @@ function circle(x,y,r,color,fill=true,width=1){ctx.beginPath();ctx.arc(x,y,r,0,T
 function polygon(x,y,r,n,rotation,fill,stroke){ctx.beginPath();for(let i=0;i<=n;i++){const a=rotation+i*TAU/n;const px=x+Math.cos(a)*r,py=y+Math.sin(a)*r;i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.closePath();ctx.fillStyle=fill;ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.fill();ctx.stroke();}
 // Original vector ranger and enemy mage silhouettes with facing and articulated steps.
 function drawChampion(x,y,a,friendly,hit,windup,motion){
+ const sprite=$("rangerArt");
+ if(friendly&&sprite.complete&&sprite.naturalWidth){
+  ctx.save();ctx.translate(x,y);ctx.save();ctx.scale(1,.43);circle(0,3,25,"#0009");ctx.restore();
+  const side=Math.cos(a)>=0?1:-1;const bob=player.target?Math.abs(Math.sin(motion))*2:0;
+  ctx.translate(0,-bob);ctx.scale(side,1);ctx.rotate(windup*-.08);ctx.drawImage(sprite,-37,-79,74,80);
+  if(hit){ctx.globalAlpha=.45;circle(0,-34,24,"#fff1dc");}ctx.restore();return;
+ }
  const moving=friendly?!!player.target:!windup;
  const stride=moving?Math.sin(motion)*4:0;
  const teal=friendly, cloth=hit?"#fff1d6":teal?"#286c72":"#793e50", edge=teal?"#8dc4ad":"#c88888";
@@ -181,6 +188,8 @@ function render(){const vw=cv.width,vh=cv.height;ctx.setTransform(vw/W,0,0,vh/H,
 const g=ctx.createRadialGradient(W/2,H/2,80,W/2,H/2,700);g.addColorStop(0,"#173d4b");g.addColorStop(.65,"#0f2938");g.addColorStop(1,"#081522");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
 ctx.save();
 // Painted, oblique lane: all marks remain on the same world plane as hitboxes.
+const arenaArt=$("arenaArt");
+if(arenaArt.complete&&arenaArt.naturalWidth){ctx.drawImage(arenaArt,0,0,W,H);ctx.fillStyle="#0a1a0d35";ctx.fillRect(0,0,W,H);}else{
 ctx.fillStyle="#233d2c";ctx.fillRect(0,0,W,H);
 for(let i=0;i<220;i++){
  const x=((i*197)%W),y=((i*113)%H),n=(Math.sin(i*83.1)+1)/2;
@@ -193,6 +202,7 @@ for(let i=0;i<75;i++){
  const x=(i*193+41)%W,y=(i*97+67)%H,n=(Math.sin(i*17)+1)/2;
  if(i%3===0){ctx.save();ctx.translate(x,y);ctx.scale(1,.55);polygon(0,0,8+n*11,5,n,"#3c5041","#62746255");ctx.restore();}
  else{ctx.strokeStyle=i%2?"#72905a55":"#98a56c44";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x-4,y);ctx.lineTo(x,y-8-n*5);ctx.lineTo(x+2,y);ctx.moveTo(x,y-3);ctx.lineTo(x+6,y-8);ctx.stroke();}
+}
 }
 // Soft arena boundary, kept clear for combat readability.
 ctx.strokeStyle="#b7c79a55";ctx.lineWidth=2;ctx.strokeRect(34,55,W-68,H-94);
@@ -221,7 +231,7 @@ for(const s of shots){ctx.strokeStyle=s.kind==="enemy"?"#f1797999":"#7bf4e899";c
 drawChampion(player.x,player.y,player.facing,true,player.hitFlash>0,player.windup/ATTACK.windup,player.motion);
 circle(player.x,player.y,player.r*.75,"#bcffe944",false,1);
 if(player.invuln>0)circle(player.x,player.y,25,"#ffe4ad",false,2);
-ctx.fillStyle="#102d27";ctx.fillRect(player.x-22,player.y-63,44,4);ctx.fillStyle="#8ceebd";ctx.fillRect(player.x-22,player.y-63,44*player.hp/player.maxHp,4);
+ctx.fillStyle="#102d27";ctx.fillRect(player.x-22,player.y-86,44,4);ctx.fillStyle="#8ceebd";ctx.fillRect(player.x-22,player.y-86,44*player.hp/player.maxHp,4);
 }
 for(const f of fx){ctx.globalAlpha=clamp(f.ttl/f.max,0,1);if(f.text){ctx.font="bold 15px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y);}else circle(f.x,f.y,f.r,f.color);}ctx.globalAlpha=1;
 if(state==="playing"&&(mode==="dodge"||mode==="lastHit")){ctx.font="700 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#b7d9d9aa";ctx.fillText(mode==="lastHit"?"28 AUTO DAMAGE · GOLD HEALTH = LAST HIT · WAVE "+waves+" / 5":"SURVIVE "+Math.max(0,60-Math.floor(time))+"s",W/2,90);}
