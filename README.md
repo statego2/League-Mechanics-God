@@ -44,7 +44,7 @@ For a public URL, enable **GitHub Pages** in the repository Settings â†’ Pages â
 
 Vanilla HTML5 Canvas + JavaScript + CSS, no third-party libraries and no copied game assets. This is a first **alpha** playable prototype. It is not yet equivalent to the attack timing, animation states, exact damage or collision rules of League of Legends.
 
-The painted mid-lane-inspired arena is a visual approximation. River, rocks and walls are decorative and currently do not block movement.
+The painted mid-lane-inspired arena is a visual approximation. Two marked stone walls block movement; the rest of the river, rocks and foliage are decorative. Clicks route around the walls, Dash stops at them, and Flash can cross them if it lands in a walkable location. Projectiles currently pass through walls.
 
 ## Repeatable encounters
 
@@ -61,7 +61,7 @@ Dodges count only resolved enemy missiles whose trajectory threatened your hurtb
 Run the dependency-free gameplay regression checks with Node 22+:
 
 ```bash
-node --test tests/game.test.cjs
+node --test tests/*.test.cjs
 ```
 
 ## Next improvements

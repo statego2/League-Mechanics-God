@@ -13,6 +13,7 @@ function boot(){
  const sandbox={document,window,requestAnimationFrame(){},Math:Object.create(Math)};
  sandbox.Math.random=()=>.5;
  vm.createContext(sandbox);
+ vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,addWave,addTarget,get bait(){return bait},get hazards(){return hazards},get player(){return player},get foes(){return foes},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;g.reset('kite');g.disableSpawn();
@@ -84,7 +85,7 @@ test('last-hit offensive spells are disabled and health threshold renders',()=>{
  const {g,node}=boot();g.reset('lastHit');g.addWave();for(const key of ['q','e','r']){g.cast(key);assert.equal(g.player.cd[key],0);}assert.equal(g.shots.length,0);assert.equal(node('cdQ').textContent,'—');g.render();
 });
 test('holding right mouse retargets movement immediately',()=>{
- const {g,node}=boot();node('arena').listeners.pointermove({clientX:900,clientY:400,buttons:2});assert.equal(g.player.target.x,900);node('arena').listeners.pointermove({clientX:300,clientY:200,buttons:2});assert.equal(g.player.target.x,300);assert.equal(g.player.target.y,200);
+ const {g,node}=boot();node('arena').listeners.pointermove({clientX:900,clientY:400,buttons:2});assert.equal(g.player.target.x,900);node('arena').listeners.pointermove({clientX:350,clientY:250,buttons:2});assert.equal(g.player.target.x,350);assert.equal(g.player.target.y,250);
 });
 
 test('drill menu exits simulation and repeated pause keys never toggle twice',()=>{
@@ -142,4 +143,28 @@ test('kite records prefer a win, then the fastest win, over earlier partial runs
  const {g,window,node}=boot();const values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
  g.reset('kite');g.setTime(100);g.end(false);g.reset('kite');g.setTime(30);g.end(true);assert.match(node('menuDescription').textContent,/win in 30.0s/);
  g.reset('kite');g.setTime(40);g.end(true);assert.match(node('menuDescription').textContent,/win in 30.0s/);g.reset('kite');g.setTime(25);g.end(true);assert.match(node('menuDescription').textContent,/win in 25.0s/);
+});
+
+test('right-click routes the player around walls without entering them',()=>{
+ const {g}=boot(),world=require('../world.js');g.player.x=120;g.player.y=150;g.moveTo(400,150);
+ let diverted=false;for(let i=0;i<360;i++){g.update(1/120);assert.ok(world.pointWalkable(g.player));if(Math.abs(g.player.y-150)>20)diverted=true;}assert.ok(diverted);assert.ok(Math.hypot(g.player.x-400,g.player.y-150)<2);
+});
+test('dash stops at a wall, while flash can cross and ends in walkable space',()=>{
+ const {g,node}=boot(),world=require('../world.js');g.player.x=100;g.player.y=150;node('arena').listeners.pointermove({clientX:600,clientY:150,buttons:0});g.cast('w');assert.ok(g.player.x<205);assert.ok(world.pointWalkable(g.player));
+ g.reset('kite');g.disableSpawn();g.player.x=100;g.player.y=150;g.cast('f');assert.ok(g.player.x>312);assert.ok(world.pointWalkable(g.player));
+});
+test('a pursuing enemy routes around a wall rather than crossing or getting stuck',()=>{
+ const {g}=boot(),world=require('../world.js');g.player.x=500;g.player.y=150;
+ const e=foe(g,80,150);e.speed=100;let diverted=false;for(let i=0;i<720;i++){g.update(1/120);assert.ok(world.pointWalkable(e,e.r));if(Math.abs(e.y-150)>10)diverted=true;}
+ assert.ok(diverted);assert.ok(Math.hypot(e.x-g.player.x,e.y-g.player.y)<260);
+});
+test('attack-move navigates around a wall before acquiring a destination',()=>{
+ const {g,key,click}=boot(),world=require('../world.js');g.player.x=120;g.player.y=150;
+ key('a');click(400,150,0);let diverted=false;for(let i=0;i<360;i++){g.update(1/120);assert.ok(world.pointWalkable(g.player));if(Math.abs(g.player.y-150)>20)diverted=true;}
+ assert.ok(diverted);assert.ok(Math.hypot(g.player.x-400,g.player.y-150)<2);
+});
+test('a fresh move order interrupts a detour immediately',()=>{
+ const {g}=boot(),world=require('../world.js');g.player.x=120;g.player.y=150;g.moveTo(400,150);advance(g,.3);g.moveTo(100,350);
+ for(let i=0;i<300;i++){g.update(1/120);assert.ok(world.pointWalkable(g.player));}
+ assert.ok(Math.hypot(g.player.x-100,g.player.y-350)<2);
 });

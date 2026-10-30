@@ -42,6 +42,12 @@ The user expects the game to look and feel like League of Dodge / League: a conv
 
 Kite records now prefer a completed run, then the fastest victory; before the first win, the best kill count (then survival time) is retained. Old v1 Kite kill-only records are not migrated. Storage failures still leave the drill playable. Regression suite: 30/30 PASS.
 
+## First physical walls and pathfinding (2026-10-30)
+
+- Added `world.js` with two hand-authored, visibly outlined rectangular wall proxies, a visibility-graph pathfinder and swept movement clipping. Right-click and attack-move route around them; enemies replan while chasing. Clicking inside a wall selects a nearby walkable point. Dash stops at walls; Flash crosses walls but lands outside them. The exact League collision map is not available, and the remaining illustrated rocks, foliage and river are decorative. Projectiles currently pass through walls.
+- `node --test tests/*.test.cjs`: **40/40 PASS**, including 500 seeded start/goal paths, click inside wall, dash/flash, retarget during detour, attack-move and enemy chase around a wall; existing gameplay suite remains green. Updated CI to run both files.
+- Browser: Last-Hit opened with wall outlines; a right-click sent the character across to the opposite side of the upper wall. An unattended five-wave run finished with 0/15 CS and 15 missed, with results displayed. No console warning/error was observed at start. Exact wall-to-art alignment, full user playthroughs and cross-browser behavior still need work.
+
 ## Current playable state
 
 Dodge Trial, Kite Arena, Last-Hit Lab, Skillshot Lab and Bait → Dodge → CS run locally at http://localhost:8080. The repository was cloned into the `League-Mechanics-God` subdirectory of the original workspace, whose parent contains separate historical Unity research. Work is on `codex/controls-and-dodge`, based on `7de3430`.
@@ -92,12 +98,12 @@ Commit: `89e7529`.
 - Gameplay CI workflow added for pushes/PRs; remote run status has not been verified.
 - No public deployment verified. Local server only; no claims about GitHub Pages.
 - Visuals are original procedural vectors; further animation and sound polish remain.
-- No obstacles/pathfinding, audio or full lane scenario yet. Last-Hit Lab is timing practice without hostile enemy pressure.
+- Only two approximate wall proxies have collision/pathfinding; the rest of the terrain is decorative. No audio or full lane scenario yet. Last-Hit Lab is timing practice without hostile enemy pressure.
 - Attack range is center-to-center and calibrated for this arena, not a claim of exact LoL data.
 
 ## Next three actions
 
-1. Upgrade the camera, characters and environment to a convincing League-like three-quarter presentation, informed by direct gameplay observation; keep the three drills playable. Acceptance: visual depth, readable animated champion silhouettes, lane terrain and matching hitboxes.
+1. Replace two rectangular wall proxies with a carefully traced, original mid-lane terrain mesh and navigation, including rivers and jungle entrances. Acceptance: visible walls match collision, no entity spawns inside obstacles, clicks and chase route around them.
 2. Extend Bait → Dodge → CS with moving opponents and more varied allied minion attrition. Acceptance: distinct bait, dodge, CS and HP metrics remain trustworthy.
 3. Improve animation and combat feedback with directional sprite animations; check performance and visibility during a complete run.
 

@@ -9,4 +9,5 @@ jobs:
         with:
           node-version: 22
       - run: node --check game.js
-      - run: node --test tests/game.test.cjs
+      - run: node --check world.js
+      - run: node --test tests/*.test.cjs
