@@ -231,3 +231,43 @@ Within a single play session, the player should experience **many meaningful, fa
 A good early benchmark is *not* a certain number of flashy effects: it is a convincing and fun 10-minute Dodge Gauntlet loop, plus trustworthy per-skill metrics and no regression in the existing game.
 
 **OUR PRODUCT PROMISE:** Condensed deliberate practice, with League-like feel and measurable mechanical progression—not a guarantee of instant rank gains.
+
+---
+
+## 12. Owner-approved first spell roster — Dodge Gauntlet (2026-10-30)
+
+This section supersedes earlier illustrative spell lists for the **first implementation scope**. Keep the initial catalog focused on the choices the owner explicitly selected. Each spell must have a distinct counterplay model; do not flatten them into one generic projectile.
+
+| Spell | Encounter behavior | Skill trained | Implementation notes |
+| --- | --- | --- | --- |
+| **Malphite R** | Malphite approaches/appears, then can commit a fast engage | Recognize engage, choose walk vs Flash, timing under distance pressure | Show believable opponent/cast cues; near-range attacks may be anticipation-only rather than realistically reactable. No impossible mandatory Flash check. |
+| **Blitzcrank Q** | Blitz arrives, aims/casts hook, then exits | Lateral juke, bait a hook, minion-block positioning | Single-target hook collision and blocker category differ from ordinary piercing projectiles. |
+| **Lux Q** | Lux arrives, commits binding from a changing angle | Read cast, step out of line, position relative to minions | Model up-to-two-target interception rather than one-hit generic bullet. |
+| **Vel'Koz Q** | Vel'Koz enters, casts Q; the projectile can split | Predict split timing and perpendicular follow-up, safe route choice | Initial missile and two split missiles are separate phases with explicit rules. |
+| **Orianna R** | Orianna/ball setup creates a Shockwave threat | Track the **ball** as danger center, not just champion location | Ball location and R-centered AoE must be represented; don't trigger AoE at Orianna's body by mistake. |
+| **Xerath Q** | **Ambient map threat**: a readable long-range Q arrives at irregular times even when Xerath is not visible/present in the arena | Off-screen line-threat awareness, movement under other pressure | Do **not** require Xerath to spawn. Telegraph/cast cue must preserve a fair response opportunity. |
+| **Xerath W** | **Ambient map threat**: delayed ground-area strike at irregular times even without a visible Xerath | Spot ground indicator, escape delayed AoE, manage overlapping threats | Do **not** require Xerath to spawn; distinct circle/area timing from Q. |
+| **Ahri Q** | Enemy Ahri casts a travelling orb that **returns** | Dodge outbound path, predict moving return trajectory, reposition for the second pass | Track outbound/return separately; avoid double-counting and handle changing return destination. |
+
+### Encounter architecture: two different threat sources
+
+1. **Champion arrivals (main loop):** Malphite, Blitzcrank, Lux, Vel'Koz, Orianna and Ahri appear or take position, visibly prepare/cast, then leave or transition out. Spawn cadence can overlap in advanced difficulty.
+2. **Map-origin ambient casts (additional layer):** Xerath Q and W occur at irregular, seeded times **without spawning/depicting Xerath**. This is a deliberate exception to the "champion enters → casts → leaves" pattern, not an implementation bug. Vary approach angle and location, but use readable, truthful warning cues and avoid unavoidable overlaps.
+
+**Important boundary:** The phrase "Delayed dash" appeared in the owner's copied list but did not name a champion. It may refer to the earlier Rakan W example; treat **Rakan W as unconfirmed optional later content**, not as an approved first-wave requirement. Do not accidentally use Orianna R as a delayed dash.
+
+### Priority / delivery
+
+- First vertical slice: working champion lifecycle + **Malphite R**, **Blitzcrank Q**, **Ahri Q outbound/return**, with true spell-specific hitboxes/state transitions and reproducible practice tests.
+- Next: **Lux Q**, **Vel'Koz Q**, **Orianna R** to widen interception, split, and location-dependent AoE.
+- Ambient layer: **Xerath Q and W**, mixed in during longer dodge runs with independent seeded timing and safety checks.
+- These are suggested engineering batches, not a new ranking that overrides the owner's desire to include **all** selected spells.
+- When multiple casts overlap, guarantee readable cues and at least one viable line of defense, factoring in Flash availability, movement speed, positions and obstacles.
+
+### Acceptance criteria
+
+- Incoming Xerath Q/W functions **without an on-screen Xerath instance**; tests assert the lack of required Xerath entity.
+- Ahri Q's return can be hazardous even when outbound missed; test moving return target/path, one hit per pass and exact hit/miss accounting.
+- Malphite R tests distinguish prediction from visually reactable Flash opportunities at different distances.
+- Vel'Koz Q actually splits; Orianna R originates from the ball; Blitz hook and Lux binding have distinct collision/interception policies.
+- Every spell is individually switchable for isolated practice, then mixes through the encounter director. Existing game modes and tests remain intact.
