@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnXerathW,spawnXerathQ,canEvadeDodgeCast,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnXerathW,spawnXerathQ,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,strokes,texts,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -809,4 +809,29 @@ test('Velkoz split branches cannot both hit the same champion',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
  const e=g.enemy(300,200),spec=g.REFERENCE_SPELLS.velkozDodge;Object.assign(e,{dodgeVisitor:true,pending:{angle:0,spell:spec,splitDistance:200}});g.releaseEnemy(e);
  advance(g,.4);const main=g.shots.find(s=>s.velkoz==='delay');assert.ok(main);g.player.x=main.x;g.player.y=main.y;advance(g,.4);assert.equal(g.stats.hits,1);
+});
+
+
+test('Velkoz split forecast checks both perpendicular branches and terrain routes',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const origin={x:160,y:g.player.y},spec=g.REFERENCE_SPELLS.velkozDodge;
+ assert.equal(g.canEvadeVelkoz(origin,.32,440*Math.cos(.32),spec),true);
+});
+test('entering Velkoz reserves its encounter until cast or cancellation',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const e=g.enemy(200,300);Object.assign(e,{dodgeVisitor:true,phase:'enter',spell:g.REFERENCE_SPELLS.velkozDodge});g.setFoes([e]);
+ assert.equal(g.spawnDodgeVisitor(),false);
+});
+
+
+test('a sampled Velkoz escape survives the actual split after 200ms reaction',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const origin={x:160,y:g.player.y},spec=g.REFERENCE_SPELLS.velkozDodge,angle=.32,distance=440*Math.cos(.32),witness={};
+ assert.ok(g.canEvadeVelkoz(origin,angle,distance,spec,witness));
+ const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'cast',entry:{x:origin.x,y:origin.y},speed:120,charge:spec.cast,pending:{angle,spell:spec,splitDistance:distance}});g.setFoes([e]);
+ advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.7);assert.equal(g.stats.hits,0);
+});
+test('Velkoz forecast rejects a point-blank split with no ordinary escape',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const spec=g.REFERENCE_SPELLS.velkozDodge;
+ assert.equal(g.canEvadeVelkoz({x:g.player.x-10,y:g.player.y},0,10,spec),false);
 });

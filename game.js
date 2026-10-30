@@ -31,7 +31,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v10":mode==="dodge"?(ahriBase()?".director_v10":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
+function recordSuffix(){return ahriCS()?".cs_ahri_v10":mode==="dodge"?(ahriBase()?".director_v11":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 function recordLabel(){return difficulty+(attackPreset==="standard"?"":", "+ATTACK_PRESETS[attackPreset].label+" AS");}
@@ -410,9 +410,34 @@ function canEvadeDodgeCast(origin,spell){
  }
  return false;
 }
+// Sample isolated Vel'Koz Q including both future split bolts. The same
+// straight response is tested against every phase, after a reaction allowance.
+function canEvadeVelkoz(origin,angle,splitDistance,spell,witness=null){
+ const travel=clamp(splitDistance/spell.speed,.25,spell.range/spell.speed);
+ const ux=Math.cos(angle),uy=Math.sin(angle),splitX=origin.x+ux*travel*spell.speed,splitY=origin.y+uy*travel*spell.speed;
+ const splitStart=spell.cast+travel+.25;
+ const phases=[{x:origin.x,y:origin.y,vx:ux*spell.speed,vy:uy*spell.speed,r:spell.radius,start:spell.cast,end:spell.cast+travel}];
+ for(const side of [-1,1])phases.push({x:splitX,y:splitY,vx:-uy*side*1050,vy:ux*side*1050,r:27.5,start:splitStart,end:splitStart+550/1050});
+ for(let i=0;i<24;i++){
+  const a=i*TAU/24,step=130,dest={x:player.x+Math.cos(a)*step,y:player.y+Math.sin(a)*step};
+  if(!world.pointWalkable(dest,player.r)||!world.segmentClear(player,dest,player.r))continue;
+  const position=t=>{const f=clamp((t-.2)*player.speed/step,0,1);return {x:player.x+(dest.x-player.x)*f,y:player.y+(dest.y-player.y)*f};};
+  let clear=true;
+  for(const shot of phases){
+   for(let t=shot.start;t<shot.end;){
+    const next=Math.min(shot.end,t+1/80),p=position(t),q=position(next),a=t-shot.start,b=next-shot.start;
+    if(segmentDistance(shot.x+shot.vx*a-p.x,shot.y+shot.vy*a-p.y,shot.x+shot.vx*b-q.x,shot.y+shot.vy*b-q.y)<=shot.r+player.hitRadius+5){clear=false;break;}
+    t=next;
+   }
+   if(!clear)break;
+  }
+  if(clear){if(witness)witness.destination=dest;return true;}
+ }
+ return false;
+}
 function spawnDodgeVisitor(){
  const active=foes.filter(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit"&&e.phase!=="orbFlight"&&e.phase!=="hookFlight").length+shots.filter(s=>s.alive&&s.directed).length+hazards.filter(h=>h.directed).length;
- if(active>=DODGE_DIRECTOR[difficulty].cap||hazards.some(h=>h.directed)||shots.some(s=>s.alive&&s.velkoz))return false;
+ if(active>=DODGE_DIRECTOR[difficulty].cap||hazards.some(h=>h.directed)||shots.some(s=>s.alive&&s.velkoz)||foes.some(e=>e.alive&&e.dodgeVisitor&&e.spell.split&&(e.phase==="enter"||e.phase==="cast")))return false;
  const roll=random()*(time>=45?100:71);
  if(time>=45&&roll>=94)return spawnXerathQ();
  if(time>=45&&roll>=91)return spawnXerathW();
@@ -434,8 +459,12 @@ function updateDodgeVisitor(e,dt){
  if(e.phase==="enter"||e.phase==="exit"){
   const goal=e.phase==="enter"?e.origin:e.entry,dx=goal.x-e.x,dy=goal.y-e.y,d=Math.hypot(dx,dy),step=Math.min(d,e.speed*dt);
   if(d>0){const next=world.clip(e,{x:e.x+dx/d*step,y:e.y+dy/d*step},e.r);e.x=next.x;e.y=next.y;}
-  if(d<=step+.01){if(e.phase==="enter"){if(!canEvadeDodgeCast(e,e.spell)){e.phase="exit";}else{const offset=e.spell.split?(random()<.5?-.32:.32):0;
- e.pending={angle:Math.atan2(player.y-e.y,player.x-e.x)+offset,fan:false,spell:e.spell,splitDistance:e.spell.split?dist(e,player)*Math.cos(offset):undefined};e.charge=e.spell.cast;e.phase="cast";}}else e.alive=false;}
+  if(d<=step+.01){if(e.phase==="enter"){
+  const offset=e.spell.split?(random()<.5?-.32:.32):0,angle=Math.atan2(player.y-e.y,player.x-e.x)+offset,splitDistance=e.spell.split?dist(e,player)*Math.cos(offset):undefined;
+  const isolated=!e.spell.split||(!shots.some(s=>s.alive&&s.directed)&&!hazards.some(h=>h.directed)&&!foes.some(other=>other!==e&&other.alive&&other.dodgeVisitor&&(other.phase==="enter"||other.phase==="cast")));
+  const safe=isolated&&canEvadeDodgeCast(e,e.spell)&&(!e.spell.split||canEvadeVelkoz(e,angle,splitDistance,e.spell));
+  if(!safe)e.phase="exit";else{e.pending={angle,fan:false,spell:e.spell,splitDistance};e.charge=e.spell.cast;e.phase="cast";}
+ }else e.alive=false;}
  }else if(e.phase==="cast"){
   e.charge-=dt;if(e.charge<=0){releaseEnemy(e);e.phase=e.spell.returning?"orbFlight":e.spell.hook?"hookFlight":"exit";}
  }else if(e.phase==="orbFlight"||e.phase==="hookFlight"){
