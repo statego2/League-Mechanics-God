@@ -30,7 +30,7 @@ For a public URL, enable **GitHub Pages** in the repository Settings â†’ Pages â
 |---|---|
 | Right mouse button | Move; click enemy to attack; hold and drag to retarget |
 | A, then left-click | Attack move toward cursor / nearest target |
-| Left-click enemy | Auto attack (when in range) |
+| Left-click enemy | Chase and auto attack |
 | Q | Bolt |
 | W | Dash |
 | E | Pulse |
@@ -66,6 +66,6 @@ node --test tests/game.test.cjs
 
 ## Next improvements
 
-Lane scenarios; audio; local records; further enemy patterns; accessibility; cross-browser tuning.
+Lane scenarios; audio; further enemy patterns; accessibility; cross-browser tuning.
 
 Independent fan-made practice project, **not affiliated with or endorsed by Riot Games**.
