@@ -10,7 +10,8 @@ function boot(preset="standard", options={}){
  node('arena').getContext=()=>ctx;
  const window={devicePixelRatio:1,listeners:{},addEventListener(k,f){this.listeners[k]=f;}};
  const document={getElementById:node,querySelectorAll:()=>[],addEventListener(){}};
- const sandbox={document,window,requestAnimationFrame(){},Math:Object.create(Math)};
+ const sandbox={document,window,requestAnimationFrame(){},Math:Object.create(Math),structuredClone};
+ if(options.laneApi)window.LaningOpponent=options.laneApi;
  sandbox.Math.random=()=>.5;
  vm.createContext(sandbox);
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
@@ -542,4 +543,33 @@ test('opening minion formation keeps rows visibly separated',()=>{
 test('champion has no attack timing or permanent hitbox overlays',()=>{
  const {g,texts,strokes}=boot('ahri');g.reset('kite');g.disableSpawn();const e=foe(g,800);g.attackOrder(e);advance(g,.1);g.render();
  assert.ok(g.player.windup>0);assert.ok(!texts.some(t=>['READY','WINDUP','RECOVERY'].includes(t)));assert.ok(!strokes.includes('#bcffe944'));assert.ok(!strokes.includes('#7ce8d0'));
+});
+
+
+test('integrated opponent farms real allied minions and resets without leaking into other modes',async()=>{
+ const brain=await import('../modules/laning-opponent-ai/brain.mjs'),adapter=await import('../modules/laning-opponent-ai/adapter.mjs');
+ const {g}=boot('ahri',{laneApi:{...brain,...adapter}});g.reset('middev');g.update(1/120);g.disableSpawn();const bot=g.foes.find(e=>e.laneBot);assert.ok(bot);assert.equal(g.allies.length,6);
+ const m=g.allies[0];m.x=bot.x-100;m.y=bot.y;m.hp=30;m.tick=999;g.player.x=100;g.player.y=600;
+ advance(g,1.5);assert.equal(m.alive,false);assert.equal(m.death.killerTeam,'bot');assert.equal(g.stats.botCS,1);assert.equal(g.stats.cs,0);
+ g.reset('middev');assert.equal(g.stats.botCS,0);g.update(1/120);assert.equal(g.foes.filter(e=>e.laneBot).length,1);g.reset('kite');advance(g,.1);assert.equal(g.foes.some(e=>e.laneBot),false);
+});
+test('integrated opponent reacts to observed player windup, uses mana and cooldown, and takes damage',async()=>{
+ const brain=await import('../modules/laning-opponent-ai/brain.mjs'),adapter=await import('../modules/laning-opponent-ai/adapter.mjs');const {g}=boot('ahri',{laneApi:{...brain,...adapter}});g.reset('middev');g.update(1/120);g.disableSpawn();const bot=g.foes.find(e=>e.laneBot);g.setAllies([]);g.player.x=bot.x-250;g.player.y=bot.y;g.player.windup=2;g.player.windupTarget=null;
+ advance(g,.65);assert.ok(g.stats.botCasts>0);assert.ok(bot.spellCD>0);assert.ok(bot.mana<300);const hp=bot.hp;g.applyImpact(bot,{sourceId:'player',sourceTeam:'player',kind:'auto',raw:40,damageType:'true'});assert.equal(bot.hp,hp-40);g.pause();const t=g.time;advance(g,1);assert.equal(g.time,t);g.pause();g.applyImpact(bot,{sourceId:'player',sourceTeam:'player',kind:'auto',raw:9999,damageType:'true'});assert.equal(bot.alive,false);advance(g,.1);assert.equal(g.foes.some(e=>e.laneBot),false);
+});
+test('integrated minion retaliation, player CS attribution and enemy spell interception',async()=>{
+ const brain=await import('../modules/laning-opponent-ai/brain.mjs'),adapter=await import('../modules/laning-opponent-ai/adapter.mjs');const {g}=boot('ahri',{laneApi:{...brain,...adapter}});g.reset('middev');g.update(1/120);g.disableSpawn();const bot=g.foes.find(e=>e.laneBot),ally=g.allies[0],foe=g.foes.find(e=>e.minion);ally.x=bot.x-50;ally.y=bot.y;ally.tick=999;g.applyImpact(g.player,{sourceId:bot.id,sourceTeam:'bot',kind:'auto',raw:1,damageType:'true'});assert.equal(ally.targetId,bot.id);assert.ok(ally.aggroBot>0);
+ foe.hp=1;g.applyImpact(foe,{sourceId:'player',sourceTeam:'player',kind:'auto',raw:10,damageType:'true'});assert.equal(g.stats.cs,1);assert.equal(g.stats.botCS,0);
+ g.player.x=bot.x-200;g.player.y=bot.y;ally.x=bot.x-100;ally.y=bot.y;ally.hp=100;const hp=g.player.hp;const shot=g.fire(bot.x,bot.y,-600,0,'enemy',45,10,1);shot.botSpell=true;shot.sourceId=bot.id;advance(g,.3);assert.ok(ally.hp<100);assert.equal(g.player.hp,hp);
+});
+test('integrated lane remains deterministic at 30, 60 and 120 FPS',async()=>{
+ const brain=await import('../modules/laning-opponent-ai/brain.mjs'),adapter=await import('../modules/laning-opponent-ai/adapter.mjs');const results=[];
+ for(const fps of [30,60,120]){const {g}=boot('ahri',{laneApi:{...brain,...adapter}});g.reset('middev');g.loop(1000);for(let i=1;i<=fps*12;i++)g.loop(1000+i*1000/fps);const b=g.foes.find(e=>e.laneBot);results.push([g.stats.botCS,g.stats.botAttacks,g.stats.botCasts,Math.round(b.x),Math.round(b.y)]);}
+ assert.deepEqual(results[0],results[1]);assert.deepEqual(results[1],results[2]);
+});
+test('real lane retaliation is reciprocal and delayed bot decisions do not cast instantly',async()=>{
+ const brain=await import('../modules/laning-opponent-ai/brain.mjs'),adapter=await import('../modules/laning-opponent-ai/adapter.mjs');const {g}=boot('ahri',{laneApi:{...brain,...adapter}});g.reset('middev');g.update(1/120);g.disableSpawn();const bot=g.foes.find(e=>e.laneBot),m=g.foes.find(e=>e.minion);g.player.x=bot.x-150;g.player.y=bot.y;m.x=g.player.x+20;m.y=g.player.y;g.applyImpact(bot,{sourceId:'player',sourceTeam:'player',kind:'auto',raw:1,damageType:'true'});assert.equal(m.targetId,'player');assert.ok(m.aggroPlayer>0);g.setAllies([]);g.player.windup=2;g.player.windupTarget=null;advance(g,.1);assert.equal(g.stats.botCasts,0);assert.equal(bot.botCast,0);advance(g,.5);assert.ok(bot.spellCD>0);
+});
+test('integrated bot reacts to visible projectile after delay and moves through the real world',async()=>{
+ const brain=await import('../modules/laning-opponent-ai/brain.mjs'),adapter=await import('../modules/laning-opponent-ai/adapter.mjs');const {g}=boot('ahri',{laneApi:{...brain,...adapter}});g.reset('middev');g.update(1/120);g.disableSpawn();g.setAllies([]);const bot=g.foes.find(e=>e.laneBot);g.setFoes([bot]);bot.x=600;bot.y=300;g.player.x=200;g.player.y=600;const shot=g.fire(800,300,-150,0,'charm',80,10,3);const y=bot.y;advance(g,.1);assert.equal(bot.y,y);advance(g,.5);assert.notEqual(bot.y,y);assert.equal(shot.alive,true);
 });
