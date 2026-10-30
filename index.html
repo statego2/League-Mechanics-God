@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070d18">
+  <meta name="description" content="League Mechanics God — a free, original browser arena for dodging, kiting and skillshot practice.">
+  <title>League Mechanics God · Arena</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="game.js"></script>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand"><span class="logo" aria-hidden="true">◇</span><div><div class="eyebrow">BROWSER MECHANICS TRAINER</div><h1>LEAGUE <em>MECHANICS</em> GOD</h1></div></div>
+      <div class="top-actions"><span class="build">ALPHA · v0.1</span><button class="ghost-button" id="pauseBtn" type="button" disabled>PAUSE <kbd>P</kbd></button><button class="ghost-button" id="restartBtn" type="button" disabled>RESTART <kbd>↻</kbd></button></div>
+    </header>
+
+    <section class="game-shell" aria-label="Play area">
+      <div class="hud">
+        <div class="hud-block"><span class="hud-label">MODE</span><strong id="modeValue">—</strong></div>
+        <div class="hud-block"><span class="hud-label">TIME</span><strong id="timeValue">00:00</strong></div>
+        <div class="hud-block"><span class="hud-label">KILLS</span><strong id="killsValue">0</strong></div>
+        <div class="hud-block"><span class="hud-label">DODGED</span><strong id="dodgedValue">0</strong></div>
+        <div class="hud-health"><div class="health-top"><span>YOUR HEALTH</span><b id="healthText">160 / 160</b></div><div class="health-track"><div id="healthFill" class="health-fill"></div></div></div>
+      </div>
+      <canvas id="arena" aria-label="Real-time top-down training arena. Use mouse and keyboard to play."></canvas>
+      <div class="toast" id="toast" aria-live="polite"></div>
+      <div class="overlay" id="overlay">
+        <div class="menu" id="menu">
+          <div class="menu-kicker">THE PRACTICE GROUNDS</div>
+          <h2 id="menuTitle">READ. REACT.<br><span>OUTPLAY.</span></h2>
+          <p id="menuDescription">A fast, original browser combat arena built for League-style movement, skillshots and kiting. Choose a mode and jump straight in.</p>
+          <div class="mode-buttons" id="modeButtons">
+            <button class="mode-card" data-mode="dodge" type="button"><span class="mode-icon">◎</span><span class="mode-info"><b>DODGE TRIAL</b><small>Survive 60 seconds of incoming skillshots</small></span><span class="mode-arrow">→</span></button>
+            <button class="mode-card" data-mode="kite" type="button"><span class="mode-icon">⌁</span><span class="mode-info"><b>KITE ARENA</b><small>Orbwalk, attack-move and defeat 10 foes</small></span><span class="mode-arrow">→</span></button>
+          </div>
+          <p class="tiny-note" id="menuFooter">No installation · No login · Desktop mouse and keyboard</p>
+          <button id="resumeBtn" type="button" class="primary-button" hidden>RESUME</button>
+        </div>
+      </div>
+      <div class="ability-bar" id="abilityBar" aria-label="Abilities">
+        <div class="ability" data-ability="q"><kbd>Q</kbd><span class="ability-name">BOLT</span><span class="cooldown" id="cdQ"></span></div>
+        <div class="ability" data-ability="w"><kbd>W</kbd><span class="ability-name">DASH</span><span class="cooldown" id="cdW"></span></div>
+        <div class="ability" data-ability="e"><kbd>E</kbd><span class="ability-name">PULSE</span><span class="cooldown" id="cdE"></span></div>
+        <div class="ability" data-ability="r"><kbd>R</kbd><span class="ability-name">VOLLEY</span><span class="cooldown" id="cdR"></span></div>
+        <div class="ability flash" data-ability="f"><kbd>F</kbd><span class="ability-name">FLASH</span><span class="cooldown" id="cdF"></span></div>
+      </div>
+    </section>
+    <footer class="help">
+      <span><kbd>RIGHT CLICK</kbd> Move / attack target</span>
+      <span><kbd>A</kbd> + left click Attack move</span>
+      <span><kbd>Q W E R F</kbd> Abilities toward cursor</span>
+      <span><kbd>P</kbd> Pause</span>
+      <span class="help-tag">An independent fan-made mechanics trainer. Not affiliated with Riot Games.</span>
+    </footer>
+  </main>
+</body>
+</html>
