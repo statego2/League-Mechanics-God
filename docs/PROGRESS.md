@@ -334,3 +334,9 @@ Next: measured minion attack/cadence and complete practice run; cannon wave and 
 - Validation: 10/10 policy tests and 127/127 existing regression tests pass; mock demo ran. No human playtest.
 - Synthetic fixtures are not evidence of calibrated League behavior. The engine must provide fair observations and utility estimates, validate commands, execute movement/combat, and own collision, commitment, damage and attribution. Movement path safety, mana, real champion tuning, live integration and human playtesting remain open.
 - Next: (1) adapt the current engine's visible snapshots and validate every command; (2) run continuous lane scenarios measuring bot CS, retaliation and dodges; (3) calibrate reaction and trade heuristics in human playtests without hidden information.
+
+## Laning opponent follow-up (2026-10-30)
+
+- Added anticipatory last-hit approach using visible incoming impacts and movement/attack travel; projectile evasion extrapolates observation age and checks movement time. Trade policy considers health, mana, observed threat, retaliation and positional risk. The game engine and modes remain untouched.
+- Added deterministic 180-second mock harness and tests. Fixture result: 30 CS attempts, 30 CS, 0 expired opportunities, 1545 mock damage dealt, 0 taken, 15 dodges, 117 movement steps and 0 invalid commands. Scripted mock values are not evidence of real lane balance or fidelity.
+- Next: integrate an observable-state adapter and engine validation; test real collisions, minion aggro and delayed commands; calibrate with varied lanes and human players.

@@ -32,41 +32,61 @@ export function createLaningOpponent(options = {}) {
     const currentPlayer = state.player?.visible && state.player.alive && validPoint(state.player.position);
     const canAttack = state.self.attack?.ready && me.attack?.ready;
     const liveTarget = id => (state.minions || []).find(m => m.id === id && m.visible && m.alive && m.team === 'player');
-    // Only already visible, linear projectiles are considered; no future player input.
+    const age = state.time - seen.time;
+    // Extrapolate only a previously visible projectile's linear motion, never hidden input.
     for (const shot of seen.skillshots || []) {
       if (!shot.visible || !validPoint(shot.position) || !validPoint(shot.velocity)) continue;
       const v2 = shot.velocity.x ** 2 + shot.velocity.y ** 2;
       if (!v2) continue;
-      const rel = { x: me.position.x - shot.position.x, y: me.position.y - shot.position.y };
+      const speed = Math.sqrt(v2);
+      const pos = { x: shot.position.x + shot.velocity.x * age, y: shot.position.y + shot.velocity.y * age };
+      const rel = { x: state.self.position.x - pos.x, y: state.self.position.y - pos.y };
       const t = (rel.x * shot.velocity.x + rel.y * shot.velocity.y) / v2;
-      const lateral = Math.abs(rel.x * shot.velocity.y - rel.y * shot.velocity.x) / Math.sqrt(v2);
-      if (t > cfg.reactionDelay && t < 1.2 && lateral < (shot.radius || 0) + (me.radius || 0) + 8) {
-        const sign = rel.x * -shot.velocity.y + rel.y * shot.velocity.x >= 0 ? 1 : -1;
-        const step = (shot.radius || 0) + (me.radius || 0) + 30;
-        return move({ x: me.position.x - sign * shot.velocity.y / Math.sqrt(v2) * step, y: me.position.y + sign * shot.velocity.x / Math.sqrt(v2) * step }, 'dodge visible projectile');
+      const cross = (rel.x * -shot.velocity.y + rel.y * shot.velocity.x) / speed;
+      const width = (shot.radius || 0) + (state.self.radius || 0);
+      const movementSpeed = state.self.moveSpeed || 0;
+      const clearance = width + 8 - Math.abs(cross);
+      // A move is useful only if there is enough time to clear the swept hitbox.
+      if (t > 0 && t < 1.2 && clearance > 0 && movementSpeed > 0 && clearance / movementSpeed < t && (shot.remainingRange == null || speed * (age + t) <= shot.remainingRange)) {
+        const sign = cross >= 0 ? 1 : -1;
+        return move({ x: state.self.position.x - sign * shot.velocity.y / speed * clearance, y: state.self.position.y + sign * shot.velocity.x / speed * clearance }, 'dodge visible projectile');
       }
     }
     const candidates = (seen.minions || []).filter(m => m.visible && m.alive && m.team === 'player' && validPoint(m.position));
     const farm = candidates.map(m => {
-      const travel = me.attack.projectileSpeed > 0 ? dist(me.position, m.position) / me.attack.projectileSpeed : 0;
-      const impact = me.attack.windup + travel;
-      // Incoming impacts are estimates of visible, already launched attacks, not future attacks.
-      const incoming = (m.incoming || []).filter(i => i.visible && i.eta >= 0 && i.eta <= impact).reduce((sum, i) => sum + i.damage, 0);
-      return { m, hp: m.health - incoming, impact };
-    }).filter(x => x.hp > 0 && x.hp <= me.attack.damage && reachable(me.position, x.m.position, me.attack.range));
-    farm.sort ( (a,b) => (b.m.value || 1) - (a.m.value || 1) || a.hp - b.hp || String(a.m.id).localeCompare(String(b.m.id)) );
+      const speed = me.moveSpeed || 0;
+      const distance = dist(me.position, m.position);
+      const reach = me.attack.range + (me.radius || 0) + (m.radius || 0);
+      const walk = speed > 0 ? Math.max(0, distance - reach * .95) / speed : Infinity;
+      const impact = (distance <= reach ? 0 : walk) + me.attack.windup + (me.attack.projectileSpeed > 0 ? Math.min(distance, reach) / me.attack.projectileSpeed : 0);
+      const incoming = (m.incoming || []).filter(i => i.visible && i.eta >= age && i.eta <= age + impact).reduce((sum, i) => sum + i.damage, 0);
+      // Account for shots that should already have landed in the delayed observation.
+      const past = (m.incoming || []).filter(i => i.visible && i.eta >= 0 && i.eta < age).reduce((sum, i) => sum + i.damage, 0);
+      return { m, hp: m.health - past - incoming, distance, reach, walk };
+    }).filter(x => x.hp > 0 && x.hp <= me.attack.damage);
+    farm.sort((a,b) => (b.m.value || 1) - (a.m.value || 1) || a.hp - b.hp || String(a.m.id).localeCompare(String(b.m.id)));
     const target = farm.find(x => {
       const now = liveTarget(x.m.id);
-      return now && now.health > 0 && reachable(state.self.position, now.position, state.self.attack.range);
+      return now && now.health > 0 && reachable(state.self.position, now.position, state.self.attack.range + (state.self.radius || 0) + (now.radius || 0));
     });
-    const cost = Math.max(0, seen.tradeRisk || 0);
-    const trade = visiblePlayer && currentPlayer && (player.windingUp || player.exposed) && (seen.tradeValue || 0) > cost * cfg.tradeMargin;
-    const spell = (me.abilities || []).find(a => a.ready && a.damage > 0 && a.lineClear && reachable(me.position, player?.position || me.position, a.range) && (state.self.abilities || []).some(b => b.id === a.id && b.ready && b.lineClear && currentPlayer && reachable(state.self.position, state.player.position, b.range)));
+    // Values are expressed in the same utility units by the adapter; missing data uses legacy estimates.
+    const hpFraction = me.maxHealth > 0 ? Math.max(0, Math.min(1, me.health / me.maxHealth)) : 1;
+    const cost = Math.max(0, (seen.tradeRisk || 0) + (seen.minionRetaliation || 0) + (seen.positionalRisk || 0) + (player?.threatReady ? (player.threatDamage || 0) : 0));
+    const value = Math.min(seen.tradeValue || 0, Number.isFinite(player?.health) ? Math.max(0, player.health) : Infinity);
+    const riskAdjusted = cost * cfg.tradeMargin / Math.max(.25, hpFraction);
+    const trade = visiblePlayer && currentPlayer && (player.windingUp || player.exposed) && value > riskAdjusted;
+    const spell = (me.abilities || []).find(a => a.ready && a.damage > 0 && a.lineClear && (a.manaCost || 0) <= (me.mana ?? Infinity) && reachable(me.position, player?.position || me.position, a.range) && (state.self.abilities || []).some(b => b.id === a.id && b.ready && b.lineClear && (b.manaCost || 0) <= (state.self.mana ?? Infinity) && currentPlayer && reachable(state.self.position, state.player.position, b.range)));
     // A good trade can outweigh a low-value CS, but not a high-value minion by default.
-    if (trade && spell && (!target || (seen.tradeValue - cost) > (target.m.value || 1))) {
+    if (trade && spell && (!target || (value - riskAdjusted) > (target.m.value || 1))) {
       return { type: 'cast', abilityId: spell.id, targetId: player.id, aim: point(player.position), reason: player.windingUp ? 'punish visible windup' : 'punish exposed position' };
     }
     if (target && canAttack) return { type: 'attack', targetId: target.m.id, reason: 'last hit' };
+    const approach = farm.find(x => x.distance > x.reach && Number.isFinite(x.walk) && x.walk <= 2 && liveTarget(x.m.id));
+    if (approach && !target && cost < (seen.farmRiskLimit ?? Infinity)) {
+      const dx = approach.m.position.x - me.position.x, dy = approach.m.position.y - me.position.y;
+      const step = Math.max  (0, approach.distance - approach.reach * .9);
+      return move({x: me.position.x + dx / approach.distance * step, y: me.position.y + dy / approach.distance * step}, 'approach last hit');
+    }
     if (trade && canAttack && reachable(me.position, player.position, me.attack.range) && reachable(state.self.position, state.player.position, state.self.attack.range)) return { type: 'attack', targetId: player.id, reason: 'punish commitment' };
     if (visiblePlayer && currentPlayer) {
       const d = dist(me.position, player.position), desired = me.attack.range * cfg.spacing;
