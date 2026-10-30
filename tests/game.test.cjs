@@ -281,8 +281,8 @@ test('Ahri can secure a minion after allied damage on each difficulty',()=>{
 test('reference spells use stated cast, speed, range and mitigated damage',()=>{
  for(const [mode,speed,radius,ttl,damage,root] of [['luxDodge',600,35,650/600,80/1.3,2],['ezrealDodge',1000,30,.6,98/1.21,0]]){const {g,node}=boot();g.reset(mode);advance(g,1.52);const caster=g.foes[0];assert.ok(caster.pending);assert.equal(g.shots.length,0);advance(g,.26);const s=g.shots[0];assert.ok(s);assert.ok(Math.abs(Math.hypot(s.vx,s.vy)-speed)<1e-6);assert.equal(s.r,radius);assert.ok(s.ttl<=ttl&&s.ttl>ttl-.03);advance(g,1);assert.ok(Math.abs(g.stats.damage-damage)<1e-6);assert.equal(g.stats.hits,1);assert.equal(node('killsValue').textContent,1);if(root)assert.ok(g.player.root>1);else assert.equal(g.player.root,0);}
 });
-test('Lux root prevents movement while flash remains usable and pause freezes it',()=>{
- const {g}=boot();g.reset('luxDodge');advance(g,2.6);assert.ok(g.player.root>0);const x=g.player.x;g.moveTo(x-200,g.player.y);advance(g,.3);assert.equal(g.player.x,x);const root=g.player.root;g.pause();advance(g,1);assert.equal(g.player.root,root);g.pause();g.cast('f');assert.notEqual(g.player.x,x);advance(g,2);assert.equal(g.player.root,0);
+test('Lux root prevents movement and flash, while pause freezes it',()=>{
+ const {g}=boot();g.reset('luxDodge');advance(g,2.6);assert.ok(g.player.root>0);const x=g.player.x;g.moveTo(x-200,g.player.y);advance(g,.3);assert.equal(g.player.x,x);const root=g.player.root;g.pause();advance(g,1);assert.equal(g.player.root,root);g.pause();g.cast('f');assert.equal(g.player.x,x);assert.equal(g.player.cd.f,0);advance(g,2);assert.equal(g.player.root,0);g.cast('f');assert.notEqual(g.player.x,x);
 });
 test('reference missiles expire at range and reference drills restart cleanly',()=>{
  for(const mode of ['luxDodge','ezrealDodge']){const {g}=boot();g.reset(mode);g.player.x=100;g.player.y=337.5;advance(g,3.5);assert.equal(g.stats.hits,0);assert.equal(g.shots.length,0);g.reset(mode);assert.equal(g.player.root,0);assert.equal(g.player.hp,590);g.setTime(59.99);advance(g,.02);assert.equal(g.state,'ended');}
@@ -962,4 +962,21 @@ test('pause freezes a pending Velkoz split and restart clears it and its outcome
  const e=g.enemy(200,150),spec=g.REFERENCE_SPELLS.velkozDodge;Object.assign(e,{dodgeVisitor:true,pending:{angle:0,spell:spec,splitDistance:spec.speed*.25}});g.releaseEnemy(e);advance(g,.27);
  const pending=g.shots.find(s=>s.velkoz==='delay');assert.ok(pending);const ttl=pending.ttl;g.pause();advance(g,1);assert.equal(pending.ttl,ttl);assert.equal(g.shots.filter(s=>s.velkoz==='child').length,0);
  g.pause();advance(g,.3);assert.equal(g.shots.filter(s=>s.velkoz==='child').length,2);g.reset('dodge');assert.equal(g.shots.length,0);assert.equal(g.dodgeDirector.attempted,0);assert.equal(Object.keys(g.dodgeDirector.outcomes).length,0);
+});
+
+
+test('Ahri flash respects cursor distance, maximum range and five-minute cooldown',()=>{
+ for(const [targetX,expected] of [[650,50],[1000,200]]){
+  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
+  const start=g.player.x;node('arena').listeners.pointermove({clientX:targetX,clientY:g.player.y,buttons:0});g.cast('f');
+  assert.ok(Math.abs(g.player.x-start-expected)<1e-8);assert.equal(g.player.cd.f,300);assert.equal(g.player.invuln,0);
+  const after=g.player.x;g.cast('f');assert.equal(g.player.x,after);advance(g,1);assert.ok(g.player.cd.f>298&&g.player.cd.f<300);
+ }
+});
+test('Ahri can flash during a spell cast without cancelling the spell',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
+ node('arena').listeners.pointermove({clientX:1000,clientY:g.player.y,buttons:0});g.cast('q');assert.ok(g.player.casting);const x=g.player.x;g.cast('f');assert.equal(g.player.x,x+200);assert.ok(g.player.casting);advance(g,.27);assert.ok(g.shots.some(s=>s.kind==='orb'));
+});
+test('Ahri flash in kite has no artificial damage immunity',()=>{
+ const {g}=boot('ahri');g.reset('kite');g.disableSpawn();g.cast('f');assert.equal(g.player.invuln,0);
 });
