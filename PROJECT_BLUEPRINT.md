@@ -54,18 +54,20 @@ The user explicitly wants a few excellent drills, not many separate modes. Dodge
 
 **Visual bar:** Clearly closer to League's gameplay readability and animation language than the current alpha—even if every asset is original and simplified.
 
-## 3. Product scope: the drills
+## 3. Product scope: exactly FOUR player-facing modes
 
-| Drill | What the player does | What to measure |
-| --- | --- | --- |
-| Dodge Trial | Move through incoming hostile skillshots and survive | Genuine threats avoided, hits, damage, reaction/spacing, survival |
-| Kite Arena | Attack opponents while staying at a safe distance | DPS / hits, movement between attacks, attack uptime, damage received |
-| Skillshot Lab | Hit moving targets with different trajectories | Accuracy, timing, prediction, difficulty |
-| Last-Hit Lab | Kill minions with controlled attacks | CS, missed last-hits, timing, positioning |
-| Bait → Dodge → CS | Invite enemy spell, evade, then last-hit safely | Correct bait, safe dodge, secured CS, time/HP cost |
-| Lane Scenario | Perform several mechanics while trading around a minion wave | Consistency across movement, trading, dodges, CS |
+**AUTHORITATIVE PRODUCT DECISION (30 October 2026):** Build **four excellent, intense, uninterrupted gameplay experiences**. Do **not** turn every mechanic, combo, bot tactic, difficulty setting or lane situation into another menu mode. The detailed design docs below control implementation.
 
-**Current alpha:** Dodge Trial, Kite Arena, Skillshot Lab, Bait → Dodge → CS, a foundational Lane Scenario and a foundational Last-Hit Lab (5 waves, 15 CS, allied projectile attrition). Lane Scenario is an early combined drill, not yet a full simulated lane.
+| # | Main mode | ONE continuous gameplay experience | Primary design spec |
+| --- | --- | --- | --- |
+| **1** | **Dodge Gauntlet** | Pure dodge survival under rapid, fair incoming spells. Frequent Ezreal Q, Lux Q, Blitz Q, Ahri returning Q, Vel'Koz split Q and occasional invisible-source Xerath Q/W. Rare Malphite R/Orianna R. | [Dodge Gauntlet Rhythm](docs/DODGE_GAUNTLET_RHYTHM.md) |
+| **2** | **Mechanics Arena — Combat Survival** | **Player alone versus MANY active hostile champions**. Full Ahri kit, combos, kiting, target switching, dodges and Flash all at once. Standard target **5–6 concurrent enemies** (design target, not a claim of current functionality); no allied champion AI, no scripted "do E now" lessons. | [Mechanics Arena Design](docs/MECHANICS_ARENA_DESIGN.md) |
+| **3** | **CS Mastery** | ONE clean, continuous farming lane with real two-sided minions; natural farming as the wave moves, including genuine under-turret CS when turret simulation is ready. **No enemy champion harassment here**—that belongs to #4. | [Four-mode Vision](docs/MECHANICS_ACCELERATOR_VISION.md) |
+| **4** | **Mid Lane Mastery — The Ultimate Drill** | ONE **very hard** 1v1 lane challenge. The enemy tries to poke you on real last-hit commitments; the enemy farms too, and you try to punish their CS. Bait, dodge, poke, zone, trade and sometimes concede CS—no separate sub-modes or four difficulty variants. | [Mid Lane Mastery Design](docs/MID_LANE_MASTERY_DESIGN.md) |
+
+**Design / implementation distinction:** The actual browser alpha currently offers **three working menu buttons**: Dodge Trial, Kite Arena, and Last-Hit Lab. These are early functional foundations for #1, #2 and #3, **not finished implementations of their full product concepts**. Older Skillshot Lab, Bait → Dodge → CS and Lane Scenario live in legacy/internal source and tests, but **do not become additional player-facing product modes**. Mode #4 is **planned, not implemented**. Do not rename unfinished alpha gameplay to suggest that it is already the complete mode.
+
+**Implementation rule:** Continue reusing and improving working modules, tests, current research/data adapters and the HTML5 Canvas game. Difficulty presets, scenario seeds, mixed practice, under-turret behavior, separate champion profiles, benchmarks and technical smoke tests may be internal parameters **inside an existing main mode**, never automatic reasons to add more mode cards.
 
 ## 4. Constraints and product decisions
 
