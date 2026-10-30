@@ -1,127 +1,209 @@
-# AGENTS.md — League Mechanics God
+# League Mechanics God — PROJECT VISION & AGENT INSTRUCTIONS
 
-> Canonical instructions for all coding agents working on this repository.
-> Read this file and `README.md` before modifying code. Treat checked-in source and actual tests as the source of truth; this document is the product direction and operating contract.
-> Last project-context update: 2026-10-30.
+**Canonical project repository:** https://github.com/statego2/League-Mechanics-God  
+**Project type:** Free, desktop-first, browser-based League of Legends–style mechanics training game  
+**Current stage:** Playable prototype / early alpha, not a finished LoL-like game  
+**Primary directive:** MAKE THE GAME BETTER AND PLAYABLE. Don't stop at writing plans.
 
-## 1. Mission
+> This is the single source of truth for every coding AI working on the project. Read this entire file, then inspect the actual repo and latest commits before changing anything. Update the progress log after meaningful work. Date of this brief: 2026-10-30.
 
-Build a genuinely enjoyable, **free, desktop-browser-based, League-of-Legends-style mechanics training game**. The outcome must be playable and help players improve **movement, dodging, spacing, kiting/orbwalking, attack-move, skillshot accuracy, and eventually CS/lane fundamentals**.
+## 1. The vision: what are we building?
 
-This is an **original independent training game**, not an official Riot product, an asset rip, or a recreation of League of Legends itself. The important target is responsive controls, useful skill practice, clear visual feedback, and a recognizable *gameplay feel*. It must not simply look like an abstract tech demo.
+Build **the best free browser-based training ground for League of Legends mechanical skills**: a game that someone can open instantly, practice for 5–20 minutes, and clearly feel they are improving.
 
-**User priority:** something that **works** and feels closer to League, rather than more design documents.
+Not a static website. Not a Unity project. Not an abstract survival game with circles. **A real, responsive, satisfying top-down/isometric-feeling training game inspired by LoL interactions**: familiar camera perspective, movement, positioning, player/enemy silhouettes, skillshots, attack rhythm, readable combat feedback, and a practice loop that develops transferable skills.
 
-## 2. Hard product and engineering constraints
+The ideal experience:
+- Open a URL. Click **Play**. No installation, account, payment, or waiting.
+- Feel **mouse-first movement** with right-clicking and immediate path retargeting.
+- Recognize **attack range, attack windup, attack cooldown, attack-move and kiting**.
+- Read and dodge enemy **projectiles, telegraphed abilities, AoE patterns and sequences**.
+- Practice under pressure rather than relying on random arcade luck.
+- See useful performance feedback: what hit, what was avoided, effective movement, attacks and CS.
+- Repeat controlled challenges at increasing difficulty; notice improvement.
+- Eventually practice **Bait → Dodge → CS**: bait an enemy ability, evade while staying positioned, and last-hit a minion.
 
-- **No Unity.** Earlier Unity exploration was explicitly abandoned.
-- **Free to build and play.** No paid APIs, required subscriptions, paid hosting, or paid assets.
-- **Runs in a desktop browser**, using mouse and keyboard. Prefer fast startup and static hosting.
-- The current vanilla **HTML/CSS/Canvas/JavaScript** stack is the starting point. Improve it incrementally; do not introduce React, TypeScript, a bundler, or a game engine merely out of preference. A migration requires a concrete, documented benefit and a working tested replacement.
-- **GitHub is the source of truth**. Keep code, docs, tasks, test instructions, and provenance together. Prefer small reviewable changes, never force-push or destroy existing work.
-- **Ship vertical slices**: playable improvement -> test -> commit -> next improvement.
-- No backend, authentication, analytics tracking, or leaderboard in the MVP unless specifically approved.
-- Desktop-first controls; accessible UI and mobile support are later considerations.
-- The repository is PUBLIC: do not commit credentials, private data, unlicensed assets, or copied third-party source.
+**Success isn't "we have a lot of code." Success is "it plays well, feels familiar, and measurably trains mechanics."**
 
-## 3. Verified baseline on 2026-10-30
+## 2. Experience pillars (use these to judge all decisions)
 
-Canonical repository: `https://github.com/statego2/League-Mechanics-God`, default branch `main`.
+1. **League-like feel:** top-down combat readability, tight right-click, smooth movement, attack range, windups, projectile speed, collision, proper A-click, skillshots, clear health bars and feedback. Prioritize FEEL over cosmetic detail.
+2. **Useful mechanical practice:** each challenge targets a trainable skill. Measure the skill accurately. Eliminate misleading scoring.
+3. **Visual credibility:** stop looking like a generic geometric tech demo. Create a coherent arena, original unit silhouettes, basic animations, shadows, direction indicators, particles and feedback. It need not recreate League exactly to feel convincing.
+4. **Instant accessibility:** free browser play, fast load, no mandatory backend, works on a typical desktop with mouse/keyboard.
+5. **Iterative shipping:** test the actual game and release improvements often; prefer one tested feature over five proposed features.
 
-Files that were directly inspected:
-- `README.md`: alpha instructions, controls, goals, and limitations.
-- `index.html`: current page and HUD.
-- `style.css`: styling.
-- `game.js`: actual HTML5 Canvas gameplay implementation.
+## 3. Hard constraints and tech direction
 
-Current modes in the inspected code:
-1. **Dodge Trial**: 60-second survival against enemy skillshots.
-2. **Kite Arena**: fight enemies with movement, auto attacks, Q/W/E/R/F, and attack-move.
+- **NO UNITY.** The owner explicitly moved away from Unity. Do not revive Unity suggestions.
+- **FREE** technologies, tooling, hosting and resources.
+- **Browser-first desktop gameplay**; mouse + keyboard. Mobile is not an MVP priority.
+- Existing vanilla **HTML + CSS + HTML5 Canvas + JavaScript** is the starting implementation. Keep it working, avoid unnecessary replatforming.
+- The code lives and evolves in this GitHub repository. Use readable modular code when the growing project justifies it.
+- A simple local server must run the application: \`python3 -m http.server 8080\`, then localhost:8080.
+- GitHub Pages is the preferred first static deployment if configured and verified.
+- Avoid required external APIs and expensive infrastructure. Keep development portable to the owner's Mac mini M4.
+- All agents should leave the repo in a runnable state; do not replace the functional alpha with speculative scaffolding.
 
-Current controls: right-click movement / target acquisition; A then left-click attack-move; left-click to attack enemies; Q/W/E/R/F abilities; P or Esc pause.
+## 4. Where we are TODAY — checked against the actual GitHub code
 
-**Do not assume** this alpha is polished, visually LoL-like, fully tested, publicly deployed, or functionally equivalent to League. Verify all such claims. GitHub Pages was mentioned in `README.md` as an option, but no live deployment has been verified here.
+Files confirmed on \`main\`:
+- \`index.html\`: menu, arena canvas, HUD, buttons and hotkey hints.
+- \`style.css\`: UI and arena layout.
+- \`game.js\`: working implementation structure with game update/render loop.
+- \`README.md\`: basic setup, two modes and controls.
+- \`AGENTS.md\`: this document.
 
-Potential correctness issue directly observed in `game.js`: the `dodged` counter increments for hostile projectiles that simply expire or leave the world, regardless of whether they truly threatened the player. Revisit the dodge metric rather than treating it as validated skill feedback.
+Existing modes (initial/alpha):
+- **Dodge Trial:** survive for 60 seconds while enemies shoot skillshots.
+- **Kite Arena:** fight up to ten enemies via movement, auto attacks and abilities.
 
-## 4. External research: League of Dodge / LoLDodgeGame
+Existing controls:
+- Right click to move / target an enemy.
+- A + left click to attack-move.
+- Left click enemy to attack.
+- Q/W/E/R and F for placeholder abilities / repositioning.
+- P or Escape for pause; restart button.
 
-Previous exploration investigated `https://loldodgegame.com/dodge/game.html` and its referenced JavaScript/assets. The user has worked with files such as `game.html`, `dodge.js`, and an archive called `loldodge-all-updated.zip`. Previous work attempted to collect resources across multiple mini-games; the completeness and locations of these files are **not verified in this repo**. An earlier download script failed with `rel: unbound variable`; do not assume its downloads succeeded.
+**Known shortcomings:** crude placeholder visuals; rough fidelity to League mechanics; scoring and input consistency need validation; no verified complete asset/reference import; no verified public deployment. Example of a specific bug worth verifying: the dodge counter appears to count enemy shots that simply expire or exit bounds, instead of only genuine threats successfully avoided.
 
-These materials are **references for studying mechanics and architecture**, not automatically licensed implementation assets.
+**Do not mistake existing code for final product.** Inspect and test the current implementation before claiming it works in every environment.
 
-### Import / research handoff protocol
+## 5. League of Dodge — reference material being transferred
 
-When an agent has access to the original LoLDodgeGame files or the user's archive:
+Previous exploration downloaded or investigated files from https://loldodgegame.com/dodge/game.html and related mini-games, including:
+- \`game.html\`
+- \`dodge.js\`
+- archive \`loldodge-all-updated.zip\`
+- multiple HTML, JS, CSS, images, audio or other resources (exact inventory not yet confirmed on GitHub).
+- A download script previously crashed with \`rel: unbound variable\`; the full asset set may be incomplete.
 
-1. Inventory the actual files and directories. Report number, sizes, formats, missing dependencies, duplicate assets, entry points, and any broken URLs. Do not invent paths or claim all files are present without checking.
-2. Check each source's license/permissions. Publicly readable code or an accessible browser resource is **not** automatically open-source or authorized for copying to a public GitHub repository.
-3. Create `research/loldodge/README.md` with original URLs, inspection date, source notes, rights/provenance status, architecture observations, and an inventory summary.
-4. Create `research/loldodge/manifest.json` recording, where available: relative path, origin URL, size, SHA-256, file type, license/permission evidence, and whether the item is checked in or withheld.
-5. Create `research/loldodge/analysis.md`: document input feel, movement, attack timing, projectile types, spawn patterns, hitboxes, dodge tracking, difficulty, camera/visual effects, and what we can reproduce with **our own implementation**.
-6. For items with **verified permission to redistribute**, place permitted files in `third_party/loldodge/` (not in the live app), retain their license/attribution notices, and clearly distinguish third-party reference files from our source. If permission is unclear or absent, **do not commit the third-party source or assets**; retain only links, file inventory/metadata, and original high-level analysis in the public repo.
-7. Ensure that no reference code or third-party artwork is silently used in `index.html`, `style.css`, or `game.js`. Our shipping product must use original code/visuals or explicitly compatible licensed materials.
-8. Summarize precisely what was imported, withheld, missing, or blocked; give the next agent a concise dependency and next-action list.
+**Purpose:** make all available reference material easy for every future AI to inspect, compare and use as an implementation guide. The external game is a **reference collection**; this repository's existing playable app remains the product.
 
-Do not upload a ZIP full of unreviewed third-party material just to make it available to the next AI. A structured, lawful, useful research handoff is better.
+### Exact reference import layout
 
-## 5. Product vision and staged roadmap
+When an AI has access to the downloaded files, it should arrange:
 
-### P0 — Establish a trustworthy, reproducible playable baseline
-- Clone and run the current app locally with a simple server, e.g. `python3 -m http.server 8080`; verify `http://localhost:8080`.
-- Confirm menu, both modes, pointer inputs, keyboard inputs, win/loss, pause, restart, canvas sizing, and absence of browser console errors.
-- Add small, useful automated tests where practical. Consider extraction of pure gameplay geometry/logic into testable functions without breaking the app.
-- Document actual bugs (not speculations); fix severe control, scoring, and gameplay failures first.
-- Make the repository easy for another agent to clone, run, and validate.
-- Check whether GitHub Pages is configured, and only claim a playable public URL if actually verified.
+\`\`\`text
+League-Mechanics-God/
+├── AGENTS.md                     <- this brief: always read first
+├── README.md
+├── index.html                    <- our actual playable game
+├── game.js                       <- our actual playable game
+├── style.css                     <- our actual playable game
+├── reference/
+│   └── league-of-dodge/
+│       ├── README.md             <- what is here and how to inspect it
+│       ├── manifest.md           <- source files, folders, sizes, missing files
+│       ├── GAMEPLAY_ANALYSIS.md  <- observed mechanics and opportunities
+│       ├── originals/            <- complete extracted reference tree, if available
+│       └── archives/             <- original ZIPs, if feasible
+└── docs/
+    └── PROGRESS.md               <- verified work, issues, next tasks
+\`\`\`
 
-### P1 — Core mechanics feel (highest gameplay priority)
-- **Click-to-move feel:** responsive right-click, accurate arrival, movement cancellation/retargeting, no accidental browser context menu, consistent world/screen mapping.
-- **Attack and kite feel:** believable attack range, attack cooldown, wind-up, release timing, stop/cancel behavior, and A-click/attack-move semantics. Avoid promising frame-perfect League replication.
-- **Skillshots and dodging:** readable telegraphs, varied shapes and speeds, fair collision boxes, per-projectile outcomes, proper dodges/hits, difficulty progression, trustworthy metrics.
-- **Input and frame stability:** separate game state update and rendering; avoid frame-rate-dependent mechanics; ensure pause doesn't generate simulation time jumps.
-- Add practice toggles and feedback only if they improve the training loop.
+**For the import agent:**
+1. Find and open the user's actual archive(s) and loose files. Verify which exist and where. Do not assume missing files exist.
+2. Clone or open the repository and create the directories above.
+3. **Preserve the original folder hierarchy and filenames** while extracting files into \`reference/league-of-dodge/originals/\`. Avoid flattening paths, renaming referenced assets or overwriting our production \`index.html\`/\`game.js\`/\`style.css\`.
+4. Preserve any existing original ZIPs in \`reference/league-of-dodge/archives/\` where practical. If the hosting/file-size limit prevents that, store the extracted material and record where the archive is retained; don't let one large ZIP block useful progress.
+5. Inventory modes, entry points, nested dependencies, duplicates, missing resources, and functionality. Record broken paths/404s and the earlier downloader bug.
+6. Commit the reference collection separately from actual game changes. Push to GitHub and verify resulting files on the remote.
+7. Report exactly what got uploaded, what failed, repository commit URL, and precise next actions for Codex.
+8. Never mix raw reference files into the live gameplay directory or silently replace our current game with the reference game.
 
-### P2 — Make it feel like a lane/combat trainer, not an abstract geometric demo
-- Original top-down/isometric-looking arena, units, shadows, range indicators, animations, impact feedback, readable attack/projectile effects, and usable HUD.
-- Aim for League-inspired readability and control, **without copying proprietary maps, champions, skins, sounds, icons, or textures**.
-- Validate appearance by viewing and playing the actual browser build, not by approving code alone.
+If an agent cannot access local files or push to GitHub, provide a **ready-to-run Mac Terminal script** targeting the user's specific local ZIP paths and the above repository layout, then clearly state what the user must run.
 
-### P3 — Purpose-built training modes
-- Refine **Dodge Trial** and **Kite Arena** before adding more modes.
-- Build a **Bait -> Dodge -> CS** training loop: provoke a skillshot, dodge it while maintaining positioning, then secure a minion last-hit. This is a desired future mechanic, **not a currently implemented feature**.
-- Expand with last-hitting drills, spacing/trading exercises, controlled skillshot patterns, and difficulty settings when the foundations are strong.
+## 6. Product roadmap — priority order
 
-### P4 — Learning and progression
-- Useful metrics: survival, damage taken, *valid* dodges/attempted dodges, hits, precision, attack downtime, CS achieved, and improvement across sessions.
-- Add local saved settings/progression and repeatable benchmark scenarios where useful.
-- Avoid gamified numbers that fail to measure the underlying skill.
+### Milestone 0 — Assemble the project and validate the starting point
+- Import and document all available League of Dodge reference material in its own folder.
+- Run the current app locally, visually inspect the page, and PLAY both modes.
+- Identify actual blockers, console errors, input bugs, win/loss, scoring, pause/resume/restart and resizing problems.
+- Start \`docs/PROGRESS.md\`: current state, tests performed, known issues and next priorities.
+- If available, set up working GitHub Pages. Only communicate the URL after verifying it works.
 
-## 6. Agent execution procedure (every working session)
+**Done when:** any new coding agent can clone the repo, launch the game and find all confirmed reference material without previous chat context.
 
-1. Read `AGENTS.md`, `README.md`, then inspect the current tree, latest commits, and any `research/loldodge/` artifacts.
-2. **Verify** current code and available reference files before planning. Do not assume the last chat or another AI successfully imported, fixed, or deployed anything.
-3. Choose the highest-value next playable improvement. Prioritize correctness, controls, visual readability, and fun over extra architecture or documents.
-4. Implement and actually run checks. Minimum relevant checks: syntax validation, localhost browser/manual interaction or browser automation if available, and regression of pause/restart/scoring.
-5. Keep each feature small enough to test; commit coherent changes to the working branch and open a PR if the workflow supports it. Do not rewrite unrelated code.
-6. Update `README.md` for user-facing changes; update `docs/PROGRESS.md` (create it if missing) with: completed, tested, known issues, next three priorities, and URLs to commits/PRs.
-7. In the final handoff, distinguish **Implemented / Tested / Not tested / Blocked / Next** and link real commits/PRs. Never claim deployment or tests succeeded unless verified.
-8. Continue autonomously on additional valuable tasks within the session, unless truly blocked; don't stop after producing a plan.
+### Milestone 1 — Make movement & kiting feel right (highest priority)
+- Right-click move and rapid retargeting.
+- Stable world coordinates across resizing.
+- Consistent player speed and motion at different FPS.
+- Attack radius + visible range feedback.
+- Windup, release, recovery, attack cooldown, auto-targeting, windup cancellation.
+- A-click/attack move with understandable, testable rules.
+- Stop/continue movement and attack commands without jank.
 
-## 7. Definition of Done
+**Done when:** players can repeatedly kite a moving target in a controlled training mode, with responsive and predictable results.
 
-A gameplay feature is done only when:
-- It runs in the actual browser and matches the intended controls/feedback.
-- Existing modes still start, pause, resume, end, and restart correctly.
-- Errors and regressions are checked; relevant automated tests pass when available.
-- No unlicensed or copied third-party assets/code, secrets, or broken external dependencies have been introduced.
-- A human player can clearly see what changed and how to use it.
-- Code and progress information are committed or presented as a clearly identified uncommitted patch.
+### Milestone 2 — Make dodging a real skill trainer
+- Reliable hitbox/collision and readable telegraphs.
+- Distinct shots: linear, spread/cone, moving walls, delayed AoE and targeted-but-dodgeable patterns.
+- Difficulty curve and repeatable challenge presets.
+- Track *real* dodge opportunities vs hits, not projectiles that harmlessly expired.
+- Provide concise actionable end-of-run feedback.
 
-## 8. Decision principles
+**Done when:** survival depends on recognizing threats, spacing, timing and movement rather than guesswork.
 
-- **Working game > impressive-looking plan.**
-- **Feel and fairness > asset quantity.**
-- **Original implementation + lawful references > copying an entire browser game.**
-- **Measured, playable improvement > unverified claims.**
-- Preserve the owner's autonomy: when a major product/architecture direction is uncertain, state the trade-off, choose a reversible default, and keep moving.
+### Milestone 3 — Look and feel more like LoL
+- Replace crude placeholder circles/polygons with an original but recognizable **champion-like top-down character** and enemy shapes with directional animation.
+- A readable lane/arena, ground and wall elements, attack/projectile effects, HP bars, cast feedback and good HUD.
+- Improve camera framing, sizing and combat clarity without sacrificing FPS or control accuracy.
+
+**Done when:** a player immediately recognizes a LoL-inspired mechanics trainer rather than a generic geometric shooter.
+
+### Milestone 4 — Bait → Dodge → CS (signature mode)
+- Add minions and deterministic HP reduction/last-hit timing.
+- Enemy skillshot pattern that can be intentionally baited.
+- Evaluate whether player avoided the shot **and** secured the CS safely.
+- Difficulty levels and quick reset / retry loop.
+
+**Done when:** this is a compelling short drill with genuinely useful feedback.
+
+### Milestone 5 — Quality, progression, and expansion
+- Save records/settings locally.
+- More training patterns and benchmarks.
+- Better sounds (optional), accessibility options, training feedback, desktop polish.
+- Browser release, CI checks and simple documented deployments.
+- Expand only after core mechanics are satisfying.
+
+## 7. Priority queue for the next development agent
+
+**Immediately after reference import:**
+1. Clone current repo, read this file + reference README/manifest + \`README.md\`.
+2. Start the game and perform an actual smoke test; document verified outcomes.
+3. Fix the most impactful actual gameplay bug (including dodge counter if confirmed).
+4. Improve right-click movement, attack timing and A-click toward a coherent LoL-like training feel.
+5. Run another smoke test and commit the changes.
+6. Continue to the next highest-value improvement, rather than stopping at a report.
+
+## 8. Mandatory agent workflow and handoff
+
+At the start:
+- Read \`AGENTS.md\`, \`README.md\`, \`docs/PROGRESS.md\` (if exists), and \`reference/league-of-dodge/\` (if present).
+- Inspect the repository tree and recent commits. Distinguish verified facts from past-chat assumptions.
+- Pick one player-visible improvement and define a short acceptance test.
+
+During work:
+- Implement, run, fix, retest. Maintain the runnable game.
+- Do **not** spend all available effort on plans, README rewrites, tooling migration or meaningless cleanup.
+- Prioritize **correct controls → satisfying combat → readable graphics → training depth**.
+- Avoid drastic rewrites unless they clearly unblock a working result.
+- Use multiple small commits with meaningful messages; work in a branch/PR when the environment supports it.
+
+At the end:
+- Update \`docs/PROGRESS.md\` with:
+  - Working features
+  - What changed
+  - Actual tests performed and results
+  - Remaining bugs/limitations
+  - Exact next three tasks
+  - Commit / PR / deployment links when real
+- Give the next AI everything necessary to continue independently.
+- Never say "deployed", "tested" or "uploaded" without verification.
+
+## 9. Definition of done
+
+A change counts as complete if it is genuinely integrated, runnable in a browser, behaviorally testable, doesn't break the two existing modes, has clear player value and leaves the repository in a usable state.
+
+**Ultimate product test:** "I can open this game in the browser, practice LoL-like mechanics, and see myself improving." If a proposed feature does not help that test, deprioritize it.
