@@ -210,17 +210,15 @@ Do **not** announce scientifically meaningful "reaction time" unless the engine 
 
 The main product remains four principal modes:
 1. **Pure Dodge Gauntlet** — common shots + occasional high-stakes threats, concentrated pure evasion.
-2. **Mechanics Arena** — reuse this director with simultaneous Ahri Q/E prediction, ADC/Tristana kiting, spacing, target switching, occasional Flash reaction. Here "threat density" must leave actual attack/cast windows.
-3. **CS Mastery** — independent minion-vs-minion simulation, lane CS then under-turret scenarios, with compressed but authentic micro-decisions; don't just teleport minion HP to "one-shot" arbitrarily.
-4. **Mid Lane Mastery** — strongest combined mode: wave trading, bait→dodge→CS, meaningful enemy cooldowns, minion aggro, map awareness (owner to define later) and a slower decision cadence where choices can be evaluated.
+2. **Mechanics Arena** — full-kit **solo versus many champions** in one chaotic, persistent combat environment. Reuse spell definitions but never make its encounter director a sequence of forced Q/E/kite lessons. No allied champion bots. Keep threat density low enough for meaningful offense.
+3. **CS Mastery** — **one uninterrupted** minion-vs-minion farming lane, progressing naturally into under-turret farming when turrets exist; no separate under-tower mode and no enemy champion poke.
+4. **Mid Lane Mastery** — **one extremely difficult, uninterrupted 1v1 lane**: the bot pokes when you commit to CS and genuinely attempts its own CS, while you try to punish its commitments. Bait/dodge/trade emerge from a real lane, not as new drills.
 
 **Do not reuse Pure Dodge's maximal cast frequency unchanged in CS or Mid Lane**; those have complex simultaneous tasks and need time for genuine decisions. Share the spell catalog/simulation but adapt the scenario rhythm by purpose.
 
-### Optional player-selected practice formats
-- **3–5 min Quick Drill:** one focused skill, frequent restart.
-- **10–12 min Standard Gauntlet:** strong mixed dodge loop with one unseen benchmark phase.
-- **20–25 min Endurance:** more seeded combinations and spaced rare events.
-- **60–90 min Mixed Session:** blocks of Dodge, Mechanics, CS and Mid Lane with an unseen evaluation and optional breaks. This is a *product proposal*, not a claim about optimal sports-science dosage.
+### Session length and difficulty are SETTINGS, not modes
+
+The product has one **Dodge Gauntlet**. Different session lengths, seeds, intensity adjustments and performance benchmarks are options **inside the same continuous mode**, not additional selectable drills or menu entries. Strong defaults should let the player enter and immediately face meaningful spells. Player-facing design scope is exactly four game modes across the entire project.
 
 ## 10. Implementation order for Codex (source-preserving)
 
