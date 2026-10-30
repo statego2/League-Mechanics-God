@@ -13,7 +13,11 @@ from urllib.parse import unquote, urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 HTML_ATTR = re.compile(r"""(?is)\b(?:src|href)\s*=\s*["']([^"']+)["']""")
 CSS_URL = re.compile(r"""(?is)url\(\s*["']?([^)'"]+)["']?\s*\)""")
-GM_TEXTURE = re.compile(r"""dodge_texture_\d+\.png""")
+GM_TEXTURE = re.compile(r"""["']([^"'\r\n]*_texture_\d+\.png)["']""")
+GM_EXTENSION = re.compile(r'\{"name":"[^"\n]+",\s*"version":"[^"\n]+",.{0,1000}?initfuncs:\[\]\}', re.S)
+GM_JS_FILE = re.compile(r'["\']([^"\']+\.js)["\']')
+def suffix(path):
+    return Path(path.name.split("?", 1)[0]).suffix.lower()
 GM_EXT = ("tph_adManager.js", "uph_localstorage.js")
 
 def local_reference(source: Path, literal: str, allowed_root: Path):
@@ -37,13 +41,14 @@ def references(path: Path):
         content = path.read_text(encoding="utf-8-sig", errors="replace")
     except OSError:
         return []
-    if path.suffix.lower() in (".html", ".htm"):
+    if suffix(path) in (".html", ".htm"):
         return HTML_ATTR.findall(content)
-    if path.suffix.lower() == ".css":
+    if suffix(path) == ".css":
         return CSS_URL.findall(content)
-    if path.suffix.lower() == ".js" and "dodge_texture_" in content and "GameMaker_Init" in content:
+    if suffix(path) == ".js" and "_texture_" in content and "GameMaker_Init" in content:
         found = list(dict.fromkeys(GM_TEXTURE.findall(content)))
-        found += [name for name in GM_EXT if name in content]
+        found += [name for block in GM_EXTENSION.findall(content) for name in GM_JS_FILE.findall(block)]
+        found += [name for name in GM_EXT if name in content and name not in found]
         return found
     return []
 
@@ -55,7 +60,7 @@ def audit(originals: Path):
              "External URLs and server-root paths are not verified against the network.",
              ""]
     files = sorted(p for p in originals.rglob("*")
-                   if p.is_file() and p.suffix.lower() in (".html", ".htm", ".css", ".js"))
+                   if p.is_file() and suffix(p) in (".html", ".htm", ".css", ".js"))
     htmlfiles = [p for p in files if p.suffix.lower() in (".html", ".htm")]
     lines += ["## Game entrypoints", ""]
     if htmlfiles:

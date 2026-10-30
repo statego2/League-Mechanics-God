@@ -1,87 +1,30 @@
-# League of Dodging — Reference Manifest
+# League of Dodge — archive manifest
 
-**As of:** 2026-10-30. **Status:** partially verified, missing archive/assets. **Scope:** files directly accessible to this import session, not every file on the user's Mac.
+Examined 30 October 2026. `loldodge-all-updated.zip`: 72,772,085 bytes, SHA-256 `cfc972b984ea6da0ffe08893d9121efb2fc3d63e2fdada8d319ca8f0db1f9cbd`. Extraction preserved original paths under the ignored `originals/extracted/loldodge-all-updated/`; an untouched copy is in ignored `archives/`. The [complete inventory](ZIP_INVENTORY.md) lists all 174 files, byte sizes and SHA-256 hashes. Expanded size: 124,514,154 bytes. It includes 85 PNG, 28 JS, 24 HTML, 16 WOFF2, 7 JPG, 7 ICO, 4 CSS, 2 SVG and 1 TXT. There are no editable GameMaker project sources in the archive.
 
-## 1. Confirmed source uploads (private, not republished)
+## Games and runtime status
 
-| Material | Original/source path | Available in this session | Bytes | SHA-256 | Public repository |
-| --- | --- | --- | ---: | --- | --- |
-| GameMaker HTML5 entry | https://loldodgegame.com/dodge/game.html | Yes, uploaded as game.html | 3,483 | 90d0397f5fd4eb6f5a63787e3148a245cbcaa5b560ce5772dcf5a54436503164 | Source link, documentation only |
-| Compiled GameMaker runtime + gameplay | https://loldodgegame.com/dodge/loldoge/dodge.js?cachebust=1527014147 | Yes, uploaded as dodge.js | 1,876,359 | c662f81fb9838534bb892ea3f1f9adaac172be53e5cf3c0709126230ab2d3d17 | Source link, documentation only |
-| loldodge-all-updated.zip | Previously mentioned/downloaded in an earlier project conversation | **No**; not mounted or found in available Library search | Unknown | Unknown | Not uploaded |
-| Other game subarchives / ZIPs | Unconfirmed; potentially inside the missing ZIP | No | Unknown | Unknown | Not uploaded |
-| Earlier separate local download script | ~/Downloads/download_loldodge_missing.sh (reported prior error) | No | Unknown | Unknown | Superseded by new importer |
+| Subtree | Contents and dependencies | Local browser observation |
+| --- | --- | --- |
+| `dodge` | Compiled GameMaker export, nine texture atlases; ad and local-storage extensions missing | White screen; missing `readFromLocalStorage` and `adRoom`. Not playable as supplied. |
+| `skillshot` | GameMaker export, ten atlases; same two extensions missing | Black screen and missing-extension errors. Not playable as supplied. |
+| `kiting` | GameMaker export and nine atlases | Menu and gameplay opened. A single enemy, champion, attack-speed selection and Flash are visible. Full run not verified. |
+| `farming` | GameMaker export and seven atlases | Menu and gameplay opened. Red and blue waves, melee, ranged and cannon minions, and money/missed counters visible. Full run not verified. |
+| `1vs1` | GameMaker export and eleven atlases; seven ad/storage/menu/peer/replay scripts missing | Black screen, `initPeer` undefined. Multiplayer is not operational from these files. |
+| `duo` | GameMaker export and seven atlases; five ad/peer/storage scripts missing | Black screen, `getIdFromUrl` undefined. Multiplayer is not operational from these files. |
+| `mobabattle` | HTML and icon; referenced JS and splash image absent | Static dependency audit establishes entry cannot load its game script; gameplay not run. |
+| `lol-rogue` | Vite bundle, CSS and partial image tree | Start menu and champion selection opened, but image requests failed; complete offline game not established. |
+| `lol-guessr` | Partial Next.js pages/assets | Server/root-relative and dynamic dependencies require further validation; no claim of offline playability. |
+| Site root | HTML pages, styles, fonts, images and web-service references | Web shell, not a self-contained game engine. External ads/analytics and server functionality are not reproduced locally. |
 
-The JS hash is computed from the exact uploaded bytes, **not** a fresh server fetch. If a newer website build exists, the checksums may differ. The lack of a public copy under this repository is intentional.
+The compiled GameMaker files contain runtime, object/sprite/room metadata and scripts, rather than editable source projects. Atlases and sprites are original third-party artwork. Kiting and Farming run with an audio-worklet 404 and browser fallback; a successful start does not prove every later screen works.
 
-## 2. Game identified
+## Dependency audit and reproduction
 
-- **Game:** League of Dodging (browser game at /dodge/).
-- **Engine:** GameMaker HTML5 export, not Unity.
-- **Loader:** /dodge/game.html creates a 1920×1080 canvas with id canvas, then loads loldoge/dodge.js?cachebust=1527014147 and invokes GameMaker_Init on load.
-- **Compiled script:** single sizable generated JavaScript file with obfuscated symbols, game object metadata, engine helpers and sprite atlas names. Not an editable GameMaker source project.
-- **Other games:** multiple minigames were discussed, but the identities, archive contents and number of games **cannot be confirmed until loldodge-all-updated.zip is available**.
+`python3 reference/league-of-dodge/tools/audit_local_tree.py` produces ignored `local-audit.md`. This run found **372 resolved references, 18 missing static references, 97 external/inline references and zero root escapes**. The 18 are seven 1v1 extensions, two Dodge extensions, five Duo extensions, two Skillshot extensions and MOBA Battle's script and splash image. This is a static lower bound, not a complete runtime network audit: dynamically constructed paths, services and later screens can reveal additional missing files. Some site pages use server-root URLs and require appropriate local routing.
 
-## 3. Expected normalized local tree (not the GitHub source tree)
+For a new machine use `python3 reference/league-of-dodge/tools/import_local_refs.py --zip /path/to/loldodge-all-updated.zip`, then run the auditor above and serve the extracted tree over HTTP. The complete private inventory and raw audit remain local. Browser observations above are from the extracted copy; no network services or multiplayer were tested as working.
 
-    reference/league-of-dodge/
-      originals/
-        dodge/
-          game.html                         CONFIRMED uploaded; installer can normalize here
-          loldoge/
-            dodge.js                        CONFIRMED uploaded; installer can normalize here
-            dodge_texture_0.png             REFERENCED, not available
-            dodge_texture_1.png             REFERENCED, not available
-            dodge_texture_2.png             REFERENCED, not available
-            dodge_texture_3.png             REFERENCED, not available
-            dodge_texture_4.png             REFERENCED, not available
-            dodge_texture_5.png             REFERENCED, not available
-            dodge_texture_6.png             REFERENCED, not available
-            dodge_texture_7.png             REFERENCED, not available
-            dodge_texture_8.png             REFERENCED, not available
-            tph_adManager.js                REFERENCED, not available
-            uph_localstorage.js             REFERENCED, not available
-        extracted/
-          loldodge-all-updated/             NOT EXTRACTED here; ZIP unavailable
-      archives/
-        loldodge-all-updated.zip            NOT ACCESSIBLE here
-      tools/import_local_refs.py            COMMITTED: our own importer
-      manifest.md                           COMMITTED: this file
-      GAMEPLAY_ANALYSIS.md                  COMMITTED: our analysis
+## Distribution
 
-**Path rationale:** The relative HTML script src is loldoge/dodge.js; the atlas filenames and two extension script filenames are present in the GameMaker JS asset metadata. The texture and extension lookup prefix is inferred from the JS's location; actual browser network requests must be checked before claiming every URL is correct.
-
-## 4. Runtime dependency inventory
-
-| File or service | Evidence | State | Expected local location / investigation |
-| --- | --- | --- | --- |
-| game.html | Uploaded HTML lines 93–111 | Available | originals/dodge/game.html |
-| loldoge/dodge.js | HTML script src; uploaded JS | Available | originals/dodge/loldoge/dodge.js |
-| dodge_texture_0.png ... dodge_texture_8.png | JS GameMaker texture filename array _B8 | Not available | originals/dodge/loldoge/ |
-| tph_adManager.js | JS GameMaker extension metadata | Not available | originals/dodge/loldoge/ |
-| uph_localstorage.js | JS GameMaker extension metadata | Not available | originals/dodge/loldoge/ |
-| Generic GameMaker internal fallbacks, libraries and worklet strings | Contained in compiled runtime | **Not automatically independently required** | Inspect actual network trace before downloading |
-| pauledevelopment.de online-score endpoints | Strings in compiled JS | External/untested | Optional network/leaderboard integrations; do not send fake requests |
-| loldodgegame.com highscore/download/choose_game | URLs in JS | External/untested | Navigation or ancillary services, not local files |
-
-## 5. Missing, failed, unverified
-
-- The named ZIP **was not accessible** to the assistant; no claim of unzip, complete inventory, or path verification for its contents can be made.
-- The nine texture atlases and two extension scripts are **not in the uploads**. Their server availability/HTTP status is unverified here.
-- The previously reported shell download failed with: line 11: rel: unbound variable. We did not possess the script to patch it; the new standalone Python importer avoids that variable.
-- No browser/local offline execution test or network HAR was possible with the incomplete asset set. Game launch, visual correctness, offline behavior and ad/score-related behavior are **not verified**.
-- The JS mentions a fallback texture; that string alone does **not** establish it is an additional deployable file.
-- Copyright/license to redistribute the external game's original files was **not established**; the files are deliberately excluded from git.
-
-## 6. Reproduction / audit procedure
-
-1. Run tools/import_local_refs.py locally on the Mac holding the ZIP and downloads. It copies files without flattening ZIP paths, verifies path safety, preserves archives privately and writes local-inventory.md.
-2. Use --download-missing only if local-only texture and extension retrieval is needed. The script validates PNG signatures and records HTTP/download failures.
-3. Read local-inventory.md for exact file list, bytes, SHA-256, path status and extraction warnings; **do not commit it if it includes private paths**.
-4. Inspect each extracted ZIP root independently to identify other minigames, then update this public manifest with names/counts/neutral metadata, not unlicensed assets.
-5. Check the actual /dodge/ Network tab for 404s, missing fonts/sounds/images/scripts and confirm a local server play test. Update status only after observation.
-6. Continue implementation in the repository's own index.html/game.js/style.css, not this vendor mirror.
-
-## 7. Preservation policy
-
-The repository's .gitignore protects private originals/, archives/ and local-inventory.md. We commit only our analysis, source links, own import tooling and manifest. We do not make a false assertion that every file has been downloaded, that the game has been successfully cloned, or that externally hosted artwork/code is freely reusable.
+No redistribution license has been established for the third-party game, exports, textures, fonts or archive. They stay outside Git and production. We publish only our own tools, analysis, file names, sizes and hashes. Gameplay is independently implemented; inventory and observation are not permission to copy art or code.

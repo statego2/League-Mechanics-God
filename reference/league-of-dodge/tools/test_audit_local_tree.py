@@ -39,5 +39,15 @@ class LocalAuditTests(unittest.TestCase):
             refs = mod.references(f)
             self.assertEqual(refs, ["dodge_texture_0.png", "tph_adManager.js"])
 
+    def test_query_named_compiled_game_scans_other_atlases_and_extensions(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            f = root / "league of kiting 31.js?cachebust=1"
+            f.write_text('function GameMaker_Init(){}; Textures:["league of kiting 31_texture_0.png"]; {"name":"peerjs","version":"0.0.1",jsFiles:["peer.js"],initfuncs:[]}')
+            (root / "league of kiting 31_texture_0.png").write_bytes(b"png")
+            _, counts = mod.audit(root)
+            self.assertEqual(counts["OK"], 1)
+            self.assertEqual(counts["MISSING"], 1)
+
 if __name__ == "__main__":
     unittest.main()

@@ -53,6 +53,6 @@ Review the generated local-only file **local-inventory.md** for per-file size, S
 
 Do not copy the minified GameMaker runtime into our application. Read the analysis, observe original gameplay when possible, and implement **original** responsive movement, skillshot threats, precise collision, believable auto-attack timing and trustworthy drill scoring in the production root game.js. Tests must demonstrate behavior; the reference alone does not prove working features.
 
-## Scope / access limitation (30 Oct 2026)
+## Archive examined (30 October 2026)
 
-The current session received game.html and dodge.js as uploads and inspected both. The previously mentioned loldodge-all-updated.zip **was not present in the accessible session file system or indexed file inventory**. We have no access to the user's local ~/Downloads filesystem, cannot claim to have extracted that ZIP, and have not run an end-to-end offline replica. The importer addresses the Mac-side inventory gap without misrepresenting its completion.
+The supplied ZIP has now been extracted locally with its original paths intact. See [ZIP inventory](ZIP_INVENTORY.md), [manifest](manifest.md) and [gameplay analysis](GAMEPLAY_ANALYSIS.md) for per-file hashes, dependencies, runtime observations and limitations. The archive and originals remain ignored by Git; only metadata and our own tools are published.

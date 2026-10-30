@@ -1,12 +1,26 @@
 # GAMEPLAY_ANALYSIS — League of Dodging (reference, not a code clone)
 
-**Evidence level:** static inspection of the uploaded 3,483-byte GameMaker entry HTML and 1,876,359-byte compiled JS dated 2026-10-30. No play-through, telemetry, source-level GML project or authoritative license was supplied. We distinguish **observed symbol/structure** from **inferred mechanics**. This analysis informs **original implementations** in League Mechanics God.
+**Evidence level:** static inspection of the full supplied archive and browser checks of individual local exports on 30 October 2026. Kiting and Farming reached gameplay; several other exports fail because dependencies are absent. There is no editable GML source or authoritative redistribution license. Distinguish observed behavior from metadata and inference; see [manifest](manifest.md) and [complete inventory](ZIP_INVENTORY.md).
+
+## Archive comparison and practical application
+
+| Area | Reference evidence | Our current implementation and next work |
+| --- | --- | --- |
+| Farming | Browser shows two opposing waves with melee, ranged and cannon units and missed/earned money. Object metadata includes separate red/blue minions, melee/ranged/cannon and controller. | Last-Hit Lab now simulates both sides, health, target retention, melee hits and traveling caster shots. This is an independent approximation, not verified LoL parity; cannon, aggro rules, timing and lane travel remain. |
+| Kiting | Browser shows an oblique arena, mobile character and opponent, a setup value displayed as 2.50 and Flash. Exports contain `oplayer`, `oenemy`, `oautoattack`, attack-speed and directional walk/shot sprites. The exact cadence and cancel window were not measured. | Persistent attack orders, cancellable windup and missile/cooldown are already implemented. Preserve these; later introduce an ADC with high attack speed for Kite, per user preference, without removing Ahri from other modes. |
+| Dodge and skillshots | Assets and object metadata include many distinct projectile and indicator types, but missing extensions prevent live verification. Names alone do not prove exact sizes, cast delays or collision. | Swept collision, per-skill geometry, minion interception and seeded threats are present. Dodge Trial now applies damage without a root so one hit does not force subsequent hits. Improve hitboxes and calibrate them against reliable LoL data. |
+| Input and responsiveness | GameMaker metadata references movement, attack range and attack move; exact click behavior could not be established from the available browser session. | Existing right-click orders, held movement, attack-move and fixed-step simulation should be preserved and evaluated by human playtests; no unsupported claim of identical controls. |
+| Presentation and animation | Kiting/Farming render small animated units on an oblique terrain; exported atlases and direction-specific movement/attack sprite identifiers exist. | Our own world/art and Ahri remain independent. Improve animation and camera/world calibration against observed play, keeping sprite and hurtbox sizes distinct. |
+| Difficulty and scoring | Reference setup and live Farming counters observed; symbol names indicate presets and ranking but do not establish exact thresholds. | Seeded presets and distinct CS/missed counts are implemented; tune with full manual sessions, especially combined lane pressure. |
+
+The archive informed the two-sided minion simulation and its visible counters, not copied code or assets. Fidelity is bounded by the observations: paths, attack cadence, player feel and minion rules require separate measurement. The following earlier single-export investigation remains useful, but statements that describe only missing uploaded assets are historical; archive status is in the manifest.
+
 
 ## Engine and execution structure
 
 - The page creates a single 1920×1080 HTML5 canvas and loads the compiled GameMaker HTML5 export with GameMaker_Init.
 - The JS bundles a GameMaker runtime, an obfuscated variable-name map, sprite metadata/atlas names, event handlers, rooms/objects and broad engine utility functions. Therefore not every function present is necessarily used by the game.
-- Metadata references 9 sprite texture atlases (dodge_texture_0.png through dodge_texture_8.png) and the GameMaker extensions tph_adManager.js and uph_localstorage.js. Their actual server presence and optionality need verification.
+- Metadata references 9 sprite texture atlases (dodge_texture_0.png through dodge_texture_8.png) and the GameMaker extensions tph_adManager.js and uph_localstorage.js. The atlases are in the archive; both extensions are absent locally and their absence causes runtime errors.
 - Source naming includes firstscreen, oplayer, oautoattack, o_bullet, o_bullet_2, o_dodge_mode, o_dodge_skillshot_mode, o_skillshot_mode, o_xerath_shot, o_velkoz_q, o_velkoz_split_left/right, o_ahri_q, o_luxult, o_jinx_w_indicator, o_windwall, o_le_blanc_w, o_ezreal_ult and many controls/menus.
 - Some sprite names include s_enemy_up, s_enemy_down, s_enemy_side, s_windwall, s_xerath_animation, s_ahri_q and s_menu_background. Names prove embedded metadata, not necessarily all modes are currently playable.
 - Includes rank and scoring references; a leaderboard service appears at pauledevelopment.de (dodgev1/dodgev2, daily, weekly, all-time). These are outside services, not mechanics to copy.

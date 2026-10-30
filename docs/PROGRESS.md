@@ -237,7 +237,7 @@ Commit: `89e7529`.
 
 - `node --test tests/*.test.cjs`: **97/97 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
 - `node --check game.js` and `git diff --check`: PASS.
-- Python reference tools: `python3 -m unittest discover -s reference/league-of-dodge/tools -p 'test_*.py'`: **7/7 PASS**.
+- Python reference tools: `python3 -m unittest discover -s reference/league-of-dodge/tools -p 'test_*.py'`: **8/8 PASS**.
 - HTTP server logs: app, JS and CSS return 200/304; initial missing favicon fixed with an original SVG icon.
 - Actual IAB browser at 1280×900: initial alpha started; revised Kite starts, accepts right-click/A+click/QWERF, shows all cooldowns, pauses and renders. Console warning/error capture empty. Dodge Trial also reached its loss/results screen in the browser, showing 9 hits and 0 false dodges; full manual survival/win playthroughs remain unverified.
 - These automated tests are simulation regressions, not proof of cross-browser feel or a human 60-second playthrough.
@@ -257,3 +257,11 @@ Commit: `89e7529`.
 2. Expand Lux Q and Ezreal Q training with accurate collision sizes and minion interception, complete relevant effects and validate against real gameplay; distinguish training warnings from authentic cast time.
 3. Replace two rectangular wall proxies with a carefully traced, original mid-lane terrain mesh and navigation, including rivers and jungle entrances. Acceptance: visible walls match collision, no entity spawns inside obstacles, clicks and chase route around them.
 
+
+## Archive audit and reference follow-up (30 October 2026)
+
+- Imported the supplied `loldodge-all-updated.zip` privately, preserving its tree; SHA-256 and every file are recorded in `reference/league-of-dodge/ZIP_INVENTORY.md`. Originals and archive remain Git-ignored.
+- Kiting and Farming reached gameplay locally; Dodge, Skillshot, 1v1 and Duo hit missing-extension errors, MOBA Battle lacks its game script, and LoL Rogue reaches champion selection with missing images. See the reference manifest for exact scope and static audit limitations.
+- Auditor now detects GameMaker exports with query-suffixed filenames and their extension/atlas dependencies: 372 resolved, 18 missing static references, 97 external/inline and zero escapes. Python reference tests: 8/8 passed.
+- `5c9a0cc`: independent two-sided minion waves and caster travel; removed roots only in Dodge Trial. Gameplay tests: 97/97 passed. Browser observed both waves fighting with no console errors; a complete human CS calibration is still needed.
+- User preference: keep Ahri for the wider game, but plan a fast-attacking ADC for Kite; no change has yet been made to its champion.
