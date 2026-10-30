@@ -31,7 +31,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v11":mode==="dodge"?(ahriBase()?".director_v17":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
+function recordSuffix(){return ahriCS()?".cs_ahri_v12":mode==="dodge"?(ahriBase()?".director_v18":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 function recordLabel(){return difficulty+(attackPreset==="standard"?"":", "+ATTACK_PRESETS[attackPreset].label+" AS");}
@@ -657,7 +657,20 @@ function cast(key){if(state!=="playing"||(player.casting&&!(key==="f"&&(ahriBase
  }cancelAttack();if((key==="e"||key==="q")&&ahriBase()){
  player.cd[key]=key==="e"?12:7;player.casting={kind:key==="e"?"charm":"orb",angle:a,remaining:AHRI.q.cast};player.facing=a;player.target=null;player.order=null;player.focus=null;updateUI();return;
  }player.cd[key]=key==="f"&&(ahriBase()||referenceSpell())?300:mode==="skillshot"&&key==="q"?.8:CD[key];if(key==="q"){if(mode==="skillshot")stats.skillShots++;fire(player.x+d.x*24,player.y+d.y*24,d.x*770,d.y*770,"q",45,10,1);burst(player.x,player.y,"#76ffff",7);}
-if(key==="w"||key==="f"){const len=key==="w"?135:(ahriBase()||referenceSpell())?Math.min(SIMULATION.toCanvas(400),dist(player,aim)):240;const x=player.x,y=player.y;const desired={x:clamp(player.x+d.x*len,25,W-25),y:clamp(player.y+d.y*len,65,H-38)};const landing=key==="w"?world.clip(player,desired):world.nearestWalkable(desired);player.x=landing.x;player.y=landing.y;player.route=[];player.routeGoal=null;player.target=null;player.focus=null;player.order=null;player.windup=0;player.invuln=(referenceSpell()||ahriBase())&&key==="f"?0:key==="w"?.26:.16;for(let i=0;i<13;i++)fx.push({x:x+(player.x-x)*i/13,y:y+(player.y-y)*i/13,vx:cosmetic(-20,20),vy:cosmetic(-20,20),ttl:.35,max:.35,color:key==="f"?"#f8cf7c":"#74f0eb",r:cosmetic(2,6)});}
+if(key==="w"||key==="f"){
+ const len=key==="w"?135:(ahriBase()||referenceSpell())?Math.min(SIMULATION.toCanvas(400),dist(player,aim)):240;
+ const x=player.x,y=player.y,priorTarget=player.target&&!player.order&&!player.casting?{...player.target}:null;
+ const waypoint=player.route.length?player.route[0]:priorTarget;
+ const desired={x:clamp(x+d.x*len,25,W-25),y:clamp(y+d.y*len,65,H-38)};
+ const landing=key==="w"?world.clip(player,desired):world.nearestWalkable(desired),sx=landing.x-x,sy=landing.y-y;
+ // Forward Flash retains a plain movement order. The positive-dot direction
+ // test and overshoot rule are training approximations, not Riot thresholds.
+ const keepMove=key==="f"&&(ahriBase()||referenceSpell())&&priorTarget&&waypoint&&sx*sx+sy*sy>1e-8&&
+  (waypoint.x-x)*sx+(waypoint.y-y)*sy>0&&(priorTarget.x-landing.x)*sx+(priorTarget.y-landing.y)*sy>0;
+ player.x=landing.x;player.y=landing.y;player.route=[];player.routeGoal=null;player.target=keepMove?priorTarget:null;player.focus=null;player.order=null;player.windup=0;
+ player.invuln=(referenceSpell()||ahriBase())&&key==="f"?0:key==="w"?.26:.16;
+ for(let i=0;i<13;i++)fx.push({x:x+(player.x-x)*i/13,y:y+(player.y-y)*i/13,vx:cosmetic(-20,20),vy:cosmetic(-20,20),ttl:.35,max:.35,color:key==="f"?"#f8cf7c":"#74f0eb",r:cosmetic(2,6)});
+}
 if(key==="e"){for(const foe of foes){if(state!=="playing")break;if(foe.alive&&dist(player,foe)<175)damageEnemy(foe,38);}if(state==="playing")for(const s of shots)if(s.kind==="enemy"&&dist(player,s)<165){s.alive=false;stats.blocked++;}burst(player.x,player.y,"#85fbe4",28);}
 if(key==="r"){for(const offset of [-.35,-.18,0,.18,.35]){const v=a+offset;fire(player.x+Math.cos(v)*25,player.y+Math.sin(v)*25,Math.cos(v)*630,Math.sin(v)*630,"r",32,8,1.4);}}
 updateUI();}

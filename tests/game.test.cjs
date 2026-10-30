@@ -278,7 +278,7 @@ test('Ahri timing uses level-one cadence and 20 percent windup',()=>{
 test('Ahri CS profile uses 53 damage and separates old timing-only records',()=>{
  const {g,node,window}=boot(),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
  node('attackSpeed').listeners.change({target:{value:'ahri'}});g.reset('lastHit');g.disableSpawn();g.addWave();g.setAllies([]);const e=g.foes[0];assert.equal(e.hp,465);assert.equal(g.player.speed,165);e.x=g.player.x+220;e.y=g.player.y;e.tick=999;e.hp=54;g.attackOrder(e);advance(g,.7);assert.equal(e.hp,1);assert.equal(g.stats.cs,0);
- g.moveTo(600,337.5);e.hp=53;g.attackOrder(e);advance(g,2);assert.equal(e.alive,false);assert.equal(node('killsValue').textContent,1);g.end(true);assert.equal(values.get('lmg.best.v1.lastHit.normal.cs_ahri_v11'),'1');assert.match(node('menuDescription').textContent,/53 damage/);
+ g.moveTo(600,337.5);e.hp=53;g.attackOrder(e);advance(g,2);assert.equal(e.alive,false);assert.equal(node('killsValue').textContent,1);g.end(true);assert.equal(values.get('lmg.best.v1.lastHit.normal.cs_ahri_v12'),'1');assert.match(node('menuDescription').textContent,/53 damage/);
 });
 test('Ahri CS unattended waves resolve without breaking the drill',()=>{
  for(const difficulty of ['easy','normal','hard']){const {g,node}=boot();node('attackSpeed').listeners.change({target:{value:'ahri'}});node('difficulty').listeners.change({target:{value:difficulty}});g.reset('lastHit');advance(g,600.02);assert.equal(g.state,'ended');assert.equal(g.stats.missed+g.stats.unresolved,126);}
@@ -988,6 +988,27 @@ test('Ahri flash respects cursor distance, maximum range and five-minute cooldow
   assert.ok(Math.abs(g.player.x-start-expected)<1e-8);assert.equal(g.player.cd.f,300);assert.equal(g.player.invuln,0);
   const after=g.player.x;g.cast('f');assert.equal(g.player.x,after);advance(g,1);assert.ok(g.player.cd.f>298&&g.player.cd.f<300);
  }
+});
+test('forward Flash preserves a move order and continues walking from the landing',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.moveTo(1100,337.5);advance(g,.1);
+ node('arena').listeners.pointermove({clientX:1100,clientY:337.5,buttons:0});g.cast('f');const landed=g.player.x;
+ assert.ok(g.player.target);assert.equal(g.player.target.x,1100);assert.equal(g.player.route.length,0);advance(g,.3);assert.ok(g.player.x>landed+40);
+});
+test('backward Flash or an overshot destination does not reverse movement',()=>{
+ for(const overshot of [false,true]){
+  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.moveTo(overshot?650:1100,337.5);
+  node('arena').listeners.pointermove({clientX:overshot?1100:100,clientY:337.5,buttons:0});g.cast('f');const landed=g.player.x;
+  assert.equal(g.player.target,null);advance(g,.2);assert.equal(g.player.x,landed);
+ }
+});
+test('Flash clears an attack chase rather than turning it into a move order',()=>{
+ const {g,node}=boot('ahri');g.reset('kite');g.disableSpawn();const e=foe(g,1050);g.attackOrder(e);advance(g,.05);assert.equal(g.player.order.type,'attack');
+ node('arena').listeners.pointermove({clientX:1100,clientY:337.5,buttons:0});g.cast('f');assert.equal(g.player.order,null);assert.equal(g.player.target,null);
+});
+test('forward Flash rebuilds a movement route around terrain',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.x=600;g.player.y=600;g.moveTo(850,600);advance(g,.05);
+ const waypoint=g.player.route[0];assert.ok(waypoint);node('arena').listeners.pointermove({clientX:waypoint.x,clientY:waypoint.y,buttons:0});g.cast('f');
+ assert.ok(g.player.target);assert.equal(g.player.route.length,0);advance(g,3);assert.ok(Math.hypot(g.player.x-850,g.player.y-600)<5);
 });
 test('Ahri can flash during a spell cast without cancelling the spell',()=>{
  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
