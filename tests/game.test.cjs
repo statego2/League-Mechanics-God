@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnXerathW,spawnXerathQ,spawnOriannaR,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnXerathW,spawnXerathQ,spawnOriannaR,spawnMalphiteR,aimMalphiteR,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,strokes,texts,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -570,8 +570,8 @@ test('successive melee waves receive the sourced 90-second health upgrade',()=>{
 });
 
 test('Dodge director sends single-cast visitors with deterministic Ezreal-heavy spell selection',()=>{
- function run(){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,55);return [g.dodgeDirector.ezreal,g.dodgeDirector.lux,g.dodgeDirector.ahri,g.dodgeDirector.blitz,g.dodgeDirector.velkoz,g.dodgeDirector.xerath,g.dodgeDirector.xerathQ,g.dodgeDirector.orianna,g.dodgeDirector.attempted];}
- const a=run(),b=run();assert.deepEqual(a,b);assert.equal(a[0]+a[1]+a[2]+a[3]+a[4]+a[5]+a[6]+a[7],a[8]);assert.ok(a[0]>a[1]);assert.ok(a[8]>=10,`too few casts: ${a}`);
+ function run(){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,55);return [g.dodgeDirector.ezreal,g.dodgeDirector.lux,g.dodgeDirector.ahri,g.dodgeDirector.blitz,g.dodgeDirector.velkoz,g.dodgeDirector.xerath,g.dodgeDirector.xerathQ,g.dodgeDirector.orianna,g.dodgeDirector.malphite,g.dodgeDirector.attempted];}
+ const a=run(),b=run();assert.deepEqual(a,b);assert.equal(a[0]+a[1]+a[2]+a[3]+a[4]+a[5]+a[6]+a[7]+a[8],a[9]);assert.ok(a[0]>a[1]);assert.ok(a[9]>=10,`too few casts: ${a}`);
 });
 test('Dodge visitor enters, casts only once, then exits without deleting its missile',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,.02);const visitor=g.foes.find(e=>e.dodgeVisitor);assert.ok(visitor);advance(g,1.1);assert.equal(g.dodgeDirector.attempted,1);assert.equal(visitor.phase,'exit');advance(g,1);assert.ok(!g.foes.includes(visitor));assert.equal(g.dodgeDirector.attempted,1);
@@ -592,7 +592,7 @@ test('Dodge director completes a long session with bounded directed threats',()=
   g.update(1/120);const active=g.foes.filter(e=>e.alive&&e.dodgeVisitor&&e.phase!=='exit'&&e.phase!=='orbFlight'&&e.phase!=='hookFlight').length+g.shots.filter(s=>s.alive&&s.directed).length+g.hazards.filter(h=>h.directed).length;
   assert.ok(active<=2,`directed threats exceeded cap: ${active}`);
  }
- assert.equal(g.state,'ended');assert.ok(g.dodgeDirector.attempted>100);assert.ok(g.dodgeDirector.xerathQ>0,'long session never scheduled Xerath Q');assert.ok(g.dodgeDirector.velkoz>0,'long session never scheduled Velkoz Q');assert.ok(g.dodgeDirector.orianna>0,'long session never scheduled Orianna R');assert.equal(g.dodgeDirector.attempted,g.dodgeDirector.ezreal+g.dodgeDirector.lux+g.dodgeDirector.ahri+g.dodgeDirector.blitz+g.dodgeDirector.velkoz+g.dodgeDirector.xerath+g.dodgeDirector.xerathQ+g.dodgeDirector.orianna);
+ assert.equal(g.state,'ended');assert.ok(g.dodgeDirector.attempted>100);assert.ok(g.dodgeDirector.xerathQ>0,'long session never scheduled Xerath Q');assert.ok(g.dodgeDirector.velkoz>0,'long session never scheduled Velkoz Q');assert.ok(g.dodgeDirector.orianna>0,'long session never scheduled Orianna R');assert.ok(g.dodgeDirector.malphite>0,'long session never scheduled Malphite R');assert.equal(g.dodgeDirector.attempted,g.dodgeDirector.ezreal+g.dodgeDirector.lux+g.dodgeDirector.ahri+g.dodgeDirector.blitz+g.dodgeDirector.velkoz+g.dodgeDirector.xerath+g.dodgeDirector.xerathQ+g.dodgeDirector.orianna+g.dodgeDirector.malphite);
 });
 test('Dodge visitor uses distinct existing visual profiles and projectile colours',()=>{
  const {g,node,draws,strokes}=boot('ahri');for(const id of ['mageArt','rangerArt']){node(id).complete=true;node(id).naturalWidth=100;}
@@ -856,4 +856,20 @@ test('Orianna ball blocks other encounters and its preparation freezes while pau
 
 test('rare Orianna event is not scheduled in the first 90 seconds',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.player.hp=g.player.maxHp=1000000;assert.ok(g.dodgeDirector.rareAt>=90&&g.dodgeDirector.rareAt<=150);advance(g,89.9);assert.equal(g.dodgeDirector.orianna,0);assert.ok(!g.hazards.some(h=>h.orianna));
+});
+
+test('Malphite approaches before dashing and hit deals damage without immobilization',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
+ assert.ok(g.spawnMalphiteR());const h=g.hazards[0];assert.equal(h.casting,false);assert.equal(g.spawnDodgeVisitor(),false);const startX=h.x,startY=h.y;advance(g,.5);assert.ok(Math.hypot(h.x-startX,h.y-startY)>1);advance(g,.8);
+ assert.equal(h.casting,true);assert.equal(g.dodgeDirector.malphite,1);g.player.x=h.target.x;g.player.y=h.target.y;const pos={x:g.player.x,y:g.player.y};advance(g,.7);
+ assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.player.hp-(590-200/1.3))<1e-7);assert.equal(g.player.root,0);assert.equal(g.player.x,pos.x);assert.equal(g.player.y,pos.y);
+});
+test('Malphite R has a walkable response after a 200ms reaction delay',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
+ assert.ok(g.spawnMalphiteR());const h=g.hazards[0];advance(g,1.26);assert.ok(h.casting);
+ const dx=g.player.x-h.target.x,dy=g.player.y-h.target.y,d=Math.hypot(dx,dy);advance(g,.2);g.moveTo(g.player.x+dx/d*90,g.player.y+dy/d*90);advance(g,.6);
+ assert.equal(g.stats.hits,0);assert.equal(g.dodgeDirector.outcomes['MALPHITE R'].avoided,1);
+});
+test('Malphite is not eligible in the first 150 seconds',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.player.hp=g.player.maxHp=1000000;assert.ok(g.dodgeDirector.malAt>=150&&g.dodgeDirector.malAt<=240);advance(g,149.9);assert.equal(g.dodgeDirector.malphite,0);
 });
