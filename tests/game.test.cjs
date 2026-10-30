@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,strokes,texts,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -362,8 +362,14 @@ test('Ahri back sprite appears when facing away and falls back to side',()=>{
 test('Ahri projectile hitbox uses scaled 65-unit gameplay radius at its boundary',()=>{
  for(const [offset,expected] of [[62.4,1],[62.6,0]]){const {g}=boot('ahri');g.reset('kite');g.disableSpawn();assert.equal(g.player.hitRadius,32.5);g.fire(400,g.player.y+offset,400,0,'enemy',18,30,1.5);advance(g,1);assert.equal(g.stats.hits,expected,`offset ${offset}`);}
 });
-test('default Ahri dodge includes sweeping pattern alongside reference casts',()=>{
- const {g}=boot('ahri');g.reset('dodge');g.disableSpawn();advance(g,14.1);assert.equal(g.sweeps.length,1);advance(g,1.5);assert.ok(g.shots.some(s=>s.kind==='enemy'&&s.r===9));
+test('directed Ahri dodge never adds the legacy synthetic sweep outside the threat budget',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.disableSpawn();g.player.hp=1e9;
+ for(let i=0;i<60*120;i++){
+  g.update(1/120);
+  assert.equal(g.sweeps.length,0);
+  assert.ok(g.shots.every(s=>!s.alive||s.directed),'undirected projectile bypassed the director');
+ }
+ assert.ok(g.dodgeDirector.attempted>0);
 });
 
 test('Ahri charm respects champion and minion gameplay-radius boundaries',()=>{
@@ -624,4 +630,17 @@ test('enemy Ahri return orb homes toward its still-living caster',()=>{
  Object.assign(shot,{phase:'out',phaseHit:false,anchor:{x:400,y:200},casterId:caster.id});
  advance(g,.6);assert.equal(shot.phase,'return');caster.y=300;advance(g,.02);
  assert.equal(shot.anchor.y,300);assert.ok(shot.vy>0);
+});
+
+
+test('Dodge visitors enter and cast with their full silhouettes inside the visible arena',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ for(const [x,y] of [[600,337],[80,90],[1120,90],[80,610],[1120,610]]){
+  g.player.x=x;g.player.y=y;let spawned=0;
+  for(let i=0;i<100;i++){
+   g.setFoes([]);if(!g.spawnDodgeVisitor())continue;spawned++;const e=g.foes[0];
+   for(const point of [e.entry,e.origin]){assert.ok(point.x>=60&&point.x<=1140);assert.ok(point.y>=145&&point.y<=645);}
+  }
+  assert.ok(spawned>0,`no visible entry found near ${x},${y}`);
+ }
 });

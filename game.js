@@ -31,7 +31,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v10":mode==="dodge"?(ahriBase()?".director_v2":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
+function recordSuffix(){return ahriCS()?".cs_ahri_v10":mode==="dodge"?(ahriBase()?".director_v3":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 function recordLabel(){return difficulty+(attackPreset==="standard"?"":", "+ATTACK_PRESETS[attackPreset].label+" AS");}
@@ -314,7 +314,9 @@ function spawnDodgeVisitor(){
  for(let i=0;i<20;i++){
   const angle=rand(0,TAU),distance=rand(340,470),p={x:player.x+Math.cos(angle)*distance,y:player.y+Math.sin(angle)*distance};
   const start={x:p.x+Math.cos(angle)*65,y:p.y+Math.sin(angle)*65};
-  if(world.pointWalkable(p,20)&&world.pointWalkable(start,20)&&world.segmentClear(start,p,20)){origin=p;entry=start;break;}
+  // Keep the entire caster silhouette on screen, including its raised sprite.
+  const visible=q=>q.x>=60&&q.x<=W-60&&q.y>=145&&q.y<=H-30;
+  if(visible(p)&&visible(start)&&world.pointWalkable(p,20)&&world.pointWalkable(start,20)&&world.segmentClear(start,p,20)){origin=p;entry=start;break;}
  }
  if(!origin)return false;
  const e=enemy(entry.x,entry.y);e.dodgeVisitor=true;e.spell=spell;e.phase="enter";e.origin=origin;e.entry=entry;e.speed=120;e.hp=e.maxHp=160;e.shoot=999;foes.push(e);
@@ -446,7 +448,8 @@ function update(dt){if(state!=="playing")return;time+=dt;if(((mode==="lane"||ref
 if(referenceSpell()&&!foes.length){const caster=enemy(970,337.5);caster.referenceCaster=true;caster.shoot=1.5;foes.push(caster);}
 if(dodgeDirector)updateDodgeDirector(dt);
 spawn-=dt;if(spawn<=0&&!referenceSpell()&&!dodgeDirector){if(mode==="lastHit"||mode==="lane")addWave();else if(mode==="bait"){}else if(mode==="skillshot")addTarget();else addEnemy();spawn=(mode==="dodge"?Math.max(1.35,3.5-time*.026):Math.max(.9,1.6-time*.015))*PRESETS[difficulty].spawn;if(mode==="lastHit"||mode==="lane")spawn=ahriCS()?30:10;else if(mode==="bait")spawn=999;else if(mode==="skillshot")spawn=.8;}
-if(mode==="dodge")updateSweeps(dt);
+// Keep the legacy sweep only for legacy presets; directed Dodge uses champion spells.
+if(mode==="dodge"&&!dodgeDirector)updateSweeps(dt);
 if(mode==="lane"){
  laneEnemyTimer-=dt;
  if(laneEnemyTimer<=0&&!foes.some(e=>e.alive&&!e.minion)){
