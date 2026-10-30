@@ -38,109 +38,27 @@ Do not collapse everything into a single arbitrary "speed" multiplier.
 
 Allow a reduced-speed learning/tutorial mode, but label that clearly as a learning aid and return to calibrated gameplay parameters for benchmark mode.
 
-## 2. Mode 1 — DODGE GAUNTLET (first priority)
+## 2. Four modes — only four, no fragmented minigame catalog
 
-**Fantasy:** Enemy champions continually enter, cast a recognizable ability, and leave; different champions replace them, and unexpected but readable threats occasionally originate from the map. No long dead time. Focus is pure movement, spacing, trajectory prediction and dodge decisions.
+These are the **only four intended player-facing gameplay modes**. Every subskill is practiced inside one of these continuous experiences. The current browser alpha still exposes only 3 simpler functioning predecessors, and the complete modes below are **design targets**. Canonical choices override older scattered brainstorming suggestions.
 
-### Encounter loop
+### Mode 1 — Dodge Gauntlet
 
-```text
-Enemy announced/enters → short movement/aim or visible cast tell
-→ committed cast → projectile/AoE resolves → enemy exits
-→ next champion approaches; at higher intensity, encounters overlap
-```
+**One relentlessly challenging pure evasion flow.** Opposing champions appear, cast and leave; weighted common threats arrive frequently (especially **Ezreal Q**) and some ambient **Xerath Q/W** threats arrive from the map without a visible Xerath. Return orb (Ahri Q), split (Vel'Koz Q), hooks and binding create varied movement problems; **Malphite R and Orianna R remain rare**. Continuous pressure is fair and readable, not arbitrary impossible projectile spam. Full event cadence, mixture and safety contracts: [Dodge Gauntlet Rhythm](DODGE_GAUNTLET_RHYTHM.md).
 
-- A **Champion Director** owns a library of enemy spell encounter cards (spell identity, cast tell, speed, range, shape, collision, entry/exit path, allowed overlapping combinations, cooldown windows). Every arrival has a readable in-world cue; cast must never spawn secretly on top of the player without an information path.
-- Start with one clear linear threat. Progress to fan, split/return, ground AoE, fast projectile, large engage and combinations. Examples in the design library: Lux Q, Ezreal Q, Blitzcrank Q, Vel'Koz Q, and later Malphite R. These are examples, not a requirement to prioritize niche spells over core minions or input fidelity.
-- Enemies spawn at varying distances/angles; move, commit a cast, and depart. Later, overlap 2–3 **compatible** casts rather than arbitrary simultaneous unavoidable hits.
-- Include **map-edge and unseen-angle attacks** as deliberately telegraphed encounter variants. Off-screen threat = meaningful minimap/edge cue and available reaction/anticipation window, not a surprise unavoidable projectile. Owner will define the broader map-awareness system later; leave it extensible.
-- Dodge Trial should be fast and punishing but not rely on freezing the player for every hit. An authentic-CC ruleset can be a separate advanced scenario. Never render an exact future trajectory line in expert dodge; keep fair champion cast animations, windup cues and the launched missile visible. Optional training overlays belong in learning mode only.
-- Prevent exploits and unfairness: no spawning inside the hurtbox, no inaccessible/blocked safe gaps, no instant repeated cast with zero tells, no single unavoidable corner lock, no opponent casts beyond the committed aiming rules, no resource-free infinite Flash solutions.
+### Mode 2 — Mechanics Arena / Combat Survival
 
-### Scoring and adaptation
+**One full-kit solo-versus-many chaotic battle.** The player fights **multiple independently active enemy champions**, with full Ahri Q/W/E/R, auto attacks, kite, target switching, positioning, combos, Flash and evasion *simultaneously*. No allied champion bots and **no imposed Q/E/dodge tutorial stages**. The owner explicitly targets **5–6 simultaneous enemies in the Standard player-facing experience** (Foundation 3–4, Expert 7–8+ are engineering/tuning targets), with continuous replacement after enemy deaths. The old "one strafing target with one Ezreal Q" is only an internal integration fixture, not the delivered gameplay. An eventual Tristana high-AS profile stays **inside this mode**, not a new main mode. Full design: [Combat Survival Arena](MECHANICS_ARENA_DESIGN.md).
 
-Measure: **eligible genuine threat events, avoided events, hits, damage received, survival time, emergency Flash use, consistency across spell families, reaction opportunities**, and performance on unseen encounter seeds.
+### Mode 3 — CS Mastery
 
-**Never count merely offscreen/expired projectiles as dodges**. A cast aimed nowhere near the player is not a skillful avoidance; correctly preempting a cast must be represented explicitly rather than assumed.
+**One continuous clean last-hitting lane**, with real allied and opposing minions, actual health/damage/targeting/windups, sustained waves and naturally evolving conditions. As minions push toward a correctly simulated turret, **under-turret CS occurs in the same mode and the same lane**—not in a separate under-turret drill. The challenge is precise CS timing, target choice, pre-positioning and movement, with dependable death/CS/gold feedback. Do not add opposing champion poke here: that belongs to Mid Lane Mastery. Existing Last-Hit Lab is an incomplete but useful foundation; don't rewrite it.
 
-- Warm-up difficulty: one spell at a time, clear body cue, lenient frequency.
-- Standard: varied direction, movement, limited overlap, calibrated projectile timings.
-- Expert: shorter gaps, credible simultaneous combinations, some map-edge threats, no exact aim guide.
-- Infinite/endurance optional; benchmark version uses controlled duration and seeds.
+### Mode 4 — Mid Lane Mastery / The Ultimate Drill
 
-**MVP acceptance**: At least 3 genuinely distinct cast/pattern cards, spawn→cast→exit lifecycle, replayable seeded encounters, varied angles, a real dodge metric, an unavoidable-pattern safety check, pause/restart and 30/60/120 FPS stable simulation, plus browser-observed gameplay.
+**One very hard, continuous 1v1 mid lane challenge** around authentic minion waves. Enemy bot attempts its own CS and threatens yours: as you approach or commit to a last hit it tries to land real poke if spell readiness, geometry and trade conditions allow; you bait, evade, farm or concede when needed. In the **same lane, at the same time**, you identify the enemy's own last-hit commitment and punish it with Ahri Q/E/autos, zoning, trading and cooldown advantage. No mandatory lesson stages, **no separate Free Farm / Bait / Poke / Under Tower variants**, and no need for a Foundation/Standard/Expert/God selection for this mode. The enemy is extremely demanding but obeys physics, observed information, cooldowns and cast commitment. Full source of truth: [Mid Lane Mastery Design](MID_LANE_MASTERY_DESIGN.md).
 
-## 3. Mode 2 — MECHANICS ARENA / COMBAT CRUCIBLE
-
-**Fantasy:** Fight under relentless pressure, like concentrated teamfight micro. Dodge threats while doing something useful: landing abilities, kiting, selecting targets, repositioning, saving Flash and exploiting enemy mistakes. It is not enough merely to survive.
-
-### Trainable mechanic modules to mix
-
-| Module | Concrete recurring decision | Example feedback |
-|---|---|---|
-| Dodge + skillshot | Move safely, then predict a **moving target** with Ahri Q/E | Hit/miss, range, cast while threatened, missed opportunities |
-| Max-range precision | Land Q or E near its **actual effective range** without wasting the cast or overstepping | Hit rate by distance bucket, time exposed at enemy threat range |
-| Two-pass Ahri Q | Cast so outbound and returning orb both connect; reposition during return | 1st/2nd pass hits, expected vs actual return path |
-| Kiting / orbwalking | Use attack release then move, repeat as threat and target position change | Attack uptime, windup cancels, spacing violations, avoidable damage |
-| Target switching | Prioritize a threatening/high-value target; reacquire during movement | Wrong targets, lost DPS, successful switches |
-| Flash reaction | A Malphite R-style engage appears; decide **when a Flash could actually evade it** | Legitimate saved hits, failed/late Flashes, wasted Flashes |
-| Defensive mobility | Evade incoming threat without wasting W/R/Flash or abandoning attack opportunity | Resources spent per avoided hit, positioning afterward |
-| Combo under pressure | Charm → Q with moving enemy and other incoming threats | Combo accuracy, correct attack/cast spacing, damage taken |
-| Positioning | Maintain proper distance against moving melee/ranged opponents | Time in valid spacing band, danger windows survived |
-| Multi-threat prioritization | One spell to dodge, one low-HP enemy, one favorable range window | Decisions resolved, missed guaranteed hits, avoidable damage |
-
-**Accuracy design:** A "max-range Q+E" score means two separate ranges and distinct cast/hit windows. Do not conflate the spells, invent impossible simultaneous inputs, or reward impossible prediction. Use source-checked current spell parameters.
-
-**Champion specialization:** Ahri is a main mid-oriented training baseline. The owner also wants a **fast-attacking ADC, especially Tristana, for the dedicated kite track**. Add that as a selectable training profile rather than forcing Ahri into every kiting task. Preserve the user's chosen champion priority.
-
-### Pressure scenes (examples)
-- "Find your angle": 3 roaming targets, one incoming line projectile, E at max feasible range.
-- "Orb return": escape a shot while repositioning so returning Q also hits.
-- "Flash check": a readable Malphite R-type engage arrives between ordinary skillshots; only successful legitimate react/anticipate + Flash counts. Include non-Flash solutions when viable.
-- "ADC survival": Tristana kiting a pursuer with higher AS; attack-windup cancels have a real opportunity cost.
-- "Teamfight collapse": two enemies apply overlapping spells while one exposed target presents a brief kill window; survival-only scores poorly.
-
-**MVP acceptance**: One polished Ahri dodge + Q/E scene, one kiting scene with reliable attack timing, one Flash-reaction scene; repeatable scenario seeds, accurate damage and per-skill metrics. More champion packs are extensions.
-
-## 4. Mode 3 — CS MASTERY (clean precision)
-
-**Fantasy:** A credible living lane of allied and enemy minions. Train raw last-hit precision with autos, then minion wave interactions, then **under-turret farming**. Multiple short attempts give more repetitions than waiting for entire match waves.
-
-### Sub-scenarios under ONE menu mode
-
-1. **Free lane CS:** normal waves, realistic opposing minion interactions, no hostile champion pressure. Understand health trajectories, attack windup/flight, unit selection, nearby allies, missed kills. No fake scripted HP countdown once credible wave combat exists.
-2. **Contested CS timing:** HP windows become harder due to allied hits or multiple simultaneous low-health minions. Practice target choice/attack preparation rather than spam clicking.
-3. **Under turret:** minions receive turret impacts with type/HP/armor interactions; player prepares targets if necessary, picks attack windows, sequences autos and spells only in an opt-in variant. Treat "X tower shots then 1 auto" as an **emergent result**, not hard-coded folklore: AD, minion class, wave upgrades, turret and timing change the answer.
-4. **Pressure CS benchmark:** brief opponent zoning/skillshot threats can be added after pure CS works, but do not blur pure CS with mode 4.
-
-**Measure:** eligible CS, actual credited CS, missed to allied/turret, unresolved, gold, aim/selection failures, preventable windup cancellations, damage prediction error, under-turret success by minion class, and fixed-conditions repeatability.
-
-**Prerequisites in existing development**: Two-sided minions already exist in an approximate form; unified impact/death/last-hit attribution and accurate wave combat are being built. **Refine instead of rewriting**. Turret is a later dependency; don't fabricate exact current timings.
-
-**MVP acceptance**: both teams simulate independently, melee/caster impacts, credible waves, clear kill credit, last-hit feedback and actual full playable runs. Under-turret benchmark follows when turret acquisition/flight/impact mechanics are validated.
-
-## 5. Mode 4 — MID LANE MASTERY (signature)
-
-**Fantasy:** Compressed, competitive laning. Get CS while an intelligent opposing mid punishes your movement, baits and casts skillshots, watches cooldown windows, stands behind minions, and changes positioning. The player must sometimes **bait → dodge → CS**, sometimes dodge → punish, sometimes surrender a minion rather than take damage.
-
-A valuable drill must force **trade-offs** rather than ask the player to tick three boxes in a known order.
-
-### Combined skill loops
-
-- Enemy threatens you during a last-hit windup: **commit to CS and risk a hit, cancel the auto and dodge, or position earlier so you can do both**.
-- Bait an E/Q out of the opponent, dodge while staying close enough to secure a minion, then use the enemy cooldown window to trade.
-- Enemy hides behind minions; your Ahri E has interception risk. Need an angle, minion kill window or correct decision *not* to cast.
-- Wave is about to thin: choose between ward/map attention (placeholder until owner's further specification), trade pressure and CS.
-- Force enemy abilities through threat-range positioning. Reward an induced opponent commitment only if it changes the subsequent decision.
-- Under turret with opponent harass: last-hit, don't eat unnecessary damage, preserve your Flash.
-- Later: wave states (slow push/freeze/bounce/crash) should arise from actual minion combat and arrival timing, not a fake state label.
-
-### Design principle
-Difficulty must come from opponents and trade-offs with **reasonable intelligence**, not impossibly fast hostile spell spam over a fake lane. Keep real-feeling rules. Run scenario variants with pre-positioned waves to compress downtime without inventing instant health changes.
-
-**Measure**: CS earned vs available, damage taken per CS, skillshots genuinely dodged, avoidable exposure, baited cooldowns converted into trade/CS advantage, valid Q/E opportunities taken vs wasted, position quality, trade damage, and consistency across unseen seeds.
-
-**MVP acceptance**: a credible two-sided wave + moving enemy champion with reproducible spell/cooldown behavior + last-hit scoring + true damage attribution + one consequential bait/dodge/trade decision. A full lane bot and wave-state/turret system are future phases.
+**Hard scope rule:** No fifth game mode called "Bait → Dodge → CS", "Skillshot Lab", "Flash Challenge", "Under Tower", "Teamfight Simulator", "Poke Practice", or "Kite Training." These are game mechanics, old prototypes, test scenarios or settings—not separate menu entries.
 
 ## 6. The shared training engine (avoid four isolated games)
 
@@ -191,21 +109,13 @@ Use **specific actionable diagnoses**, not empty "great dodge" praise, global sc
 
 Optional skill profile/dashboard should show **multiple dimensions**, not declare the user "Challenger" without external calibration.
 
-## 9. Current implementation implications / sequencing
+## 9. Integration without multiplying player modes
 
-The active development branch already has versions of Dodge Trial, Kite Arena, Last-Hit Lab, Ahri spells, a fixed-step loop, threat-scoring tests, approximate two-sided minions and a research-guided Ahri adapter. It also has preserved legacy modes. **Inspect the most recent actual state and progress before touching anything**; test counts mentioned in past docs are not a promise of a passing future head.
+The current branch already has Dodge Trial, Kite Arena, Last-Hit Lab, hidden legacy exercises, fixed-step movement/combat and progressively improved two-sided minion AI. Read `docs/PROGRESS.md` to see actual implementation; passing tests on prototypes do **not** prove the four product modes are finished.
 
-Suggested implementation cadence, honoring the user's mode order while respecting prerequisites:
+Convert the existing three public gameplay foundations **in place** toward Dodge Gauntlet, Combat Survival Arena and CS Mastery. Add Mid Lane Mastery **as the fourth** only when credible waves plus a genuine opposing CS-and-poke bot make it playable. Keep retired prototypes available internally for tests, **not** as a permanently expanding public menu. Avoid presenting unfinished features as already available.
 
-**Stage A — Punchy pure Dodge vertical slice FIRST:** adapt existing Dodge Trial with a reusable spawn→telegraph/cast→exit champion encounter director, 3 varied enemy spell cards, increased but fair cadence, randomized angles and map-edge cues, accurate dodge/Flash/block scoring. Retain existing accurate projectile/fixed-step systems; no visual exact-aim line in expert play. Test and browser-play it.
-
-**Stage B — Combined mechanics:** create one great continuous Ahri Q/E-under-pressure encounter by combining the same director with moving valid targets; add a specific Flash-reaction trial. Make Tristana fast-AS kiting a specialty track without abandoning existing Ahri.
-
-**Stage C — CS excellence:** finalize the unified impact/death/CS pipeline and realistic two-sided minion interactions; produce a free-farm CS benchmark, then model and test under-turret farming as a dedicated sub-scenario.
-
-**Stage D — Mid lane combined:** moving enemy AI, threat-angle logic, CS windows, punish windows and bait→dodge→CS or trade at practical fidelity; eventually minion aggro, tower, map-awareness and wave states.
-
-Parallel or shared foundation work (data adapters, minions, damage) is welcome, but don't hold **all** gameplay improvement hostage to fully simulating a 30-minute LoL match.
+For work prioritization: build the next most valuable playable improvement within these four experiences, reusing actual combat and data infrastructure. Do not hold progress hostage to a full-scale 30-minute League match simulation.
 
 ## 10. What to implement next and what NOT to do
 
