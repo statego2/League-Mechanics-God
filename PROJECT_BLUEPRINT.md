@@ -79,7 +79,7 @@ The game should develop skills that transfer to LoL:
 - `game.js`: update/render loop, player, enemies, projectiles, abilities and input.
 - `README.md`: how to run the alpha and descriptions of its modes.
 
-**Current prototype:** `Dodge Trial` (survive for 60 seconds) and `Kite Arena` (kill opponents while moving and casting).
+**Current prototype:** `Dodge Trial` (survive for 60 seconds), `Kite Arena` (kill opponents while moving and casting), and `Last-Hit Lab` (15 minions, allied projectile attrition, CS/missed scoring).
 
 **Important qualification:** Source files were inspected, but a complete gameplay/browser test and a public deployment were not confirmed during this document's creation.
 

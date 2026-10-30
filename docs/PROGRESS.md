@@ -20,12 +20,16 @@ Commit: `ce38142` — persistent attack orders, cancellable windups and truthful
 
 ## Completed: readable, reproducible encounters
 
+Commit: `34830db`.
+
 - Foundation/Standard/Expert presets and selectable encounter seed. Restart rewinds gameplay RNG; cosmetic particles use a separate RNG.
 - Locked-aim line/fan telegraphs, stationary casting enemies, delayed ground-circle impacts every third Dodge cast. Ground avoidance and invulnerability blocks respect threat accounting.
 - Original vector ranger/mage silhouettes, directional weapons, articulated steps, player health/hurtbox, floating damage and stone court. No third-party art.
 - Browser: Foundation selected, seed changed to 177858, Dodge Trial started; movement, seed HUD, new art and health displayed correctly.
 
 ## Completed: Last-Hit Lab and drill navigation
+
+Commit: `89e7529`.
 
 - Five waves / 15 possible CS. Allied caster missiles travel and damage enemy minions; only the player's killing blow earns CS. Misses are counted once per allied kill or unresolved minion at timeout.
 - Gold health bars and a damage threshold mark the 28-damage last-hit window. Q/E/R disabled for this drill; W/F remain available. Adjacent waves settle in different columns to keep targets selectable.
@@ -35,14 +39,17 @@ Commit: `ce38142` — persistent attack orders, cancellable windups and truthful
 
 ## Tests actually run
 
-- `node --test tests/game.test.cjs`: **18/18 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation.
-- `node --check game.js`: PASS.
-- Actual IAB browser at 1280×900: initial alpha started; revised Kite starts, accepts right-click/A+click/QWERF, shows all cooldowns, pauses and renders. Console warning/error capture empty. Additional dodge/browser verification follows next batch.
+- `node --test tests/game.test.cjs`: **19/19 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards.
+- `node --check game.js` and `git diff --check`: PASS.
+- Python reference tools: `python3 -m unittest discover -s reference/league-of-dodge/tools -p 'test_*.py'`: **7/7 PASS**.
+- HTTP server logs: app, JS and CSS return 200/304; initial missing favicon fixed with an original SVG icon.
+- Actual IAB browser at 1280×900: initial alpha started; revised Kite starts, accepts right-click/A+click/QWERF, shows all cooldowns, pauses and renders. Console warning/error capture empty. Dodge Trial also reached its loss/results screen in the browser, showing 9 hits and 0 false dodges; full manual survival/win playthroughs remain unverified.
 - These automated tests are simulation regressions, not proof of cross-browser feel or a human 60-second playthrough.
 
 ## Known limits
 
 - Original reference archives/art are absent from git by design. Read all reference docs/tools; use independent art and logic.
+- Gameplay CI workflow added for pushes/PRs; remote run status has not been verified.
 - No public deployment verified. Local server only; no claims about GitHub Pages.
 - Visuals are original procedural vectors; further animation and sound polish remain.
 - No obstacles/pathfinding, audio, skillshot lab or combined lane pressure yet. Last-Hit Lab is timing practice without hostile enemy pressure.

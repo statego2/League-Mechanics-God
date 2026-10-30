@@ -114,10 +114,12 @@ if(player.target&&player.windup<=0){const dx=player.target.x-player.x,dy=player.
 player.x=clamp(player.x,22,W-22);player.y=clamp(player.y,59,H-36);
 const previousFoes=new Map(foes.map(e=>[e.id,{x:e.x,y:e.y}]));
 for(const e of foes){if(!e.alive)continue;if(e.minion){updateMinion(e,dt);continue;}e.hit=Math.max(0,e.hit-dt);e.spin+=dt*e.strafe;const dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;let vx=0,vy=0;if(d>230){vx=dx/d;vy=dy/d;}else if(d<155){vx=-dx/d;vy=-dy/d;}vx+=(-dy/d)*Math.sin(e.spin)*.5;vy+=(dx/d)*Math.sin(e.spin)*.5;const mag=Math.hypot(vx,vy)||1;if(!e.pending){e.x=clamp(e.x+vx/mag*e.speed*dt,25,W-25);e.y=clamp(e.y+vy/mag*e.speed*dt,60,H-35);e.shoot-=dt;if(e.shoot<=0&&d<650)shootEnemy(e);}else{e.charge-=dt;if(e.charge<=0)releaseEnemy(e);}if(d<e.r+player.r+1)takeHit(11);}
+if(state!=="playing")return;
 for(const h of hazards){
  if(dist(player,h)<=h.r+player.r*.75)h.threat=true;
  h.ttl-=dt;if(h.ttl<=0){
   if(dist(player,h)<=h.r+player.r*.75){if(player.invuln>0)stats.blocked++;else takeHit(25);}else if(h.threat)dodged++;
+  if(state!=="playing")return;
   burst(h.x,h.y,"#f5b57d",24);
  }
 }
