@@ -57,7 +57,7 @@ The default player uses an approximate level-1 Ahri profile. Q, W, E and R are e
 
 Vanilla HTML5 Canvas + JavaScript + CSS, no third-party libraries and no copied game assets. This is a first **alpha** playable prototype. It is not yet equivalent to the attack timing, animation states, exact damage or collision rules of League of Legends.
 
-The painted mid-lane arena is a visual approximation based on a user-provided gameplay screenshot; it is not the actual Rift geometry. Two marked stone walls block movement; the rest of the river, rocks and foliage are decorative. Clicks route around the walls, Dash stops at them, and Flash can cross them if it lands in a walkable location. Projectiles currently pass through walls.
+The painted mid-lane arena is a visual approximation based on a user-provided gameplay screenshot; it is not the actual Rift geometry. Two approximate collision regions block movement; their outlines are hidden and may not match the art exactly; the rest of the river, rocks and foliage are decorative. Clicks route around the walls, Dash stops at them, and Flash can cross them if it lands in a walkable location. Projectiles currently pass through walls.
 
 ## Repeatable encounters
 

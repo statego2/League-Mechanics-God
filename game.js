@@ -30,7 +30,6 @@ const ahriCS=()=>mode==="lastHit"&&attackPreset==="ahri";
 const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
-const autoThreshold=e=>physicalDamage(autoDamage(),e.armor||0);
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
 function recordSuffix(){return ahriCS()?".cs_ahri_v9":mode==="dodge"?(ahriBase()?".ahri_spells_v3":".no_line_"+attackPreset):attackPreset==="standard"?"":".as_"+attackPreset;}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
@@ -574,11 +573,7 @@ for(let i=0;i<75;i++){
  else{ctx.strokeStyle=i%2?"#72905a55":"#98a56c44";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x-4,y);ctx.lineTo(x,y-8-n*5);ctx.lineTo(x+2,y);ctx.moveTo(x,y-3);ctx.lineTo(x+6,y-8);ctx.stroke();}
 }
 }
-// Mark collision proxies so their physical edges are visible against painted art.
-for(const wall of world.walls){ctx.fillStyle="#172b2a33";ctx.fillRect(wall.left,wall.top,wall.right-wall.left,wall.bottom-wall.top);ctx.strokeStyle="#e2c99588";ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.strokeRect(wall.left,wall.top,wall.right-wall.left,wall.bottom-wall.top);ctx.setLineDash([]);}
-// Soft arena boundary, kept clear for combat readability.
-ctx.strokeStyle="#b7c79a55";ctx.lineWidth=2;ctx.strokeRect(34,55,W-68,H-94);
-for(const [x,y] of [[34,55],[W-34,55],[34,H-39],[W-34,H-39]]){ctx.save();ctx.translate(x,y);ctx.scale(1,.6);polygon(0,0,16,5,.2,"#536556","#9caa86");circle(0,0,4,"#92c9a8");ctx.restore();}
+// Collision remains in world.js; its approximate proxy boxes are not drawn.
 ctx.restore();
 
 if(player){
@@ -597,20 +592,16 @@ for(const e of foes)if(e.pending){
   ctx.setLineDash([]);ctx.strokeStyle="#ff80634a";ctx.lineWidth=e.pending.spell?e.pending.spell.radius*2:14;ctx.stroke();
   ctx.setLineDash([9,7]);ctx.strokeStyle="#ffd1a4cc";ctx.lineWidth=2;ctx.stroke();
  }
- ctx.setLineDash([]);ctx.strokeStyle="#ffcf87";ctx.lineWidth=3;ctx.beginPath();ctx.arc(e.x,e.y,29,-Math.PI/2,-Math.PI/2+TAU*clamp(1-e.charge/(e.pending.spell?e.pending.spell.cast:PRESETS[difficulty].warning),0,1));ctx.stroke();ctx.restore();
+ ctx.restore();
 }
 }
 if(player){
-if(attackMove||player.order){ctx.save();ctx.setLineDash([5,7]);circle(player.x,player.y,ahriBase()?331.5:ATTACK.range,"#8af0d755",false,1);ctx.restore();}
-const focus=foes.find(e=>e.id===player.focus);if(focus)circle(focus.x,focus.y,focus.r+9,"#f7d184",false,2);
-ctx.strokeStyle=player.windup>0?"#f7d184":"#7ce8d0";ctx.lineWidth=4;ctx.beginPath();ctx.arc(player.x,player.y,32,-Math.PI/2,-Math.PI/2+TAU*(player.windup>0?1-player.windup/ATTACK.windup:1-player.attackTimer/(ATTACK.period-ATTACK.windup)));ctx.stroke();
-ctx.font="bold 10px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#c5eadf";ctx.fillText(player.root>0?`ROOTED ${player.root.toFixed(1)}s`:referenceSpell()?"DODGE":player.windup>0?"WINDUP":player.attackTimer>0?"RECOVERY":"READY",player.x,player.y+49);
+if(attackMove){ctx.save();ctx.setLineDash([5,7]);circle(player.x,player.y,ahriBase()?331.5:ATTACK.range,"#8af0d755",false,1);ctx.restore();}
 if(player.target){circle(player.target.x,player.target.y,13,"#7ee7d288",false,2);ctx.strokeStyle="#7ee7d288";ctx.beginPath();ctx.moveTo(player.target.x-8,player.target.y);ctx.lineTo(player.target.x+8,player.target.y);ctx.moveTo(player.target.x,player.target.y-8);ctx.lineTo(player.target.x,player.target.y+8);ctx.stroke();}
 const actors=[...foes,...allies,{isPlayer:true,x:player.x,y:player.y}].sort((a,b)=>a.y-b.y);
 for(const e of actors){
  if(e.isPlayer){
 drawChampion(player.x,player.y,player.facing,true,player.hitFlash>0,player.windup/ATTACK.windup,player.motion);
-circle(player.x,player.y,player.hitRadius,"#bcffe944",false,1);
 if(player.invuln>0)circle(player.x,player.y,25,"#ffe4ad",false,2);
 if(player.fox){for(let i=0;i<player.fox.count;i++){const a=time*3+i*TAU/3;circle(player.x+Math.cos(a)*25,player.y-20+Math.sin(a)*10,5,"#a4e6ff");}}
 ctx.fillStyle="#102d27";ctx.fillRect(player.x-22,player.y-86,44,4);ctx.fillStyle="#8ceebd";ctx.fillRect(player.x-22,player.y-86,44*player.hp/player.maxHp,4);
@@ -624,7 +615,7 @@ ctx.fillStyle="#102d27";ctx.fillRect(player.x-22,player.y-86,44,4);ctx.fillStyle
  }
  if(e.minion){
  drawMinionSwing(e);
- // Allied caster and enemy melee minion, with an auto-damage threshold on the bar.
+ // Red minion with an ordinary health bar.
  const minionArt=$("minionArt");
  if(!ahriCS()){
   ctx.save();ctx.translate(e.destination-80,e.y);ctx.save();ctx.scale(1,.45);circle(0,3,15,"#0007");ctx.restore();
@@ -632,12 +623,11 @@ ctx.fillStyle="#102d27";ctx.fillRect(player.x-22,player.y-86,44,4);ctx.fillStyle
  }
  ctx.save();ctx.translate(e.x,e.y-(e.moving?Math.abs(Math.sin(time*12+e.id))*2:0));ctx.save();ctx.scale(1,.45);circle(0,3,17,"#0007");ctx.restore();
  if(e.minionType==="siege")drawCannon(e);else if(minionArt.complete&&minionArt.naturalWidth){ctx.drawImage(minionArt,-24,-48,48,49);if(e.hit>0){ctx.globalAlpha=.4;circle(0,-26,16,"#fff0dc");}}else polygon(0,-10,14,5,Math.PI/2,e.hit?"#fff0dc":"#ac6a57","#dfb68c");drawCasterStaff(e);ctx.restore();
- const threshold=autoThreshold(e);const last=e.hp<=threshold;ctx.fillStyle="#13252b";ctx.fillRect(e.x-19,e.y-55,38,5);ctx.fillStyle=last?"#f8cf77":"#d9827d";ctx.fillRect(e.x-19,e.y-55,38*Math.max(0,e.hp/e.maxHp),5);ctx.fillStyle="#fff3bf";ctx.fillRect(e.x-19+38*threshold/e.maxHp,e.y-56,1,7);
- if(e.id===player.focus){ctx.font="bold 11px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=last?"#ffe09b":"#d6cec1";ctx.fillText(Math.ceil(e.hp),e.x,e.y-62);}continue;
+ ctx.fillStyle="#13252b";ctx.fillRect(e.x-19,e.y-55,38,5);ctx.fillStyle="#d9827d";ctx.fillRect(e.x-19,e.y-55,38*Math.max(0,e.hp/e.maxHp),5);continue;
 }drawChampion(e.x,e.y,e.pending?e.pending.angle:Math.atan2(player.y-e.y,player.x-e.x),false,e.hit>0,e.pending?1:0,time*7);
 if(e.charm>0){ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#ffb2df";ctx.fillText("♥ CHARMED",e.x,e.y-96);}
 ctx.fillStyle="#101e23";ctx.fillRect(e.x-25,e.y-86,50,5);ctx.fillStyle="#ff9290";ctx.fillRect(e.x-25,e.y-86,50*clamp(e.hp/e.maxHp,0,1),5);}
-for(const s of shots){const visualRadius=s.kind==="orb"?13:s.kind==="charm"?10:s.kind==="enemy"&&s.r>15?11:s.r;ctx.strokeStyle=(s.kind==="enemy"||s.kind==="enemyMinion")?"#f1797999":s.kind==="charm"?"#ffa8d999":"#7bf4e899";ctx.lineWidth=visualRadius*1.5;ctx.beginPath();ctx.moveTo(s.x-s.vx*.04,s.y-s.vy*.04);ctx.lineTo(s.x,s.y);ctx.stroke();if(s.kind==="enemy"&&s.r>15)circle(s.x,s.y,s.r,"#ffbda866",false,1);circle(s.x,s.y,visualRadius,(s.kind==="enemy"||s.kind==="enemyMinion")?"#ff9c85":s.kind==="charm"?"#ffb1df":s.kind==="r"?"#f5d47d":"#81fdf1");circle(s.x,s.y,visualRadius*1.7,(s.kind==="enemy"||s.kind==="enemyMinion")?"#fe626344":"#8df5dd44");}
+for(const s of shots){const visualRadius=s.kind==="orb"?13:s.kind==="charm"?10:s.kind==="enemy"&&s.r>15?11:s.r;ctx.strokeStyle=(s.kind==="enemy"||s.kind==="enemyMinion")?"#f1797999":s.kind==="charm"?"#ffa8d999":"#7bf4e899";ctx.lineWidth=visualRadius*1.5;ctx.beginPath();ctx.moveTo(s.x-s.vx*.04,s.y-s.vy*.04);ctx.lineTo(s.x,s.y);ctx.stroke();circle(s.x,s.y,visualRadius,(s.kind==="enemy"||s.kind==="enemyMinion")?"#ff9c85":s.kind==="charm"?"#ffb1df":s.kind==="r"?"#f5d47d":"#81fdf1");circle(s.x,s.y,visualRadius*1.7,(s.kind==="enemy"||s.kind==="enemyMinion")?"#fe626344":"#8df5dd44");}
 }
 for(const f of fx){ctx.globalAlpha=clamp(f.ttl/f.max,0,1);if(f.text){ctx.font="bold 15px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y);}else circle(f.x,f.y,f.r,f.color);}ctx.globalAlpha=1;
 if(state==="playing"&&(referenceSpell()||mode==="dodge"||mode==="lastHit"||mode==="lane"||mode==="skillshot"||mode==="bait")){ctx.font="700 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#b7d9d9aa";ctx.fillText(referenceSpell()?`${referenceSpell().name} · MOVE OR FLASH · ${Math.max(0,60-Math.floor(time))}s`:mode==="lane"?"FARM, EVADE AND TRADE · "+Math.max(0,60-Math.floor(time))+"s":mode==="bait"?baitLabel():mode==="skillshot"?"AIM WITH THE CURSOR · Q TO FIRE · "+Math.max(0,45-Math.floor(time))+"s":mode==="lastHit"?`${autoDamage()} AUTO DAMAGE · WAVE `+waves+(ahriCS()?` / 20 · GOLD ${stats.gold} · GOLD MISSED ${stats.missedGold}`:" / 5"):"SURVIVE "+Math.max(0,60-Math.floor(time))+"s",W/2,90);}
