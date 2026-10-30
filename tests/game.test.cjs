@@ -237,3 +237,7 @@ test('sweep warning pauses, resets, and its centre corridor is walkable across t
  for(let x=22;x<=1178;x+=20)assert.ok(world.pointWalkable({x,y:wall.gap}));
  g.pause();advance(g,2);assert.equal(wall.remaining,remaining);g.pause();g.reset('dodge');assert.equal(g.sweeps.length,0);g.disableSpawn();advance(g,13);assert.equal(g.sweeps.length,0);
 });
+
+test('kite feedback measures time ready in range without an active attack',()=>{
+ const {g}=boot();const e=foe(g);advance(g,1);assert.ok(g.stats.readyIdle>.99);g.attackOrder(e);const baseline=g.stats.readyIdle;advance(g,2);assert.ok(g.stats.readyIdle-baseline<.03);
+});
