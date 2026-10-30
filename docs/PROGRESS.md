@@ -1,69 +1,40 @@
-# League Mechanics God — Progress & Codex Handoff
+# Development progress — 2026-10-30
 
-**Updated:** 2026-10-30. **Canonical spec:** [PROJECT_BLUEPRINT.md](../PROJECT_BLUEPRINT.md).
+Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
-## Current state
+## Current playable state
 
-- The public repo's original HTML5 Canvas browser alpha remains in root index.html, game.js and style.css, supporting intended Dodge Trial and Kite Arena modes (source reviewed in the blueprint).
-- The blueprint correctly calls the alpha an unfinished playable prototype. A real, end-to-end browser gameplay test has **not** been reported as completed in this session.
-- An external League of Dodging GameMaker HTML5 export was inspected via two available source uploads (game.html and dodge.js). Third-party originals are intentionally **not** uploaded to public git.
-- reference/league-of-dodge/ now holds manifest.md, GAMEPLAY_ANALYSIS.md, README.md and a local-only preservation script. These are handoff artifacts, **not** a new production game.
-- The previously mentioned loldodge-all-updated.zip could not be retrieved by this session, nor could an exhaustive inventory of the user's Mac downloads be made. The local importer can produce the authoritative private ZIP manifest on that machine.
+Dodge Trial and Kite Arena run locally at http://localhost:8080. The repository was cloned into the `League-Mechanics-God` subdirectory of the original workspace, whose parent contains separate historical Unity research. Work is on `codex/controls-and-dodge`, based on `7de3430`.
 
-## Completed in this reference import
+## Completed: controls and collision foundation
 
-- Read and followed PROJECT_BLUEPRINT.md and AGENTS.md.
-- Verified the production root contains the initial application and retained those files untouched.
-- Inspected the uploaded original GameMaker HTML5 entry and compiled JavaScript.
-- Catalogued 9 named texture atlases, 2 named extension scripts, gameplay/object references, URLs, source hashes and the unavailable archive.
-- Authored independent, evidence-graded mechanics analysis, including kiting and dodge-scoring requirements.
-- Added a safe ZIP extraction/copy script with archive-slip guards, SHA-256 local manifest, private storage paths and optional atlas/script retrieval.
-- Added Git ignore protection for original reference binaries and ZIPs.
-- Published reference docs and code on main with real GitHub commits.
+- Persistent right-click attack orders chase the live target; newest movement/target command wins.
+- A + click travels and acquires targets in range, preferring units near the clicked destination.
+- Explicit windup → release → recovery: movement cancels uncommitted attacks; launched autos home to their target and survive movement. Stop with S.
+- Fixed 120 Hz simulation; swept relative-motion collision for missiles; nearest collision selection for piercing-free skillshots.
+- Dodges require an actual trajectory threat within 0.8 s before avoidance. Pulse/invulnerability blocks are separate; unrelated expired shots score zero.
+- Range, target, windup, cooldown/ready cues; results report released/cancelled autos, hits and blocks.
+- Blur/tab hiding pauses; restart clears state and restores the pause button label.
 
-## Tests actually performed
+Commit: first implementation commit immediately preceding the next feature commit (find with `git log --oneline`).
 
-| Check | Result | Notes |
-| --- | --- | --- |
-| GitHub repo and PROJECT_BLUEPRINT.md read | PASS | Direct GitHub connector |
-| Uploaded original HTML/JS static inspection | PASS | Source strings, object map, hashes |
-| GameMaker entry references loldoge/dodge.js | PASS | HTML source |
-| 9 atlas + 2 extension references identified | PASS | Compiled JS asset metadata |
-| ZIP presence in accessible session and Library search | FAIL / UNAVAILABLE | Not mounted or indexed; cannot claim contents |
-| External asset HTTP retrieval | NOT VERIFIED | Network unavailable in this working container; Mac option remains |
-| Importer execution on user's Mac and archive extraction | NOT RUN | User's Mac filesystem is inaccessible to GitHub connector |
-| Full game/browser play, 404 network check and timing test | NOT RUN | Cannot assert production readiness |
-| Original game file copy to GitHub | INTENTIONALLY SKIPPED | Third-party redistribution rights not established |
-| Existing game index.html/game.js/style.css changed | NO | Preserved by design |
+## Tests actually run
 
-## Known problems / risks
+- `node --test tests/game.test.cjs`: **10/10 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions.
+- `node --check game.js`: PASS.
+- Actual IAB browser at 1280×900: initial alpha started; revised Kite starts, accepts right-click/A+click/QWERF, shows all cooldowns, pauses and renders. Console warning/error capture empty. Additional dodge/browser verification follows next batch.
+- These automated tests are simulation regressions, not proof of cross-browser feel or a human 60-second playthrough.
 
-1. The own game's dodged counter may count unrelated expiring shots as player dodges (see blueprint); test and fix.
-2. Attack-move semantics, attack cancel and kiting cadence are not yet measured or validated at different frame rates.
-3. The alpha's visuals do not meet the project's MOBA readability goals.
-4. The missing archive might contain further minigames, graphics and dependencies; this reference library explicitly does not claim coverage.
-5. Third-party original graphics and compiled code cannot be republished or integrated without a suitable license.
+## Known limits
 
-## The next three highest-value actions (in order)
+- Original reference archives/art are absent from git by design. Read all reference docs/tools; use independent art and logic.
+- No public deployment verified. Local server only; no claims about GitHub Pages.
+- Current art remains primitive, hostile shots have no advance telegraph, no difficulty selection yet.
+- No obstacles/pathfinding, audio, last-hit drill or skillshot lab yet.
+- Attack range is center-to-center and calibrated for this arena, not a claim of exact LoL data.
 
-1. **Run and verify the existing alpha in a browser.** Serve project root locally using python3 -m http.server 8080, test mode selection, right-click input, A+click, QWERF, pause/resume and restart. Record console/network errors with reproducible steps. **Acceptance:** both modes start and finish/restart without blocking errors; any actual failures get fixed.
-2. **Repair the mechanic accuracy bottleneck.** Implement meaningful threat-based dodge counts and explicit attack windup/release/cancel/recovery, including targeting and range cues; add reproducible scenarios at 30/60/120 FPS. **Acceptance:** non-threatening shots do not count as dodges; pre-release move cancels damage; post-release move does not cancel committed projectile.
-3. **Import full Mac-side reference inventory when accessible.** Run the committed import_local_refs.py on the Mac with loldodge-all-updated.zip, check private local-inventory.md, compare ZIP game roots and missing files, and update the public manifest with verified *metadata*. **Acceptance:** every discovered ZIP entry inventoried, each missing dependency honestly marked and no unlicensed originals committed.
+## Next three actions
 
-
-## Importer/auditor verification addendum (2026-10-30)
-
-- The GitHub Actions workflow [Reference importer tests](https://github.com/statego2/League-Mechanics-God/actions/runs/41071003224) **completed successfully** after adding the dependency auditor tests. This ran Python compilation/unit tests on GitHub CI, **not on the user's Mac**.
-- A private, session-local partial ZIP was created from the two uploaded files preserving originals/dodge/game.html and originals/dodge/loldoge/dodge.js. ZIP integrity check passed. It was **not published to GitHub**.
-- Static relative-path check of the partial ZIP: the game.html script src resolves to the included loldoge/dodge.js; the nine sprite atlases named by GameMaker metadata are absent; both named extension scripts are absent.
-- Committed tools/audit_local_tree.py writes a private local-audit.md mapping HTML/CSS/known GameMaker dependencies to OK/MISSING/SERVER-ROOT/EXTERNAL/ESCAPES-ROOT. This can catalog additional games **after** the missing source ZIP is imported on the Mac.
-- A successful CI check is not equivalent to successful local ZIP retrieval, successful external downloads or playable browser testing.
-
-## Hard constraints for Codex
-
-- NO UNITY. Browser game first, free static hosting.
-- Do not overwrite root application from the GameMaker reference.
-- Do not push unlicensed third-party game code, art, ZIPs or collected analytics.
-- Keep end-user progress visible: build → play → test → improve → commit → update this document.
-- The reference analysis reflects static evidence, not observed exact League mechanics.
-- Report precise GitHub commit links and test results, not aspirational completion.
+1. Telegraph and difficulty presets with reproducible seeds; line/fan and delayed ground AoE. Acceptance: readable fixed-direction warning before fire, deterministic retry and blocks distinct from movement dodges.
+2. Original character silhouettes, walking/attack motion, terrain and impact cues. Acceptance: direction and hostile intent legible without imported assets.
+3. Last-hit practice after existing drill regressions pass. Acceptance: real minion attrition, CS vs misses and repeatable timing pressure.
