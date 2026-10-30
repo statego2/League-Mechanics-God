@@ -51,7 +51,7 @@ function enemy(x,y){return {id:++enemySeq,x,y,r:20,hp:mode==="kite"?88:58,maxHp:
 function addWave(){
  if(waves>=5)return;waves++;
  for(let i=0;i<3;i++){
-  const e=enemy(910+i*8,220+i*55);e.minion=true;e.r=14;e.hp=e.maxHp=88;e.speed=65;e.tick=1+i*.32;e.destination=waves%2?820:875;foes.push(e);
+  const e=enemy(910+i*8,200+i*65);e.minion=true;e.r=14;e.hp=e.maxHp=88;e.speed=65;e.tick=1+i*.32;e.destination=waves%2?820:875;foes.push(e);
  }
  notify("WAVE "+waves+" / 5 — TIME YOUR LAST HITS");
 }
