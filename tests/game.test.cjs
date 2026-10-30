@@ -644,3 +644,26 @@ test('Dodge visitors enter and cast with their full silhouettes inside the visib
   assert.ok(spawned>0,`no visible entry found near ${x},${y}`);
  }
 });
+
+test('directed projectile outcomes distinguish hits, avoided threats and harmless misses',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ function shot(y){const s=g.fire(400,y,400,0,'enemy',10,8,1.2);s.directed=true;s.spellName='EZREAL Q';return s;}
+ shot(g.player.y);advance(g,.6);
+ shot(100);advance(g,1.3);
+ shot(g.player.y);advance(g,.01);g.player.y=500;advance(g,1.3);
+ const outcomes=g.dodgeDirector.outcomes['EZREAL Q'];
+ assert.equal(outcomes.hit,1);assert.equal(outcomes.harmless,1);assert.equal(outcomes.avoided,1);assert.equal(g.dodged,1);
+});
+test('lethal directed hits are recorded before the result screen and in-flight phases remain unresolved',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.hp=1;
+ const pending=g.fire(100,100,1,0,'enemy',1,1,10);pending.directed=true;pending.spellName='LUX Q';
+ const lethal=g.fire(g.player.x-10,g.player.y,400,0,'enemy',10,8,1);lethal.directed=true;lethal.spellName='EZREAL Q';
+ g.update(1/120);assert.equal(g.state,'ended');assert.equal(g.dodgeDirector.outcomes['EZREAL Q'].hit,1);
+ assert.match(node('menuDescription').textContent,/EZREAL Q: 0 avoided \/ 1 hit/);assert.match(node('menuDescription').textContent,/1 unresolved phase/);
+});
+test('returning orb records two independent hit phases and never counts a hit as avoided',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const s=g.fire(400,g.player.y,775,0,'enemyOrb',35,50,450/775);
+ Object.assign(s,{phase:'out',phaseHit:false,anchor:{x:400,y:g.player.y},casterId:-999,directed:true,spellName:'AHRI Q'});
+ advance(g,1.5);assert.equal(g.dodgeDirector.outcomes['AHRI Q'].hit,2);assert.equal(g.dodgeDirector.outcomes['AHRI Q'].avoided,0);
+});
