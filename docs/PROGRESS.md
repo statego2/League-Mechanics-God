@@ -159,6 +159,12 @@ Kite records now prefer a completed run, then the fastest victory; before the fi
 - Fixed non-piercing player projectile ordering to use earliest swept-circle contact instead of nearest target center. Boundary and ordering tests cover hits just inside/outside both champion/minion radii. Expert is the default, and the synthetic sweeping gap pattern again overlaps the Lux/Ezreal Dodge spells; its extra 45-damage bullets are training-only, not a real LoL spell. Difficulty choice remains available. Dodge local records are versioned separately.
 - `node --test tests/*.test.cjs`: **90/90 PASS**, including hitbox boundaries, collision order and the restored sweep. Browser smoke: expert is selected; Ahri and her ground circle render in Last-Hit. A manual 60-second difficult Dodge run and complete human CS run are still unverified.
 
+## Ahri passive and minion mitigation (2026-10-30)
+
+- Ahri gains a fragment for each player minion kill, healing 35 at nine fragments; a champion takedown heals 75, capped by max HP. A champion takedown while Spirit Rush is active grants a charge up to three and keeps the recast window at least 10 seconds. Values are the level-1, no-AP reference approximation; real takedown attribution, level/AP scaling and full passive/ultimate interactions still require work.
+- Allied melee and caster damage now go through the target armor calculation, including current-health bonus damage. Current training minions have zero armor by default; minion simulation still uses scripted attackers and needs real bidirectional units and target selection.
+- `node --test tests/*.test.cjs`: **93/93 PASS**. Added tests for ninth CS heal, champion heal/cap, armored allied damage, and R charge gain.
+
 ## Current playable state
 
 Dodge Trial, Kite Arena and Last-Hit Lab are available in the visible menu locally at http://localhost:8080. The repository was cloned into the `League-Mechanics-God` subdirectory of the original workspace, whose parent contains separate historical Unity research. Work is on `codex/controls-and-dodge`, based on `7de3430`.
@@ -206,7 +212,7 @@ Commit: `89e7529`.
 
 ## Tests actually run
 
-- `node --test tests/*.test.cjs`: **90/90 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
+- `node --test tests/*.test.cjs`: **93/93 PASS**, executes real game source with a minimal DOM and seeded randomness. Covers cancellation/release, chase, rapid retarget, attack-move travel/selection, dodge vs block accounting, fast swept collision, homing/target exclusivity, 30/60/120 FPS cadence, pause/restart/blur and both end conditions; locked aim, line/fan/AoE sequence, ground threat scoring, seed reproducibility; full 15-minion unattended resolution, CS vs allied projectile kills, spell restrictions, held mouse retargeting and drill navigation; death immediately freezes unresolved hazards; Skillshot accuracy, safe target spawn, local records, full Bait success and failure, and artwork fallbacks.
 - `node --check game.js` and `git diff --check`: PASS.
 - Python reference tools: `python3 -m unittest discover -s reference/league-of-dodge/tools -p 'test_*.py'`: **7/7 PASS**.
 - HTTP server logs: app, JS and CSS return 200/304; initial missing favicon fixed with an original SVG icon.

@@ -371,3 +371,14 @@ test('Ahri charm respects champion and minion gameplay-radius boundaries',()=>{
 test('non-piercing skillshot hits the first collision, not the closest center',()=>{
  const {g}=boot('ahri');g.reset('kite');g.disableSpawn();const a=foe(g,790,g.player.y+62);a.hp=1000;const b={...a,id:99,x:800,y:g.player.y,hp:1000};g.setFoes([a,b]);g.fire(600,g.player.y,1000,0,'charm',80,30,1);g.update(.5);assert.equal(a.hp,1000);assert.equal(b.hp,920);assert.ok(b.charm>0);
 });
+
+test('Ahri heals on ninth minion last hit and champion takedown',()=>{
+ const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.player.hp=400;for(let i=0;i<9;i++){const e=g.enemy(900,300);e.minion=true;e.hp=1;g.damageEnemy(e,1);}assert.equal(g.player.essence,0);assert.equal(g.player.hp,435);g.reset('kite');g.disableSpawn();g.player.hp=550;const champ=foe(g,800);champ.hp=1;g.damageEnemy(champ,1);assert.equal(g.player.hp,590);
+});
+test('allied minion damage respects target armor',()=>{
+ const {g,node}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();const e=g.foes[0];e.x=e.destination;e.armor=100;e.tick=999;e.meleeTick=0;g.update(1/120);assert.ok(Math.abs(e.hp-(465-(11+465*.02)/2))<1e-8);
+});
+
+test('Ahri champion takedown adds a Spirit Rush charge during its active window',()=>{
+ const {g}=boot('ahri');g.reset('kite');g.disableSpawn();g.cast('r');advance(g,.4);const e=foe(g,800);e.hp=1;g.damageEnemy(e,1);assert.equal(g.player.rushCharges,3);assert.ok(g.player.rushWindow>10);
+});
