@@ -18,9 +18,15 @@ The user expects the game to look and feel like League of Dodge / League: a conv
 - Ranger now has a detailed sprite, mirrored facing, movement bob and windup tilt; this is one pose, not full directional or attack animation. Enemies and minions still need matching artwork. Enemy body clicks now select the ground-anchored target.
 - Browser smoke test: Kite Arena and Last-Hit Lab render the painted lane; Last-Hit Lab shows sprite, minions, health and HUD. No console warnings/errors in the final browser test. `node --test tests/game.test.cjs`: 20/20 pass, including elevated body selection. Full manual completion and cross-browser/performance checks remain outstanding.
 
+## Skillshot and records (2026-10-30)
+
+- Added Skillshot Lab: 45 seconds, three seeded moving targets, Q at 0.8s cooldown, W/F mobility, and a results breakdown of hits/shots/accuracy. Auto-attacks and E/R disabled in this drill. Q projectiles still in flight when the timer ends count as fired but not hit.
+- Local personal bests are recorded per drill and difficulty: Dodge points, Kite kills, Last-Hit CS, Skillshot hits. Storage failures are caught and do not interrupt play; seed is not part of the record key.
+- Tests: `node --test tests/game.test.cjs` 22/22 pass including accuracy, timer and storage failures. Browser smoke: Skillshot selected, Q raised SHOTS to 1, pause froze counters; full manual run not yet done.
+
 ## Current playable state
 
-Dodge Trial, Kite Arena and Last-Hit Lab run locally at http://localhost:8080. The repository was cloned into the `League-Mechanics-God` subdirectory of the original workspace, whose parent contains separate historical Unity research. Work is on `codex/controls-and-dodge`, based on `7de3430`.
+Dodge Trial, Kite Arena, Last-Hit Lab and Skillshot Lab run locally at http://localhost:8080. The repository was cloned into the `League-Mechanics-God` subdirectory of the original workspace, whose parent contains separate historical Unity research. Work is on `codex/controls-and-dodge`, based on `7de3430`.
 
 ## Completed: controls and collision foundation
 
@@ -68,12 +74,12 @@ Commit: `89e7529`.
 - Gameplay CI workflow added for pushes/PRs; remote run status has not been verified.
 - No public deployment verified. Local server only; no claims about GitHub Pages.
 - Visuals are original procedural vectors; further animation and sound polish remain.
-- No obstacles/pathfinding, audio, skillshot lab or combined lane pressure yet. Last-Hit Lab is timing practice without hostile enemy pressure.
+- No obstacles/pathfinding, audio or combined lane pressure yet. Last-Hit Lab is timing practice without hostile enemy pressure.
 - Attack range is center-to-center and calibrated for this arena, not a claim of exact LoL data.
 
 ## Next three actions
 
 1. Upgrade the camera, characters and environment to a convincing League-like three-quarter presentation, informed by direct gameplay observation; keep the three drills playable. Acceptance: visual depth, readable animated champion silhouettes, lane terrain and matching hitboxes.
 2. Build Bait → Dodge → CS on top of Last-Hit Lab. Acceptance: telegraphed enemy casts create a safe CS window; scoring distinguishes bait/dodge/CS and HP cost.
-3. Improve kite results and add local best records. Acceptance: auto damage / attack cadence feedback, storage failure never breaks play.
+3. Improve animation and combat feedback with directional sprite animations; check performance and visibility during a complete run.
 

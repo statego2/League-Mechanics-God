@@ -20,6 +20,7 @@ For a public URL, enable **GitHub Pages** in the repository Settings â†’ Pages â
 
 - **Dodge Trial:** survive 60 seconds of enemy skillshots. Track damage and dodges.
 - **Kite Arena:** defeat 10 enemies using movement, autos and abilities.
+- **Skillshot Lab:** aim Q at moving targets for 45 seconds; results show hits, shots and accuracy. W/F reposition.
 - **Last-Hit Lab:** time 28-damage auto attacks across 5 minion waves (15 possible CS). Allied caster projectiles damage minions; only your killing blow earns CS. Gold health bars mark last-hit range. Q/E/R are disabled in this drill; W/F remain available.
 
 ## Controls
@@ -45,6 +46,8 @@ Vanilla HTML5 Canvas + JavaScript + CSS, no third-party libraries and no copied 
 ## Repeatable encounters
 
 Choose Foundation, Standard or Expert before entering a drill. Restart reuses the same seed, so the same inputs produce the same encounter; the seed button changes the next run. Enemies lock their aim during a visible warning before firing line/fan missiles. Dodge Trial also includes delayed circular ground impacts. Move out before the ring fills.
+
+Results store a local best for each drill and difficulty in this browser; unavailable storage does not prevent play.
 
 ## Mechanics and checks
 

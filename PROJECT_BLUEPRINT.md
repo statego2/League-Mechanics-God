@@ -4,7 +4,7 @@
 **Repository:** https://github.com/statego2/League-Mechanics-God  
 **Document role:** The project's main vision and execution document. Read this before deciding what to build next.  
 **Updated:** 30 October 2026  
-**Current reality:** A browser alpha now includes Dodge Trial, Kite Arena and a foundational Last-Hit Lab. Controls, telegraphs and scoring have regression coverage; the full intended game remains in development. See docs/PROGRESS.md for verified scope.
+**Current reality:** A browser alpha now includes Dodge Trial, Kite Arena, Skillshot Lab and a foundational Last-Hit Lab. Controls, telegraphs and scoring have regression coverage; the full intended game remains in development. See docs/PROGRESS.md for verified scope.
 
 ---
 
@@ -57,7 +57,7 @@ The game should develop skills that transfer to LoL:
 | Bait → Dodge → CS | Invite enemy spell, evade, then last-hit safely | Correct bait, safe dodge, secured CS, time/HP cost |
 | Lane Scenario | Perform several mechanics while trading around a minion wave | Consistency across movement, trading, dodges, CS |
 
-**Current alpha:** Dodge Trial, Kite Arena and a foundational Last-Hit Lab (5 waves, 15 CS, allied projectile attrition). Skillshot Lab, Bait → Dodge → CS and Lane Scenario remain future features.
+**Current alpha:** Dodge Trial, Kite Arena, Skillshot Lab and a foundational Last-Hit Lab (5 waves, 15 CS, allied projectile attrition). Skillshot Lab, Bait → Dodge → CS and Lane Scenario remain future features.
 
 ## 4. Constraints and product decisions
 

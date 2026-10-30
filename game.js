@@ -15,22 +15,35 @@ function segmentDistance(ax,ay,bx,by){const dx=bx-ax,dy=by-ay;const t=clamp(-(ax
 function threatening(s){const v2=s.vx*s.vx+s.vy*s.vy;if(!v2)return false;const t=((player.x-s.x)*s.vx+(player.y-s.y)*s.vy)/v2;return t>0&&t<=Math.min(.8,s.ttl)&&Math.hypot(s.x+s.vx*t-player.x,s.y+s.vy*t-player.y)<=s.r+player.r*.75;}
 const CD={q:3,w:6,e:9,r:15,f:18};
 let state="menu",mode="dodge",time=0,last=0,kills=0,dodged=0,spawn=0,aim={x:W/2+120,y:H/2},mouse={x:W/2,y:H/2},player,foes=[],shots=[],fx=[],keys=new Set(),attackMove=false,toastTime=0,enemySeq=0,stats;
-function reset(nextMode){mode=nextMode;time=0;kills=0;dodged=0;spawn=0;enemySeq=0;rng=seed;hazards=[];waves=0;stats={released:0,cancelled:0,hits:0,blocked:0,damage:0,moving:0,autoDamage:0,missed:0};accumulator=0;foes=[];shots=[];fx=[];keys.clear();attackMove=false;player={x:W/2,y:H/2,r:17,hp:160,maxHp:160,speed:270,target:null,focus:null,order:null,facing:0,motion:0,hitFlash:0,attackTimer:0,windup:0,windupTarget:null,cd:{q:0,w:0,e:0,r:0,f:0},invuln:0,flashTrail:0};state="playing";ui.pause.textContent="PAUSE P";$("encounterValue").textContent=difficulty.toUpperCase()+" · SEED "+seed;ui.overlay.classList.add("hidden");ui.pause.disabled=false;ui.restart.disabled=false;$("settings").hidden=false;ui.mode.textContent=mode==="dodge"?"DODGE TRIAL":mode==="lastHit"?"LAST-HIT LAB":"KITE ARENA";$("killsLabel").textContent=mode==="lastHit"?"CS":"KILLS";$("dodgedLabel").textContent=mode==="lastHit"?"MISSED":"DODGED";updateUI();}
+function reset(nextMode){mode=nextMode;time=0;kills=0;dodged=0;spawn=0;enemySeq=0;rng=seed;hazards=[];waves=0;stats={released:0,cancelled:0,hits:0,blocked:0,damage:0,moving:0,autoDamage:0,missed:0,skillShots:0,skillHits:0};accumulator=0;foes=[];shots=[];fx=[];keys.clear();attackMove=false;player={x:W/2,y:H/2,r:17,hp:160,maxHp:160,speed:270,target:null,focus:null,order:null,facing:0,motion:0,hitFlash:0,attackTimer:0,windup:0,windupTarget:null,cd:{q:0,w:0,e:0,r:0,f:0},invuln:0,flashTrail:0};state="playing";ui.pause.textContent="PAUSE P";$("encounterValue").textContent=difficulty.toUpperCase()+" · SEED "+seed;ui.overlay.classList.add("hidden");ui.pause.disabled=false;ui.restart.disabled=false;$("settings").hidden=false;ui.mode.textContent=mode==="dodge"?"DODGE TRIAL":mode==="lastHit"?"LAST-HIT LAB":mode==="skillshot"?"SKILLSHOT LAB":"KITE ARENA";$("killsLabel").textContent=mode==="lastHit"?"CS":mode==="skillshot"?"HITS":"KILLS";$("dodgedLabel").textContent=mode==="lastHit"?"MISSED":mode==="skillshot"?"SHOTS":"DODGED";updateUI();}
 function showMenu(title,desc,finished=false){attackMove=false;ui.pause.disabled=true;state=finished?"ended":"menu";ui.overlay.classList.remove("hidden");ui.title.innerHTML=title;ui.desc.textContent=desc;ui.buttons.hidden=false;ui.foot.hidden=false;ui.resume.hidden=true;$("settings").hidden=false;ui.pause.textContent="PAUSE P";}
 function pause(){attackMove=false;if(state==="playing"){state="paused";ui.overlay.classList.remove("hidden");ui.title.innerHTML="PAUSED<span>.</span>";ui.desc.textContent="Take a moment, then return to the arena.";ui.buttons.hidden=true;ui.foot.hidden=true;ui.resume.hidden=false;$("settings").hidden=true;ui.pause.textContent="RESUME P";}else if(state==="paused"){state="playing";ui.overlay.classList.add("hidden");ui.pause.textContent="PAUSE P";}}
+// Records are local and partitioned by drill and difficulty; storage can be unavailable.
+function saveRecord(value){
+ try{
+  const key="lmg.best.v1."+mode+"."+difficulty;
+  const previous=Number(window.localStorage.getItem(key));
+  const best=Math.max(Number.isFinite(previous)?previous:0,value);
+  window.localStorage.setItem(key,String(best));return best;
+ }catch{return null;}
+}
 function end(win){
  if(state!=="playing")return;
  if(mode==="lastHit"){for(const e of foes)if(e.alive&&e.minion){e.alive=false;stats.missed++;}}
  updateUI();
  const score=mode==="dodge"?Math.round(time*10+dodged*15):kills*100+Math.round(player.hp);
  let description;
- if(mode==="lastHit")description=`${kills} / 15 CS · ${stats.missed} missed · ${stats.released} autos · ${stats.cancelled} cancelled. Gold bars mark last-hit health (28 damage).`;
+ if(mode==="skillshot")description=`${stats.skillHits} / ${stats.skillShots} skillshots hit · ${stats.skillShots?Math.round(stats.skillHits/stats.skillShots*100):0}% accuracy · ${kills} targets defeated.`;
+ else if(mode==="lastHit")description=`${kills} / 15 CS · ${stats.missed} missed · ${stats.released} autos · ${stats.cancelled} cancelled. Gold bars mark last-hit health (28 damage).`;
  else if(mode==="dodge")description=`Survived ${time.toFixed(1)}s · ${dodged} threats avoided · ${stats.hits} hits · ${stats.blocked} blocked · ${score} points.`;
  else description=`Defeated ${kills} enemies · ${(stats.autoDamage/Math.max(time,1)).toFixed(1)} auto DPS · ${stats.released} autos · ${stats.cancelled} cancelled · ${Math.round(stats.moving/Math.max(time,1)*100)}% moving · ${stats.hits} hits taken.`;
+ const recordValue=mode==="dodge"?score:mode==="lastHit"?kills:mode==="skillshot"?stats.skillHits:kills;
+ const best=saveRecord(recordValue);
+ if(best!==null)description+=` · Local best (${difficulty}): ${best} ${mode==="dodge"?"points":mode==="lastHit"?"CS":mode==="skillshot"?"hits":"kills"}.`;
  showMenu(win?"TRIAL <span>COMPLETE.</span>":"YOU <span>FELL.</span>",description,true);
 }
 function notify(s){ui.toast.textContent=s;ui.toast.classList.add("show");toastTime=1.35;}
-function updateUI(){ui.time.textContent=String(Math.floor(time/60)).padStart(2,"0")+":"+String(Math.floor(time%60)).padStart(2,"0");ui.kills.textContent=kills;ui.dodged.textContent=mode==="lastHit"?stats.missed:dodged;ui.health.textContent=Math.max(0,Math.ceil(player.hp))+" / "+player.maxHp;ui.fill.style.width=(100*clamp(player.hp/player.maxHp,0,1))+"%";for(const key of Object.keys(CD)){const locked=mode==="lastHit"&&["q","e","r"].includes(key);const cd=player.cd[key],el=$("cd"+key.toUpperCase());el.textContent=locked?"—":cd>0?cd.toFixed(cd<1?1:0):"";el.closest(".ability").classList.toggle("on-cd",locked||cd>0);}}
+function updateUI(){ui.time.textContent=String(Math.floor(time/60)).padStart(2,"0")+":"+String(Math.floor(time%60)).padStart(2,"0");ui.kills.textContent=mode==="skillshot"?stats.skillHits:kills;ui.dodged.textContent=mode==="skillshot"?stats.skillShots:mode==="lastHit"?stats.missed:dodged;ui.health.textContent=Math.max(0,Math.ceil(player.hp))+" / "+player.maxHp;ui.fill.style.width=(100*clamp(player.hp/player.maxHp,0,1))+"%";for(const key of Object.keys(CD)){const locked=(mode==="lastHit"&&["q","e","r"].includes(key)||mode==="skillshot"&&["e","r"].includes(key));const cd=player.cd[key],el=$("cd"+key.toUpperCase());el.textContent=locked?"—":cd>0?cd.toFixed(cd<1?1:0):"";el.closest(".ability").classList.toggle("on-cd",locked||cd>0);}}
 function burst(x,y,color,n=11){for(let i=0;i<n;i++){const a=cosmetic(0,TAU),v=cosmetic(50,200);fx.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,ttl:cosmetic(.25,.55),max:.55,color,r:cosmetic(1,3.8)});}}
 function number(x,y,value,color){fx.push({x,y:y-30,vx:0,vy:-38,ttl:.7,max:.7,color,text:String(value)});}
 function enemy(x,y){return {id:++enemySeq,x,y,r:20,hp:mode==="kite"?88:58,maxHp:mode==="kite"?88:58,speed:mode==="kite"?rand(75,108):rand(85,135),shoot:rand(.5,1.1),strafe:random()<.5?-1:1,spin:rand(0,TAU),hit:0,castCount:0,charge:0,pending:null,alive:true};}
@@ -49,6 +62,17 @@ function updateMinion(e,dt){
   const shot=fire(e.destination-80,e.y,380,0,"allied",damage,3,1);shot.targetId=e.id;
 
  }
+}
+function addTarget(){
+ if(foes.filter(e=>e.targetDummy&&e.alive).length>=3)return;
+ const e=enemy(rand(780,1040),rand(145,530));e.targetDummy=true;e.hp=e.maxHp=45;e.r=20;
+ e.anchorX=e.x;e.anchorY=e.y;e.phase=rand(0,TAU);e.speed=difficulty==="easy"?55:difficulty==="hard"?135:90;
+ foes.push(e);
+}
+function updateTarget(e,dt){
+ e.hit=Math.max(0,e.hit-dt);e.phase+=dt*e.speed/65;
+ e.x=clamp(e.anchorX+Math.sin(e.phase)*85,55,W-55);
+ e.y=clamp(e.anchorY+Math.sin(e.phase*.57)*45,105,H-85);
 }
 function addEnemy(){if(foes.length>= (mode==="kite"?5:PRESETS[difficulty].cap))return;const edge=Math.floor(rand(0,4));let x=edge===0?-30:edge===1?W+30:rand(70,W-70),y=edge===2?-30:edge===3?H+30:rand(90,H-90);foes.push(enemy(x,y));}
 function fire(x,y,vx,vy,kind,damage,r=8,life=4){shots.push({x,y,px:x,py:y,vx,vy,kind,damage,r,ttl:life,alive:true,hit:false,threat:false});return shots[shots.length-1];}
@@ -78,7 +102,7 @@ if(!e||!e.alive||player.attackTimer>0||player.windup>0||dist(player,e)>ATTACK.ra
 player.target=null;player.windup=ATTACK.windup;player.windupTarget=e.id;
 player.facing=Math.atan2(e.y-player.y,e.x-player.x);
 }
-function attackOrder(e){if(player.windupTarget!==e.id)cancelAttack();player.order={type:"attack",id:e.id};player.focus=e.id;player.target=null;}
+function attackOrder(e){if(mode==="skillshot")return;if(player.windupTarget!==e.id)cancelAttack();player.order={type:"attack",id:e.id};player.focus=e.id;player.target=null;}
 function updateOrder(){
 const order=player.order;if(!order)return;
 if(order.type==="attack"){
@@ -95,14 +119,14 @@ if(order.type==="attack"){
 }
 }
 function nearestEnemy(x,y,r=Infinity){let best=null,bd=r;for(const e of foes)if(e.alive){const ground=Math.hypot(e.x-x,e.y-y);const body=e.minion?ground:Math.hypot(e.x-x,e.y-31-y);const d=Math.min(ground,body);if(d<bd){best=e;bd=d;}}return best;}
-function cast(key){if(state!=="playing"||player.cd[key]>0)return;if(mode==="lastHit"&&["q","e","r"].includes(key)){notify("LAST-HIT LAB — USE AUTO ATTACKS (28 DAMAGE)");return;}const a=Math.atan2(aim.y-player.y,aim.x-player.x),d={x:Math.cos(a),y:Math.sin(a)};cancelAttack();player.cd[key]=CD[key];if(key==="q"){fire(player.x+d.x*24,player.y+d.y*24,d.x*770,d.y*770,"q",45,10,1);burst(player.x,player.y,"#76ffff",7);}
+function cast(key){if(state!=="playing"||player.cd[key]>0)return;if((mode==="lastHit"&&["q","e","r"].includes(key))||(mode==="skillshot"&&["e","r"].includes(key))){notify(mode==="skillshot"?"SKILLSHOT LAB — AIM WITH Q":"LAST-HIT LAB — USE AUTO ATTACKS (28 DAMAGE)");return;}const a=Math.atan2(aim.y-player.y,aim.x-player.x),d={x:Math.cos(a),y:Math.sin(a)};cancelAttack();player.cd[key]=mode==="skillshot"&&key==="q"?.8:CD[key];if(key==="q"){if(mode==="skillshot")stats.skillShots++;fire(player.x+d.x*24,player.y+d.y*24,d.x*770,d.y*770,"q",45,10,1);burst(player.x,player.y,"#76ffff",7);}
 if(key==="w"||key==="f"){const len=key==="w"?135:240;const x=player.x,y=player.y;player.x=clamp(player.x+d.x*len,25,W-25);player.y=clamp(player.y+d.y*len,65,H-38);player.target=null;player.focus=null;player.order=null;player.windup=0;player.invuln=key==="w"?.26:.16;for(let i=0;i<13;i++)fx.push({x:x+(player.x-x)*i/13,y:y+(player.y-y)*i/13,vx:cosmetic(-20,20),vy:cosmetic(-20,20),ttl:.35,max:.35,color:key==="f"?"#f8cf7c":"#74f0eb",r:cosmetic(2,6)});}
 if(key==="e"){for(const foe of foes)if(foe.alive&&dist(player,foe)<175)damageEnemy(foe,38);for(const s of shots)if(s.kind==="enemy"&&dist(player,s)<165){s.alive=false;stats.blocked++;}burst(player.x,player.y,"#85fbe4",28);}
 if(key==="r"){for(const offset of [-.35,-.18,0,.18,.35]){const v=a+offset;fire(player.x+Math.cos(v)*25,player.y+Math.sin(v)*25,Math.cos(v)*630,Math.sin(v)*630,"r",32,8,1.4);}}
 updateUI();}
 function moveTo(x,y){cancelAttack();attackMove=false;player.order=null;player.target={x:clamp(x,20,W-20),y:clamp(y,60,H-35)};player.focus=null;}
-function update(dt){if(state!=="playing")return;time+=dt;if((mode==="dodge"||mode==="lastHit")&&time>=60){end(true);return;}
-spawn-=dt;if(spawn<=0){if(mode==="lastHit")addWave();else addEnemy();spawn=(mode==="dodge"?Math.max(1.35,3.5-time*.026):Math.max(.9,1.6-time*.015))*PRESETS[difficulty].spawn;if(mode==="lastHit")spawn=10;}
+function update(dt){if(state!=="playing")return;time+=dt;if(((mode==="dodge"||mode==="lastHit")&&time>=60)||(mode==="skillshot"&&time>=45)){end(true);return;}
+spawn-=dt;if(spawn<=0){if(mode==="lastHit")addWave();else if(mode==="skillshot")addTarget();else addEnemy();spawn=(mode==="dodge"?Math.max(1.35,3.5-time*.026):Math.max(.9,1.6-time*.015))*PRESETS[difficulty].spawn;if(mode==="lastHit")spawn=10;else if(mode==="skillshot")spawn=.8;}
 for(const k of Object.keys(CD))player.cd[k]=Math.max(0,player.cd[k]-dt);player.hitFlash=Math.max(0,player.hitFlash-dt);player.invuln=Math.max(0,player.invuln-dt);player.attackTimer=Math.max(0,player.attackTimer-dt);
 updateOrder();
 const oldX=player.x,oldY=player.y;
@@ -113,7 +137,7 @@ if(player.windup>0){player.windup=Math.max(0,player.windup-dt);if(player.windup<
 if(player.target&&player.windup<=0){const dx=player.target.x-player.x,dy=player.target.y-player.y,len=Math.hypot(dx,dy);if(len<1)player.target=null;else{const step=Math.min(player.speed*dt,len);player.x+=dx/len*step;player.y+=dy/len*step;player.facing=Math.atan2(dy,dx);stats.moving+=dt;player.motion+=dt*15;}}
 player.x=clamp(player.x,22,W-22);player.y=clamp(player.y,59,H-36);
 const previousFoes=new Map(foes.map(e=>[e.id,{x:e.x,y:e.y}]));
-for(const e of foes){if(!e.alive)continue;if(e.minion){updateMinion(e,dt);continue;}e.hit=Math.max(0,e.hit-dt);e.spin+=dt*e.strafe;const dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;let vx=0,vy=0;if(d>230){vx=dx/d;vy=dy/d;}else if(d<155){vx=-dx/d;vy=-dy/d;}vx+=(-dy/d)*Math.sin(e.spin)*.5;vy+=(dx/d)*Math.sin(e.spin)*.5;const mag=Math.hypot(vx,vy)||1;if(!e.pending){e.x=clamp(e.x+vx/mag*e.speed*dt,25,W-25);e.y=clamp(e.y+vy/mag*e.speed*dt,60,H-35);e.shoot-=dt;if(e.shoot<=0&&d<650)shootEnemy(e);}else{e.charge-=dt;if(e.charge<=0)releaseEnemy(e);}if(d<e.r+player.r+1)takeHit(11);}
+for(const e of foes){if(!e.alive)continue;if(e.minion){updateMinion(e,dt);continue;}if(e.targetDummy){updateTarget(e,dt);continue;}e.hit=Math.max(0,e.hit-dt);e.spin+=dt*e.strafe;const dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;let vx=0,vy=0;if(d>230){vx=dx/d;vy=dy/d;}else if(d<155){vx=-dx/d;vy=-dy/d;}vx+=(-dy/d)*Math.sin(e.spin)*.5;vy+=(dx/d)*Math.sin(e.spin)*.5;const mag=Math.hypot(vx,vy)||1;if(!e.pending){e.x=clamp(e.x+vx/mag*e.speed*dt,25,W-25);e.y=clamp(e.y+vy/mag*e.speed*dt,60,H-35);e.shoot-=dt;if(e.shoot<=0&&d<650)shootEnemy(e);}else{e.charge-=dt;if(e.charge<=0)releaseEnemy(e);}if(d<e.r+player.r+1)takeHit(11);}
 if(state!=="playing")return;
 for(const h of hazards){
  if(dist(player,h)<=h.r+player.r*.75)h.threat=true;
@@ -143,7 +167,7 @@ for(const s of shots){if(!s.alive)continue;
   }
   if(hit){
    if(s.kind==="allied"){hit.hp-=s.damage;hit.hit=.08;if(hit.hp<=0){hit.alive=false;stats.missed++;number(hit.x,hit.y,"MISSED","#eaa7a1");}}
-   else{if(s.kind==="auto")stats.autoDamage+=Math.min(hit.hp,s.damage);damageEnemy(hit,s.damage);}s.alive=false;
+   else{if(s.kind==="q"&&mode==="skillshot")stats.skillHits++;if(s.kind==="auto")stats.autoDamage+=Math.min(hit.hp,s.damage);damageEnemy(hit,s.damage);}s.alive=false;
   }
   if(s.ttl<=0||s.x<0||s.x>W||s.y<0||s.y>H)s.alive=false;
  }
@@ -234,17 +258,17 @@ if(player.invuln>0)circle(player.x,player.y,25,"#ffe4ad",false,2);
 ctx.fillStyle="#102d27";ctx.fillRect(player.x-22,player.y-86,44,4);ctx.fillStyle="#8ceebd";ctx.fillRect(player.x-22,player.y-86,44*player.hp/player.maxHp,4);
 }
 for(const f of fx){ctx.globalAlpha=clamp(f.ttl/f.max,0,1);if(f.text){ctx.font="bold 15px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y);}else circle(f.x,f.y,f.r,f.color);}ctx.globalAlpha=1;
-if(state==="playing"&&(mode==="dodge"||mode==="lastHit")){ctx.font="700 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#b7d9d9aa";ctx.fillText(mode==="lastHit"?"28 AUTO DAMAGE · GOLD HEALTH = LAST HIT · WAVE "+waves+" / 5":"SURVIVE "+Math.max(0,60-Math.floor(time))+"s",W/2,90);}
+if(state==="playing"&&(mode==="dodge"||mode==="lastHit"||mode==="skillshot")){ctx.font="700 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#b7d9d9aa";ctx.fillText(mode==="skillshot"?"AIM WITH THE CURSOR · Q TO FIRE · "+Math.max(0,45-Math.floor(time))+"s":mode==="lastHit"?"28 AUTO DAMAGE · GOLD HEALTH = LAST HIT · WAVE "+waves+" / 5":"SURVIVE "+Math.max(0,60-Math.floor(time))+"s",W/2,90);}
 }
 function loop(ts){const dt=last?Math.min((ts-last)/1000,.25):0;last=ts;if(state==="playing"){accumulator+=dt;while(accumulator>=STEP&&state==="playing"){update(STEP);accumulator-=STEP;}}else accumulator=0;render();requestAnimationFrame(loop);}
 function coords(e){const b=cv.getBoundingClientRect();return{x:(e.clientX-b.left)*W/b.width,y:(e.clientY-b.top)*H/b.height};}
 cv.addEventListener("contextmenu",e=>e.preventDefault());
-cv.addEventListener("pointermove",e=>{mouse=coords(e);aim=mouse;if(state==="playing"&&(e.buttons&2)){const t=nearestEnemy(mouse.x,mouse.y,30);if(t)attackOrder(t);else moveTo(mouse.x,mouse.y);}});
+cv.addEventListener("pointermove",e=>{mouse=coords(e);aim=mouse;if(state==="playing"&&(e.buttons&2)){if(mode==="skillshot"){moveTo(mouse.x,mouse.y);return;}const t=nearestEnemy(mouse.x,mouse.y,30);if(t)attackOrder(t);else moveTo(mouse.x,mouse.y);}});
 cv.addEventListener("pointerdown",e=>{if(state!=="playing")return;e.preventDefault();mouse=coords(e);aim=mouse;
-if(e.button===2){attackMove=false;const t=nearestEnemy(mouse.x,mouse.y,30);if(t)attackOrder(t);else moveTo(mouse.x,mouse.y);}
+if(e.button===2){attackMove=false;if(mode==="skillshot"){moveTo(mouse.x,mouse.y);return;}const t=nearestEnemy(mouse.x,mouse.y,30);if(t)attackOrder(t);else moveTo(mouse.x,mouse.y);}
 else if(e.button===0){if(attackMove){cancelAttack();player.order={type:"attackMove",x:clamp(mouse.x,22,W-22),y:clamp(mouse.y,59,H-36)};player.target=null;player.focus=null;attackMove=false;notify("ATTACK MOVE");}else{const t=nearestEnemy(mouse.x,mouse.y,24);if(t)attackOrder(t);}}
 });
-window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(e.repeat)return;if(["q","w","e","r","f","a","s","p","escape"].includes(k))e.preventDefault();if(k==="p"||k==="escape"){if(state==="playing"||state==="paused")pause();return;}if(state!=="playing"||e.repeat)return;if(k==="s"){moveTo(player.x,player.y);return;}if(k==="a"){attackMove=true;notify("ATTACK MOVE — LEFT CLICK");return;}if(CD[k])cast(k);});
+window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(e.repeat)return;if(["q","w","e","r","f","a","s","p","escape"].includes(k))e.preventDefault();if(k==="p"||k==="escape"){if(state==="playing"||state==="paused")pause();return;}if(state!=="playing"||e.repeat)return;if(k==="s"){moveTo(player.x,player.y);return;}if(k==="a"&&mode==="skillshot"){notify("SKILLSHOT LAB — AIM WITH Q");return;}if(k==="a"){attackMove=true;notify("ATTACK MOVE — LEFT CLICK");return;}if(CD[k])cast(k);});
 window.addEventListener("blur",()=>{if(state==="playing")pause();});
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&state==="playing")pause();});
 $("difficulty").addEventListener("change",e=>{difficulty=e.target.value;});
