@@ -8,3 +8,4 @@
 .menu{max-height:100%;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#4e7468 transparent}
 @media(min-width:701px){.menu{width:min(680px,100%)}.mode-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}.mode-card:nth-child(odd):last-child{grid-column:1 / -1}.menu h2{font-size:clamp(36px,4vw,54px)}}
 @media(max-width:700px){.top-actions{flex-wrap:wrap;justify-content:flex-end}.top-actions #soundBtn{font-size:9px;padding:7px 6px}}
+.settings{flex-wrap:wrap}

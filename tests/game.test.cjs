@@ -217,3 +217,14 @@ test('retry removes stale toast feedback',()=>{
 test('fatal contact stops later enemies from acting in the same simulation step',()=>{
  const {g}=boot();g.player.hp=1;const a=g.enemy(g.player.x,g.player.y),b=g.enemy(g.player.x+100,g.player.y);a.speed=b.speed=0;a.shoot=999;b.shoot=-1;g.setFoes([a,b]);advance(g,.02);assert.equal(g.state,'ended');assert.equal(g.shots.length,0);
 });
+
+test('attack-speed presets change cadence without affecting frame-rate independence',()=>{
+ for(const [preset,expected] of [['slow',3],['standard',6],['fast',8]]){for(const fps of [30,60,120]){const {g,node}=boot();node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();const e=foe(g);g.attackOrder(e);g.loop(1000);for(let i=1;i<=fps*4;i++)g.loop(1000+i*1000/fps);assert.equal(g.stats.released,expected,`${preset} ${fps}`);}}
+});
+test('personal bests are separated by attack-speed preset',()=>{
+ const {g,node,window}=boot(),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};g.reset('skillshot');g.stats.skillHits=4;g.end(true);node('attackSpeed').listeners.change({target:{value:'fast'}});g.reset('skillshot');g.stats.skillHits=2;g.end(true);assert.equal(values.get('lmg.best.v1.skillshot.normal'),'4');assert.equal(values.get('lmg.best.v1.skillshot.normal.as_fast'),'2');
+});
+
+test('target escaping during windup is reported as a cancelled attack, without consuming cooldown',()=>{
+ const {g}=boot();const e=foe(g,800);g.attackOrder(e);advance(g,.05);e.x=1100;advance(g,.2);assert.equal(g.stats.cancelled,1);assert.equal(g.stats.released,0);assert.equal(g.player.attackTimer,0);
+});
