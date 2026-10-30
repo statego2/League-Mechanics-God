@@ -23,6 +23,36 @@ function boot(preset="standard", options={}){
 }
 function foe(g,x=800,y=337.5){const e=g.enemy(x,y);e.speed=0;e.shoot=999;e.hp=e.maxHp=10000;g.setFoes([e]);return e;}
 function advance(g,seconds){for(let i=0;i<Math.round(seconds*120);i++)g.update(1/120);}
+test('Dodge HUD shows hits taken instead of the unrelated kill count',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.equal(node('killsLabel').textContent,'HITS');
+ g.fire(g.player.x-5,g.player.y,1,0,'enemy',10,8,1);g.update(1/120);assert.equal(node('killsValue').textContent,1);
+ g.reset('kite');assert.equal(node('killsLabel').textContent,'KILLS');
+});
+test('rare area casts count a threatened player who enters and exits before impact',()=>{
+ for(const kind of ['orianna','malphite']){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.x=950;g.player.y=300;
+  const h={x:600,y:300,r:kind==='orianna'?207.5:162.5,ttl:.2,max:.2,casting:true,directed:true,threat:false,spellName:kind==='orianna'?'ORIANNA R':'MALPHITE R'};
+  if(kind==='orianna'){h.orianna=true;}else{h.malphite=true;h.target={x:600,y:300};h.start={x:600,y:300};h.remaining=.2;}
+  g.hazards.push(h);advance(g,.025);g.player.x=700;advance(g,.025);g.player.x=950;advance(g,.2);
+  assert.equal(g.dodged,1,kind);assert.equal(g.dodgeDirector.outcomes[h.spellName].avoided,1,kind);assert.equal(g.stats.hits,0,kind);
+ }
+});
+test('rare area casts that never threaten the player remain harmless',()=>{
+ for(const kind of ['orianna','malphite']){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.x=950;g.player.y=300;
+  const h={x:600,y:300,r:kind==='orianna'?207.5:162.5,ttl:.1,max:.1,casting:true,directed:true,threat:false,spellName:kind==='orianna'?'ORIANNA R':'MALPHITE R'};
+  if(kind==='orianna'){h.orianna=true;}else{h.malphite=true;h.target={x:600,y:300};h.start={x:600,y:300};h.remaining=.1;}
+  g.hazards.push(h);advance(g,.15);assert.equal(g.dodged,0,kind);assert.equal(g.dodgeDirector.outcomes[h.spellName].harmless,1,kind);
+ }
+});
+test('entering a rare area at impact records a hit, not an avoidance',()=>{
+ for(const kind of ['orianna','malphite']){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.x=950;g.player.y=300;
+  const h={x:600,y:300,r:kind==='orianna'?207.5:162.5,ttl:.1,max:.1,casting:true,directed:true,threat:false,spellName:kind==='orianna'?'ORIANNA R':'MALPHITE R'};
+  if(kind==='orianna'){h.orianna=true;}else{h.malphite=true;h.target={x:600,y:300};h.start={x:600,y:300};h.remaining=.1;}
+  g.hazards.push(h);advance(g,.025);g.player.x=700;advance(g,.125);assert.equal(g.dodged,0,kind);assert.equal(g.stats.hits,1,kind);assert.equal(g.dodgeDirector.outcomes[h.spellName].hit,1,kind);
+ }
+});
 test('minion death grace preserves player last-hit credit and retargets only after death',()=>{
  const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();
  const a=g.allies[0],victim=g.foes[0],next=g.foes[1];g.setAllies([a]);g.setFoes([victim,next]);
