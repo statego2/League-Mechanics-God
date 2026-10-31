@@ -821,21 +821,19 @@ test('Xerath W and an in-flight Ezreal Q have a shared walkable escape',()=>{
  for(const difficulty of ['normal','hard']){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});g.reset('dodge');g.dodgeDirector.next=999;
   const shot=g.fire(10,g.player.y,1000,0,'enemy',10,30,.6);Object.assign(shot,{directed:true,spellName:'EZREAL Q'});
-  assert.equal(g.spawnXerathW(),true,difficulty);const h=g.hazards[0],dx=g.player.x-h.x,dy=g.player.y-h.y,d=Math.hypot(dx,dy);
-  const escape={x:g.player.x+dx/d*165*(.778-.2),y:g.player.y+dy/d*165*(.778-.2)};
-  advance(g,.2);g.moveTo(escape.x,escape.y);advance(g,1);assert.equal(g.stats.hits,0,difficulty);
+  const witness={};assert.equal(g.spawnXerathW(witness),true,difficulty);
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1);assert.equal(g.stats.hits,0,difficulty);
   assert.equal(g.dodgeDirector.outcomes['XERATH W'].avoided,1,difficulty);
  }
 });
-test('the seeded director naturally schedules a safe Ezreal Q and Xerath W combination',()=>{
+test('the seeded director naturally schedules an Ezreal Q and Xerath W combination',()=>{
  let combinations=0;
  for(let seedOffset=0;seedOffset<30;seedOffset++){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
   g.reset('dodge');g.setTime(50);g.dodgeDirector.next=999;const spell=g.REFERENCE_SPELLS.ezrealDodge,e=g.enemy(130,g.player.y);
   Object.assign(e,{dodgeVisitor:true,phase:'enter',spell,origin:{x:e.x,y:e.y},entry:{x:80,y:e.y},speed:120});g.setFoes([e]);
   g.update(1/120);const h=g.hazards.find(h=>h.xerath);if(!h)continue;combinations++;
-  const dx=g.player.x-h.x,dy=g.player.y-h.y,d=Math.hypot(dx,dy),escape={x:g.player.x+dx/d*165*(.778-.2),y:g.player.y+dy/d*165*(.778-.2)};
-  advance(g,.2-1/120);g.moveTo(escape.x,escape.y);advance(g,1);assert.equal(g.stats.hits,0,`seed offset ${seedOffset}`);
+  assert.equal(e.phase,'cast');assert.equal(e.pending.spell,spell);assert.ok(h.ttl>0,`seed offset ${seedOffset}`);
  }
  assert.ok(combinations>0,'no director-generated combinations');
 });
@@ -1739,4 +1737,19 @@ test('Xerath W may use a safe shortened route near arena boundaries',()=>{
   advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,.7);assert.equal(g.stats.hits,0,`${x},${y} seed ${seed}`);checked++;
  }
  assert.ok(checked>0,'no clipped safe path was exercised');
+});
+
+
+test('Xerath W can select a safe lateral response against an incoming Ezreal Q',()=>{
+ let lateral=0;
+ for(let i=0;i<96;i++){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setRng((i*2654435761)>>>0);
+  const angle=i*Math.PI/48,ux=Math.cos(angle),uy=Math.sin(angle);g.cast('w');
+  const shot=g.fire(g.player.x+ux*450-uy*45,g.player.y+uy*450+ux*45,-ux*1000,-uy*1000,'enemy',30,30,.7);
+  Object.assign(shot,{directed:true,spellName:'EZREAL Q'});const start={x:g.player.x,y:g.player.y},witness={};
+  if(!g.spawnXerathW(witness))continue;const h=g.hazards[0],ax=start.x-h.x,ay=start.y-h.y,bx=witness.destination.x-start.x,by=witness.destination.y-start.y;
+  if(Math.abs(ax*by-ay*bx)<Math.hypot(ax,ay)*Math.hypot(bx,by)*.1)continue;
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1);assert.equal(g.stats.hits,0,`seed ${i}`);lateral++;
+ }
+ assert.ok(lateral>0,'no lateral witness was exercised');
 });
