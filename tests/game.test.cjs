@@ -771,6 +771,23 @@ test('director rejects a point-blank cast and accepts a walkable long-range side
  assert.equal(g.canEvadeDodgeCast({x:g.player.x-250,y:g.player.y},spell),false);
  assert.equal(g.canEvadeDodgeCast({x:g.player.x-460,y:g.player.y},spell),true);
 });
+test('straight-shot safety checks reject targets beyond projectile reach including hitboxes',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.x=900;g.player.y=337.5;
+ const spell=g.REFERENCE_SPELLS.ezrealDodge,reach=spell.range+spell.radius+g.player.hitRadius;
+ assert.equal(g.canEvadeDodgeCast({x:g.player.x-reach+1,y:g.player.y},spell),true);
+ assert.equal(g.canEvadeDodgeCast({x:g.player.x-reach-1,y:g.player.y},spell),false);
+});
+test('a visitor cancels its uncommitted cast when its target moves out of reach',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.x=1000;g.player.y=337.5;
+ const e=g.enemy(250,337.5);Object.assign(e,{dodgeVisitor:true,spell:g.REFERENCE_SPELLS.ezrealDodge,phase:'enter',origin:{x:e.x,y:e.y},entry:{x:e.x-50,y:e.y},speed:120});g.setFoes([e]);
+ advance(g,.05);assert.equal(e.phase,'exit');assert.equal(g.dodgeDirector.attempted,0);assert.equal(g.shots.length,0);
+});
+test('dodging a locked straight shot during its cast counts as an avoidance',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const e=g.enemy(100,337.5);Object.assign(e,{dodgeVisitor:true,spell:g.REFERENCE_SPELLS.ezrealDodge,phase:'enter',origin:{x:e.x,y:e.y},entry:{x:50,y:e.y},speed:120});g.setFoes([e]);
+ advance(g,.025);assert.equal(e.phase,'cast');g.player.y=500;advance(g,1.5);
+ assert.equal(g.stats.hits,0);assert.equal(g.dodged,1);assert.equal(g.dodgeDirector.outcomes['EZREAL Q'].avoided,1);
+});
 test('visitor abandons a cast if the player closes distance during its entry',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
  const e=g.enemy(400,300);Object.assign(e,{dodgeVisitor:true,spell:g.REFERENCE_SPELLS.ezrealDodge,phase:'enter',origin:{x:400,y:300},entry:{x:350,y:300},speed:120});g.setFoes([e]);

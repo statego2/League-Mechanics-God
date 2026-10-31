@@ -31,7 +31,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v12":mode==="dodge"?(ahriBase()?".director_v19":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
+function recordSuffix(){return ahriCS()?".cs_ahri_v12":mode==="dodge"?(ahriBase()?".director_v20":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 function recordLabel(){return difficulty+(attackPreset==="standard"?"":", "+ATTACK_PRESETS[attackPreset].label+" AS");}
@@ -458,6 +458,9 @@ function dodgeEscapeClear(origin,spell,destination){
 function canEvadeDodgeCast(origin,spell){
  const dx=player.x-origin.x,dy=player.y-origin.y,d=Math.hypot(dx,dy);
  if(d<1)return false;
+ // A straight projectile must be able to reach the player's current hitbox.
+ // The split shot can threaten beyond its main missile's straight path.
+ if(!spell.split&&d>spell.range+spell.radius+player.hitRadius)return false;
  const clearance=spell.radius+player.hitRadius+8;
  const available=spell.cast+Math.max(0,d-clearance)/spell.speed-.2;
  if(available<=0||player.speed*available<clearance)return false;
@@ -530,7 +533,7 @@ function updateDodgeVisitor(e,dt){
   const offset=e.spell.split?(random()<.5?-.32:.32):0,angle=Math.atan2(player.y-e.y,player.x-e.x)+offset,splitDistance=e.spell.split?dist(e,player)*Math.cos(offset):undefined;
   const isolated=!e.spell.split||(!shots.some(s=>s.alive&&s.directed)&&!hazards.some(h=>h.directed)&&!foes.some(other=>other!==e&&other.alive&&other.dodgeVisitor&&(other.phase==="enter"||other.phase==="cast")));
   const safe=isolated&&canEvadeDodgeCast(e,e.spell)&&(!e.spell.split||canEvadeVelkoz(e,angle,splitDistance,e.spell));
-  if(!safe)e.phase="exit";else{e.pending={angle,fan:false,spell:e.spell,splitDistance};e.charge=e.spell.cast;e.phase="cast";}
+  if(!safe)e.phase="exit";else{e.pending={angle,fan:false,spell:e.spell,splitDistance,threat:!e.spell.split};e.charge=e.spell.cast;e.phase="cast";}
  }else if(dist(e,finalGoal)<.1)e.alive=false;}
  }else if(e.phase==="cast"){
   e.charge-=dt;if(e.charge<=0){releaseEnemy(e);e.phase=e.spell.returning?"orbFlight":e.spell.hook?"hookFlight":"exit";}
@@ -567,7 +570,7 @@ function shootEnemy(e){
 }
 function releaseEnemy(e){
  const p=e.pending;if(!p)return;
- if(p.spell){const spec=p.spell;const shot=fire(e.x,e.y,Math.cos(p.angle)*spec.speed,Math.sin(p.angle)*spec.speed,spec.returning?"enemyOrb":"enemy",spec.returning?spec.raw:physicalDamage(spec.raw,spec.resist),spec.radius,spec.range/spec.speed);shot.root=spec.root;
+ if(p.spell){const spec=p.spell;const shot=fire(e.x,e.y,Math.cos(p.angle)*spec.speed,Math.sin(p.angle)*spec.speed,spec.returning?"enemyOrb":"enemy",spec.returning?spec.raw:physicalDamage(spec.raw,spec.resist),spec.radius,spec.range/spec.speed);shot.root=spec.root;shot.threat=!!p.threat;
   if(spec.returning){shot.phase="out";shot.phaseHit=false;shot.casterId=e.id;shot.anchor={x:e.x,y:e.y};e.orbShot=shot;}
   if(spec.split){shot.velkoz="main";shot.splitAngle=p.angle;shot.ttl=clamp((p.splitDistance??spec.speed*.6)/spec.speed,.25,spec.range/spec.speed);}
   if(spec.hook){shot.casterId=e.id;shot.anchor={x:e.x,y:e.y};e.orbShot=shot;}
