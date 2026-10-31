@@ -753,8 +753,8 @@ function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
   // Ahri's broad orb needs more room for the same 200 ms reaction allowance.
   // Distance is measured to centres; hit radii still permit contact at range.
   const angle=rand(0,TAU),distance=rand(340,spell.returning?520:470),p={x:player.x+Math.cos(angle)*distance,y:player.y+Math.sin(angle)*distance};
-  // A follow-up enters from farther away so the first cast has a readable
-  // response window before the next caster commits its own attack.
+  // Multi-phase follow-ups enter closer so they can overlap the remaining
+  // missile lifetime; commitment is still rechecked against every phase.
   const entryDistance=forcedSpell?followEntry:joiningMultiPhase?35:65,start={x:p.x+Math.cos(angle)*entryDistance,y:p.y+Math.sin(angle)*entryDistance};
   // Keep the entire caster silhouette on screen, including its raised sprite.
   const visible=q=>q.x>=60&&q.x<=W-60&&q.y>=145&&q.y<=H-30;
