@@ -1824,3 +1824,16 @@ test('Dodge director changes encounter spacing in bounded pressure and recovery 
  assert.ok(Math.abs(spike/stable-.8)<1e-10);assert.ok(Math.abs(recovery/stable-1.3)<1e-10);
  assert.ok(Math.abs(interval('easy',50)-interval('easy',78))<1e-10);
 });
+
+
+test('Velkoz split awards one dodge only after both threatened branches miss',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const group={hit:false,remaining:2,threatened:false};
+ for(const ttl of [.01,.03]){const s=g.fire(100,100,1,0,'enemy',10,5,ttl);Object.assign(s,{directed:true,spellName:'VELKOZ Q',velkoz:'child',group,threat:true});}
+ g.update(.02);assert.equal(g.dodged,0);g.update(.02);assert.equal(g.dodged,1);assert.equal(g.stats.hits,0);
+});
+test('Velkoz split awards no dodge when a later branch hits',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const group={hit:false,remaining:2,threatened:false};
+ const first=g.fire(100,100,1,0,'enemy',10,5,.01);Object.assign(first,{directed:true,spellName:'VELKOZ Q',velkoz:'child',group,threat:true});
+ const second=g.fire(g.player.x+100,g.player.y,-1000,0,'enemy',10,5,1);Object.assign(second,{directed:true,spellName:'VELKOZ Q',velkoz:'child',group,threat:true});
+ g.update(.02);assert.equal(g.dodged,0);g.update(.1);assert.equal(g.stats.hits,1);assert.equal(g.dodged,0);
+});
