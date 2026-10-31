@@ -110,7 +110,7 @@ function pause(){attackMove=false;if(state==="playing"||state==="paused"){last=0
 // Records are local and partitioned by drill and difficulty; storage can be unavailable.
 function saveRecord(value){
  try{
-  const key="lmg.best.v1."+mode+"."+difficulty+recordSuffix()+(mode==="dodge"&&dodgeDirector?".skill_v1":"");
+  const key="lmg.best.v1."+mode+"."+difficulty+recordSuffix()+(mode==="dodge"&&dodgeDirector?".skill_v2":"");
   const previous=Number(window.localStorage.getItem(key));
   const best=Math.max(Number.isFinite(previous)?previous:0,value);
   window.localStorage.setItem(key,String(best));return best;
@@ -948,7 +948,7 @@ if(mode==="lane"){
 }
 if(mode==="bait")updateBait(dt);if(state!=="playing")return;
 for(const k of Object.keys(CD))player.cd[k]=Math.max(0,player.cd[k]-dt);player.hitFlash=Math.max(0,player.hitFlash-dt);player.root=Math.max(0,player.root-dt);player.boost=Math.max(0,player.boost-dt);player.rushWindow=Math.max(0,player.rushWindow-dt);player.rushLock=Math.max(0,player.rushLock-dt);player.invuln=Math.max(0,player.invuln-dt);player.attackTimer=Math.max(0,player.attackTimer-dt);
-if(player.casting){player.casting.remaining-=dt;if(player.casting.remaining<=0){const cast=player.casting;player.casting=null;const speed=AHRI.q.speed,orb=cast.kind==="orb";const s=fire(player.x,player.y,Math.cos(cast.angle)*speed,Math.sin(cast.angle)*speed,cast.kind,orb?35:80,orb?AHRI.q.radius:30,(orb?AHRI.q.range:500)/speed);if(orb){s.phase="out";s.hitIds=new Set();}if(dodgeDirector){s.trainingSkill=orb?"q":"e";stats[orb?"dodgeQShots":"dodgeEShots"]++;}burst(player.x,player.y,orb?"#8cf4ff":"#f6a7da",7);}}
+if(player.casting){player.casting.remaining-=dt;if(player.casting.remaining<=0){const cast=player.casting;player.casting=null;const speed=AHRI.q.speed,orb=cast.kind==="orb";const s=fire(player.x,player.y,Math.cos(cast.angle)*speed,Math.sin(cast.angle)*speed,cast.kind,orb?35:80,orb?AHRI.q.radius:30,(orb?AHRI.q.range:500)/speed);s.spawnOffset=clamp(dt+cast.remaining,0,dt);if(orb){s.phase="out";s.hitIds=new Set();}if(dodgeDirector){s.trainingSkill=orb?"q":"e";stats[orb?"dodgeQShots":"dodgeEShots"]++;}burst(player.x,player.y,orb?"#8cf4ff":"#f6a7da",7);}}
 if(player.fox){const f=player.fox;f.remaining-=dt;f.next-=dt;
  if(f.count>0&&f.next<=0){const targets=foes.filter(e=>e.alive&&!e.baitCaster&&!e.referenceCaster&&dist(player,e)<=275).sort((a,b)=>(b.charm>0)-(a.charm>0)||dist(player,a)-dist(player,b));
   if(targets.length){const target=targets[0],angle=Math.atan2(target.y-player.y,target.x-player.x),shot=fire(player.x,player.y,Math.cos(angle)*700,Math.sin(angle)*700,"fox",40,7,1);shot.targetId=target.id;shot.foxCast=f;f.count--;f.next=.12;}}
@@ -1115,10 +1115,11 @@ for(const s of shots){if(!s.alive)continue;
  const travelFraction=dt>0?(offset+travelDt)/dt:0,startFraction=dt>0?offset/dt:0;
  const playerStartX=oldX+(player.x-oldX)*startFraction,playerStartY=oldY+(player.y-oldY)*startFraction;
  const playerEndX=oldX+(player.x-oldX)*travelFraction,playerEndY=oldY+(player.y-oldY)*travelFraction;
+ const targetStart=(prev,target)=>({x:prev.x+(target.x-prev.x)*startFraction,y:prev.y+(target.y-prev.y)*startFraction});
  const targetEnd=(prev,target)=>({x:prev.x+(target.x-prev.x)*travelFraction,y:prev.y+(target.y-prev.y)*travelFraction});
  if(s.kind==="orb"){
   for(const e of foes){if(!e.alive||s.hitIds.has(e.id))continue;const prev=previousFoes.get(e.id)||e;
-   if(segmentDistance(s.px-prev.x,s.py-prev.y,s.x-targetEnd(prev,e).x,s.y-targetEnd(prev,e).y)<=s.r+targetHitRadius(e)){s.hitIds.add(e.id);recordDodgeSkillHit(s,e);applyImpact(e,{sourceId:"player",sourceTeam:"player",kind:"orb",raw:s.damage,damageType:s.phase==="out"?"magic":"true"});if(state!=="playing")break;}}
+   if(segmentDistance(s.px-targetStart(prev,e).x,s.py-targetStart(prev,e).y,s.x-targetEnd(prev,e).x,s.y-targetEnd(prev,e).y)<=s.r+targetHitRadius(e)){s.hitIds.add(e.id);recordDodgeSkillHit(s,e);applyImpact(e,{sourceId:"player",sourceTeam:"player",kind:"orb",raw:s.damage,damageType:s.phase==="out"?"magic":"true"});if(state!=="playing")break;}}
   if(s.phase==="out"&&s.ttl<=0){s.phase="return";s.ttl=3;s.hitIds.clear();}
   else if(s.phase==="return"&&(dist(s,player)<1||s.ttl<=0))s.alive=false;
  }else if(s.kind==="enemyOrb"){
@@ -1181,7 +1182,7 @@ for(const s of shots){if(!s.alive)continue;
  }else{
   let hit=null,first=Infinity;
   for(const e of foes){if(!e.alive||((s.kind==="auto"||s.kind==="allied"||s.kind==="fox"||s.kind==="rush")&&e.id!==s.targetId))continue;const prev=previousFoes.get(e.id)||e;
-   const t=segmentHitTime(s.px-prev.x,s.py-prev.y,s.x-targetEnd(prev,e).x,s.y-targetEnd(prev,e).y,s.r+targetHitRadius(e));if(t<first){first=t;hit=e;}
+   const t=segmentHitTime(s.px-targetStart(prev,e).x,s.py-targetStart(prev,e).y,s.x-targetEnd(prev,e).x,s.y-targetEnd(prev,e).y,s.r+targetHitRadius(e));if(t<first){first=t;hit=e;}
   }
   if(hit){
    if(s.kind==="allied"){applyImpact(hit,{sourceId:s.sourceId??null,sourceTeam:"ally",kind:"minionProjectile",raw:s.damage,damageType:"physical",minionBonus:s.minionBonus});}

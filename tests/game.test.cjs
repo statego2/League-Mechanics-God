@@ -1679,7 +1679,7 @@ test('skill-scored Dodge records stay separate while retaining the survival reco
  const oldScore='lmg.best.v1.dodge.normal.director_v65.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
  g.reset('dodge');g.setTime(10);g.stats.dodgeQHits=1;g.stats.dodgeEHits=1;g.end(false);
  assert.match(node('menuDescription').textContent,/150 points/);assert.match(node('menuDescription').textContent,/Best survival: 120.0s/);
- assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v1'),'150');assert.equal(values.get(survival),'120');
+ assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v2'),'150');assert.equal(values.get(survival),'120');
 });
 
 test('paired Ezreal escapes remain safe with existing movement and W decay',()=>{
@@ -1764,6 +1764,30 @@ test('visitor projectile travels only after its windup ends inside a simulation 
  Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'cast',charge:.09,pending:{angle:0,spell:spec,threat:true},entry:{x:e.x,y:e.y}});g.setFoes([e]);
  g.update(.1);assert.equal(g.stats.hits,0);assert.equal(g.shots.length,1);
  assert.ok(Math.abs(g.shots[0].x-(e.x+spec.speed*.01))<1e-6);
+});
+test('Ahri Q and E only travel after their cast finishes within the step',()=>{
+ for(const [key,kind] of [['q','orb'],['e','charm']]){
+  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+  node('arena').listeners.pointermove({clientX:g.player.x+300,clientY:g.player.y,buttons:0});g.cast(key);g.player.casting.remaining=.09;
+  const start=g.player.x;g.update(.1);const shot=g.shots.find(s=>s.kind===kind);assert.ok(shot,key);
+  assert.ok(Math.abs(shot.x-start-7.75)<1e-7,`${key}: travelled ${shot.x-start}`);
+ }
+});
+test('Ahri Q and E do not hit a target that left before release',()=>{
+ for(const [key,kind] of [['q','orb'],['e','charm']]){
+  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+  const e=g.enemy(g.player.x+50,g.player.y);Object.assign(e,{speed:1000,shoot:999,spin:0,strafe:0,hp:1000,maxHp:1000});g.setFoes([e]);
+  node('arena').listeners.pointermove({clientX:e.x,clientY:e.y,buttons:0});g.cast(key);g.player.casting.remaining=.09;g.update(.1);
+  assert.ok(e.x>g.player.x+130,key);assert.equal(e.hp,1000,`${key}: hit before release`);assert.ok(g.shots.some(s=>s.kind===kind));
+ }
+});
+test('Ahri Q and E can hit a target that enters during the active interval',()=>{
+ for(const key of ['q','e']){
+  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+  const e=g.enemy(g.player.x+250,g.player.y);Object.assign(e,{speed:2000,shoot:999,spin:0,strafe:0,hp:1000,maxHp:1000});g.setFoes([e]);
+  node('arena').listeners.pointermove({clientX:e.x,clientY:e.y,buttons:0});g.cast(key);g.player.casting.remaining=.09;g.update(.1);
+  assert.ok(e.hp<1000,`${key}: missed a target during active interval`);
+ }
 });
 
 test('projectile does not collide with player movement before its release',()=>{
@@ -2045,6 +2069,18 @@ test('Expert endless cadence stays active across twelve simulated minutes',t=>{
  t.diagnostic(`casts/min per seed ${JSON.stringify(runs)}`);
  t.diagnostic(`cast mix per seed ${JSON.stringify(mix)}`);
  t.diagnostic(`resolved phase outcomes per seed ${JSON.stringify(phases)}`);
+});
+test('Expert idle survival is shorter than Standard across a seeded sample',t=>{
+ const results={normal:[],hard:[]};
+ for(const difficulty of Object.keys(results))for(let seed=0;seed<8;seed++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});for(let i=0;i<seed;i++)node('newSeed').listeners.click();g.reset('dodge');
+  while(g.state==='playing'&&g.time<90)g.update(1/120);
+  results[difficulty].push(Number(g.time.toFixed(2)));
+ }
+ const average=xs=>xs.reduce((a,b)=>a+b,0)/xs.length;
+ assert.ok(average(results.hard)<average(results.normal),JSON.stringify(results));
+ assert.ok(results.hard.every(t=>t<90),`Expert idle survived the sample: ${results.hard}`);
+ t.diagnostic(`idle survival seconds ${JSON.stringify(results)}`);
 });
 
 
