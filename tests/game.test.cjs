@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,visitorPathsCrowded,updateDodgeVisitor,spawnXerathW,spawnXerathQ,spawnOriannaR,spawnMalphiteR,aimMalphiteR,oriannaEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,visitorPathsCrowded,updateDodgeVisitor,spawnXerathW,spawnXerathQ,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,drawSizes,strokes,arcs,texts,lines,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -725,7 +725,7 @@ test('Dodge director continues past 12 minutes with bounded directed threats',()
   g.update(1/120);const active=g.foes.filter(e=>e.alive&&e.dodgeVisitor&&e.phase!=='exit'&&e.phase!=='orbFlight'&&e.phase!=='hookFlight').length+g.shots.filter(s=>s.alive&&s.directed).length+g.hazards.filter(h=>h.directed).length;
   assert.ok(active<=2,`directed threats exceeded cap: ${active}`);
  }
- assert.equal(g.state,'playing');assert.ok(g.dodgeDirector.attempted>100);assert.ok(g.dodgeDirector.xerathQ>0,'long session never scheduled Xerath Q');assert.ok(g.dodgeDirector.velkoz>0,'long session never scheduled Velkoz Q');assert.ok(g.dodgeDirector.orianna>0,'long session never scheduled Orianna R');assert.ok(g.dodgeDirector.malphite>0,'long session never scheduled Malphite R');assert.equal(g.dodgeDirector.attempted,g.dodgeDirector.ezreal+g.dodgeDirector.lux+g.dodgeDirector.ahri+g.dodgeDirector.blitz+g.dodgeDirector.velkoz+g.dodgeDirector.xerath+g.dodgeDirector.xerathQ+g.dodgeDirector.oriannaQ+g.dodgeDirector.orianna+g.dodgeDirector.malphite);
+ assert.equal(g.state,'playing');assert.ok(g.dodgeDirector.attempted>100);assert.ok(g.dodgeDirector.xerathQ>0,'long session never scheduled Xerath Q');assert.ok(g.dodgeDirector.velkoz>0,'long session never scheduled Velkoz Q');assert.ok(g.dodgeDirector.orianna>0,'long session never scheduled Orianna R');assert.ok(g.dodgeDirector.malphite>0,'long session never scheduled Malphite R');assert.equal(g.dodgeDirector.attempted,g.dodgeDirector.ezreal+g.dodgeDirector.lux+g.dodgeDirector.ahri+g.dodgeDirector.blitz+g.dodgeDirector.velkoz+g.dodgeDirector.xerath+g.dodgeDirector.xerathQ+g.dodgeDirector.oriannaQ+g.dodgeDirector.orianna+g.dodgeDirector.malphite+g.dodgeDirector.cassio);
 });
 test('Dodge visitor uses distinct existing visual profiles and projectile colours',()=>{
  const {g,node,draws,strokes}=boot('ahri');for(const id of ['mageArt','explorerArt']){node(id).complete=true;node(id).naturalWidth=100;}
@@ -1803,7 +1803,7 @@ test('enemy Ahri return does not hit movement completed before the turn',()=>{
 
 test('Dodge director changes encounter spacing in bounded pressure and recovery phases',()=>{
  function interval(difficulty,time){
-  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});g.reset('dodge');g.setTime(time);g.setRng(1);g.dodgeDirector.next=0;
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});g.reset('dodge');g.setTime(time);g.setRng(1);g.dodgeDirector.next=0;g.dodgeDirector.cassAt=Infinity;
   g.update(1/120);assert.ok(g.foes.length||g.hazards.length,`no encounter at ${difficulty} ${time}`);return g.dodgeDirector.next;
  }
  const stable=interval('hard',50),spike=interval('hard',78),recovery=interval('hard',86);
@@ -1827,7 +1827,7 @@ test('Velkoz split awards no dodge when a later branch hits',()=>{
 
 
 test('Expert endless pressure ramps after three minutes and reaches a cap',()=>{
- function interval(time){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(time);g.setRng(1);g.dodgeDirector.next=0;g.dodgeDirector.rareAt=Infinity;g.dodgeDirector.malAt=Infinity;g.update(1/120);return g.dodgeDirector.next;}
+ function interval(time){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(time);g.setRng(1);g.dodgeDirector.next=0;g.dodgeDirector.cassAt=Infinity;g.dodgeDirector.rareAt=Infinity;g.dodgeDirector.malAt=Infinity;g.update(1/120);return g.dodgeDirector.next;}
  // Times share the same phase of the 43-second rhythm.
  const early=interval(50),later=interval(50+43*10),cap=interval(50+43*20),beyond=interval(50+43*30);
  assert.ok(later<early);assert.ok(cap<later);assert.ok(Math.abs(cap-beyond)<1e-9);
@@ -1910,4 +1910,70 @@ test('different entering Dodge casters keep separated trajectories',()=>{
   assert.equal(g.visitorPathsCrowded(second.entry,second.origin,first),false);checked++;
  }
  assert.ok(checked>0,'no mixed-caster entries sampled');
+});
+
+
+test('Cassiopeia cone and facing distinguish turn-away, face and escape',()=>{
+ for(const [scenario,facing,dy,hit] of [['face',Math.PI,0,true],['turn',0,0,true],['outside',Math.PI,300,false]]){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.facing=facing;
+  const h={x:g.player.x-200,y:g.player.y+dy,angle:0,cassio:true,casting:true,ttl:.005,directed:true,spellName:'CASSIOPEIA R',threat:true};g.hazards.push(h);
+  g.update(.01);assert.equal(g.stats.hits,Number(hit),scenario);assert.equal(g.player.root,0);
+  assert.equal(g.dodgeDirector.cassFails,Number(scenario==='face'));assert.equal(g.dodgeDirector.cassTurns,Number(scenario==='turn'));assert.equal(g.dodgeDirector.cassEscapes,Number(scenario==='outside'));
+  if(hit)assert.ok(Math.abs(g.stats.damage-125/1.3)<1e-8);
+ }
+});
+test('Cassiopeia spawn is isolated and appears before committing her cast',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnCassioR());
+ const h=g.hazards[0];assert.equal(h.casting,false);assert.equal(g.spawnDodgeVisitor(),false);advance(g,.95);
+ assert.equal(h.casting,true);assert.equal(g.dodgeDirector.cassio,1);assert.ok(h.ttl>0);
+});
+
+
+test('moving away from Cassiopeia changes facing before impact without immobilization',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.facing=Math.PI;
+ const h={x:g.player.x-200,y:g.player.y,angle:0,cassio:true,casting:true,ttl:.5,directed:true,spellName:'CASSIOPEIA R',threat:true};g.hazards.push(h);
+ advance(g,.1);g.moveTo(g.player.x+150,g.player.y);advance(g,.42);
+ assert.equal(g.dodgeDirector.cassTurns,1);assert.equal(g.dodgeDirector.cassFails,0);assert.equal(g.stats.hits,1);assert.equal(g.player.root,0);
+});
+test('Cassiopeia defers an unreactable cast rather than immobilizing the player',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.root=.6;
+ const h={x:g.player.x-200,y:g.player.y,cassio:true,casting:false,ttl:.001,directed:true,spellName:'CASSIOPEIA R',directorScheduled:true};g.hazards.push(h);
+ g.update(.01);assert.equal(g.dodgeDirector.cassio,0);assert.equal(g.hazards.length,0);assert.ok(g.dodgeDirector.cassAt>g.time);
+});
+test('Cassiopeia outcome is preserved in the result after a lethal hit',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.hp=1;g.player.facing=Math.PI;
+ const h={x:g.player.x-200,y:g.player.y,angle:0,cassio:true,casting:true,ttl:.001,directed:true,spellName:'CASSIOPEIA R'};g.hazards.push(h);
+ g.update(.01);assert.equal(g.state,'ended');assert.match(node('dodgeBreakdownText').textContent,/1 facing her/);assert.match(node('dodgeBreakdownText').textContent,/CASSIOPEIA R: 0 avoided \/ 1 hit/);
+});
+
+test('Cassiopeia is scheduled in sustained Expert endless play',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
+ advance(g,600);assert.equal(g.state,'playing');assert.ok(g.dodgeDirector.cassio>=1);
+});
+
+test('Flash away changes the Cassiopeia facing outcome while still in the cone',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.facing=Math.PI;
+ const h={x:g.player.x-200,y:g.player.y,angle:0,cassio:true,casting:true,ttl:.25,directed:true,spellName:'CASSIOPEIA R'};g.hazards.push(h);
+ node('arena').listeners.pointermove({clientX:g.player.x+80,clientY:g.player.y,buttons:0});g.cast('f');advance(g,.26);
+ assert.equal(g.dodgeDirector.cassTurns,1);assert.equal(g.stats.hits,1);assert.equal(g.player.root,0);
+});
+test('Cassiopeia setup and cast freeze during pause and render without extra assets',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnCassioR());const h=g.hazards[0],ttl=h.ttl;
+ assert.doesNotThrow(()=>g.render());g.pause();advance(g,.5);assert.equal(h.ttl,ttl);g.pause();advance(g,.1);assert.ok(h.ttl<ttl);
+});
+
+test('Cassiopeia training cone and facing boundaries use centre geometry',()=>{
+ const {g}=boot('ahri'),h={x:0,y:0,angle:0};
+ const at=(distance,degrees)=>({x:distance*Math.cos(degrees*Math.PI/180),y:distance*Math.sin(degrees*Math.PI/180)});
+ assert.equal(g.cassioConeContains(h,at(425,0)),true);assert.equal(g.cassioConeContains(h,at(425.1,0)),false);
+ assert.equal(g.cassioConeContains(h,at(300,39.9)),true);assert.equal(g.cassioConeContains(h,at(300,40.1)),false);
+ assert.equal(g.facingCassio(h,{x:200,y:0},Math.PI),true);assert.equal(g.facingCassio(h,{x:200,y:0},0),false);
+});
+
+
+test('Cassiopeia uses a bounded sprite with a safe missing-image fallback',()=>{
+ const {g,node,drawSizes}=boot('ahri');g.reset('dodge');const art=node('serpentArt');art.complete=true;art.naturalWidth=100;
+ g.drawChampion(600,300,0,false,false,1,0,'cassio');assert.deepEqual(drawSizes.find(x=>x[0]===art).slice(1),[-37,-79,74,80]);
+ art.naturalWidth=0;assert.doesNotThrow(()=>g.drawChampion(600,300,0,false,false,1,0,'cassio'));
+ const missing=boot('ahri',{missingNodes:['serpentArt']});missing.g.reset('dodge');assert.doesNotThrow(()=>missing.g.drawChampion(600,300,0,false,false,1,0,'cassio'));
 });
