@@ -776,6 +776,25 @@ test('enemy Ahri return orb homes toward its still-living caster',()=>{
  advance(g,.6);assert.equal(shot.phase,'return');caster.y=300;advance(g,.02);
  assert.equal(shot.anchor.y,300);assert.ok(shot.vy>0);
 });
+test('Dodge results include the future Ahri Q return while its outgoing orb is live',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const orb=g.fire(300,200,775,0,'enemyOrb',35,50,.5);
+ Object.assign(orb,{directed:true,spellName:'AHRI Q',phase:'out',phaseHit:false,anchor:{x:300,y:200},casterId:-1});
+ g.end(false);assert.match(node('dodgeBreakdownText').textContent,/2 unresolved phases/);
+});
+test('a lethal outgoing Ahri Q hit still reports its unplayed return',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.hp=1;
+ const orb=g.fire(g.player.x,g.player.y,775,0,'enemyOrb',35,50,.5);
+ Object.assign(orb,{directed:true,spellName:'AHRI Q',phase:'out',phaseHit:false,anchor:{x:300,y:200},casterId:-1});
+ g.update(.01);assert.equal(g.state,'ended');assert.match(node('dodgeBreakdownText').textContent,/AHRI Q: 0 avoided \/ 1 hit/);
+ assert.match(node('dodgeBreakdownText').textContent,/1 unresolved phase/);
+});
+test('Ahri return is not counted twice once it has begun',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const orb=g.fire(300,200,775,0,'enemyOrb',35,50,.5);
+ Object.assign(orb,{directed:true,spellName:'AHRI Q',phase:'return',phaseHit:false,anchor:{x:300,y:200},casterId:-1});
+ g.end(false);assert.match(node('dodgeBreakdownText').textContent,/1 unresolved phase/);
+});
 
 
 test('Dodge visitors enter and cast with their full silhouettes inside the visible arena',()=>{
@@ -1604,6 +1623,24 @@ test('double Ezreal projectiles occur naturally on Standard and Expert but not F
   assert.equal(found,expected,difficulty);
  }
 });
+test('Expert can introduce paired Ezreal pressure before 45 seconds without changing Standard',()=>{
+ for(const difficulty of ['hard','normal']){
+  let paired=0;
+  for(let seed=1;seed<=80;seed++){
+   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});g.reset('dodge');g.setTime(10);g.setRng(seed*2654435761>>>0);
+   if(g.spawnDodgeVisitor()&&g.foes.some(e=>e.followUp))paired++;
+  }
+  if(difficulty==='hard')assert.ok(paired>0,'no early Expert pairs');else assert.equal(paired,0);
+ }
+});
+test('Dodge allows an Ahri skillshot followed by movement to evade an incoming attack',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;
+ const p=g.player,e=g.enemy(p.x+220,p.y);e.speed=0;e.shoot=999;e.hp=e.maxHp=200;g.setFoes([e]);
+ node('arena').listeners.pointermove({clientX:e.x,clientY:e.y,buttons:0});g.cast('q');
+ const shot=g.fire(p.x-400,p.y,600,0,'enemy',20,5,1);Object.assign(shot,{directed:true,spellName:'LUX Q'});
+ advance(g,.26);g.moveTo(p.x,p.y+150);advance(g,.8);
+ assert.ok(e.hp<e.maxHp,'Ahri Q did not hit');assert.equal(g.stats.hits,0,'incoming attack hit');
+});
 
 test('paired Ezreal escapes remain safe with existing movement and W decay',()=>{
  let accepted=0,boosted=0,led=0;
@@ -1902,7 +1939,7 @@ test('Dodge director changes encounter spacing in bounded pressure and recovery 
   g.update(1/120);assert.ok(g.foes.length||g.hazards.length,`no encounter at ${difficulty} ${time}`);return g.dodgeDirector.next;
  }
  const stable=interval('hard',50),spike=interval('hard',78),recovery=interval('hard',86);
- for(const [value,multiplier] of [[stable,1],[spike,.8],[recovery,1.3]])assert.ok(value>=2.2*multiplier*.88&&value<=2.2*multiplier*1.12);
+ for(const [value,multiplier] of [[stable,1],[spike,.8],[recovery,1.3]])assert.ok(value>=1.65*multiplier*.88&&value<=1.65*multiplier*1.12);
  assert.ok(recovery>stable);
  assert.ok(Math.abs(interval('easy',50)-interval('easy',78))<1e-10);
 });
