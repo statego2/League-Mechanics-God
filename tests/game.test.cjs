@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnXerathW,spawnXerathQ,spawnOriannaR,spawnMalphiteR,aimMalphiteR,oriannaEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,updateDodgeVisitor,spawnXerathW,spawnXerathQ,spawnOriannaR,spawnMalphiteR,aimMalphiteR,oriannaEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,drawSizes,strokes,arcs,texts,lines,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -1551,18 +1551,22 @@ test('double Ezreal projectiles occur naturally on Standard and Expert but not F
 });
 
 test('paired Ezreal escapes remain safe with existing movement and W decay',()=>{
- let accepted=0,boosted=0;
- for(let seedOffset=0;seedOffset<100;seedOffset++){
+ let accepted=0,boosted=0,led=0;
+ for(let seedOffset=0;seedOffset<300;seedOffset++){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
   g.reset('dodge');g.setTime(50);g.dodgeDirector.next=999;const spell=g.REFERENCE_SPELLS.ezrealDodge;
   if(!g.spawnDodgeVisitor())continue;const follow=g.foes.find(x=>x.followUp&&x.spell===spell);if(!follow)continue;
   g.moveTo(g.player.x+(seedOffset%2?120:-120),g.player.y+100);if(seedOffset%2)g.cast('w');
   for(let i=0;i<120&&follow.phase==='enter';i++)g.update(1/120);
-  if(follow.phase!=='cast')continue;const witness={};if(!g.canEvadeDodgeCast(follow,spell,witness))continue;
+  if(follow.phase!=='cast')continue;
+  const angle=follow.pending.angle,direct=Math.atan2(g.player.y-follow.y,g.player.x-follow.x);
+  const aim={x:follow.x+Math.cos(angle)*400,y:follow.y+Math.sin(angle)*400},witness={};
+  // The follow-up is the candidate, not an additional already committed shot.
+  follow.phase='enter';const safe=g.canEvadeDodgeCast(follow,spell,witness,aim);follow.phase='cast';assert.ok(safe,`accepted cast lost its escape: seed ${seedOffset}`);
   advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.5);
-  assert.equal(g.stats.hits,0,`seed ${seedOffset}`);accepted++;if(seedOffset%2)boosted++;
+  assert.equal(g.stats.hits,0,`seed ${seedOffset}`);accepted++;if(seedOffset%2)boosted++;if(Math.abs(angle-direct)>1e-5)led++;
  }
- assert.ok(accepted>=2,`only ${accepted} moving witnesses`);assert.ok(boosted>=1,`no W-boosted witnesses`);
+ assert.ok(accepted>=2,`only ${accepted} moving witnesses`);assert.ok(boosted>=1,`no W-boosted witnesses`);assert.ok(led>=1,`no led follow-up witnesses`);
 });
 
 
@@ -1671,4 +1675,18 @@ test('seeded straight visitors sometimes lead existing movement and retain a wal
   assert.equal(g.stats.hits,0,`seed ${seed}`);
  }
  assert.ok(led>0,`no led shots; direct=${direct}`);assert.ok(direct>0,'no direct shots');
+});
+
+
+test('unsafe lead falls back to a separately verified direct shot',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const spell=g.REFERENCE_SPELLS.ezrealDodge;
+ let found=null;
+ search: for(const x of [250,400,600,800,950])for(const y of [130,210,340,480,590])for(let move=0;move<8;move++)for(let shot=0;shot<8;shot++){
+  g.player.x=x;g.player.y=y;g.moveTo(x+Math.cos(move*Math.PI/4)*180,y+Math.sin(move*Math.PI/4)*180);
+  const origin={x:x+Math.cos(shot*Math.PI/4)*470,y:y+Math.sin(shot*Math.PI/4)*470},lead=g.dodgeReactionPath(spell.cast).end;
+  if(Math.hypot(lead.x-x,lead.y-y)<5)continue;
+  if(!g.canEvadeDodgeCast(origin,spell,null,lead)&&g.canEvadeDodgeCast(origin,spell)){found={origin};break search;}
+ }
+ assert.ok(found,'no case found');const e=g.enemy(found.origin.x,found.origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'enter',origin:{...found.origin},entry:{...found.origin},speed:120});g.setFoes([e]);g.setRng(1);
+ g.updateDodgeVisitor(e,1/120);assert.equal(e.phase,'cast');assert.ok(Math.abs(e.pending.angle-Math.atan2(g.player.y-e.y,g.player.x-e.x))<1e-10);
 });

@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v45":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v46":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -629,10 +629,13 @@ function updateDodgeVisitor(e,dt){
   // Some straight shots lead only the player's existing route through the
   // windup. This is a seeded training policy, not hidden knowledge of inputs.
   const canLead=!e.spell.split&&!e.spell.returning&&!!player.target;
-  const aimPoint=canLead&&random()<.25?dodgeReactionPath(e.spell.cast).end:player;
-  const offset=e.spell.split?(random()<.5?-.32:.32):0,angle=Math.atan2(aimPoint.y-e.y,aimPoint.x-e.x)+offset,splitDistance=e.spell.split?dist(e,player)*Math.cos(offset):undefined;
+  let aimPoint=canLead&&random()<.25?dodgeReactionPath(e.spell.cast).end:player;
+  const offset=e.spell.split?(random()<.5?-.32:.32):0,splitDistance=e.spell.split?dist(e,player)*Math.cos(offset):undefined;
+  let angle=Math.atan2(aimPoint.y-e.y,aimPoint.x-e.x)+offset;
   const isolated=!e.spell.split||(!shots.some(s=>s.alive&&s.directed)&&!hazards.some(h=>h.directed)&&!foes.some(other=>other!==e&&other.alive&&other.dodgeVisitor&&(other.phase==="enter"||other.phase==="cast")));
-  const safe=isolated&&regularAllowed(e.spell.name)&&canEvadeDodgeCast(e,e.spell,null,aimPoint)&&(!e.spell.split||canEvadeVelkoz(e,angle,splitDistance,e.spell));
+  let safe=isolated&&regularAllowed(e.spell.name)&&canEvadeDodgeCast(e,e.spell,null,aimPoint)&&(!e.spell.split||canEvadeVelkoz(e,angle,splitDistance,e.spell));
+  // A lead that fails the safety forecast need not discard a safe direct cast.
+  if(!safe&&aimPoint!==player&&isolated&&regularAllowed(e.spell.name)){aimPoint=player;angle=Math.atan2(player.y-e.y,player.x-e.x);safe=canEvadeDodgeCast(e,e.spell);}
   if(!safe)e.phase="exit";else{
    e.pending={angle,fan:false,spell:e.spell,splitDistance,threat:!e.spell.split};e.charge=e.spell.cast;e.phase="cast";recordRegular(e.spell.name);
    // One seeded opportunity per Ezreal cast. Each candidate must pass its
