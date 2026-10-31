@@ -781,7 +781,7 @@ test('ambient Xerath W has a readable delay, center damage and no caster entity'
  assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.player.hp-(590-50*1.667/1.3))<1e-7);
  assert.equal(g.dodgeDirector.outcomes['XERATH W'].hit,1);
 });
-test('Xerath W can be escaped and cannot overlap another directed encounter',()=>{
+test('Xerath W can be escaped and rejects an unsupported directed encounter',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
  const shot=g.fire(100,100,1,0,'enemy',1,1,10);shot.directed=true;
  assert.equal(g.spawnXerathW(),false);shot.alive=false;
@@ -789,6 +789,47 @@ test('Xerath W can be escaped and cannot overlap another directed encounter',()=
  const h=g.hazards[0],dx=g.player.x-h.x,dy=g.player.y-h.y,d=Math.hypot(dx,dy);
  g.moveTo(g.player.x+dx/d*120,g.player.y+dy/d*120);advance(g,.8);
  assert.equal(g.stats.hits,0);assert.equal(g.dodgeDirector.outcomes['XERATH W'].avoided,1);
+});
+test('Xerath W and an in-flight Ezreal Q have a shared walkable escape',()=>{
+ for(const difficulty of ['normal','hard']){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});g.reset('dodge');g.dodgeDirector.next=999;
+  const shot=g.fire(10,g.player.y,1000,0,'enemy',10,30,.6);Object.assign(shot,{directed:true,spellName:'EZREAL Q'});
+  assert.equal(g.spawnXerathW(),true,difficulty);const h=g.hazards[0],dx=g.player.x-h.x,dy=g.player.y-h.y,d=Math.hypot(dx,dy);
+  const escape={x:g.player.x+dx/d*165*(.778-.2),y:g.player.y+dy/d*165*(.778-.2)};
+  advance(g,.2);g.moveTo(escape.x,escape.y);advance(g,1);assert.equal(g.stats.hits,0,difficulty);
+  assert.equal(g.dodgeDirector.outcomes['XERATH W'].avoided,1,difficulty);
+ }
+});
+test('the seeded director naturally schedules a safe Ezreal Q and Xerath W combination',()=>{
+ let combinations=0;
+ for(let seedOffset=0;seedOffset<30;seedOffset++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
+  g.reset('dodge');g.setTime(50);g.dodgeDirector.next=999;const spell=g.REFERENCE_SPELLS.ezrealDodge,e=g.enemy(130,g.player.y);
+  Object.assign(e,{dodgeVisitor:true,phase:'enter',spell,origin:{x:e.x,y:e.y},entry:{x:80,y:e.y},speed:120});g.setFoes([e]);
+  g.update(1/120);const h=g.hazards.find(h=>h.xerath);if(!h)continue;combinations++;
+  const dx=g.player.x-h.x,dy=g.player.y-h.y,d=Math.hypot(dx,dy),escape={x:g.player.x+dx/d*165*(.778-.2),y:g.player.y+dy/d*165*(.778-.2)};
+  advance(g,.2-1/120);g.moveTo(escape.x,escape.y);advance(g,1);assert.equal(g.stats.hits,0,`seed offset ${seedOffset}`);
+ }
+ assert.ok(combinations>0,'no director-generated combinations');
+});
+test('normal gameplay reaches the mixed encounter across seeded sessions',()=>{
+ let sessionsWithOverlap=0;
+ for(let seedOffset=0;seedOffset<5;seedOffset++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});node('dodgeLength').listeners.change({target:{value:'180'}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
+  g.reset('dodge');g.player.hp=g.player.maxHp=1000000;let found=false;
+  while(g.time<179&&!found){g.update(1/120);found=g.hazards.some(h=>h.xerath)&&(g.foes.some(e=>e.alive&&e.dodgeVisitor&&e.phase==='cast'&&e.spell===g.REFERENCE_SPELLS.ezrealDodge)||g.shots.some(s=>s.alive&&s.spellName==='EZREAL Q'));}
+  if(found)sessionsWithOverlap++;
+ }
+ assert.ok(sessionsWithOverlap>0,'no natural mixed encounters in five seeded sessions');
+});
+test('Xerath W rejects unsafe or unsupported overlaps and respects Foundation cap',()=>{
+ for(const scenario of ['imminent','foundation','orb','split','multiple','pending']){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:scenario==='foundation'?'easy':'hard'}});g.reset('dodge');g.dodgeDirector.next=999;
+  const s=g.fire(scenario==='imminent'?g.player.x-70:10,g.player.y,1000,0,scenario==='orb'?'enemyOrb':'enemy',10,30,.6);Object.assign(s,{directed:true,spellName:scenario==='orb'?'AHRI Q':'EZREAL Q'});
+  if(scenario==='split')s.velkoz='main';if(scenario==='multiple'){const extra=g.fire(10,100,1000,0,'enemy',10,30,.6);extra.directed=true;extra.spellName='EZREAL Q';}
+  if(scenario==='pending'){const e=g.enemy(200,200);Object.assign(e,{dodgeVisitor:true,phase:'enter'});g.setFoes([e]);}
+  assert.equal(g.spawnXerathW(),false,scenario);assert.equal(g.hazards.length,0,scenario);
+ }
 });
 test('Xerath W uses center based edge and outside hits use base damage',()=>{
  for(const [offset,expected] of [[62.5,50*1.667/1.3],[62.6,50/1.3],[137.5,50/1.3],[137.6,0]]){
