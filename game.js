@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v63":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v64":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -546,6 +546,22 @@ function spawnMalphiteR(){
 function aimMalphiteR(source){
  const reaction=dodgeReactionDelay();if(!Number.isFinite(reaction))return null;
  const dx=player.x-source.x,dy=player.y-source.y,d=Math.hypot(dx,dy);if(d<1)return null;
+ // Rare Expert reaction check: aim directly only when Flash is ready and a
+ // walkable landing exists after the reaction allowance. No other directed
+ // threats are active for this encounter. The witness replaces any retained
+ // movement order after flashing; this is a sampled training policy.
+ if(difficulty==="hard"&&player.cd.f<=0&&random()<.3&&d<=MALPHITE_R.range){
+  const target={x:player.x,y:player.y},duration=d/MALPHITE_R.speed,start=dodgeReactionPath(reaction).end;
+  if(reaction<duration&&world.pointWalkable(target,25))for(let i=0;i<32;i++){
+   const a=i*TAU/32,landing={x:clamp(start.x+Math.cos(a)*SIMULATION.toCanvas(400),25,W-25),y:clamp(start.y+Math.sin(a)*SIMULATION.toCanvas(400),65,H-38)};
+   if(!world.pointWalkable(landing,player.r))continue;
+   const travel=forecastTravel(reaction,duration),raw={x:clamp(landing.x+Math.cos(a)*travel,world.bounds.left,world.bounds.right),y:clamp(landing.y+Math.sin(a)*travel,world.bounds.top,world.bounds.bottom)};
+   const walk=world.clip(landing,raw,player.r);
+   // Leave room for the second click after Flash rather than accepting a
+   // barely safe endpoint reachable only by frame-perfect input.
+   if(world.pointWalkable(walk,player.r)&&world.segmentClear(landing,walk,player.r)&&dist(walk,target)>MALPHITE_R.radius+player.hitRadius+25)return {target,duration,flashWitness:landing,walkWitness:walk};
+  }
+ }
  for(const side of [-1,1]){
   const target={x:player.x-side*dy/d*170,y:player.y+side*dx/d*170},distance=dist(source,target);
   if(distance>MALPHITE_R.range||!world.pointWalkable(target,25))continue;

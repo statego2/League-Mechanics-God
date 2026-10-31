@@ -1378,6 +1378,30 @@ test('Malphite planned landing remains escapable from a moving player',()=>{
  g.hazards.push({...source,malphite:true,casting:true,target:plan.target,start:source,remaining:plan.duration,ttl:plan.duration,max:plan.duration,r:162.5,directed:true,spellName:'MALPHITE R'});
  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,plan.duration);assert.equal(g.stats.hits,0);
 });
+test('Expert direct Malphite R provides a real Flash-and-move escape',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.setRng(1);
+ const source={x:200,y:g.player.y},plan=g.aimMalphiteR(source);assert.ok(plan?.flashWitness);assert.equal(plan.target.x,g.player.x);assert.equal(plan.target.y,g.player.y);
+ g.hazards.push({...source,malphite:true,casting:true,target:plan.target,start:source,remaining:plan.duration,ttl:plan.duration,max:plan.duration,r:162.5,directed:true,spellName:'MALPHITE R'});
+ advance(g,.2);node('arena').listeners.pointermove({clientX:plan.flashWitness.x,clientY:plan.flashWitness.y,buttons:0});g.cast('f');advance(g,.1);g.moveTo(plan.walkWitness.x,plan.walkWitness.y);
+ advance(g,plan.duration);assert.equal(g.stats.hits,0);assert.ok(g.player.cd.f>0);assert.equal(g.dodgeDirector.outcomes['MALPHITE R'].avoided,1);
+});
+test('Malphite does not require Flash when it is on cooldown',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.player.cd.f=20;g.setRng(1);
+ const plan=g.aimMalphiteR({x:200,y:g.player.y}),witness={};assert.ok(plan);assert.equal(plan.flashWitness,undefined);
+ assert.ok(g.sampleAreaEscape(.2,plan.duration,p=>Math.hypot(p.x-plan.target.x,p.y-plan.target.y)<=162.5+g.player.hitRadius+8,witness));
+});
+test('direct Malphite Flash witnesses survive existing movement and W decay',()=>{
+ let checked=0;
+ for(const side of [-1,1])for(const boosted of [false,true]){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.setRng(1);
+  const source={x:g.player.x+side*400,y:g.player.y};g.moveTo(g.player.x,g.player.y+80);if(boosted)g.cast('w');
+  const plan=g.aimMalphiteR(source);if(!plan?.flashWitness)continue;
+  g.hazards.push({...source,malphite:true,casting:true,target:plan.target,start:source,remaining:plan.duration,ttl:plan.duration,max:plan.duration,r:162.5,directed:true,spellName:'MALPHITE R'});
+  advance(g,.2);node('arena').listeners.pointermove({clientX:plan.flashWitness.x,clientY:plan.flashWitness.y,buttons:0});g.cast('f');g.moveTo(plan.walkWitness.x,plan.walkWitness.y);advance(g,plan.duration);
+  assert.equal(g.stats.hits,0,`side ${side}, boosted ${boosted}`);checked++;
+ }
+ assert.ok(checked>=2,`only ${checked} Flash witnesses`);
+});
 
 
 test('forecast accounts for W decay and soft caps across movement and expiration',()=>{
