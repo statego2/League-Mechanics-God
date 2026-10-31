@@ -4,9 +4,9 @@ const assert=require('node:assert/strict');
 const vm=require('node:vm');
 const fs=require('node:fs');
 function boot(preset="standard", options={}){
- const nodes=new Map(),draws=[],drawSizes=[],strokes=[],arcs=[],texts=[];
+ const nodes=new Map(),draws=[],drawSizes=[],strokes=[],arcs=[],texts=[],lines=[];
  function node(id){if(!nodes.has(id))nodes.set(id,{textContent:'',style:{},classList:{add(){},remove(){},toggle(){}},listeners:{},addEventListener(k,f){this.listeners[k]=f;},closest(){return this;},setAttribute(k,v){this[k]=v;},getBoundingClientRect(){return {left:0,top:0,width:1200,height:675};}});return nodes.get(id);}
- const ctx=new Proxy({drawImage(img,...args){draws.push(img);drawSizes.push([img,...args])},arc(x,y,r){arcs.push({x,y,r})},fillText(t){texts.push(String(t))},stroke(){strokes.push(this.strokeStyle)},createRadialGradient(){return {addColorStop(){}};}},{get(o,k){return o[k]||(()=>{});}});
+ const ctx=new Proxy({drawImage(img,...args){draws.push(img);drawSizes.push([img,...args])},arc(x,y,r){arcs.push({x,y,r})},fillText(t){texts.push(String(t))},stroke(){strokes.push(this.strokeStyle)},lineTo(x,y){lines.push({x,y})},createRadialGradient(){return {addColorStop(){}};}},{get(o,k){return o[k]||(()=>{});}});
  node('arena').getContext=()=>ctx;
  const window={devicePixelRatio:1,listeners:{},addEventListener(k,f){this.listeners[k]=f;}};
  const document={getElementById:node,querySelectorAll:()=>[],addEventListener(){}};
@@ -19,7 +19,7 @@ function boot(preset="standard", options={}){
  const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnXerathW,spawnXerathQ,spawnOriannaR,spawnMalphiteR,aimMalphiteR,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
- return {g,node,window,draws,drawSizes,strokes,arcs,texts,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
+ return {g,node,window,draws,drawSizes,strokes,arcs,texts,lines,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
 }
 function foe(g,x=800,y=337.5){const e=g.enemy(x,y);e.speed=0;e.shoot=999;e.hp=e.maxHp=10000;g.setFoes([e]);return e;}
 function advance(g,seconds){for(let i=0;i<Math.round(seconds*120);i++)g.update(1/120);}
@@ -1285,4 +1285,13 @@ test('regeneration restores health after damage without changing recorded damage
  advance(g,8);assert.ok(Math.abs(g.player.hp-494)<1e-8);assert.equal(g.stats.damage,100);assert.equal(g.stats.hits,1);
  g.applyImpact(g.player,{sourceTeam:'enemy',kind:'test',raw:1000,damageType:'true'});advance(g,3);
  assert.equal(g.state,'ended');assert.equal(g.player.hp,0);
+});
+
+
+test('Xerath Q charge shows a short directional cue without drawing the full aim line',()=>{
+ const {g,strokes,lines}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ g.hazards.push({x:300,y:300,endX:900,endY:300,r:36.25,ttl:.5,max:.528,beam:true,directed:true});g.render();
+ assert.ok(strokes.includes('#9edcffaa'));
+ assert.ok(lines.some(p=>p.x===345&&p.y===300));
+ assert.ok(!lines.some(p=>p.x===900&&p.y===300));
 });
