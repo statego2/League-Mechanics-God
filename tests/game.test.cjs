@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnXerathW,spawnXerathQ,spawnOriannaR,spawnMalphiteR,aimMalphiteR,oriannaEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnXerathW,spawnXerathQ,spawnOriannaR,spawnMalphiteR,aimMalphiteR,oriannaEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,drawSizes,strokes,arcs,texts,lines,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -1467,4 +1467,18 @@ test('Dodge results separate compact summary from accessible spell breakdown and
  assert.equal(node('dodgeBreakdown').hidden,false);assert.match(node('menuDescription').textContent,/1 hits/);
  assert.doesNotMatch(node('menuDescription').textContent,/EZREAL Q:/);assert.match(node('dodgeBreakdownText').textContent,/EZREAL Q: 0 avoided \/ 1 hit/);
  node('dodgeBreakdown').open=true;g.reset('kite');g.pause();assert.equal(node('dodgeBreakdown').hidden,true);assert.equal(node('dodgeBreakdown').open,false);g.pause();g.end(false);assert.equal(node('dodgeBreakdown').hidden,true);
+});
+
+
+test('blocked third Xerath Q or W falls back to an Ezreal visitor',()=>{
+ // Set the random generator so its next roll is in the desired ambient band.
+ for(const [name,minimum,maximum] of [['XERATH Q',.94,1],['XERATH W',.91,.94]]){
+  let found=false;
+  for(let seed=0;seed<200&&!found;seed++){
+   const initial=Math.imul(seed,2654435761)>>>0,next=(Math.imul(1664525,initial)+1013904223)>>>0,roll=next/4294967296;if(roll<minimum||roll>=maximum)continue;
+   const {g}=boot('ahri');g.reset('dodge');g.setTime(60);g.dodgeDirector.next=999;g.dodgeDirector.lastRegular=name;g.dodgeDirector.regularStreak=2;g.setRng(initial);
+   if(g.spawnDodgeVisitor()){assert.equal(g.foes[0].spell.name,'EZREAL Q',name);found=true;}
+  }
+  assert.ok(found,`no valid ${name} seed`);
+ }
 });
