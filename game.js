@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v50":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v51":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -552,7 +552,7 @@ function dodgeEscapeClear(origin,spell,destination,reaction,aimPoint=player){
  incoming.push({x:origin.x,y:origin.y,vx:dx/d*spell.speed,vy:dy/d*spell.speed,r:spell.radius,start:spell.cast,end:spell.cast+spell.range/spell.speed});
  return forecastDodgePath(incoming,destination,reaction);
 }
-// Sample two perpendicular escapes and forecast existing directed missiles.
+// Sample perpendicular and oblique escapes against existing directed missiles.
 function canEvadeDodgeCast(origin,spell,witness=null,aimPoint=player){
  const reaction=dodgeReactionDelay();if(!Number.isFinite(reaction))return false;
  const dx=aimPoint.x-origin.x,dy=aimPoint.y-origin.y,d=Math.hypot(dx,dy),playerDistance=dist(player,origin);
@@ -563,8 +563,12 @@ function canEvadeDodgeCast(origin,spell,witness=null,aimPoint=player){
  const clearance=spell.radius+player.hitRadius+8;
  const available=spell.cast+Math.max(0,playerDistance-clearance)/spell.speed-reaction;
  if(available<=0||forecastTravel(reaction,reaction+available)<clearance)return false;
- for(const side of [-1,1]){
-  const start=dodgeReactionPath(reaction).end,destination={x:start.x-side*dy/d*clearance,y:start.y+side*dx/d*clearance};
+ const start=dodgeReactionPath(reaction).end,shotAngle=Math.atan2(dy,dx);
+ // Prioritize perpendicular dodges, then sample oblique responses that may
+ // avoid a second projectile or an obstacle. Every route is forecast below.
+ for(const turn of [0,1,-1,2,-2,3,-3])for(const side of [-1,1]){
+  const angle=shotAngle+side*Math.PI/2+turn*TAU/16;
+  const destination={x:start.x+Math.cos(angle)*clearance,y:start.y+Math.sin(angle)*clearance};
   if(world.pointWalkable(destination,player.r)&&world.segmentClear(start,destination,player.r)&&dodgeEscapeClear(origin,spell,destination,reaction,aimPoint)){if(witness)witness.destination=destination;return true;}
  }
  return false;

@@ -1753,3 +1753,33 @@ test('Xerath W can select a safe lateral response against an incoming Ezreal Q',
  }
  assert.ok(lateral>0,'no lateral witness was exercised');
 });
+
+test('Xerath W shared escape respects a committed led Ezreal cast while moving',()=>{
+ let accepted=0;
+ for(let i=0;i<48;i++){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setRng((i*2654435761)>>>0);
+  const a=i*Math.PI/24,p=g.player,origin={x:p.x+Math.cos(a)*450,y:p.y+Math.sin(a)*450},spell=g.REFERENCE_SPELLS.ezrealDodge;
+  const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'cast',entry:{...origin},speed:120,hp:10000,charge:spell.cast});
+  g.setFoes([e]);g.moveTo(p.x-Math.sin(a)*140,p.y+Math.cos(a)*140);if(i%2)g.cast('w');
+  const predicted=g.dodgeReactionPath(spell.cast).end;
+  e.pending={angle:Math.atan2(predicted.y-e.y,predicted.x-e.x),spell,threat:true};
+  const witness={};if(!g.spawnXerathW(witness))continue;
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.5);
+  assert.equal(g.stats.hits,0,`angle ${i}`);accepted++;
+ }
+ assert.ok(accepted>=2,`only ${accepted} accepted combinations`);
+});
+
+test('straight-shot director can use an oblique escape against a second missile',()=>{
+ let accepted=0;
+ for(let i=0;i<96;i++){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player,origin={x:p.x-450,y:p.y},spell=g.REFERENCE_SPELLS.ezrealDodge;
+  const a=i*Math.PI/48,ux=Math.cos(a),uy=Math.sin(a);g.cast('w');
+  const s=g.fire(p.x+ux*450-uy*45,p.y+uy*450+ux*45,-ux*1000,-uy*1000,'enemy',30,30,.7);Object.assign(s,{directed:true,spellName:'EZREAL Q'});
+  const witness={};if(!g.canEvadeDodgeCast(origin,spell,witness))continue;
+  if(Math.abs(witness.destination.x-p.x)<5)continue;
+  const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'cast',charge:spell.cast,entry:{...origin},speed:120,hp:10000,pending:{angle:0,spell}});g.setFoes([e]);
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.5);assert.equal(g.stats.hits,0,`angle ${i}`);accepted++;
+ }
+ assert.ok(accepted>0,'no oblique route was exercised');
+});
