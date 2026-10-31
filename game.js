@@ -820,7 +820,12 @@ function updateDodgeVisitor(e,dt){
 function updateDodgeDirector(dt){
  // The missile's spawn offset has been consumed by the preceding update;
  // forecasting it in the release frame would see an incomplete trajectory.
- if(dodgeDirector.splitFollow){dodgeDirector.splitFollow=false;spawnDodgeVisitor(REFERENCE_SPELLS.ezrealDodge,20);}
+ if(dodgeDirector.splitFollow){
+  dodgeDirector.splitFollow=false;
+  // A hit in the release step makes the split harmless to this player. Do
+  // not turn a vanished or already-resolved combination into a fresh cast.
+  if(shots.some(s=>s.alive&&s.directed&&s.velkoz&&!s.ignorePlayer&&!(s.group&&s.group.hit)))spawnDodgeVisitor(REFERENCE_SPELLS.ezrealDodge,20);
+ }
  if(difficulty==="hard"&&time>=dodgeDirector.cassAt&&time>=dodgeDirector.rareGuardUntil){
   if(spawnCassioR()){hazards[hazards.length-1].directorScheduled=true;dodgeDirector.cassAt=time+rand(150,240);dodgeDirector.rareGuardUntil=time+35;return;}
   dodgeDirector.cassAt=time+1;

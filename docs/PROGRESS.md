@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Expert split follow-up lifecycle (2026-10-31)
+
+- A queued Ezreal follow-up is now discarded if the Vel’Koz threat was removed or became unable to hit the player before the next update. This prevents a resolved combination from unexpectedly spawning an unrelated isolated attack. Pause preserves the queue and restart clears it.
+- Added an actual 180-second seeded simulation at 30, 60 and 120 rendered FPS; combat counters and fixed-step timing match, and the run exercises Vel’Koz. Full suite 359/359; syntax and diff checks pass. Browser smoke verified Expert start and pause; long human balance testing remains open.
+
 ## Expert Dodge: make split overlap occur in live scheduling (2026-10-31)
 
 - A seeded integration test exposed that allowing Vel’Koz/Ezreal overlap at aim-lock did not produce simultaneous missiles in twelve 180-second stationary-player runs. Expert now gets a 40% seeded follow-up opportunity after Vel’Koz Q release, processed on the next update after its spawn offset has been consumed. The visitor enters briefly and must pass existing shared-escape checks at spawn and aim-lock. Caps, recovery, and failed safety checks still defer the combination. Record namespace is director_v71.

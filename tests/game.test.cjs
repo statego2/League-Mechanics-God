@@ -1217,6 +1217,29 @@ test('Expert director naturally overlaps Ezreal and Velkoz missiles',()=>{
  }
  assert.ok(overlap,'no Velkoz + Ezreal missile overlap appeared in twelve seeded Expert runs');
 });
+test('pending split follow-up is discarded if its original threat has resolved',()=>{
+ for(const scenario of ['removed','main-hit','child-hit']){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(50);g.dodgeDirector.next=999;g.dodgeDirector.splitFollow=true;
+  if(scenario!=='removed'){
+   const s=g.fire(700,150,0,0,'enemy',10,30,.2);
+   Object.assign(s,{directed:true,velkoz:scenario==='main-hit'?'delay':'child',ignorePlayer:scenario==='main-hit',group:scenario==='child-hit'?{hit:true}:null});
+  }
+  g.update(1/120);assert.equal(g.dodgeDirector.splitFollow,false,scenario);assert.equal(g.foes.filter(e=>e.dodgeVisitor).length,0,scenario);
+ }
+});
+test('pending split follow-up waits through pause and is cleared by restart',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.splitFollow=true;
+ g.pause();advance(g,1);assert.equal(g.dodgeDirector.splitFollow,true);g.reset('dodge');assert.ok(!g.dodgeDirector.splitFollow);assert.equal(g.foes.length,0);
+});
+test('seeded Expert combat remains deterministic at 30, 60 and 120 FPS',()=>{
+ const snapshots=[];
+ for(const fps of [30,60,120]){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(1234567);g.player.hp=g.player.maxHp=1000000;
+  g.loop(1000);for(let i=1;i<=fps*180;i++)g.loop(1000+i*1000/fps+.01);
+  const d=g.dodgeDirector;snapshots.push([d.attempted,d.ezreal,d.lux,d.ahri,d.blitz,d.velkoz,d.xerath,d.xerathQ,g.stats.hits,Math.round(g.time*120)]);
+ }
+ assert.deepEqual(snapshots[0],snapshots[1]);assert.deepEqual(snapshots[1],snapshots[2]);assert.ok(snapshots[0][5]>0,'run must exercise Velkoz');
+});
 
 test('Orianna ball is shown before its shockwave, with no stun or pull on hit',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;
