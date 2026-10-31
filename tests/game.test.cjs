@@ -441,6 +441,19 @@ test('Ahri Fox-Fire does not cancel an auto windup and is locked in auto-only CS
 test('Ahri Spirit Rush has three timed charges and fires magic bolts',()=>{
  const {g,node}=boot('ahri');g.reset('kite');g.disableSpawn();const e=foe(g,800);e.mr=100;const x=g.player.x;g.cast('r');assert.equal(g.player.rushCharges,2);assert.equal(g.player.cd.r,140);g.cast('r');assert.equal(g.player.rushCharges,2);advance(g,.7);assert.ok(g.player.x>x);assert.ok(Math.abs(e.hp-9962.5)<1e-8);advance(g,.4);assert.match(node('cdR').textContent,/×2/);g.cast('r');assert.equal(g.player.rushCharges,1);advance(g,1.1);g.cast('r');assert.equal(g.player.rushCharges,0);advance(g,1.1);g.cast('r');assert.equal(g.player.rushCharges,0);assert.ok(g.player.cd.r>130);
 });
+test('Spirit Rush snapshots capped movement speed when the dash starts',()=>{
+ function dash(boosted){
+  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+  node('arena').listeners.pointermove({clientX:1000,clientY:g.player.y,buttons:0});if(boosted)g.cast('w');g.cast('r');
+  const speed=g.player.dashing.speed,start=g.player.x;g.update(.1);return {g,speed,moved:g.player.x-start};
+ }
+ const base=dash(false),boosted=dash(true);
+ assert.equal(base.speed,765);assert.ok(Math.abs(boosted.speed-826.3)<1e-9);
+ assert.ok(Math.abs(base.moved-76.5)<1e-8);assert.ok(Math.abs(boosted.moved-82.63)<1e-8);
+ const before=base.g.player.dashing.speed;base.g.cast('w');assert.equal(base.g.player.dashing.speed,before);
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;node('arena').listeners.pointermove({clientX:1000,clientY:g.player.y,buttons:0});g.cast('w');advance(g,.8);g.cast('r');
+ assert.ok(g.player.dashing.speed>base.speed&&g.player.dashing.speed<boosted.speed);
+});
 test('Spirit Rush cannot ignore enemy collisions or cast while rooted',()=>{
  const {g}=boot('ahri');g.reset('kite');g.disableSpawn();g.player.root=1;g.cast('r');assert.equal(g.player.cd.r,0);g.player.root=0;g.fire(670,g.player.y,0,0,'enemy',18,5,1);g.cast('r');advance(g,.3);assert.equal(g.stats.hits,1);assert.equal(g.player.invuln,0);
 });
