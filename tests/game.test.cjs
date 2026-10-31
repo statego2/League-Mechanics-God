@@ -1172,6 +1172,11 @@ test('Orianna encounter renders a caster and ball during setup',()=>{
  const {g,node,draws}=boot('ahri');node('clockworkArt').complete=true;node('clockworkArt').naturalWidth=100;
  g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;assert.ok(g.spawnOriannaR());g.render();assert.ok(draws.includes(node('clockworkArt')));
 });
+test('Orianna shockwave appears on impact without a pre-cast area guide',()=>{
+ const {g,arcs}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const h={x:g.player.x-350,y:g.player.y,source:{x:g.player.x-400,y:g.player.y},r:207.5,orianna:true,casting:true,ttl:.05,directed:true,spellName:'ORIANNA R'};g.hazards.push(h);
+ g.render();assert.ok(!arcs.some(a=>a.r===h.r));g.update(.06);arcs.length=0;g.render();assert.ok(arcs.some(a=>a.r===h.r));
+});
 
 test('Orianna Q hits along its moving path once and records its own damage',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;assert.ok(g.spawnOriannaR());const h=g.hazards[0];
