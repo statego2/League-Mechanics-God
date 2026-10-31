@@ -819,6 +819,24 @@ test('director rejects a point-blank cast and accepts a walkable long-range side
  assert.equal(g.canEvadeDodgeCast({x:g.player.x-250,y:g.player.y},spell),false);
  assert.equal(g.canEvadeDodgeCast({x:g.player.x-460,y:g.player.y},spell),true);
 });
+test('director accounts for spell cast locks and defers threats during a dash',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const spell=g.REFERENCE_SPELLS.ezrealDodge,origin={x:g.player.x-460,y:g.player.y};
+ assert.equal(g.canEvadeDodgeCast(origin,spell),true);
+ g.player.casting={kind:'charm',angle:0,remaining:.25};assert.equal(g.canEvadeDodgeCast(origin,spell),false);
+ g.player.casting.remaining=.1;assert.equal(g.canEvadeDodgeCast(origin,spell),true);
+ g.player.casting=null;g.player.dashing={x:800,y:337.5};
+ assert.equal(g.canEvadeDodgeCast(origin,spell),false);assert.equal(g.canEvadeVelkoz(origin,0,400,g.REFERENCE_SPELLS.velkozDodge),false);
+ assert.equal(g.spawnXerathW(),false);assert.equal(g.spawnXerathQ(),false);assert.equal(g.spawnOriannaR(),false);assert.equal(g.aimMalphiteR(origin),null);
+ g.player.dashing=null;g.player.root=2;assert.equal(g.canEvadeDodgeCast(origin,spell),false);assert.equal(g.spawnXerathW(),false);assert.equal(g.spawnXerathQ(),false);
+});
+test('a sampled escape remains safe when a committed Ahri spell delays movement',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const origin={x:200,y:g.player.y},spell=g.REFERENCE_SPELLS.luxDodge,witness={};g.player.casting={kind:'charm',angle:Math.PI/2,remaining:.25};
+ assert.ok(g.canEvadeDodgeCast(origin,spell,witness));
+ const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'cast',entry:{...origin},speed:120,charge:spell.cast,pending:{angle:0,spell}});g.setFoes([e]);
+ advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.5);assert.equal(g.stats.hits,0);
+});
 test('straight-shot safety checks reject targets beyond projectile reach including hitboxes',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.x=900;g.player.y=337.5;
  const spell=g.REFERENCE_SPELLS.ezrealDodge,reach=spell.range+spell.radius+g.player.hitRadius;
