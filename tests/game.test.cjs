@@ -1168,6 +1168,12 @@ test('Malphite approaches before dashing and hit deals damage without immobiliza
  assert.equal(h.casting,true);assert.equal(g.dodgeDirector.malphite,1);g.player.x=h.target.x;g.player.y=h.target.y;const pos={x:g.player.x,y:g.player.y};advance(g,.7);
  assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.stats.damage-(200/1.3))<1e-7);assert.equal(g.player.root,0);assert.equal(g.player.x,pos.x);assert.equal(g.player.y,pos.y);
 });
+test('Malphite renders bounded stone art and retains a missing-image fallback',()=>{
+ const {g,node,drawSizes}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const art=node('stoneArt');art.complete=true;art.naturalWidth=1211;
+ assert.ok(g.spawnMalphiteR());g.render();assert.deepEqual(drawSizes.find(x=>x[0]===art).slice(1),[-42,-90,84,90]);
+ art.naturalWidth=0;assert.doesNotThrow(()=>g.render());
+ const missing=boot('ahri',{missingNodes:['stoneArt']});missing.g.reset('dodge');missing.g.dodgeDirector.next=999;assert.ok(missing.g.spawnMalphiteR());assert.doesNotThrow(()=>missing.g.render());
+});
 test('Malphite R has a walkable response after a 200ms reaction delay',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
  assert.ok(g.spawnMalphiteR());const h=g.hazards[0];advance(g,1.26);assert.ok(h.casting);
