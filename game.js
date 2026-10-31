@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v40":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v41":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -641,7 +641,7 @@ function updateDodgeVisitor(e,dt){
   }
  }else if(dist(e,finalGoal)<.1)e.alive=false;}
  }else if(e.phase==="cast"){
-  e.charge-=dt;if(e.charge<=0){releaseEnemy(e);e.phase=e.spell.returning?"orbFlight":e.spell.hook?"hookFlight":"exit";}
+  e.charge-=dt;if(e.charge<=0){releaseEnemy(e,Math.max(0,dt+e.charge));e.phase=e.spell.returning?"orbFlight":e.spell.hook?"hookFlight":"exit";}
  }else if(e.phase==="orbFlight"||e.phase==="hookFlight"){
   if(!e.orbShot||!e.orbShot.alive)e.phase="exit";
  }
@@ -681,9 +681,9 @@ function shootEnemy(e){
   e.pending={angle:a,fan:mode==="dodge"&&e.castCount%2===0};e.charge=preset.warning;e.shoot=999;
  }
 }
-function releaseEnemy(e){
+function releaseEnemy(e,spawnOffset=0){
  const p=e.pending;if(!p)return;
- if(p.spell){const spec=p.spell;const shot=fire(e.x,e.y,Math.cos(p.angle)*spec.speed,Math.sin(p.angle)*spec.speed,spec.returning?"enemyOrb":"enemy",spec.returning?spec.raw:physicalDamage(spec.raw,spec.resist),spec.radius,spec.range/spec.speed);shot.root=spec.root;shot.threat=!!p.threat;
+ if(p.spell){const spec=p.spell;const shot=fire(e.x,e.y,Math.cos(p.angle)*spec.speed,Math.sin(p.angle)*spec.speed,spec.returning?"enemyOrb":"enemy",spec.returning?spec.raw:physicalDamage(spec.raw,spec.resist),spec.radius,spec.range/spec.speed);shot.root=spec.root;shot.threat=!!p.threat;shot.spawnOffset=spawnOffset;
   if(spec.returning){shot.phase="out";shot.phaseHit=false;shot.casterId=e.id;shot.anchor={x:e.x,y:e.y};e.orbShot=shot;}
   if(spec.split){shot.velkoz="main";shot.splitAngle=p.angle;shot.ttl=clamp((p.splitDistance??spec.speed*.6)/spec.speed,.25,spec.range/spec.speed);}
   if(spec.hook){shot.casterId=e.id;shot.anchor={x:e.x,y:e.y};e.orbShot=shot;}
@@ -952,10 +952,12 @@ for(const s of shots){if(!s.alive)continue;
   const dx=s.anchor.x-s.x,dy=s.anchor.y-s.y,d=Math.hypot(dx,dy)||1;s.vx=dx/d*700;s.vy=dy/d*700;
  }
  if((s.kind==="enemy"||s.kind==="enemyOrb")&&!s.phaseHit&&!s.ignorePlayer&&!(s.group&&s.group.hit)&&threatening(s))s.threat=true;
- s.px=s.x;s.py=s.y;const travelDt=Math.max(0,Math.min(dt,s.ttl,s.kind==="orb"&&s.phase==="return"?dist(s,player)/700:s.kind==="enemyOrb"&&s.phase==="return"?dist(s,s.anchor)/700:dt));s.x+=s.vx*travelDt;s.y+=s.vy*travelDt;s.ttl-=dt;
+ const offset=clamp(s.spawnOffset||0,0,dt);s.spawnOffset=0;const activeDt=dt-offset;
+ s.px=s.x;s.py=s.y;const travelDt=Math.max(0,Math.min(activeDt,s.ttl,s.kind==="orb"&&s.phase==="return"?dist(s,player)/700:s.kind==="enemyOrb"&&s.phase==="return"?dist(s,s.anchor)/700:activeDt));s.x+=s.vx*travelDt;s.y+=s.vy*travelDt;s.ttl-=activeDt;
  // A missile that expires or reaches its return anchor partway through this
  // step cannot collide with motion that occurs after its own travel ended.
- const travelFraction=dt>0?travelDt/dt:0;
+ const travelFraction=dt>0?(offset+travelDt)/dt:0,startFraction=dt>0?offset/dt:0;
+ const playerStartX=oldX+(player.x-oldX)*startFraction,playerStartY=oldY+(player.y-oldY)*startFraction;
  const playerEndX=oldX+(player.x-oldX)*travelFraction,playerEndY=oldY+(player.y-oldY)*travelFraction;
  const targetEnd=(prev,target)=>({x:prev.x+(target.x-prev.x)*travelFraction,y:prev.y+(target.y-prev.y)*travelFraction});
  if(s.kind==="orb"){
@@ -964,7 +966,7 @@ for(const s of shots){if(!s.alive)continue;
   if(s.phase==="out"&&s.ttl<=0){s.phase="return";s.ttl=3;s.hitIds.clear();}
   else if(s.phase==="return"&&(dist(s,player)<1||s.ttl<=0))s.alive=false;
  }else if(s.kind==="enemyOrb"){
-  const collision=!s.phaseHit&&segmentDistance(s.px-oldX,s.py-oldY,s.x-playerEndX,s.y-playerEndY)<=s.r+player.hitRadius;
+  const collision=!s.phaseHit&&segmentDistance(s.px-playerStartX,s.py-playerStartY,s.x-playerEndX,s.y-playerEndY)<=s.r+player.hitRadius;
   if(collision){s.phaseHit=true;if(player.invuln>0){recordDodgeOutcome(s,"blocked");stats.blocked++;}else{recordDodgeOutcome(s,"hit");takeHit(s.phase==="out"?physicalDamage(s.damage,30):s.damage);}}
   const phaseFinished=s.phase==="out"?s.ttl<=0:(dist(s,s.anchor)<1||s.ttl<=0);
   if(phaseFinished){
@@ -976,7 +978,7 @@ for(const s of shots){if(!s.alive)continue;
   if(target&&segmentDistance(s.px-prev.x,s.py-prev.y,s.x-targetEnd(prev,target).x,s.y-targetEnd(prev,target).y)<=s.r+targetHitRadius(target)){applyImpact(target,{sourceId:s.sourceId??null,sourceTeam:"enemy",kind:"minionProjectile",raw:s.damage,damageType:"physical",minionBonus:s.minionBonus});s.alive=false;}
   if(s.ttl<=0)s.alive=false;
  }else if(s.kind==="enemy"){
-  const collision=!s.ignorePlayer&&!(s.group&&s.group.hit)&&segmentDistance(s.px-oldX,s.py-oldY,s.x-playerEndX,s.y-playerEndY)<=s.r+player.hitRadius;
+  const collision=!s.ignorePlayer&&!(s.group&&s.group.hit)&&segmentDistance(s.px-playerStartX,s.py-playerStartY,s.x-playerEndX,s.y-playerEndY)<=s.r+player.hitRadius;
   if(collision){s.alive=false;if(s.group)s.group.hit=true;if(player.invuln>0){recordDodgeOutcome(s,"blocked");stats.blocked++;}else {recordDodgeOutcome(s,"hit");takeHit(s.damage);if(state==="playing"&&s.root&&mode!=="dodge"){
    player.root=s.root;
    // A dash interrupted inside a wall must leave the player on walkable ground.

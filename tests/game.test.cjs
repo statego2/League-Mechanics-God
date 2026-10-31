@@ -1581,3 +1581,19 @@ test('cached HTML without new caster image nodes keeps the arena rendering',()=>
  const {g}=boot('ahri',{missingNodes:['ahriArt','ahriBackArt','rangerBackArt']});g.reset('dodge');
  assert.doesNotThrow(()=>g.drawChampion(500,300,-Math.PI/2,true,false,0,0));
 });
+
+
+test('visitor projectile travels only after its windup ends inside a simulation step',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const spec=g.REFERENCE_SPELLS.ezrealDodge, e=g.enemy(g.player.x-90,g.player.y);
+ Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'cast',charge:.09,pending:{angle:0,spell:spec,threat:true},entry:{x:e.x,y:e.y}});g.setFoes([e]);
+ g.update(.1);assert.equal(g.stats.hits,0);assert.equal(g.shots.length,1);
+ assert.ok(Math.abs(g.shots[0].x-(e.x+spec.speed*.01))<1e-6);
+});
+
+test('projectile does not collide with player movement before its release',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.speed=1000;
+ const spec=g.REFERENCE_SPELLS.ezrealDodge, e=g.enemy(g.player.x+20,g.player.y);
+ Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'cast',charge:.09,pending:{angle:Math.PI,spell:spec,threat:true},entry:{x:e.x,y:e.y}});g.setFoes([e]);
+ g.moveTo(g.player.x+200,g.player.y);g.update(.1);assert.equal(g.stats.hits,0);
+});
