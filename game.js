@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v43":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v44":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -939,12 +939,14 @@ for(const h of hazards){
  }
 }
 hazards=hazards.filter(h=>h.ttl>0);
-const newSplitShots=[];
 for(const s of shots){if(!s.alive)continue;
  if(s.velkoz==="delay"){
-  s.ttl-=dt;if(s.ttl<=0){
+  const launch=clamp(s.ttl,0,dt);s.ttl-=dt;
+  if(s.ttl<=0){
    const group={hit:s.ignorePlayer};
-   for(const side of [-1,1])newSplitShots.push({group,x:s.x,y:s.y,vx:Math.cos(s.splitAngle+side*Math.PI/2)*1050,vy:Math.sin(s.splitAngle+side*Math.PI/2)*1050,ignorePlayer:s.ignorePlayer,damage:s.damage});
+   // Array iteration includes these new children: their offset ensures they
+   // only move and collide during the time after the split becomes active.
+   for(const side of [-1,1]){const a=s.splitAngle+side*Math.PI/2,child=fire(s.x,s.y,Math.cos(a)*1050,Math.sin(a)*1050,"enemy",s.damage,27.5,550/1050);child.directed=true;child.spellName="VELKOZ Q";child.velkoz="child";child.ignorePlayer=s.ignorePlayer;child.group=group;child.spawnOffset=launch;}
    s.alive=false;
   }
   continue;
@@ -999,7 +1001,9 @@ for(const s of shots){if(!s.alive)continue;
   }}if(s.bait&&state==="playing")resolveBait(false);}
   else if(s.ttl<=0||s.x<0||s.x>W||s.y<0||s.y>H||(s.bait&&((player.x-s.x)*s.vx+(player.y-s.y)*s.vy)<=0)){s.alive=false;if(s.ignorePlayer||(s.group&&s.group.hit)){s.threat=false;s.phaseResolved=true;}recordDodgeOutcome(s,s.threat?"avoided":"harmless");if(s.threat){dodged++;if(!s.bait)cue("dodge");}if(s.bait)resolveBait(true);}
   if(s.velkoz==="main"&&!s.alive&&state==="playing"){
-   s.alive=true;s.velkoz="delay";s.ttl=.25;s.vx=s.vy=0;s.ignorePlayer=collision;s.phaseResolved=true;
+   // Begin the split delay at impact/expiry, not at the end of this step.
+   const terminal=offset+travelDt*(collision?contact:1);
+   s.alive=true;s.velkoz="delay";s.ttl=.25-(dt-terminal);s.vx=s.vy=0;s.ignorePlayer=collision;s.phaseResolved=true;
   }
  }else{
   let hit=null,first=Infinity;
@@ -1015,7 +1019,6 @@ for(const s of shots){if(!s.alive)continue;
  if(state!=="playing")break;
 }
 if(state!=="playing")return;
-for(const split of newSplitShots){const child=fire(split.x,split.y,split.vx,split.vy,"enemy",split.damage,27.5,550/1050);child.directed=true;child.spellName="VELKOZ Q";child.velkoz="child";child.ignorePlayer=split.ignorePlayer;child.group=split.group;}
 // Resolve after this step's impacts, allowing a champion hit during the grace
 // window to receive credit. The fixed-step clock quantizes expiry by <= 1 tick.
 for(const unit of [...foes,...allies])if(unit.alive&&unit.deathGrace&&time>=unit.deathGrace.until){unit.hp=0;resolveDeath(unit,{...unit.deathGrace.impact,time});}

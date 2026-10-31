@@ -1632,3 +1632,26 @@ test('Dodge resolves an area impact before the deadline and excludes one after i
   g.update(.1);assert.equal(g.state,'ended');assert.equal(g.stats.hits,Number(hit),`ttl ${ttl}`);
  }
 });
+
+
+test('Velkoz split retains sub-step expiry and launches children within their active step',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const main=g.fire(200,150,100,0,'enemy',10,30,.005);main.directed=true;main.spellName='VELKOZ Q';main.velkoz='main';main.splitAngle=0;
+ g.update(.01);assert.equal(main.velkoz,'delay');assert.ok(Math.abs(main.ttl-.245)<1e-9);
+ g.update(.25);const children=g.shots.filter(s=>s.velkoz==='child');assert.equal(children.length,2);
+ for(const child of children)assert.ok(Math.abs(Math.abs(child.y-150)-5.25)<1e-7,`child y=${child.y}`);
+});
+
+test('Velkoz children ignore champion movement before split activation',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.speed=300;
+ const x=g.player.x,y=g.player.y,main=g.fire(x,y,0,0,'enemy',10,30,.245);
+ Object.assign(main,{directed:true,spellName:'VELKOZ Q',velkoz:'delay',splitAngle:0,phaseResolved:true});
+ g.moveTo(x,y+100);g.update(.25);assert.equal(g.stats.hits,0);assert.equal(g.shots.filter(s=>s.velkoz==='child').length,2);
+});
+
+test('Velkoz child can hit during the remainder of the split activation step',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const x=g.player.x,y=g.player.y-65,main=g.fire(x,y,0,0,'enemy',10,30,.24);
+ Object.assign(main,{directed:true,spellName:'VELKOZ Q',velkoz:'delay',splitAngle:0,phaseResolved:true});
+ g.update(.25);assert.equal(g.stats.hits,1);
+});
