@@ -822,6 +822,33 @@ test('normal gameplay reaches the mixed encounter across seeded sessions',()=>{
  }
  assert.ok(sessionsWithOverlap>0,'no natural mixed encounters in five seeded sessions');
 });
+test('a seeded Lux follow-up permits ordinary movement to avoid both casts',()=>{
+ let checked=false;
+ for(let seedOffset=0;seedOffset<40&&!checked;seedOffset++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
+  g.reset('dodge');g.setTime(50);g.dodgeDirector.next=999;g.player.hp=g.player.maxHp=100000;
+  const spell=g.REFERENCE_SPELLS.ezrealDodge,e=g.enemy(130,g.player.y),first={};assert.ok(g.canEvadeDodgeCast(e,spell,first));
+  Object.assign(e,{dodgeVisitor:true,phase:'enter',spell,origin:{x:e.x,y:e.y},entry:{x:80,y:e.y},speed:120});g.setFoes([e]);g.update(1/120);
+  const follow=g.foes.find(x=>x.followUp);if(!follow)continue;checked=true;
+  assert.equal(follow.spell,g.REFERENCE_SPELLS.luxDodge);advance(g,.2-1/120);g.moveTo(first.destination.x,first.destination.y);
+  for(let i=0;i<180&&follow.phase==='enter';i++)g.update(1/120);
+  assert.equal(follow.phase,'cast');assert.equal(g.stats.hits,0);
+  const second={};assert.ok(g.canEvadeDodgeCast(follow,follow.spell,second));advance(g,.2);g.moveTo(second.destination.x,second.destination.y);advance(g,1.5);
+  assert.equal(g.stats.hits,0);assert.equal(g.dodgeDirector.ezreal,1);assert.equal(g.dodgeDirector.lux,1);
+ }
+ assert.ok(checked,'no seeded follow-up spawned');
+});
+test('Lux follow-ups occur in natural Expert sessions but not Foundation',()=>{
+ for(const [difficulty,expected] of [['easy',false],['hard',true]]){
+  let found=false;
+  for(let seedOffset=0;seedOffset<5&&!found;seedOffset++){
+   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});node('dodgeLength').listeners.change({target:{value:'180'}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
+   g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
+   while(g.time<179&&!found){g.update(1/120);found=g.foes.some(e=>e.alive&&e.followUp&&e.phase==='cast');}
+  }
+  assert.equal(found,expected,difficulty);
+ }
+});
 test('Xerath W rejects unsafe or unsupported overlaps and respects Foundation cap',()=>{
  for(const scenario of ['imminent','foundation','orb','split','multiple','pending']){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:scenario==='foundation'?'easy':'hard'}});g.reset('dodge');g.dodgeDirector.next=999;
