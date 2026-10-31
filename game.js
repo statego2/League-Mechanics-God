@@ -1042,7 +1042,10 @@ for(const h of hazards){
   }else if(h.casting){
    if(Number.isFinite(playerContact(h.target.x,h.target.y,h.target.x,h.target.y,0,impactFraction,h.r+player.hitRadius)))h.threat=true;
    const f=clamp(1-h.ttl/h.remaining,0,1);h.x=h.start.x+(h.target.x-h.start.x)*f;h.y=h.start.y+(h.target.y-h.start.y)*f;
-   if(h.ttl<=0){const collision=dist(effectPlayer,h.target)<=h.r+player.hitRadius;
+   if(h.ttl<=0){
+    // Dust appears on landing only; no prospective landing circle is drawn.
+    fx.push({x:h.target.x,y:h.target.y,vx:0,vy:0,r:h.r,ttl:.22,max:.22,rockImpact:true});
+    const collision=dist(effectPlayer,h.target)<=h.r+player.hitRadius;
     if(collision){if(player.invuln>0){recordDodgeOutcome(h,"blocked");stats.blocked++;}else{recordDodgeOutcome(h,"hit");takeHit(physicalDamage(MALPHITE_R.raw,30));}}
     else{recordDodgeOutcome(h,h.threat?"avoided":"harmless");if(h.threat){dodged++;cue("dodge");}}
     burst(h.target.x,h.target.y,"#bc9e84",20);if(state!=="playing")return;
@@ -1405,7 +1408,7 @@ for(const f of fx){ctx.globalAlpha=clamp(f.ttl/f.max,0,1);if(f.cassio){
  ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);const glow=ctx.createRadialGradient(0,0,0,0,0,f.r);
  glow.addColorStop(0,"#e8ffd9bb");glow.addColorStop(.35,"#9ff9a777");glow.addColorStop(1,"#45d99100");
  ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,f.r,-CASSIO_R.halfAngle,CASSIO_R.halfAngle);ctx.closePath();ctx.fillStyle=glow;ctx.fill();ctx.restore();
-}else if(f.shockwave){const glow=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r);glow.addColorStop(0,"#f5dcffcc");glow.addColorStop(.5,"#c586e477");glow.addColorStop(1,"#ab68d500");circle(f.x,f.y,f.r,glow);
+}else if(f.shockwave||f.rockImpact){const glow=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r);glow.addColorStop(0,f.rockImpact?"#ead5b5bb":"#f5dcffcc");glow.addColorStop(.5,f.rockImpact?"#a88e7277":"#c586e477");glow.addColorStop(1,f.rockImpact?"#947b5e00":"#ab68d500");circle(f.x,f.y,f.r,glow);
 }else if(f.beam){ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(f.endX,f.endY);ctx.strokeStyle=f.color;ctx.lineWidth=XERATH_Q.radius*2;ctx.lineCap="butt";ctx.stroke();}else if(f.text){ctx.font="bold 15px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y);}else circle(f.x,f.y,f.r,f.color);}ctx.globalAlpha=1;
 if(state==="playing"&&(referenceSpell()||mode==="dodge"||mode==="lastHit"||mode==="lane"||mode==="skillshot"||mode==="bait")){ctx.font="700 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#b7d9d9aa";ctx.fillText(referenceSpell()?`${referenceSpell().name} · MOVE OR FLASH · ${Math.max(0,60-Math.floor(time))}s`:mode==="lane"?"FARM, EVADE AND TRADE · "+Math.max(0,60-Math.floor(time))+"s":mode==="bait"?baitLabel():mode==="skillshot"?"AIM WITH THE CURSOR · Q TO FIRE · "+Math.max(0,45-Math.floor(time))+"s":mode==="lastHit"?`${autoDamage()} AUTO DAMAGE · WAVE `+waves+(ahriCS()?` / 20 · GOLD ${stats.gold} · GOLD MISSED ${stats.missedGold}`:" / 5"):"SURVIVE",W/2,90);}
 }

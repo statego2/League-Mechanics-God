@@ -1174,6 +1174,12 @@ test('Malphite renders bounded stone art and retains a missing-image fallback',(
  art.naturalWidth=0;assert.doesNotThrow(()=>g.render());
  const missing=boot('ahri',{missingNodes:['stoneArt']});missing.g.reset('dodge');missing.g.dodgeDirector.next=999;assert.ok(missing.g.spawnMalphiteR());assert.doesNotThrow(()=>missing.g.render());
 });
+test('Malphite landing effect appears on impact and not as a target guide',()=>{
+ const {g,arcs}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const target={x:g.player.x-350,y:g.player.y},start={x:target.x-100,y:target.y};
+ const h={...start,target,start,remaining:.2,r:162.5,malphite:true,casting:true,ttl:.05,directed:true,spellName:'MALPHITE R'};g.hazards.push(h);
+ g.render();assert.ok(!arcs.some(a=>a.r===h.r));g.update(.06);arcs.length=0;g.render();assert.ok(arcs.some(a=>a.r===h.r&&a.x===target.x&&a.y===target.y));
+});
 test('Malphite R has a walkable response after a 200ms reaction delay',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
  assert.ok(g.spawnMalphiteR());const h=g.hazards[0];advance(g,1.26);assert.ok(h.casting);
