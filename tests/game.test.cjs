@@ -1601,6 +1601,23 @@ test('accepted Ahri Q walking witnesses avoid both orb phases',()=>{
  }
  assert.ok(checked>=3,`only ${checked} walking witnesses`);
 });
+test('accepted Ahri Q overlap witnesses also avoid an incoming Ezreal shot',()=>{
+ let checked=0;
+ for(const side of [-1,1])for(const dy of [-1,1]){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.cassAt=Infinity;g.dodgeDirector.malAt=Infinity;g.dodgeDirector.rareAt=Infinity;
+  const spec=g.REFERENCE_SPELLS.ahriDodge,p=g.player,origin={x:p.x+side*500,y:p.y},witness={};
+  const shot=g.fire(p.x+side*50,p.y+dy*300,0,-dy*1000,'enemy',20,30,1);Object.assign(shot,{directed:true,spellName:'EZREAL Q'});
+  if(!g.canEvadeDodgeCast(origin,spec,witness))continue;
+  const e=g.enemy(origin.x,origin.y),aim=Math.atan2(p.y-e.y,p.x-e.x);
+  Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'cast',charge:spec.cast,pending:{angle:aim,spell:spec,threat:true},entry:{...origin}});g.setFoes([e]);
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,2.4);
+  assert.equal(g.stats.hits,0,`side ${side}, shot direction ${dy}`);checked++;
+ }
+ assert.ok(checked>0,'no accepted overlap witnesses');
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const p=g.player,shot=g.fire(p.x,p.y-300,0,1000,'enemy',20,30,1);Object.assign(shot,{directed:true,spellName:'EZREAL Q'});
+ assert.equal(g.canEvadeDodgeCast({x:p.x-500,y:p.y},g.REFERENCE_SPELLS.ahriDodge),false,'point-blank overlap must be deferred');
+});
 
 
 test('Ezreal-pattern sprite has normal dimensions and a safe fallback',()=>{
@@ -1890,7 +1907,7 @@ test('Expert endless round remains active beyond twelve simulated minutes and en
 });
 
 test('Expert endless cadence stays active across twelve simulated minutes',t=>{
- const runs=[];
+ const runs=[],mix=[],phases=[];
  for(let seed=0;seed<3;seed++){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});for(let i=0;i<seed;i++)node('newSeed').listeners.click();g.reset('dodge');g.player.hp=g.player.maxHp=1e6;
   const buckets=[],points=[[500,250],[700,250],[700,450],[500,450]];let last=0;
@@ -1898,9 +1915,15 @@ test('Expert endless cadence stays active across twelve simulated minutes',t=>{
    if(step%360===0){const [x,y]=points[Math.floor(step/360)%4];g.moveTo(x,y);}if(step%1440===0)g.cast('w');g.update(1/120);
    if((step+1)%(60*120)===0){buckets.push(g.dodgeDirector.attempted-last);last=g.dodgeDirector.attempted;}
   }
-  runs.push(buckets);assert.equal(g.state,'playing');assert.ok(buckets.every(n=>n>=5));
+  runs.push(buckets);const d=g.dodgeDirector;mix.push({ezreal:d.ezreal,ahri:d.ahri,lux:d.lux,blitz:d.blitz,velkoz:d.velkoz,xerath:d.xerath+d.xerathQ,orianna:d.orianna,malphite:d.malphite,cassio:d.cassio});
+  phases.push(Object.values(d.outcomes).reduce((a,v)=>({avoided:a.avoided+v.avoided,hit:a.hit+v.hit,blocked:a.blocked+v.blocked,harmless:a.harmless+v.harmless}),{avoided:0,hit:0,blocked:0,harmless:0}));
+  assert.equal(g.state,'playing');assert.ok(buckets.every(n=>n>=5));
+  for(const name of ['ezreal','ahri','lux','blitz','velkoz'])assert.ok(d[name]>0,`seed ${seed}: no ${name} casts`);
+  assert.ok(d.ezreal>d.ahri,`seed ${seed}: Ezreal should remain more common than Ahri`);
  }
  t.diagnostic(`casts/min per seed ${JSON.stringify(runs)}`);
+ t.diagnostic(`cast mix per seed ${JSON.stringify(mix)}`);
+ t.diagnostic(`resolved phase outcomes per seed ${JSON.stringify(phases)}`);
 });
 
 
