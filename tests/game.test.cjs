@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,visitorPathsCrowded,updateDodgeVisitor,spawnXerathW,spawnXerathQ,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,visitorPathsCrowded,updateDodgeVisitor,spawnXerathW,spawnXerathQ,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,drawSizes,strokes,arcs,texts,lines,rotations,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -1578,6 +1578,28 @@ test('paired Ezreal escapes remain safe with existing movement and W decay',()=>
   assert.equal(g.stats.hits,0,`seed ${seedOffset}`);accepted++;if(seedOffset%2)boosted++;if(Math.abs(angle-direct)>1e-5)led++;
  }
  assert.ok(accepted>=2,`only ${accepted} moving witnesses`);assert.ok(boosted>=1,`no W-boosted witnesses`);assert.ok(led>=1,`no led follow-up witnesses`);
+});
+
+test('Ahri Q forecast rejects a path safe outbound but crossed by the returning orb',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ g.player.x=600;g.player.y=170;
+ const spell=g.REFERENCE_SPELLS.ahriDodge,origin={x:350,y:337},aim={x:800,y:337},destination={x:600,y:440};
+ assert.equal(g.dodgeEscapeClear(origin,{...spell,returning:false},destination,.2,aim),true);
+ assert.equal(g.dodgeEscapeClear(origin,spell,destination,.2,aim),false);
+});
+
+test('accepted Ahri Q walking witnesses avoid both orb phases',()=>{
+ let checked=0;
+ for(const angle of [0,Math.PI/4,Math.PI/2,3*Math.PI/4,Math.PI,5*Math.PI/4,3*Math.PI/2,7*Math.PI/4]){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.cassAt=Infinity;g.dodgeDirector.malAt=Infinity;g.dodgeDirector.rareAt=Infinity;
+  const spec=g.REFERENCE_SPELLS.ahriDodge,origin={x:g.player.x+Math.cos(angle)*500,y:g.player.y+Math.sin(angle)*500},witness={};
+  if(!g.canEvadeDodgeCast(origin,spec,witness))continue;
+  const e=g.enemy(origin.x,origin.y),aim=Math.atan2(g.player.y-e.y,g.player.x-e.x);
+  Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'cast',charge:spec.cast,pending:{angle:aim,spell:spec,threat:true},entry:{...origin}});g.setFoes([e]);
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,2.4);
+  assert.equal(g.stats.hits,0,`angle ${angle}`);checked++;
+ }
+ assert.ok(checked>=3,`only ${checked} walking witnesses`);
 });
 
 
