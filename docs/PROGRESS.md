@@ -700,3 +700,9 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 - The straight-shot director's initial distance check now integrates the player's current W movement boost and its decay over the available response time. Previously it used base speed and could reject an encounter even though the later shared-path forecast and the actual boosted movement admit an escape. The final projectile/terrain forecast is unchanged; the accepted difficulty may increase when W is already active. Dodge records use `director_v47`.
 - Regression demonstrates a shot rejected at base speed but accepted and avoided with W after the 200 ms reaction allowance. Existing moving, paired and led-shot tests remain in the suite. `node --test tests/*.test.cjs`: 272/272 pass; `node --check game.js`, generated Ahri data check and `git diff --check` pass. Browser smoke started Expert Dodge, moved and activated W; the specific director decision was verified in simulation.
 - Next: human 3/12-minute Gauntlet playtests including boosted overlap fairness; visually confirm paired encounters and Orianna; verify Vel'Koz split timing against reliable data; continue faithful CS waves and turret behavior. The Gauntlet and full game remain unfinished.
+
+
+## Planned Cassiopeia R reaction (31 October 2026)
+
+- User requested training to turn away from Cassiopeia R. Added it to the existing Dodge Gauntlet roadmap, after current encounter stability/playtesting and before declaring the Gauntlet complete. It is not implemented and does not add a separate mode. The design preserves the user's no-stun-in-Dodge constraint: distinguish would-be stun, turned-away hit and full escape, without immobilizing the player. See `docs/DODGE_GAUNTLET_RHYTHM.md` for sources, uncertainties and acceptance checks.
+- Documentation-only change; no gameplay or assets changed. Next: continue Gauntlet fairness and playtesting, then implement the planned facing-based encounter.

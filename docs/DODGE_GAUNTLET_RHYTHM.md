@@ -27,6 +27,15 @@ Imagine a 10–12 minute continuous drill:
 
 **North star:** more qualified dodge opportunities per minute, **not** a random high number of shots per minute. Skill transfer matters more than "bullet-hell" spectacle.
 
+### Planned encounter: Cassiopeia R turn-away reaction (31 October 2026)
+
+Add **Petrifying Gaze** within the existing Gauntlet after the current roster's overlap fairness and longer playtests are stabilized, before treating the mode as finished. It is an occasional readable reaction encounter, not another menu mode or permanent visual aiming guide. Give the player a visible source and credible cast animation/sound; schedule it away from other rare ultimates unless a combined pattern has been separately validated. Initial frequency and encounter placement are training policies to tune by playtesting.
+
+- **Actual mechanic:** Riot describes a frontal attack that stuns enemies facing Cassiopeia and slows enemies facing away. Both outcomes still take damage; escaping the cone is the way to avoid the hit entirely. Sources: [Riot's ability description](https://na.leagueoflegends.com/en/featured/mid-season-magic), [community mechanics reference](https://wiki.leagueoflegends.com/en-us/Cassiopeia/LoL). The community reference lists a 0.5 s cast, 850 range, 80° cone and 2 s CC; verify patch/version and collision edge rules before implementation instead of presenting these as independently confirmed engine data.
+- **Player skill:** turn the champion away before impact, using the game's real facing state; mouse position alone must not count. Distinguish turning away inside the cone (damage but no stun), facing her inside it (would-be stun), and leaving the cone (miss). Test movement, stopped facing, attacks/casts and Flash against the eventual facing rules and clearly document any simplifications.
+- **Dodge-specific accommodation:** preserve the user's no-immobilization requirement. A would-be stun must be recorded and communicated as a failed turn, without rooting the player or causing an artificial chain death. Any slow treatment must be explicitly described and playtested; do not silently claim exact LoL CC. Record the damage and turn outcome separately so turning away is not mislabeled as a full dodge.
+- **Fairness and verification:** use a bounded source position and a reaction window consistent with the supported cast time; validate a feasible turn or escape under player movement and overlapping attacks before scheduling. Test cone edges, facing boundary, impact timing, interrupted/pause/restart and result accounting. Review the source and animation in a real browser encounter. No unverified cone overlay or extra graphics should be added as a substitute for a readable cast.
+
 ## 2. Separate three independent knobs
 
 ### A. Spell fidelity (fixed within a calibrated scenario)
