@@ -9,3 +9,5 @@
 @media(min-width:701px){.menu{width:min(680px,100%)}.mode-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}.mode-card:nth-child(odd):last-child{grid-column:1 / -1}.menu h2{font-size:clamp(36px,4vw,54px)}}
 @media(max-width:700px){.top-actions{flex-wrap:wrap;justify-content:flex-end}.top-actions #soundBtn{font-size:9px;padding:7px 6px}}
 .settings{flex-wrap:wrap}
+
+.dodge-breakdown{max-width:415px;margin:0 auto 16px;text-align:left;color:#bcd4df;font-size:12px}.dodge-breakdown summary{cursor:pointer;color:#8ce8dc;font-weight:700}.dodge-breakdown pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.6 ui-monospace,Menlo,monospace;color:#b2c6d1;margin:8px 0 0}

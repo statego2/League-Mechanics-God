@@ -791,7 +791,7 @@ test('lethal directed hits are recorded before the result screen and in-flight p
  const pending=g.fire(100,100,1,0,'enemy',1,1,10);pending.directed=true;pending.spellName='LUX Q';
  const lethal=g.fire(g.player.x-10,g.player.y,400,0,'enemy',10,8,1);lethal.directed=true;lethal.spellName='EZREAL Q';
  g.update(1/120);assert.equal(g.state,'ended');assert.equal(g.dodgeDirector.outcomes['EZREAL Q'].hit,1);
- assert.match(node('menuDescription').textContent,/EZREAL Q: 0 avoided \/ 1 hit/);assert.match(node('menuDescription').textContent,/1 unresolved phase/);
+ assert.match(node('dodgeBreakdownText').textContent,/EZREAL Q: 0 avoided \/ 1 hit/);assert.match(node('dodgeBreakdownText').textContent,/1 unresolved phase/);
 });
 test('returning orb records two independent hit phases and never counts a hit as avoided',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
@@ -1158,7 +1158,7 @@ test('Orianna Q arrival area uses its own radius without applying a second hit',
 test('a lethal Orianna Q is recorded before the result screen',()=>{
  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;assert.ok(g.spawnOriannaR());const h=g.hazards[0];g.player.hp=1;
  g.player.x=h.source.x+(h.destination.x-h.source.x)*.4;g.player.y=h.source.y+(h.destination.y-h.source.y)*.4;advance(g,.3);
- assert.equal(g.state,'ended');assert.match(node('menuDescription').textContent,/ORIANNA Q: 0 avoided \/ 1 hit/);assert.match(node('menuDescription').textContent,/0 unresolved phases/);
+ assert.equal(g.state,'ended');assert.match(node('dodgeBreakdownText').textContent,/ORIANNA Q: 0 avoided \/ 1 hit/);assert.match(node('dodgeBreakdownText').textContent,/0 unresolved phases/);
 });
 
 
@@ -1204,12 +1204,12 @@ test('CS deaths do not draw an artificial MISSED label',()=>{
 test('result counts a pending Velkoz split as unresolved when it can still hit',()=>{
  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
  const e=g.enemy(200,150),spec=g.REFERENCE_SPELLS.velkozDodge;Object.assign(e,{dodgeVisitor:true,pending:{angle:0,spell:spec,splitDistance:spec.speed*.25}});g.releaseEnemy(e);advance(g,.27);
- assert.ok(g.shots.some(s=>s.velkoz==='delay'));g.end(true);assert.match(node('menuDescription').textContent,/1 unresolved phase/);
+ assert.ok(g.shots.some(s=>s.velkoz==='delay'));g.end(true);assert.match(node('dodgeBreakdownText').textContent,/1 unresolved phase/);
 });
 test('result excludes an already-ineligible Velkoz split branch',()=>{
  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
  const e=g.enemy(400,g.player.y),spec=g.REFERENCE_SPELLS.velkozDodge;Object.assign(e,{dodgeVisitor:true,pending:{angle:0,spell:spec}});g.releaseEnemy(e);advance(g,.25);
- assert.ok(g.shots.some(s=>s.velkoz==='delay'&&s.ignorePlayer));g.end(true);assert.match(node('menuDescription').textContent,/0 unresolved phases/);
+ assert.ok(g.shots.some(s=>s.velkoz==='delay'&&s.ignorePlayer));g.end(true);assert.match(node('dodgeBreakdownText').textContent,/0 unresolved phases/);
 });
 
 test('pause freezes a pending Velkoz split and restart clears it and its outcomes',()=>{
@@ -1458,4 +1458,13 @@ test('a third identical complex visitor is deferred while repeated Ezreal remain
   d.lastRegular=name;d.regularStreak=2;const origin={x:140,y:g.player.y},spell=g.REFERENCE_SPELLS[spellKey],e=g.enemy(origin.x,origin.y);
   Object.assign(e,{dodgeVisitor:true,spell,phase:'enter',origin:{...origin},entry:{...origin},speed:120});g.setFoes([e]);g.update(1/120);assert.equal(e.phase,expected,name);
  }
+});
+
+
+test('Dodge results separate compact summary from accessible spell breakdown and reset it',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const shot=g.fire(g.player.x-5,g.player.y,1,0,'enemy',10,8,1);shot.directed=true;shot.spellName='EZREAL Q';g.update(1/120);g.end(false);
+ assert.equal(node('dodgeBreakdown').hidden,false);assert.match(node('menuDescription').textContent,/1 hits/);
+ assert.doesNotMatch(node('menuDescription').textContent,/EZREAL Q:/);assert.match(node('dodgeBreakdownText').textContent,/EZREAL Q: 0 avoided \/ 1 hit/);
+ node('dodgeBreakdown').open=true;g.reset('kite');g.pause();assert.equal(node('dodgeBreakdown').hidden,true);assert.equal(node('dodgeBreakdown').open,false);g.pause();g.end(false);assert.equal(node('dodgeBreakdown').hidden,true);
 });

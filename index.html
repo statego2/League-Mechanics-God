@@ -7,7 +7,7 @@
   <meta name="description" content="League Mechanics God — a free, original browser arena for dodging, kiting and skillshot practice.">
   <title>League Mechanics God · Arena</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2">
   <script defer src="world.js"></script>
   <script defer src="ahri-data.js"></script>
   <script defer src="game.js"></script>
@@ -45,6 +45,7 @@
           <div class="menu-kicker">THE PRACTICE GROUNDS</div>
           <h2 id="menuTitle">READ. REACT.<br><span>OUTPLAY.</span></h2>
           <p id="menuDescription">A fast, original browser combat arena built for League-style movement, skillshots and kiting. Choose a mode and jump straight in.</p>
+          <details id="dodgeBreakdown" class="dodge-breakdown" hidden><summary>Spell breakdown</summary><pre id="dodgeBreakdownText"></pre></details>
           <div class="settings" id="settings">
             <label for="difficulty">DIFFICULTY <select id="difficulty"><option value="easy">Foundation</option><option value="normal">Standard</option><option value="hard" selected>Expert</option></select></label>
             <label for="dodgeLength">DODGE TIME <select id="dodgeLength"><option value="60" selected>1 minute</option><option value="180">3 minutes</option><option value="720">12 minutes</option></select></label>
