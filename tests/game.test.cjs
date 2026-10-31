@@ -183,6 +183,18 @@ test('holding right mouse retargets movement immediately',()=>{
 test('drill menu exits simulation and repeated pause keys never toggle twice',()=>{
  const {g,node,window,key}=boot();key('p');assert.equal(g.state,'paused');window.listeners.keydown({key:'p',repeat:true,preventDefault(){}});assert.equal(g.state,'paused');node('menuBtn').listeners.click();assert.equal(g.state,'menu');assert.equal(node('settings').hidden,false);g.reset('lastHit');assert.equal(g.state,'playing');assert.equal(node('pauseBtn').disabled,false);
 });
+test('resuming after suspended animation frames does not advance the simulation',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const shot=g.fire(g.player.x-100,g.player.y,500,0,'enemy',10,5,3);
+ g.loop(1000);g.loop(1017);const t=g.time,x=shot.x;
+ g.pause();g.pause();g.loop(61017);
+ assert.equal(g.time,t);assert.equal(shot.x,x);assert.equal(g.stats.hits,0);
+ g.loop(61034);assert.ok(g.time>t);assert.ok(shot.x>x);
+});
+test('starting a new drill discards stale animation frame time',()=>{
+ const {g}=boot('ahri');g.loop(1000);g.loop(1017);g.reset('dodge');g.dodgeDirector.next=999;
+ g.loop(61000);assert.equal(g.time,0);g.loop(61017);assert.ok(g.time>0);
+});
 
 test('death from contact freezes later hazards and the final result immediately',()=>{
  const {g,node}=boot();g.player.hp=1;const e=foe(g,g.player.x,g.player.y);e.speed=0;g.hazards.push({x:100,y:100,r:50,ttl:.001,max:1,threat:true});advance(g,.01);assert.equal(g.state,'ended');assert.equal(g.dodged,0);assert.equal(g.stats.hits,1);assert.match(node('menuDescription').textContent,/1 hits taken/);
