@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v53":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v54":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -369,6 +369,13 @@ function addEnemy(){
 // Each visitor casts once, so no individual champion cooldown is faked.
 // Spawn interval and concurrency are training policies, not game spell stats.
 const DODGE_DIRECTOR={easy:{interval:5,cap:1},normal:{interval:3.2,cap:2},hard:{interval:2.5,cap:3}};
+// Seeded interval jitter remains in force. This bounded training rhythm changes
+// opportunity spacing only; individual spell timing and safety checks stay fixed.
+function dodgeRhythmMultiplier(now){
+ if(difficulty==="easy"||now<45)return 1;
+ const phase=(now-45)%43;
+ return phase<30?1:phase<38?.8:1.3;
+}
 // Avoid three identical complex encounters in a row; repeated Ezreal Q is
 // intentional. Record a visitor at aim lock, and ambient casts at creation.
 function regularAllowed(name){return name==="EZREAL Q"||dodgeDirector.lastRegular!==name||dodgeDirector.regularStreak<2;}
@@ -676,7 +683,7 @@ function updateDodgeDirector(dt){
   dodgeDirector.rareAt=time+1;
  }
  dodgeDirector.next-=dt;if(dodgeDirector.next>0)return;
- if(spawnDodgeVisitor())dodgeDirector.next=DODGE_DIRECTOR[difficulty].interval*rand(.88,1.12);
+ if(spawnDodgeVisitor())dodgeDirector.next=DODGE_DIRECTOR[difficulty].interval*dodgeRhythmMultiplier(time)*rand(.88,1.12);
  else dodgeDirector.next=.25;
 }
 // An unsafe, uncommitted ultimate is deferred instead of consuming its full

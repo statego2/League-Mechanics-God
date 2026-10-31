@@ -1813,3 +1813,14 @@ test('enemy Ahri return does not hit movement completed before the turn',()=>{
  Object.assign(s,{phase:'out',phaseHit:false,anchor:{x:g.player.x-200,y:g.player.y},casterId:-1,directed:true,spellName:'AHRI Q'});
  g.update(.05);assert.equal(g.stats.hits,0);assert.equal(s.phase,'return');
 });
+
+
+test('Dodge director changes encounter spacing in bounded pressure and recovery phases',()=>{
+ function interval(difficulty,time){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});node('dodgeLength').listeners.change({target:{value:'180'}});g.reset('dodge');g.setTime(time);g.setRng(1);g.dodgeDirector.next=0;
+  g.update(1/120);assert.ok(g.foes.length||g.hazards.length,`no encounter at ${difficulty} ${time}`);return g.dodgeDirector.next;
+ }
+ const stable=interval('hard',50),spike=interval('hard',78),recovery=interval('hard',86);
+ assert.ok(Math.abs(spike/stable-.8)<1e-10);assert.ok(Math.abs(recovery/stable-1.3)<1e-10);
+ assert.ok(Math.abs(interval('easy',50)-interval('easy',78))<1e-10);
+});
