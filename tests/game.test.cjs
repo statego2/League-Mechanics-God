@@ -1798,3 +1798,18 @@ test('straight-shot director can accept a safe shortened route near a boundary',
  }
  assert.ok(accepted>0,'no shortened safe route was exercised');
 });
+
+
+test('enemy Ahri orb returns and can hit during the remainder of its turn step',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const s=g.fire(g.player.x+83,g.player.y,1000,0,'enemyOrb',35,50,.005);
+ Object.assign(s,{phase:'out',phaseHit:false,anchor:{x:g.player.x-200,y:g.player.y},casterId:-1,directed:true,spellName:'AHRI Q'});
+ g.update(.05);assert.equal(g.stats.hits,1);assert.equal(g.stats.damage,35);assert.equal(s.phase,'return');
+ assert.equal(g.dodgeDirector.outcomes['AHRI Q'].hit,1);
+});
+test('enemy Ahri return does not hit movement completed before the turn',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.speed=300;g.moveTo(g.player.x-150,g.player.y);
+ const s=g.fire(g.player.x+100,g.player.y,1000,0,'enemyOrb',35,50,.005);
+ Object.assign(s,{phase:'out',phaseHit:false,anchor:{x:g.player.x-200,y:g.player.y},casterId:-1,directed:true,spellName:'AHRI Q'});
+ g.update(.05);assert.equal(g.stats.hits,0);assert.equal(s.phase,'return');
+});

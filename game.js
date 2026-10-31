@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v52":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v53":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -1000,11 +1000,28 @@ for(const s of shots){if(!s.alive)continue;
   else if(s.phase==="return"&&(dist(s,player)<1||s.ttl<=0))s.alive=false;
  }else if(s.kind==="enemyOrb"){
   const collision=!s.phaseHit&&segmentDistance(s.px-playerStartX,s.py-playerStartY,s.x-playerEndX,s.y-playerEndY)<=s.r+player.hitRadius;
-  if(collision){s.phaseHit=true;if(player.invuln>0){recordDodgeOutcome(s,"blocked");stats.blocked++;}else{recordDodgeOutcome(s,"hit");takeHit(s.phase==="out"?physicalDamage(s.damage,30):s.damage);}}
+  if(collision){s.phaseHit=true;if(player.invuln>0){recordDodgeOutcome(s,"blocked");stats.blocked++;}else{recordDodgeOutcome(s,"hit");takeHit(s.phase==="out"?physicalDamage(s.damage,30):s.damage);}if(state!=="playing")return;}
   const phaseFinished=s.phase==="out"?s.ttl<=0:(dist(s,s.anchor)<1||s.ttl<=0);
   if(phaseFinished){
    if(!s.phaseHit){recordDodgeOutcome(s,s.threat?"avoided":"harmless");if(s.threat){dodged++;cue("dodge");}}
-   if(s.phase==="out"){s.phase="return";s.ttl=3;s.phaseHit=false;s.phaseResolved=false;s.threat=false;}else s.alive=false;
+   if(s.phase==="out"){
+    s.phase="return";s.ttl=3;s.phaseHit=false;s.phaseResolved=false;s.threat=false;
+    // The outbound leg can end before the step does. Return immediately for
+    // the remaining interval and compare only the corresponding player path.
+    const remaining=Math.max(0,activeDt-travelDt);
+    if(remaining>0){
+     const caster=foes.find(e=>e.id===s.casterId&&e.alive);if(caster)s.anchor={x:caster.x,y:caster.y};
+     const rx=s.anchor.x-s.x,ry=s.anchor.y-s.y,rd=Math.hypot(rx,ry),flight=Math.min(remaining,rd/700);
+     s.vx=rd?rx/rd*700:0;s.vy=rd?ry/rd*700:0;s.px=s.x;s.py=s.y;
+     if(threatening(s,{x:playerEndX,y:playerEndY}))s.threat=true;
+     s.x+=s.vx*flight;s.y+=s.vy*flight;s.ttl-=remaining;
+     const endFraction=dt>0?(offset+travelDt+flight)/dt:0;
+     const returnEndX=oldX+(player.x-oldX)*endFraction,returnEndY=oldY+(player.y-oldY)*endFraction;
+     const returnHit=segmentDistance(s.px-playerEndX,s.py-playerEndY,s.x-returnEndX,s.y-returnEndY)<=s.r+player.hitRadius;
+     if(returnHit){s.phaseHit=true;if(player.invuln>0){recordDodgeOutcome(s,"blocked");stats.blocked++;}else{recordDodgeOutcome(s,"hit");takeHit(s.damage);}if(state!=="playing")return;}
+     if(flight>=rd/700||s.ttl<=0){if(!s.phaseHit){recordDodgeOutcome(s,s.threat?"avoided":"harmless");if(s.threat){dodged++;cue("dodge");}}s.alive=false;}
+    }
+   }else s.alive=false;
   }
  }else if(s.kind==="enemyMinion"){
   const target=allies.find(e=>e.id===s.targetId&&e.alive),prev=target&&(previousAllies.get(target.id)||target);
