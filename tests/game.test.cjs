@@ -147,7 +147,7 @@ test('pause freezes timers, restart clears orders/stats/cooldowns, blur pauses',
  const {g,window,node}=boot();g.cast('q');advance(g,.2);g.pause();const t=g.time;advance(g,1);assert.equal(g.time,t);g.pause();advance(g,.1);assert.ok(g.time>t);window.listeners.blur();assert.equal(g.state,'paused');g.reset('dodge');assert.equal(g.state,'playing');assert.equal(g.time,0);assert.equal(g.player.cd.q,0);assert.equal(g.stats.hits,0);assert.equal(node('pauseBtn').textContent,'PAUSE P');g.render();
 });
 test('both drill end conditions transition once; restart remains playable',()=>{
- const {g,node}=boot();g.reset('dodge');g.disableSpawn();g.setTime(59.999);advance(g,.1);assert.equal(g.state,'ended');assert.match(node('menuDescription').textContent,/threats avoided/);g.end(false);assert.match(node('menuTitle').innerHTML,/COMPLETE/);
+ const {g,node}=boot();g.reset('dodge');g.disableSpawn();g.setTime(59.999);advance(g,.1);assert.equal(g.state,'playing');g.end(false);assert.match(node('menuDescription').textContent,/threats avoided/);g.end(true);assert.match(node('menuTitle').innerHTML,/FELL/);
  g.reset('kite');g.disableSpawn();for(let i=0;i<10;i++){const e=foe(g,620);e.hp=1;g.fire(600,e.y,1000,0,'q',45,10,1);advance(g,.04);}assert.equal(g.state,'ended');assert.match(node('menuDescription').textContent,/Defeated 10/);
 });
 
@@ -700,7 +700,7 @@ test('Dodge director sends single-cast visitors with deterministic Ezreal-heavy 
 });
 test('Ahri Q is actually scheduled on every difficulty in the default seeded long drill',()=>{
  for(const difficulty of ['easy','normal','hard']){
-  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});node('dodgeLength').listeners.change({target:{value:'180'}});
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});
   g.reset('dodge');g.player.hp=g.player.maxHp=1000000;advance(g,90);
   assert.ok(g.dodgeDirector.ahri>0,`${difficulty}: no Ahri casts`);assert.ok(g.dodgeDirector.ezreal>g.dodgeDirector.ahri,`${difficulty}: Ezreal should remain common`);
  }
@@ -709,22 +709,23 @@ test('Dodge visitor enters, casts only once, then exits without deleting its mis
  const {g}=boot('ahri');g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,.02);const visitor=g.foes.find(e=>e.dodgeVisitor);assert.ok(visitor);advance(g,1.1);assert.equal(g.dodgeDirector.attempted,1);assert.equal(visitor.phase,'exit');advance(g,1);assert.ok(!g.foes.includes(visitor));assert.equal(g.dodgeDirector.attempted,1);
 });
 
-test('Dodge session duration is a setting and records are partitioned by length',()=>{
- const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
- node('dodgeLength').listeners.change({target:{value:'180'}});g.reset('dodge');g.disableSpawn();g.setTime(60);g.update(1/120);assert.equal(g.state,'playing');g.setTime(179.999);g.update(1/120);assert.equal(g.state,'ended');assert.ok([...values.keys()].some(k=>k.includes('.time_180')));
- node('dodgeLength').listeners.change({target:{value:'60'}});g.reset('dodge');g.setTime(59.999);g.update(1/120);assert.equal(g.state,'ended');assert.ok([...values.keys()].some(k=>k.includes('.time_60')));
+test('Dodge is endless and uses separate records from timed runs',()=>{
+ const {g,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
+ g.reset('dodge');g.dodgeDirector.next=999;g.setTime(720);g.update(1/120);assert.equal(g.state,'playing');
+ g.player.hp=1;g.fire(g.player.x,g.player.y,0,0,'enemy',10,5,1);g.update(1/120);assert.equal(g.state,'ended');
+ assert.ok([...values.keys()].some(k=>k.includes('.endless')));
 });
 
 test('Dodge director does not grant artificial invulnerability after a hit',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.disableSpawn();g.fire(g.player.x-5,g.player.y,1,0,'enemy',10,8,1);g.fire(g.player.x+5,g.player.y,-1,0,'enemy',10,8,1);g.update(1/120);assert.equal(g.stats.hits,2);assert.equal(g.player.hp,570);assert.equal(g.player.invuln,0);
 });
-test('Dodge director completes a long session with bounded directed threats',()=>{
- const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'normal'}});node('dodgeLength').listeners.change({target:{value:'720'}});g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
+test('Dodge director continues past 12 minutes with bounded directed threats',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'normal'}});g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
  for(let i=0;i<720*120+2&&g.state==='playing';i++){
   g.update(1/120);const active=g.foes.filter(e=>e.alive&&e.dodgeVisitor&&e.phase!=='exit'&&e.phase!=='orbFlight'&&e.phase!=='hookFlight').length+g.shots.filter(s=>s.alive&&s.directed).length+g.hazards.filter(h=>h.directed).length;
   assert.ok(active<=2,`directed threats exceeded cap: ${active}`);
  }
- assert.equal(g.state,'ended');assert.ok(g.dodgeDirector.attempted>100);assert.ok(g.dodgeDirector.xerathQ>0,'long session never scheduled Xerath Q');assert.ok(g.dodgeDirector.velkoz>0,'long session never scheduled Velkoz Q');assert.ok(g.dodgeDirector.orianna>0,'long session never scheduled Orianna R');assert.ok(g.dodgeDirector.malphite>0,'long session never scheduled Malphite R');assert.equal(g.dodgeDirector.attempted,g.dodgeDirector.ezreal+g.dodgeDirector.lux+g.dodgeDirector.ahri+g.dodgeDirector.blitz+g.dodgeDirector.velkoz+g.dodgeDirector.xerath+g.dodgeDirector.xerathQ+g.dodgeDirector.oriannaQ+g.dodgeDirector.orianna+g.dodgeDirector.malphite);
+ assert.equal(g.state,'playing');assert.ok(g.dodgeDirector.attempted>100);assert.ok(g.dodgeDirector.xerathQ>0,'long session never scheduled Xerath Q');assert.ok(g.dodgeDirector.velkoz>0,'long session never scheduled Velkoz Q');assert.ok(g.dodgeDirector.orianna>0,'long session never scheduled Orianna R');assert.ok(g.dodgeDirector.malphite>0,'long session never scheduled Malphite R');assert.equal(g.dodgeDirector.attempted,g.dodgeDirector.ezreal+g.dodgeDirector.lux+g.dodgeDirector.ahri+g.dodgeDirector.blitz+g.dodgeDirector.velkoz+g.dodgeDirector.xerath+g.dodgeDirector.xerathQ+g.dodgeDirector.oriannaQ+g.dodgeDirector.orianna+g.dodgeDirector.malphite);
 });
 test('Dodge visitor uses distinct existing visual profiles and projectile colours',()=>{
  const {g,node,draws,strokes}=boot('ahri');for(const id of ['mageArt','explorerArt']){node(id).complete=true;node(id).naturalWidth=100;}
@@ -840,7 +841,7 @@ test('the seeded director naturally schedules an Ezreal Q and Xerath W combinati
 test('normal gameplay reaches the mixed encounter across seeded sessions',()=>{
  let sessionsWithOverlap=0;
  for(let seedOffset=0;seedOffset<5;seedOffset++){
-  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});node('dodgeLength').listeners.change({target:{value:'180'}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
   g.reset('dodge');g.player.hp=g.player.maxHp=1000000;let found=false;
   while(g.time<179&&!found){g.update(1/120);found=g.hazards.some(h=>h.xerath)&&(g.foes.some(e=>e.alive&&e.dodgeVisitor&&e.phase==='cast'&&e.spell===g.REFERENCE_SPELLS.ezrealDodge)||g.shots.some(s=>s.alive&&s.spellName==='EZREAL Q'));}
   if(found)sessionsWithOverlap++;
@@ -867,7 +868,7 @@ test('Lux follow-ups occur in natural Expert sessions but not Foundation',()=>{
  for(const [difficulty,expected] of [['easy',false],['hard',true]]){
   let found=false;
   for(let seedOffset=0;seedOffset<5&&!found;seedOffset++){
-   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});node('dodgeLength').listeners.change({target:{value:'180'}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
+   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
    g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
    while(g.time<179&&!found){g.update(1/120);found=g.foes.some(e=>e.alive&&e.followUp&&e.phase==='cast'&&e.spell===g.REFERENCE_SPELLS.luxDodge);}
   }
@@ -1434,7 +1435,7 @@ test('clipped area escape never claims a point through a wall is reachable',()=>
 test('moving-player seeded sessions sustain mixed pressure without impossible state',t=>{
  const runs=[];
  for(let seedIndex=0;seedIndex<3;seedIndex++){
-  const {g,node}=boot('ahri');node('dodgeLength').listeners.change({target:{value:'180'}});for(let n=0;n<seedIndex;n++)node('newSeed').listeners.click();
+  const {g,node}=boot('ahri');for(let n=0;n<seedIndex;n++)node('newSeed').listeners.click();
   g.reset('dodge');g.player.hp=g.player.maxHp=1e6;
   const points=[[500,250],[700,250],[700,450],[500,450]];
   for(let step=0;step<179*120;step++){
@@ -1540,7 +1541,7 @@ test('double Ezreal projectiles occur naturally on Standard and Expert but not F
  for(const [difficulty,expected] of [['easy',false],['normal',true],['hard',true]]){
   let found=false;
   for(let seedOffset=0;seedOffset<5&&!found;seedOffset++){
-   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});node('dodgeLength').listeners.change({target:{value:'180'}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
+   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
    g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
    while(g.time<179&&!found){g.update(1/120);found=g.shots.filter(s=>s.alive&&s.spellName==='EZREAL Q').length>=2;}
   }
@@ -1616,25 +1617,10 @@ test('Velkoz splits from first swept contact, including a moving champion',()=>{
 });
 
 
-test('Dodge resolves lethal projectile impacts before the survival deadline',()=>{
- const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setTime(59.95);g.player.hp=10;
- const s=g.fire(g.player.x-(g.player.hitRadius+10+30),g.player.y,1000,0,'enemy',100,10,1);s.directed=true;s.spellName='EZREAL Q';s.threat=true;
- g.update(.1);assert.equal(g.state,'ended');assert.equal(g.stats.hits,1);assert.match(node('menuTitle').innerHTML,/FELL/);assert.ok(Math.abs(g.time-60)<1e-8);
+test('Dodge still resolves lethal impacts beyond the former time limit',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setTime(720);g.player.hp=10;
+ g.fire(g.player.x-30,g.player.y,1000,0,'enemy',100,10,1);g.update(.1);assert.equal(g.state,'ended');assert.equal(g.stats.hits,1);
 });
-test('Dodge stops at the deadline before a later projectile impact',()=>{
- const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setTime(59.95);g.player.hp=10;
- const s=g.fire(g.player.x-(g.player.hitRadius+10+70),g.player.y,1000,0,'enemy',100,10,1);s.directed=true;s.spellName='EZREAL Q';s.threat=true;
- g.update(.1);assert.equal(g.state,'ended');assert.equal(g.stats.hits,0);assert.match(node('menuTitle').innerHTML,/COMPLETE/);assert.ok(Math.abs(g.time-60)<1e-8);
-});
-
-test('Dodge resolves an area impact before the deadline and excludes one after it',()=>{
- for(const [ttl,hit] of [[.03,true],[.07,false]]){
-  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setTime(59.95);g.player.hp=10;
-  g.hazards.push({x:g.player.x,y:g.player.y,r:40,ttl,max:ttl,directed:true,threat:true,spellName:'TEST AREA'});
-  g.update(.1);assert.equal(g.state,'ended');assert.equal(g.stats.hits,Number(hit),`ttl ${ttl}`);
- }
-});
-
 
 test('Velkoz split retains sub-step expiry and launches children within their active step',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
@@ -1817,7 +1803,7 @@ test('enemy Ahri return does not hit movement completed before the turn',()=>{
 
 test('Dodge director changes encounter spacing in bounded pressure and recovery phases',()=>{
  function interval(difficulty,time){
-  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});node('dodgeLength').listeners.change({target:{value:'180'}});g.reset('dodge');g.setTime(time);g.setRng(1);g.dodgeDirector.next=0;
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});g.reset('dodge');g.setTime(time);g.setRng(1);g.dodgeDirector.next=0;
   g.update(1/120);assert.ok(g.foes.length||g.hazards.length,`no encounter at ${difficulty} ${time}`);return g.dodgeDirector.next;
  }
  const stable=interval('hard',50),spike=interval('hard',78),recovery=interval('hard',86);
@@ -1836,4 +1822,27 @@ test('Velkoz split awards no dodge when a later branch hits',()=>{
  const first=g.fire(100,100,1,0,'enemy',10,5,.01);Object.assign(first,{directed:true,spellName:'VELKOZ Q',velkoz:'child',group,threat:true});
  const second=g.fire(g.player.x+100,g.player.y,-1000,0,'enemy',10,5,1);Object.assign(second,{directed:true,spellName:'VELKOZ Q',velkoz:'child',group,threat:true});
  g.update(.02);assert.equal(g.dodged,0);g.update(.1);assert.equal(g.stats.hits,1);assert.equal(g.dodged,0);
+});
+
+
+test('Expert endless pressure ramps after three minutes and reaches a cap',()=>{
+ function interval(time){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(time);g.setRng(1);g.dodgeDirector.next=0;g.dodgeDirector.rareAt=Infinity;g.dodgeDirector.malAt=Infinity;g.update(1/120);return g.dodgeDirector.next;}
+ // Times share the same phase of the 43-second rhythm.
+ const early=interval(50),later=interval(50+43*10),cap=interval(50+43*20),beyond=interval(50+43*30);
+ assert.ok(later<early);assert.ok(cap<later);assert.ok(Math.abs(cap-beyond)<1e-9);
+});
+
+
+test('endless Dodge keeps best survival separately from score',()=>{
+ const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
+ g.reset('dodge');g.setTime(130);g.end(false);assert.match(node('menuDescription').textContent,/Best survival: 130.0s/);
+ g.reset('dodge');g.setTime(90);g.end(false);assert.match(node('menuDescription').textContent,/Best survival: 130.0s/);
+ assert.ok([...values.keys()].some(k=>k.endsWith('.endless.survival')));
+});
+
+test('Expert endless round remains active beyond twelve simulated minutes and ends on death',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
+ advance(g,780);assert.equal(g.state,'playing');assert.ok(g.dodgeDirector.attempted>100);
+ g.applyImpact(g.player,{sourceTeam:'enemy',kind:'test',raw:2000000,damageType:'true'});assert.equal(g.state,'ended');
+ assert.match(node('menuDescription').textContent,/Survived 780/);
 });

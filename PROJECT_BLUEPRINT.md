@@ -40,6 +40,8 @@ The game should develop skills that transfer to LoL:
 
 The user explicitly wants a few excellent drills, not many separate modes. Dodge Trial should not immobilize the player when a skillshot hits; it should remain demanding via threats and damage. Kite should ultimately use an ADC with high attack speed rather than Ahri; preserve Ahri in other modes. The laning vision and a challenging combined CS, positioning, bait and dodge experience remain central; restore it after the minion/wave simulation is credible. Dodge should retain varied overlapping threats and difficulty should favor challenge without sacrificing readable, fair patterns. The visible menu now offers Dodge Trial, Kite Arena and Last-Hit Lab; preserve legacy implementations for regression coverage but do not add more menu modes without clear value. Make Ahri the default player baseline across these drills and integrate recognizable opponent spells into Dodge Trial. Continue toward accurate Ahri abilities, visuals and realistic CS waves; the current sprite and abilities are still placeholders.
 
+**Latest Dodge direction (31 October 2026):** The user wants an endless game, with Expert as the development and balancing priority. Do not reintroduce a countdown or forced win at a duration. Elapsed survival time is a result metric; improve the intensity and training value while preserving readable, avoidable patterns. Other difficulty options and modes remain playable but are not the priority.
+
 ## 2. What the game should actually look and feel like
 
 **Camera and world:** A readable top-down / three-quarter MOBA-like perspective, coherent arena or lane, ground textures or tiles, obstacles where appropriate, readable combat distance and safe/unsafe zones. Not a generic blank grid.
@@ -60,7 +62,7 @@ The user explicitly wants a few excellent drills, not many separate modes. Dodge
 
 | # | Main mode | ONE continuous gameplay experience | Primary design spec |
 | --- | --- | --- | --- |
-| **1** | **Dodge Gauntlet** | Pure dodge survival under rapid, fair incoming spells. Frequent Ezreal Q, Lux Q, Blitz Q, Ahri returning Q, Vel'Koz split Q and occasional invisible-source Xerath Q/W. Rare Malphite R/Orianna R; planned Cassiopeia R turn-away reaction. | [Dodge Gauntlet Rhythm](docs/DODGE_GAUNTLET_RHYTHM.md) |
+| **1** | **Dodge Gauntlet** | Endless dodge survival under rapid, fair incoming spells, with Expert as the primary tuning target. Frequent Ezreal Q, Lux Q, Blitz Q, Ahri returning Q, Vel'Koz split Q and occasional invisible-source Xerath Q/W. Rare Malphite R/Orianna R; planned Cassiopeia R turn-away reaction. | [Dodge Gauntlet Rhythm](docs/DODGE_GAUNTLET_RHYTHM.md) |
 | **2** | **Mechanics Arena — Combat Survival** | **Player alone versus MANY active hostile champions**. Full Ahri kit, combos, kiting, target switching, dodges and Flash all at once. Standard target **5–6 concurrent enemies** (design target, not a claim of current functionality); no allied champion AI, no scripted "do E now" lessons. | [Mechanics Arena Design](docs/MECHANICS_ARENA_DESIGN.md) |
 | **3** | **CS Mastery** | ONE clean, continuous farming lane with real two-sided minions; natural farming as the wave moves, including genuine under-turret CS when turret simulation is ready. **No enemy champion harassment here**—that belongs to #4. | [Four-mode Vision](docs/MECHANICS_ACCELERATOR_VISION.md) |
 | **4** | **Mid Lane Mastery — The Ultimate Drill** | ONE **very hard** 1v1 lane challenge. The enemy tries to poke you on real last-hit commitments; the enemy farms too, and you try to punish their CS. Bait, dodge, poke, zone, trade and sometimes concede CS—no separate sub-modes or four difficulty variants. | [Mid Lane Mastery Design](docs/MID_LANE_MASTERY_DESIGN.md) |
@@ -91,7 +93,7 @@ The user explicitly wants a few excellent drills, not many separate modes. Dodge
 - `game.js`: update/render loop, player, enemies, projectiles, abilities and input.
 - `README.md`: how to run the alpha and descriptions of its modes.
 
-**Current prototype:** `Dodge Trial` (survive for 60 seconds), `Kite Arena` (kill opponents while moving and casting), `Last-Hit Lab` (15 minions, allied projectile attrition, CS/missed scoring), `Skillshot Lab`, `Bait → Dodge → CS` and a basic `Lane Scenario`.
+**Current prototype:** `Dodge Trial` (endless survival until defeat; elapsed time and personal best), `Kite Arena` (kill opponents while moving and casting), `Last-Hit Lab` (15 minions, allied projectile attrition, CS/missed scoring), `Skillshot Lab`, `Bait → Dodge → CS` and a basic `Lane Scenario`.
 
 **Important qualification:** Source files were inspected, but a complete gameplay/browser test and a public deployment were not confirmed during this document's creation.
 

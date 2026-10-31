@@ -12,7 +12,7 @@
 
 ## 1. The feel we are trying to create
 
-Imagine a 10–12 minute continuous drill:
+Imagine an endless continuous drill, with Expert as the main balancing target:
 
 - There is **almost always a next useful decision**, but not an unreadable permanent wall of missiles.
 - **Ezreal Q is the baseline rhythm**: many attempts from changing angles, with moving casters and periodic two-shot pressure. The player becomes excellent at reading and sidestepping ordinary, fast, single-projectile threats.
@@ -93,7 +93,7 @@ Approximate *routine* Q count if the director meets its regular cast budget:
 
 Actual safe counts depend on whether other events are active, line-of-fire geometry and fair recovery time. **Do not hit numerical targets by scheduling attacks that cannot be read or evaded.** Report both attempted and qualified threatening casts. The rare events are *on top* of these numbers only when the safety budget allows.
 
-## 4. Wave rhythm inside one 12-minute drill
+## 4. Wave rhythm inside an endless drill
 
 Keep *fidelity* fixed while varying intensity/complexity. Use seeded timing jitter so the player learns mechanics rather than memorizes a soundtrack.
 
@@ -108,7 +108,7 @@ Keep *fidelity* fixed while varying intensity/complexity. Use seeded timing jitt
 | **8:00–10:30** | Expert peak | Challenging but solvable combinations, continued high Ez Q representation, short burst windows |
 | **10:30–12:00** | Unseen benchmark | Frozen rules, new unrehearsed seed, no dynamic difficulty, consistent spell mix and scoring; test generalization |
 
-For a **3–5 minute quick drill**, compact into calibration → mixed pressure → brief unseen benchmark; rare Malphite may not appear at all. If the user deliberately picks a **Flash reaction drill**, Malphite can repeat often *there*, separately from the default Dodge Gauntlet. This preserves both objectives.
+The following time ranges describe milestones within an endless run, not a countdown or automatic ending. The implementation currently ramps Expert encounter spacing gradually after three minutes to a cap at twelve minutes; these policies need human tuning. If the user deliberately picks a **Flash reaction drill**, Malphite can repeat often *there*, separately from the default Dodge Gauntlet. This preserves both objectives.
 
 ### Micro-rhythm (every ~30–60 s)
 - **Stable flow (20–35 s):** common shots, frequent Ezreal Q and some variation.
@@ -227,7 +227,7 @@ The main product remains four principal modes:
 
 ### Session length and difficulty are SETTINGS, not modes
 
-The product has one **Dodge Gauntlet**. Different session lengths, seeds, intensity adjustments and performance benchmarks are options **inside the same continuous mode**, not additional selectable drills or menu entries. Strong defaults should let the player enter and immediately face meaningful spells. Player-facing design scope is exactly four game modes across the entire project.
+The product has one **Dodge Gauntlet**. Seeds, intensity adjustments and performance benchmarks belong **inside the same endless mode**, not additional selectable drills or menu entries. Elapsed time measures survival rather than limiting play. Strong defaults should let the player enter and immediately face meaningful spells. Player-facing design scope is exactly four game modes across the entire project.
 
 ## 10. Implementation order for Codex (source-preserving)
 
