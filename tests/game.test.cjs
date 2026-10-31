@@ -1404,3 +1404,31 @@ test('Orianna encounter draws its own clockwork sprite and supports missing art'
  assert.deepEqual(drawSizes.find(a=>a[0]===clockwork).slice(1),[-27,-79,54,80]);
  clockwork.naturalWidth=0;draws.length=0;assert.doesNotThrow(()=>g.render());assert.ok(!draws.includes(clockwork));
 });
+
+test('moving dodge witnesses remain safe across positions, approach angles and W states',()=>{
+ let accepted=0,boosted=0;
+ for(const [px,py] of [[600,337],[320,300],[900,400]])for(let i=0;i<8;i++)for(const direction of [-1,1])for(const useW of [false,true]){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.x=px;g.player.y=py;
+  const a=i*Math.PI/4,origin={x:px+Math.cos(a)*450,y:py+Math.sin(a)*450};
+  if(origin.x<60||origin.x>1140||origin.y<145||origin.y>645)continue;
+  g.moveTo(px-Math.sin(a)*direction*180,py+Math.cos(a)*direction*180);if(useW)g.cast('w');
+  const spell=g.REFERENCE_SPELLS.ezrealDodge,witness={};if(!g.canEvadeDodgeCast(origin,spell,witness))continue;
+  accepted++;if(useW)boosted++;
+  const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'cast',entry:{...origin},speed:120,charge:spell.cast,pending:{angle:Math.atan2(py-origin.y,px-origin.x),spell}});g.setFoes([e]);
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.5);
+  assert.equal(g.stats.hits,0,`position ${px},${py}, angle ${i}, direction ${direction}, W ${useW}`);
+ }
+ assert.ok(accepted>=16,`only ${accepted} accepted cases`);assert.ok(boosted>=8,`only ${boosted} boosted cases`);
+});
+
+test('Orianna escape can stop at a nearby arena corner instead of needing a full-speed destination',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.x=1168;g.player.y=69;
+ const ball={x:1000,y:235,r:207.5},witness={};assert.equal(g.oriannaEscape(ball,witness),true);
+ g.hazards.push({...ball,orianna:true,casting:true,ttl:.5,max:.5,directed:true,spellName:'ORIANNA R'});
+ advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,.35);assert.equal(g.stats.hits,0);
+});
+
+test('clipped area escape never claims a point through a wall is reachable',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.x=650;g.player.y=580;
+ assert.equal(g.sampleAreaEscape(.2,.5,p=>p.x<=660),false);
+});
