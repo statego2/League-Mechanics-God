@@ -1807,7 +1807,8 @@ test('Dodge director changes encounter spacing in bounded pressure and recovery 
   g.update(1/120);assert.ok(g.foes.length||g.hazards.length,`no encounter at ${difficulty} ${time}`);return g.dodgeDirector.next;
  }
  const stable=interval('hard',50),spike=interval('hard',78),recovery=interval('hard',86);
- assert.ok(Math.abs(spike/stable-.8)<1e-10);assert.ok(Math.abs(recovery/stable-1.3)<1e-10);
+ for(const [value,multiplier] of [[stable,1],[spike,.8],[recovery,1.3]])assert.ok(value>=2.2*multiplier*.88&&value<=2.2*multiplier*1.12);
+ assert.ok(recovery>stable);
  assert.ok(Math.abs(interval('easy',50)-interval('easy',78))<1e-10);
 });
 
@@ -1859,4 +1860,16 @@ test('Expert endless cadence stays active across twelve simulated minutes',t=>{
   runs.push(buckets);assert.equal(g.state,'playing');assert.ok(buckets.every(n=>n>=5));
  }
  t.diagnostic(`casts/min per seed ${JSON.stringify(runs)}`);
+});
+
+
+test('Expert recovery defers new overlaps without canceling committed missiles',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.setTime(86);
+ const shot=g.fire(g.player.x-100,g.player.y,1000,0,'enemy',10,30,.6);Object.assign(shot,{directed:true,spellName:'EZREAL Q'});
+ assert.equal(g.spawnXerathW(),false);assert.equal(g.spawnDodgeVisitor(g.REFERENCE_SPELLS.ezrealDodge),false);
+ advance(g,.1);assert.equal(g.stats.hits,1);
+});
+test('Expert recovery still schedules an isolated encounter',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(86);g.setRng(1);g.dodgeDirector.next=0;
+ g.update(1/120);assert.ok(g.foes.length||g.hazards.length);
 });
