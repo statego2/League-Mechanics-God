@@ -41,3 +41,7 @@ The ranger has three directional illustrations with left/right mirroring and pro
 ## Dodge void caster (2026-10-31)
 
 - `void-caster.png` was generated with the built-in image generation tool as an original transparent fantasy void-creature sprite, prompted for a single violet eye, armored shell, short tentacles and a small, readable three-quarter MOBA-game silhouette. It visually distinguishes the visitor using the Vel'Koz Q training pattern from the mage used for Lux. It is not an official Riot asset; gameplay collision and projectile dimensions are unchanged. The artwork is a static pose, not a full champion animation, and still requires in-game review during a live Vel'Koz encounter.
+
+## Dodge clockwork caster (2026-10-31)
+
+- `clockwork-caster.png` is an original generated transparent sprite for the Orianna-pattern encounter, created with the built-in image generator. Prompt requested a single violet-and-brass clockwork automaton, full body, three-quarter MOBA presentation, with no ball, floor or text. It is not an official Riot asset. The sprite is static and does not reproduce Orianna's actual in-game model or animations; its small on-screen legibility still needs human review in a live encounter.

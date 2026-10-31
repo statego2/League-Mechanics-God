@@ -1139,8 +1139,8 @@ test('Orianna ball travels visibly from caster to its destination before Shockwa
 });
 
 test('Orianna encounter renders a caster and ball during setup',()=>{
- const {g,node,draws}=boot('ahri');node('mageArt').complete=true;node('mageArt').naturalWidth=100;
- g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;assert.ok(g.spawnOriannaR());g.render();assert.ok(draws.includes(node('mageArt')));
+ const {g,node,draws}=boot('ahri');node('clockworkArt').complete=true;node('clockworkArt').naturalWidth=100;
+ g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;assert.ok(g.spawnOriannaR());g.render();assert.ok(draws.includes(node('clockworkArt')));
 });
 
 test('Orianna Q hits along its moving path once and records its own damage',()=>{
@@ -1393,4 +1393,14 @@ test('boosted area-escape witness survives Xerath impact after continuing its mo
  assert.ok(g.spawnXerathQ());const h=g.hazards[0],witness={};
  assert.ok(g.sampleAreaEscape(.2,.528,p=>g.beamTouchesPlayer(h,p,g.player.hitRadius+8),witness));
  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,.4);assert.equal(g.stats.hits,0);
+});
+
+
+test('Orianna encounter draws its own clockwork sprite and supports missing art',()=>{
+ const {g,node,draws,drawSizes}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const clockwork=node('clockworkArt'),mage=node('mageArt');clockwork.complete=mage.complete=true;clockwork.naturalWidth=mage.naturalWidth=100;
+ g.hazards.push({x:800,y:300,source:{x:900,y:300},orianna:true,casting:false,ttl:1,max:1});g.render();
+ assert.ok(draws.includes(clockwork));assert.ok(!draws.includes(mage));
+ assert.deepEqual(drawSizes.find(a=>a[0]===clockwork).slice(1),[-27,-79,54,80]);
+ clockwork.naturalWidth=0;draws.length=0;assert.doesNotThrow(()=>g.render());assert.ok(!draws.includes(clockwork));
 });
