@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v67":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v68":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -617,13 +617,31 @@ function forecastDodgePath(incoming,destination,reaction,margin=0){
  }
  return true;
 }
-// Forecast existing non-returning missiles, committed casts and the new shot.
+// Forecast a stationary-anchor Ahri orb, including its future return. A
+// charmed/moving caster makes the anchor unpredictable, so defer the overlap.
+function forecastExistingOrb(shot,incoming){
+ if(shot.spawnOffset>0)return false;
+ const caster=foes.find(e=>e.id===shot.casterId&&e.alive);
+ if(caster&&(!caster.dodgeVisitor||caster.phase!=="orbFlight"||caster.charm>0))return false;
+ const anchor=caster?{x:caster.x,y:caster.y}:shot.anchor;
+ if(!anchor||!Number.isFinite(anchor.x)||!Number.isFinite(anchor.y))return false;
+ if(shot.phase==="out"){
+  if(!shot.phaseHit)incoming.push({x:shot.x,y:shot.y,vx:shot.vx,vy:shot.vy,r:shot.r,start:0,end:shot.ttl});
+  const x=shot.x+shot.vx*shot.ttl,y=shot.y+shot.vy*shot.ttl,dx=anchor.x-x,dy=anchor.y-y,d=Math.hypot(dx,dy);
+  if(d<1e-8)return false;incoming.push({x,y,vx:dx/d*700,vy:dy/d*700,r:shot.r,start:shot.ttl,end:shot.ttl+d/700});
+  return true;
+ }
+ if(shot.phase!=="return")return false;
+ if(!shot.phaseHit){const dx=anchor.x-shot.x,dy=anchor.y-shot.y,d=Math.hypot(dx,dy);if(d<1e-8)return false;incoming.push({x:shot.x,y:shot.y,vx:dx/d*700,vy:dy/d*700,r:shot.r,start:0,end:Math.min(shot.ttl,d/700)});}
+ return true;
+}
+// Forecast existing missiles, committed casts and the new shot.
 function dodgeEscapeClear(origin,spell,destination,reaction,aimPoint=player){
  const incoming=[];
  for(const shot of shots){
   if(!shot.alive||!shot.directed)continue;
-  // The return orb changes direction; wait for it to resolve before new casts.
-  if(shot.kind==="enemyOrb"||shot.velkoz)return false;
+  if(shot.kind==="enemyOrb"){if(spell!==REFERENCE_SPELLS.ezrealDodge||!forecastExistingOrb(shot,incoming))return false;continue;}
+  if(shot.velkoz)return false;
   incoming.push({x:shot.x,y:shot.y,vx:shot.vx,vy:shot.vy,r:shot.r,start:0,end:shot.ttl});
  }
  for(const e of foes){
@@ -706,6 +724,7 @@ function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
   else spell=roll<45?REFERENCE_SPELLS.ezrealDodge:roll<60?REFERENCE_SPELLS.luxDodge:roll<71?REFERENCE_SPELLS.ahriDodge:roll<83?REFERENCE_SPELLS.blitzDodge:REFERENCE_SPELLS.velkozDodge;
  }
  if(!regularAllowed(spell.name)){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
+ if(shots.some(s=>s.alive&&s.directed&&s.kind==="enemyOrb")&&spell!==REFERENCE_SPELLS.ezrealDodge){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
  if(spell.split&&active>0){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
  let origin=null,entry=null;
  for(let i=0;i<80;i++){
