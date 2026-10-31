@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Expert Dodge: make split overlap occur in live scheduling (2026-10-31)
+
+- A seeded integration test exposed that allowing Vel’Koz/Ezreal overlap at aim-lock did not produce simultaneous missiles in twelve 180-second stationary-player runs. Expert now gets a 40% seeded follow-up opportunity after Vel’Koz Q release, processed on the next update after its spawn offset has been consumed. The visitor enters briefly and must pass existing shared-escape checks at spawn and aim-lock. Caps, recovery, and failed safety checks still defer the combination. Record namespace is director_v71.
+- The new integration test observes both actual missiles alive together in natural Expert scheduling; earlier tests execute the sampled escape against each split phase. Full suite: 356/356 pass; syntax and diff checks pass. Chrome smoke: restarted Expert Dodge and reached results; the unattended run ended in 14.5 seconds and does not validate the later overlap visually. Manual skilled-play balance remains open.
+
 ## Expert Dodge: Vel’Koz and Ezreal overlap (2026-10-31)
 
 - Expert can schedule Ezreal Q during an active Vel’Koz Q, including the main missile, split delay and split bolts. A sampled walking response must clear all existing phases and the new cast. Uncertain split predictions defer; other difficulties and unsupported overlaps retain isolation. This conservative training forecast cannot guarantee safety after arbitrary player movement.

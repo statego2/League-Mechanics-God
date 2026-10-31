@@ -1206,6 +1206,17 @@ test('Velkoz overlap defers offscreen split predictions and non-Expert modes',()
   assert.equal(g.canEvadeDodgeCast({x:140,y:g.player.y},spell),false,scenario);
  }
 });
+test('Expert director naturally overlaps Ezreal and Velkoz missiles',()=>{
+ let overlap=false;
+ for(let seed=1;seed<=12&&!overlap;seed++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed*1234567);g.player.hp=g.player.maxHp=1000000;
+  for(let i=0;i<120*180&&!overlap;i++){
+   g.update(1/120);
+   overlap=g.shots.some(s=>s.alive&&s.directed&&s.velkoz)&&g.shots.some(s=>s.alive&&s.directed&&s.spellName==='EZREAL Q');
+  }
+ }
+ assert.ok(overlap,'no Velkoz + Ezreal missile overlap appeared in twelve seeded Expert runs');
+});
 
 test('Orianna ball is shown before its shockwave, with no stun or pull on hit',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;
@@ -1799,7 +1810,7 @@ test('Dodge counts Charm hits against a visitor once per released E',()=>{
 });
 test('skill-scored Dodge records stay separate while retaining the survival record',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
- const oldScore='lmg.best.v1.dodge.normal.director_v70.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
+ const oldScore='lmg.best.v1.dodge.normal.director_v71.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
  g.reset('dodge');g.setTime(10);g.stats.dodgeQHits=1;g.stats.dodgeEHits=1;g.end(false);
  assert.match(node('menuDescription').textContent,/150 points/);assert.match(node('menuDescription').textContent,/Best survival: 120.0s/);
  assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v3'),'150');assert.equal(values.get(survival),'120');
