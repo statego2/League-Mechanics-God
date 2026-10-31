@@ -1597,3 +1597,18 @@ test('projectile does not collide with player movement before its release',()=>{
  Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'cast',charge:.09,pending:{angle:Math.PI,spell:spec,threat:true},entry:{x:e.x,y:e.y}});g.setFoes([e]);
  g.moveTo(g.player.x+200,g.player.y);g.update(.1);assert.equal(g.stats.hits,0);
 });
+
+
+test('Velkoz splits from first swept contact, including a moving champion',()=>{
+ for(const moving of [false,true]){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+  const startX=g.player.x, startY=g.player.y;
+  if(moving){g.player.speed=200;g.moveTo(startX+100,startY);}
+  const spec=g.REFERENCE_SPELLS.velkozDodge,e=g.enemy(startX-100,startY);
+  Object.assign(e,{dodgeVisitor:true,pending:{angle:0,spell:spec}});g.releaseEnemy(e);
+  g.update(.1);const main=g.shots.find(s=>s.velkoz==='delay');assert.ok(main);
+  const expectedContactTime=(100-spec.radius-g.player.hitRadius)/(spec.speed-(moving?200:0));
+  assert.ok(Math.abs(main.x-(e.x+spec.speed*expectedContactTime))<1e-6,`moving=${moving}, split x=${main.x}`);
+  assert.equal(g.stats.hits,1);
+ }
+});
