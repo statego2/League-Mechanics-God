@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v12":mode==="dodge"?(ahriBase()?".director_v30":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v4":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v31":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -892,13 +892,18 @@ for(const s of shots){if(!s.alive)continue;
  }
  if((s.kind==="enemy"||s.kind==="enemyOrb")&&!s.phaseHit&&!s.ignorePlayer&&!(s.group&&s.group.hit)&&threatening(s))s.threat=true;
  s.px=s.x;s.py=s.y;const travelDt=Math.max(0,Math.min(dt,s.ttl,s.kind==="orb"&&s.phase==="return"?dist(s,player)/700:s.kind==="enemyOrb"&&s.phase==="return"?dist(s,s.anchor)/700:dt));s.x+=s.vx*travelDt;s.y+=s.vy*travelDt;s.ttl-=dt;
+ // A missile that expires or reaches its return anchor partway through this
+ // step cannot collide with motion that occurs after its own travel ended.
+ const travelFraction=dt>0?travelDt/dt:0;
+ const playerEndX=oldX+(player.x-oldX)*travelFraction,playerEndY=oldY+(player.y-oldY)*travelFraction;
+ const targetEnd=(prev,target)=>({x:prev.x+(target.x-prev.x)*travelFraction,y:prev.y+(target.y-prev.y)*travelFraction});
  if(s.kind==="orb"){
   for(const e of foes){if(!e.alive||s.hitIds.has(e.id))continue;const prev=previousFoes.get(e.id)||e;
-   if(segmentDistance(s.px-prev.x,s.py-prev.y,s.x-e.x,s.y-e.y)<=s.r+targetHitRadius(e)){s.hitIds.add(e.id);applyImpact(e,{sourceId:"player",sourceTeam:"player",kind:"orb",raw:s.damage,damageType:s.phase==="out"?"magic":"true"});if(state!=="playing")break;}}
+   if(segmentDistance(s.px-prev.x,s.py-prev.y,s.x-targetEnd(prev,e).x,s.y-targetEnd(prev,e).y)<=s.r+targetHitRadius(e)){s.hitIds.add(e.id);applyImpact(e,{sourceId:"player",sourceTeam:"player",kind:"orb",raw:s.damage,damageType:s.phase==="out"?"magic":"true"});if(state!=="playing")break;}}
   if(s.phase==="out"&&s.ttl<=0){s.phase="return";s.ttl=3;s.hitIds.clear();}
   else if(s.phase==="return"&&(dist(s,player)<1||s.ttl<=0))s.alive=false;
  }else if(s.kind==="enemyOrb"){
-  const collision=!s.phaseHit&&segmentDistance(s.px-oldX,s.py-oldY,s.x-player.x,s.y-player.y)<=s.r+player.hitRadius;
+  const collision=!s.phaseHit&&segmentDistance(s.px-oldX,s.py-oldY,s.x-playerEndX,s.y-playerEndY)<=s.r+player.hitRadius;
   if(collision){s.phaseHit=true;if(player.invuln>0){recordDodgeOutcome(s,"blocked");stats.blocked++;}else{recordDodgeOutcome(s,"hit");takeHit(s.phase==="out"?physicalDamage(s.damage,30):s.damage);}}
   const phaseFinished=s.phase==="out"?s.ttl<=0:(dist(s,s.anchor)<1||s.ttl<=0);
   if(phaseFinished){
@@ -907,10 +912,10 @@ for(const s of shots){if(!s.alive)continue;
   }
  }else if(s.kind==="enemyMinion"){
   const target=allies.find(e=>e.id===s.targetId&&e.alive),prev=target&&(previousAllies.get(target.id)||target);
-  if(target&&segmentDistance(s.px-prev.x,s.py-prev.y,s.x-target.x,s.y-target.y)<=s.r+targetHitRadius(target)){applyImpact(target,{sourceId:s.sourceId??null,sourceTeam:"enemy",kind:"minionProjectile",raw:s.damage,damageType:"physical",minionBonus:s.minionBonus});s.alive=false;}
+  if(target&&segmentDistance(s.px-prev.x,s.py-prev.y,s.x-targetEnd(prev,target).x,s.y-targetEnd(prev,target).y)<=s.r+targetHitRadius(target)){applyImpact(target,{sourceId:s.sourceId??null,sourceTeam:"enemy",kind:"minionProjectile",raw:s.damage,damageType:"physical",minionBonus:s.minionBonus});s.alive=false;}
   if(s.ttl<=0)s.alive=false;
  }else if(s.kind==="enemy"){
-  const collision=!s.ignorePlayer&&!(s.group&&s.group.hit)&&segmentDistance(s.px-oldX,s.py-oldY,s.x-player.x,s.y-player.y)<=s.r+player.hitRadius;
+  const collision=!s.ignorePlayer&&!(s.group&&s.group.hit)&&segmentDistance(s.px-oldX,s.py-oldY,s.x-playerEndX,s.y-playerEndY)<=s.r+player.hitRadius;
   if(collision){s.alive=false;if(s.group)s.group.hit=true;if(player.invuln>0){recordDodgeOutcome(s,"blocked");stats.blocked++;}else {recordDodgeOutcome(s,"hit");takeHit(s.damage);if(state==="playing"&&s.root&&mode!=="dodge"){
    player.root=s.root;
    // A dash interrupted inside a wall must leave the player on walkable ground.
@@ -924,7 +929,7 @@ for(const s of shots){if(!s.alive)continue;
  }else{
   let hit=null,first=Infinity;
   for(const e of foes){if(!e.alive||((s.kind==="auto"||s.kind==="allied"||s.kind==="fox"||s.kind==="rush")&&e.id!==s.targetId))continue;const prev=previousFoes.get(e.id)||e;
-   const t=segmentHitTime(s.px-prev.x,s.py-prev.y,s.x-e.x,s.y-e.y,s.r+targetHitRadius(e));if(t<first){first=t;hit=e;}
+   const t=segmentHitTime(s.px-prev.x,s.py-prev.y,s.x-targetEnd(prev,e).x,s.y-targetEnd(prev,e).y,s.r+targetHitRadius(e));if(t<first){first=t;hit=e;}
   }
   if(hit){
    if(s.kind==="allied"){applyImpact(hit,{sourceId:s.sourceId??null,sourceTeam:"ally",kind:"minionProjectile",raw:s.damage,damageType:"physical",minionBonus:s.minionBonus});}

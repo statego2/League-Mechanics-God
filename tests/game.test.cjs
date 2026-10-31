@@ -352,7 +352,7 @@ test('Ahri timing uses level-one cadence and 20 percent windup',()=>{
 test('Ahri CS profile uses 53 damage and separates old timing-only records',()=>{
  const {g,node,window}=boot(),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
  node('attackSpeed').listeners.change({target:{value:'ahri'}});g.reset('lastHit');g.disableSpawn();g.addWave();g.setAllies([]);const e=g.foes[0];assert.equal(e.hp,465);assert.equal(g.player.speed,165);e.x=g.player.x+220;e.y=g.player.y;e.tick=999;e.hp=54;g.attackOrder(e);advance(g,.7);assert.equal(e.hp,1);assert.equal(g.stats.cs,0);
- g.moveTo(600,337.5);e.hp=53;g.attackOrder(e);advance(g,2);assert.equal(e.alive,false);assert.equal(node('killsValue').textContent,1);g.end(true);assert.equal(values.get('lmg.best.v1.lastHit.normal.cs_ahri_v12'),'1');assert.match(node('menuDescription').textContent,/53 damage/);
+ g.moveTo(600,337.5);e.hp=53;g.attackOrder(e);advance(g,2);assert.equal(e.alive,false);assert.equal(node('killsValue').textContent,1);g.end(true);assert.equal(values.get('lmg.best.v1.lastHit.normal.cs_ahri_v13'),'1');assert.match(node('menuDescription').textContent,/53 damage/);
 });
 test('Ahri CS unattended waves resolve without breaking the drill',()=>{
  for(const difficulty of ['easy','normal','hard']){const {g,node}=boot();node('attackSpeed').listeners.change({target:{value:'ahri'}});node('difficulty').listeners.change({target:{value:difficulty}});g.reset('lastHit');advance(g,600.02);assert.equal(g.state,'ended');assert.equal(g.stats.missed+g.stats.unresolved,126);}
@@ -1294,4 +1294,26 @@ test('Xerath Q charge shows a short directional cue without drawing the full aim
  assert.ok(strokes.includes('#9edcffaa'));
  assert.ok(lines.some(p=>p.x===345&&p.y===300));
  assert.ok(!lines.some(p=>p.x===900&&p.y===300));
+});
+
+
+test('expired hostile projectiles cannot hit later movement in the same frame',()=>{
+ for(const kind of ['enemy','enemyOrb'])for(const dt of [1/30,.1]){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.moveTo(800,g.player.y);
+  const s=g.fire(g.player.x+45,g.player.y,0,0,kind,10,8,.001);
+  if(kind==='enemyOrb')Object.assign(s,{phase:'out',phaseHit:false,anchor:{x:900,y:g.player.y},casterId:-999});
+  g.update(dt);assert.equal(g.stats.hits,0,`${kind} ${dt}`);
+ }
+});
+test('a hostile projectile can still hit before expiring mid-frame',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.moveTo(800,g.player.y);
+ g.fire(g.player.x+40,g.player.y,0,0,'enemy',10,8,.001);g.update(1/30);assert.equal(g.stats.hits,1);
+});
+
+test('minion missile expiry is compared against target motion only during its lifetime',()=>{
+ const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();
+ const ally=g.allies[0],enemy=g.foes[0];Object.assign(ally,{x:500,y:300,tick:999});Object.assign(enemy,{x:700,y:300,tick:999});
+ g.setAllies([ally]);g.setFoes([enemy]);const initial=ally.hp;
+ const shot=g.fire(540,300,0,0,'enemyMinion',21,3,.001);shot.targetId=ally.id;
+ g.update(.1);assert.ok(ally.x>500);assert.equal(ally.hp,initial);
 });
