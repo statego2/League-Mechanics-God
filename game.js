@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v37":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v38":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -852,6 +852,10 @@ for(const e of foes){if(!e.alive)continue;if(e.dodgeVisitor){updateDodgeVisitor(
 if(state!=="playing")return;
 if(ahriCS())updateCSWave(dt);
 for(const h of hazards){
+ // Test instantaneous impacts where the player was when this timer expired,
+ // not at a later point in the same simulation step.
+ const impactFraction=dt>0?clamp(h.ttl/dt,0,1):0;
+ const effectPlayer={x:oldX+(player.x-oldX)*impactFraction,y:oldY+(player.y-oldY)*impactFraction};
  if(h.malphite){
   h.ttl-=dt;
   if(!h.casting&&h.ttl>0){
@@ -861,9 +865,9 @@ for(const h of hazards){
    h.casting=true;h.target=plan.target;h.remaining=h.ttl=plan.duration;h.start={x:h.x,y:h.y};h.threat=dist(player,h.target)<=h.r+player.hitRadius;
    dodgeDirector.attempted++;dodgeDirector.malphite++;
   }else if(h.casting){
-   if(dist(player,h.target)<=h.r+player.hitRadius)h.threat=true;
+   if(dist(effectPlayer,h.target)<=h.r+player.hitRadius)h.threat=true;
    const f=clamp(1-h.ttl/h.remaining,0,1);h.x=h.start.x+(h.target.x-h.start.x)*f;h.y=h.start.y+(h.target.y-h.start.y)*f;
-   if(h.ttl<=0){const collision=dist(player,h.target)<=h.r+player.hitRadius;
+   if(h.ttl<=0){const collision=dist(effectPlayer,h.target)<=h.r+player.hitRadius;
     if(collision){if(player.invuln>0){recordDodgeOutcome(h,"blocked");stats.blocked++;}else{recordDodgeOutcome(h,"hit");takeHit(physicalDamage(MALPHITE_R.raw,30));}}
     else{recordDodgeOutcome(h,h.threat?"avoided":"harmless");if(h.threat){dodged++;cue("dodge");}}
     burst(h.target.x,h.target.y,"#bc9e84",20);if(state!=="playing")return;
@@ -873,7 +877,7 @@ for(const h of hazards){
  }
  if(h.orianna){
   h.ttl-=dt;
-  if(h.casting&&dist(player,h)<=h.r+player.hitRadius)h.threat=true;
+  if(h.casting&&dist(effectPlayer,h)<=h.r+player.hitRadius)h.threat=true;
   if(!h.casting){
    const elapsed=h.max-h.ttl,priorX=h.x,priorY=h.y,f=clamp(elapsed/h.travelDuration,0,1);
    h.x=h.source.x+(h.destination.x-h.source.x)*f;h.y=h.source.y+(h.destination.y-h.source.y)*f;
@@ -891,7 +895,7 @@ for(const h of hazards){
    h.casting=true;h.ttl=ORIANNA_R.cast;h.threat=dist(player,h)<=h.r+player.hitRadius;
    dodgeDirector.attempted++;dodgeDirector.orianna++;
   }else if(h.ttl<=0){
-   const collision=dist(player,h)<=h.r+player.hitRadius;
+   const collision=dist(effectPlayer,h)<=h.r+player.hitRadius;
    if(collision){if(player.invuln>0){recordDodgeOutcome(h,"blocked");stats.blocked++;}else{recordDodgeOutcome(h,"hit");takeHit(physicalDamage(ORIANNA_R.raw,30));}}
    else{recordDodgeOutcome(h,h.threat?"avoided":"harmless");if(h.threat){dodged++;cue("dodge");}}
    burst(h.x,h.y,"#c9a4ff",24);if(state!=="playing")return;
@@ -899,7 +903,7 @@ for(const h of hazards){
   continue;
  }
  if(h.beam){
-  const collision=beamTouchesPlayer(h,player,player.hitRadius);
+  const collision=beamTouchesPlayer(h,effectPlayer,player.hitRadius);
   if(collision)h.threat=true;
   h.ttl-=dt;if(h.ttl<=0){
    fx.push({x:h.x,y:h.y,endX:h.endX,endY:h.endY,vx:0,vy:0,ttl:.2,max:.2,color:"#b5e5ff",beam:true});
@@ -910,9 +914,9 @@ for(const h of hazards){
   continue;
  }
  const hitRadius=h.xerath?h.r:h.r+player.hitRadius;
- if(dist(player,h)<=hitRadius)h.threat=true;
+ if(dist(effectPlayer,h)<=hitRadius)h.threat=true;
  h.ttl-=dt;if(h.ttl<=0){
-  if(dist(player,h)<=hitRadius){if(player.invuln>0){recordDodgeOutcome(h,"blocked");stats.blocked++;}else{recordDodgeOutcome(h,"hit");const raw=h.xerath?XERATH_W.raw*(dist(player,h)<=XERATH_W.center?1.667:1):25;takeHit(h.xerath?physicalDamage(raw,30):raw);}}else{recordDodgeOutcome(h,h.threat?"avoided":"harmless");if(h.threat){dodged++;cue("dodge");}}
+  if(dist(effectPlayer,h)<=hitRadius){if(player.invuln>0){recordDodgeOutcome(h,"blocked");stats.blocked++;}else{recordDodgeOutcome(h,"hit");const raw=h.xerath?XERATH_W.raw*(dist(effectPlayer,h)<=XERATH_W.center?1.667:1):25;takeHit(h.xerath?physicalDamage(raw,30):raw);}}else{recordDodgeOutcome(h,h.threat?"avoided":"harmless");if(h.threat){dodged++;cue("dodge");}}
   if(state!=="playing")return;
   burst(h.x,h.y,"#f5b57d",24);
  }

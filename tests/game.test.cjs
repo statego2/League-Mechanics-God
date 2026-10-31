@@ -1482,3 +1482,26 @@ test('blocked third Xerath Q or W falls back to an Ezreal visitor',()=>{
   assert.ok(found,`no valid ${name} seed`);
  }
 });
+
+test('area impacts sample the player position at impact rather than frame end',()=>{
+ for(const kind of ['xerathW','xerathQ','orianna','malphite']){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player;g.moveTo(p.x+200,p.y);
+  let h;if(kind==='xerathW')h={x:p.x+150,y:p.y,r:137.5,xerath:true};
+  else if(kind==='xerathQ')h={x:p.x+80,y:p.y-200,endX:p.x+80,endY:p.y+200,r:36.25,beam:true};
+  else if(kind==='orianna')h={x:p.x+250,y:p.y,r:207.5,orianna:true,casting:true};
+  else h={x:p.x,y:p.y,r:162.5,malphite:true,casting:true,start:{x:p.x,y:p.y},target:{x:p.x+205,y:p.y},remaining:1};
+  Object.assign(h,{ttl:.01,max:1,directed:true,spellName:kind});g.hazards.push(h);g.update(.1);
+  assert.equal(g.stats.hits,0,`${kind}: player entered only after impact`);
+ }
+});
+test('an area impact still hits when the player leaves later in the same frame',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player;g.moveTo(p.x-200,p.y);
+ g.hazards.push({x:p.x+136,y:p.y,r:137.5,xerath:true,ttl:.001,max:1,directed:true,spellName:'XERATH W'});g.update(.1);
+ assert.equal(g.stats.hits,1);
+});
+
+test('Xerath W center damage uses the position at impact',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player;g.moveTo(p.x+200,p.y);
+ g.hazards.push({x:p.x+70,y:p.y,r:137.5,xerath:true,ttl:.01,max:1,directed:true,spellName:'XERATH W'});g.update(.1);
+ assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.stats.damage-50/1.3)<1e-8);
+});
