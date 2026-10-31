@@ -1652,6 +1652,14 @@ test('Dodge counts Q once across both orb legs and counts a missed cast separate
  assert.match(node('dodgeBreakdownText').textContent,/Q 1\/2 casts hit \(0 in flight\)/);
  assert.match(node('dodgeBreakdownText').textContent,/20 skill points/);
 });
+test('a piercing Q hitting multiple visitors earns one transparent skill bonus',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const spec=g.REFERENCE_SPELLS.ezrealDodge,visitors=[180,250].map(dx=>{
+  const e=g.enemy(g.player.x+dx,g.player.y);Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'cast',charge:999,pending:{angle:0,spell:spec},hp:1000,maxHp:1000});return e;
+ });g.setFoes(visitors);node('arena').listeners.pointermove({clientX:g.player.x+300,clientY:g.player.y,buttons:0});g.cast('q');advance(g,1.6);
+ assert.ok(visitors.every(e=>e.hp<1000));assert.equal(g.stats.dodgeQHits,1);g.end(false);
+ assert.match(node('menuDescription').textContent,/20 from skillshots/);assert.match(node('dodgeBreakdownText').textContent,/20 skill points/);
+});
 test('Dodge skill results distinguish a released in-flight E from a miss',()=>{
  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
  node('arena').listeners.pointermove({clientX:g.player.x+200,clientY:g.player.y,buttons:0});g.cast('e');advance(g,.26);
