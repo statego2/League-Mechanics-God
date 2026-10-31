@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v31":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v32":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -368,8 +368,8 @@ function spawnXerathW(){
   const a=angle+i*TAU/16,dx=Math.cos(a),dy=Math.sin(a),offset=90;
   const center={x:player.x+dx*offset,y:player.y+dy*offset};
   // Reserve 0.2 s for recognition; the escape ends comfortably outside the AoE.
-  const travelTime=Math.max(0,XERATH_W.delay-reaction),escape={x:player.x-dx*player.speed*travelTime,y:player.y-dy*player.speed*travelTime};
-  if(!world.pointWalkable(escape,player.r)||!world.segmentClear(player,escape,player.r))continue;
+  const travelTime=Math.max(0,XERATH_W.delay-reaction),start=dodgeReactionPath(reaction).end,escape={x:start.x-dx*player.speed*travelTime,y:start.y-dy*player.speed*travelTime};
+  if(!world.pointWalkable(escape,player.r)||!world.segmentClear(start,escape,player.r))continue;
   if(dist(center,escape)<XERATH_W.radius+10)continue;
   const incoming=active.map(s=>({x:s.x,y:s.y,vx:s.vx,vy:s.vy,r:s.r,start:0,end:s.ttl}));
   for(const e of casters){const s=e.pending.spell;incoming.push({x:e.x,y:e.y,vx:Math.cos(e.pending.angle)*s.speed,vy:Math.sin(e.pending.angle)*s.speed,r:s.radius,start:e.charge,end:e.charge+s.range/s.speed});}
@@ -454,17 +454,35 @@ function aimMalphiteR(source){
  }
  return null;
 }
-// Sample a walk after the reaction delay against moving projectiles. This is a
-// conservative training forecast, not a complete navigation or fairness solver.
-function forecastDodgePath(incoming,destination,reaction){
- const length=dist(player,destination),moveTime=length/player.speed;
- const position=t=>{const f=clamp((t-reaction)/moveTime,0,1);return {x:player.x+(destination.x-player.x)*f,y:player.y+(destination.y-player.y)*f};};
+// Approximate the existing right-click route before a new response arrives.
+// Cast/root/windup lock movement. Speed is sampled now; W decay and future
+// attack orders are not predicted, so this is not a complete fairness solver.
+function dodgeReactionPath(reaction){
+ const start={x:player.x,y:player.y},locked=Math.max(player.root||0,player.casting?.remaining||0,player.windup||0);
+ const route=player.target?world.path(start,world.nearestWalkable(player.target),player.r):[];
+ const speed=playerMoveSpeed();
+ const at=t=>{
+  let remaining=speed*Math.max(0,Math.min(t,reaction)-locked),point=start;
+  for(const next of route){const length=dist(point,next);if(length>remaining&&length>0)return {x:point.x+(next.x-point.x)*remaining/length,y:point.y+(next.y-point.y)*remaining/length};remaining-=length;point=next;}
+  return {x:point.x,y:point.y};
+ };
+ return {at,end:at(reaction)};
+}
+// Sample a response against moving projectiles, including existing movement
+// during the reaction period. This remains an approximate training forecast.
+function forecastDodgePath(incoming,destination,reaction,margin=0){
+ const approach=dodgeReactionPath(reaction),start=approach.end,length=dist(start,destination),moveTime=length/player.speed;
+ const position=t=>{
+  if(t<=reaction)return approach.at(t);
+  const f=moveTime>0?clamp((t-reaction)/moveTime,0,1):1;
+  return {x:start.x+(destination.x-start.x)*f,y:start.y+(destination.y-start.y)*f};
+ };
  for(const shot of incoming){
   const end=Math.min(shot.end,3);
   for(let t=Math.max(0,shot.start);t<end;){
-   const next=Math.min(end,t+1/40),p=position(t),q=position(next);
+   const next=Math.min(end,t+1/80),p=position(t),q=position(next);
    const a=t-shot.start,b=next-shot.start;
-   if(segmentDistance(shot.x+shot.vx*a-p.x,shot.y+shot.vy*a-p.y,shot.x+shot.vx*b-q.x,shot.y+shot.vy*b-q.y)<=shot.r+player.hitRadius)return false;
+   if(segmentDistance(shot.x+shot.vx*a-p.x,shot.y+shot.vy*a-p.y,shot.x+shot.vx*b-q.x,shot.y+shot.vy*b-q.y)<=shot.r+player.hitRadius+margin)return false;
    t=next;
   }
  }
@@ -500,8 +518,8 @@ function canEvadeDodgeCast(origin,spell,witness=null){
  const available=spell.cast+Math.max(0,d-clearance)/spell.speed-reaction;
  if(available<=0||player.speed*available<clearance)return false;
  for(const side of [-1,1]){
-  const destination={x:player.x-side*dy/d*clearance,y:player.y+side*dx/d*clearance};
-  if(world.pointWalkable(destination,player.r)&&world.segmentClear(player,destination,player.r)&&dodgeEscapeClear(origin,spell,destination,reaction)){if(witness)witness.destination=destination;return true;}
+  const start=dodgeReactionPath(reaction).end,destination={x:start.x-side*dy/d*clearance,y:start.y+side*dx/d*clearance};
+  if(world.pointWalkable(destination,player.r)&&world.segmentClear(start,destination,player.r)&&dodgeEscapeClear(origin,spell,destination,reaction)){if(witness)witness.destination=destination;return true;}
  }
  return false;
 }
@@ -515,19 +533,9 @@ function canEvadeVelkoz(origin,angle,splitDistance,spell,witness=null){
  const phases=[{x:origin.x,y:origin.y,vx:ux*spell.speed,vy:uy*spell.speed,r:spell.radius,start:spell.cast,end:spell.cast+travel}];
  for(const side of [-1,1])phases.push({x:splitX,y:splitY,vx:-uy*side*1050,vy:ux*side*1050,r:27.5,start:splitStart,end:splitStart+550/1050});
  for(let i=0;i<24;i++){
-  const a=i*TAU/24,step=130,dest={x:player.x+Math.cos(a)*step,y:player.y+Math.sin(a)*step};
-  if(!world.pointWalkable(dest,player.r)||!world.segmentClear(player,dest,player.r))continue;
-  const position=t=>{const f=clamp((t-reaction)*player.speed/step,0,1);return {x:player.x+(dest.x-player.x)*f,y:player.y+(dest.y-player.y)*f};};
-  let clear=true;
-  for(const shot of phases){
-   for(let t=shot.start;t<shot.end;){
-    const next=Math.min(shot.end,t+1/80),p=position(t),q=position(next),a=t-shot.start,b=next-shot.start;
-    if(segmentDistance(shot.x+shot.vx*a-p.x,shot.y+shot.vy*a-p.y,shot.x+shot.vx*b-q.x,shot.y+shot.vy*b-q.y)<=shot.r+player.hitRadius+5){clear=false;break;}
-    t=next;
-   }
-   if(!clear)break;
-  }
-  if(clear){if(witness)witness.destination=dest;return true;}
+  const a=i*TAU/24,step=130,start=dodgeReactionPath(reaction).end,dest={x:start.x+Math.cos(a)*step,y:start.y+Math.sin(a)*step};
+  if(!world.pointWalkable(dest,player.r)||!world.segmentClear(start,dest,player.r))continue;
+  if(forecastDodgePath(phases,dest,reaction,5)){if(witness)witness.destination=dest;return true;}
  }
  return false;
 }

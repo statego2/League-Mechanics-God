@@ -1317,3 +1317,21 @@ test('minion missile expiry is compared against target motion only during its li
  const shot=g.fire(540,300,0,0,'enemyMinion',21,3,.001);shot.targetId=ally.id;
  g.update(.1);assert.ok(ally.x>500);assert.equal(ally.hp,initial);
 });
+
+test('dodge director rejects a cast when the current move order enters an existing projectile before reaction',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const p=g.player,shot=g.fire(p.x,p.y+70,0,.01,'enemy',10,30,2);shot.directed=true;
+ const origin={x:140,y:p.y},spell=g.REFERENCE_SPELLS.ezrealDodge;
+ assert.equal(g.canEvadeDodgeCast(origin,spell),true);
+ g.moveTo(p.x,p.y+200);assert.equal(g.canEvadeDodgeCast(origin,spell),false);
+});
+
+test('moving-player escape witnesses survive continuing the existing order during reaction',()=>{
+ for(const side of [-1,1]){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+  const p=g.player,origin={x:140,y:p.y},spell=g.REFERENCE_SPELLS.ezrealDodge;
+  g.moveTo(p.x,p.y+side*180);const witness={};assert.equal(g.canEvadeDodgeCast(origin,spell,witness),true);
+  const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'cast',entry:{...origin},speed:120,charge:spell.cast,pending:{angle:0,spell}});g.setFoes([e]);
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.5);assert.equal(g.stats.hits,0,`side ${side}`);
+ }
+});
