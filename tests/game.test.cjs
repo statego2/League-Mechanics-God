@@ -1053,6 +1053,22 @@ test('Ezreal walking witnesses clear an existing Ahri orb and its return',()=>{
  }
  assert.ok(counts.out>0&&counts.return>0,JSON.stringify(counts));
 });
+test('Ahri orb and Ezreal shared escapes survive existing movement and W decay',()=>{
+ const counts={out:0,return:0,boosted:0};
+ for(const phase of ['out','return'])for(const side of [-1,1])for(const boosted of [false,true])for(let i=0;i<16;i++){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.cassAt=Infinity;g.dodgeDirector.rareAt=Infinity;g.dodgeDirector.malAt=Infinity;
+  const p=g.player,y=p.y+side*70,caster=g.enemy(300,y),s=g.fire(phase==='out'?350:850,y,phase==='out'?775:-700,0,'enemyOrb',35,50,phase==='out'?.4:2);
+  Object.assign(caster,{dodgeVisitor:true,phase:'orbFlight',charm:0,orbShot:s,entry:{x:300,y},speed:120,hp:10000,maxHp:10000});
+  Object.assign(s,{directed:true,spellName:'AHRI Q',phase,phaseHit:false,anchor:{x:300,y},casterId:caster.id});g.setFoes([caster]);
+  g.moveTo(p.x+(i%2?80:-80),p.y-side*100);if(boosted)g.cast('w');
+  const a=i*Math.PI/8,origin={x:p.x+Math.cos(a)*450,y:p.y+Math.sin(a)*450},spec=g.REFERENCE_SPELLS.ezrealDodge,witness={};
+  if(!g.canEvadeDodgeCast(origin,spec,witness))continue;
+  const enemy=g.enemy(origin.x,origin.y);Object.assign(enemy,{dodgeVisitor:true,spell:spec,phase:'cast',charge:spec.cast,pending:{angle:Math.atan2(p.y-origin.y,p.x-origin.x),spell:spec,threat:true},entry:{...origin}});g.setFoes([caster,enemy]);
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,2);
+  assert.equal(g.stats.hits,0,`${phase}, side ${side}, boosted ${boosted}, angle ${i}`);counts[phase]++;if(boosted)counts.boosted++;
+ }
+ assert.ok(counts.out>0&&counts.return>0&&counts.boosted>0,JSON.stringify(counts));
+});
 test('Expert naturally schedules Ezreal pressure while an Ahri orb is active',()=>{
  let found=false;
  for(let seed=0;seed<5&&!found;seed++){
@@ -1060,6 +1076,18 @@ test('Expert naturally schedules Ezreal pressure while an Ahri orb is active',()
   while(g.time<120&&!found){g.update(1/120);found=g.shots.some(s=>s.alive&&s.kind==='enemyOrb')&&(g.foes.some(e=>e.alive&&e.dodgeVisitor&&e.spell===g.REFERENCE_SPELLS.ezrealDodge&&e.phase==='cast')||g.shots.some(s=>s.alive&&s.spellName==='EZREAL Q'));}
  }
  assert.ok(found,'no natural Ahri orb + Ezreal overlap');
+});
+test('an Ezreal joining an active Ahri orb still enters visibly before casting',()=>{
+ let spawned=0;
+ for(let seed=1;seed<=40;seed++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(10);g.setRng(seed*2654435761>>>0);
+  const p=g.player,y=p.y+150,caster=g.enemy(300,y),orb=g.fire(350,y,775,0,'enemyOrb',35,50,.4);
+  Object.assign(caster,{dodgeVisitor:true,spell:g.REFERENCE_SPELLS.ahriDodge,phase:'orbFlight',charm:0,orbShot:orb,entry:{x:300,y}});Object.assign(orb,{directed:true,spellName:'AHRI Q',phase:'out',phaseHit:false,anchor:{x:300,y},casterId:caster.id});g.setFoes([caster]);
+  if(!g.spawnDodgeVisitor())continue;const visitor=g.foes.find(e=>e!==caster);if(!visitor)continue;
+  assert.equal(visitor.spell,g.REFERENCE_SPELLS.ezrealDodge);assert.equal(visitor.phase,'enter');
+  assert.ok(Math.abs(Math.hypot(visitor.entry.x-visitor.origin.x,visitor.entry.y-visitor.origin.y)-35)<1e-6);spawned++;
+ }
+ assert.ok(spawned>0,'no overlap entry sampled');
 });
 
 test('escape forecast considers an enemy cast that has already locked its aim',()=>{
@@ -1748,7 +1776,7 @@ test('Dodge counts Charm hits against a visitor once per released E',()=>{
 });
 test('skill-scored Dodge records stay separate while retaining the survival record',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
- const oldScore='lmg.best.v1.dodge.normal.director_v68.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
+ const oldScore='lmg.best.v1.dodge.normal.director_v69.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
  g.reset('dodge');g.setTime(10);g.stats.dodgeQHits=1;g.stats.dodgeEHits=1;g.end(false);
  assert.match(node('menuDescription').textContent,/150 points/);assert.match(node('menuDescription').textContent,/Best survival: 120.0s/);
  assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v2'),'150');assert.equal(values.get(survival),'120');
@@ -2164,15 +2192,17 @@ test('Expert endless round remains active beyond twelve simulated minutes and en
 });
 
 test('Expert endless cadence stays active across twelve simulated minutes',t=>{
- const runs=[],mix=[],phases=[];
+ const runs=[],mix=[],phases=[],overlaps=[];
  for(let seed=0;seed<3;seed++){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});for(let i=0;i<seed;i++)node('newSeed').listeners.click();g.reset('dodge');g.player.hp=g.player.maxHp=1e6;
-  const buckets=[],points=[[500,250],[700,250],[700,450],[500,450]];let last=0;
+  const buckets=[],points=[[500,250],[700,250],[700,450],[500,450]];let last=0,priorEz=0,overlapCasts=0;
   for(let step=0;step<720*120;step++){
    if(step%360===0){const [x,y]=points[Math.floor(step/360)%4];g.moveTo(x,y);}if(step%1440===0)g.cast('w');g.update(1/120);
+   if(g.dodgeDirector.ezreal>priorEz&&g.shots.some(s=>s.alive&&s.kind==='enemyOrb'))overlapCasts+=g.dodgeDirector.ezreal-priorEz;
+   priorEz=g.dodgeDirector.ezreal;
    if((step+1)%(60*120)===0){buckets.push(g.dodgeDirector.attempted-last);last=g.dodgeDirector.attempted;}
   }
-  runs.push(buckets);const d=g.dodgeDirector;mix.push({ezreal:d.ezreal,ahri:d.ahri,lux:d.lux,blitz:d.blitz,velkoz:d.velkoz,xerath:d.xerath+d.xerathQ,orianna:d.orianna,malphite:d.malphite,malDirect:d.malDirect,cassio:d.cassio});
+  runs.push(buckets);overlaps.push(overlapCasts);const d=g.dodgeDirector;mix.push({ezreal:d.ezreal,ahri:d.ahri,lux:d.lux,blitz:d.blitz,velkoz:d.velkoz,xerath:d.xerath+d.xerathQ,orianna:d.orianna,malphite:d.malphite,malDirect:d.malDirect,cassio:d.cassio});
   phases.push(Object.values(d.outcomes).reduce((a,v)=>({avoided:a.avoided+v.avoided,hit:a.hit+v.hit,blocked:a.blocked+v.blocked,harmless:a.harmless+v.harmless}),{avoided:0,hit:0,blocked:0,harmless:0}));
   assert.equal(g.state,'playing');assert.ok(buckets.every(n=>n>=5));
   for(const name of ['ezreal','ahri','lux','blitz','velkoz'])assert.ok(d[name]>0,`seed ${seed}: no ${name} casts`);
@@ -2181,6 +2211,7 @@ test('Expert endless cadence stays active across twelve simulated minutes',t=>{
  t.diagnostic(`casts/min per seed ${JSON.stringify(runs)}`);
  t.diagnostic(`cast mix per seed ${JSON.stringify(mix)}`);
  t.diagnostic(`resolved phase outcomes per seed ${JSON.stringify(phases)}`);
+ t.diagnostic(`Ezreal releases during Ahri orb per seed ${JSON.stringify(overlaps)}`);
 });
 test('Expert idle survival is shorter than Standard across a seeded sample',t=>{
  const results={normal:[],hard:[]};

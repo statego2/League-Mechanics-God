@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v68":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v69":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -726,6 +726,7 @@ function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
  if(!regularAllowed(spell.name)){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
  if(shots.some(s=>s.alive&&s.directed&&s.kind==="enemyOrb")&&spell!==REFERENCE_SPELLS.ezrealDodge){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
  if(spell.split&&active>0){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
+ const joiningOrb=spell===REFERENCE_SPELLS.ezrealDodge&&shots.some(s=>s.alive&&s.directed&&s.kind==="enemyOrb");
  let origin=null,entry=null;
  for(let i=0;i<80;i++){
   // Ahri's broad orb needs more room for the same 200 ms reaction allowance.
@@ -733,7 +734,7 @@ function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
   const angle=rand(0,TAU),distance=rand(340,spell.returning?520:470),p={x:player.x+Math.cos(angle)*distance,y:player.y+Math.sin(angle)*distance};
   // A follow-up enters from farther away so the first cast has a readable
   // response window before the next caster commits its own attack.
-  const entryDistance=forcedSpell?followEntry:65,start={x:p.x+Math.cos(angle)*entryDistance,y:p.y+Math.sin(angle)*entryDistance};
+  const entryDistance=forcedSpell?followEntry:joiningOrb?35:65,start={x:p.x+Math.cos(angle)*entryDistance,y:p.y+Math.sin(angle)*entryDistance};
   // Keep the entire caster silhouette on screen, including its raised sprite.
   const visible=q=>q.x>=60&&q.x<=W-60&&q.y>=145&&q.y<=H-30;
   // Preserve separation throughout entry, including different spell casters.
