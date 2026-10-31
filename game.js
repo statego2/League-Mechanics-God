@@ -31,7 +31,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v12":mode==="dodge"?(ahriBase()?".director_v21":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
+function recordSuffix(){return ahriCS()?".cs_ahri_v12":mode==="dodge"?(ahriBase()?".director_v22":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 function recordLabel(){return difficulty+(attackPreset==="standard"?"":", "+ATTACK_PRESETS[attackPreset].label+" AS");}
@@ -545,16 +545,24 @@ function updateDodgeVisitor(e,dt){
 }
 function updateDodgeDirector(dt){
  if(time>=dodgeDirector.malAt&&time>=dodgeDirector.rareGuardUntil){
-  if(spawnMalphiteR()){dodgeDirector.malAt=time+rand(150,240);dodgeDirector.rareGuardUntil=time+35;return;}
+  if(spawnMalphiteR()){hazards[hazards.length-1].directorScheduled=true;dodgeDirector.malAt=time+rand(150,240);dodgeDirector.rareGuardUntil=time+35;return;}
   dodgeDirector.malAt=time+1;
  }
  if(time>=dodgeDirector.rareAt&&time>=dodgeDirector.rareGuardUntil){
-  if(spawnOriannaR()){dodgeDirector.rareAt=time+rand(90,150);dodgeDirector.rareGuardUntil=time+35;return;}
+  if(spawnOriannaR()){hazards[hazards.length-1].directorScheduled=true;dodgeDirector.rareAt=time+rand(90,150);dodgeDirector.rareGuardUntil=time+35;return;}
   dodgeDirector.rareAt=time+1;
  }
  dodgeDirector.next-=dt;if(dodgeDirector.next>0)return;
  if(spawnDodgeVisitor())dodgeDirector.next=DODGE_DIRECTOR[difficulty].interval*rand(.88,1.12);
  else dodgeDirector.next=.25;
+}
+// An unsafe, uncommitted ultimate is deferred instead of consuming its full
+// rare-event interval. A short guard avoids chaining Orianna Q attempts.
+function deferRareEvent(h){
+ if(!h.directorScheduled||!dodgeDirector)return;
+ const retry=time+5;
+ if(h.malphite)dodgeDirector.malAt=retry;else if(h.orianna)dodgeDirector.rareAt=retry;
+ dodgeDirector.rareGuardUntil=retry;
 }
 function fire(x,y,vx,vy,kind,damage,r=8,life=4){shots.push({x,y,px:x,py:y,vx,vy,kind,damage,r,ttl:life,alive:true,hit:false,threat:false});return shots[shots.length-1];}
 // Lock aim at telegraph start; players can read and bait the cast.
@@ -745,7 +753,7 @@ for(const h of hazards){
   if(!h.casting&&h.ttl>0){
    const f=clamp(1-h.ttl/h.max,0,1);h.x=h.startApproach.x+(h.approach.x-h.startApproach.x)*f;h.y=h.startApproach.y+(h.approach.y-h.startApproach.y)*f;
   }else if(!h.casting&&h.ttl<=0){
-   h.x=h.approach.x;h.y=h.approach.y;const plan=aimMalphiteR(h);if(!plan){h.ttl=0;continue;}
+   h.x=h.approach.x;h.y=h.approach.y;const plan=aimMalphiteR(h);if(!plan){h.ttl=0;deferRareEvent(h);continue;}
    h.casting=true;h.target=plan.target;h.remaining=h.ttl=plan.duration;h.start={x:h.x,y:h.y};h.threat=dist(player,h.target)<=h.r+player.hitRadius;
    dodgeDirector.attempted++;dodgeDirector.malphite++;
   }else if(h.casting){
@@ -775,7 +783,7 @@ for(const h of hazards){
    }
   }
   if(h.ttl<=0&&!h.casting){
-   if(!oriannaEscape(h)){h.ttl=0;continue;}
+   if(!oriannaEscape(h)){h.ttl=0;deferRareEvent(h);continue;}
    h.casting=true;h.ttl=ORIANNA_R.cast;h.threat=dist(player,h)<=h.r+player.hitRadius;
    dodgeDirector.attempted++;dodgeDirector.orianna++;
   }else if(h.ttl<=0){

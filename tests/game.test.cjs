@@ -929,6 +929,26 @@ test('Orianna cancels the shockwave if the player has no ordinary escape when it
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;assert.ok(g.spawnOriannaR());const h=g.hazards[0];
  advance(g,.45);g.player.x=h.destination.x;g.player.y=h.destination.y;advance(g,1.15);assert.equal(g.dodgeDirector.orianna,0);assert.equal(g.stats.hits,0);assert.equal(g.hazards.length,0);
 });
+test('unsafe scheduled rare ultimates defer instead of consuming a full rare interval',()=>{
+ for(const kind of ['orianna','malphite']){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=kind==='orianna'?0:999;g.dodgeDirector.malAt=kind==='malphite'?0:999;g.player.hp=g.player.maxHp=100000;
+  advance(g,.025);const h=g.hazards.find(h=>h[kind]);assert.ok(h,kind);assert.ok(h.directorScheduled);
+  if(kind==='orianna'){advance(g,.45);g.player.x=h.destination.x;g.player.y=h.destination.y;advance(g,1.1);}
+  else{g.player.x=h.approach.x;g.player.y=h.approach.y;advance(g,1.3);}
+  const next=kind==='orianna'?g.dodgeDirector.rareAt:g.dodgeDirector.malAt;
+  assert.equal(g.dodgeDirector[kind],0,kind);assert.ok(next-g.time>4.7&&next-g.time<=5,kind);
+  assert.ok(g.dodgeDirector.rareGuardUntil-g.time>4.7,kind);
+  g.player.x=600;g.player.y=337.5;advance(g,7);assert.ok(g.dodgeDirector[kind]>0,`${kind} did not retry successfully`);
+ }
+});
+test('committed rare ultimates retain their normal long interval',()=>{
+ for(const kind of ['orianna','malphite']){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=kind==='orianna'?0:999;g.dodgeDirector.malAt=kind==='malphite'?0:999;g.player.hp=g.player.maxHp=100000;
+  advance(g,2);assert.equal(g.dodgeDirector[kind],1,kind);
+  const next=kind==='orianna'?g.dodgeDirector.rareAt:g.dodgeDirector.malAt;
+  assert.ok(next-g.time>(kind==='orianna'?87:147),kind);assert.ok(g.dodgeDirector.rareGuardUntil-g.time>30,kind);
+ }
+});
 test('Orianna ball blocks other encounters and its preparation freezes while paused',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;assert.ok(g.spawnOriannaR());const h=g.hazards[0];
  assert.equal(g.spawnDodgeVisitor(),false);assert.equal(g.spawnXerathQ(),false);const before=h.ttl;g.pause();advance(g,.5);assert.equal(h.ttl,before);g.pause();advance(g,.1);assert.ok(h.ttl<before);
