@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,updateDodgeVisitor,spawnXerathW,spawnXerathQ,spawnOriannaR,spawnMalphiteR,aimMalphiteR,oriannaEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,visitorPathsCrowded,updateDodgeVisitor,spawnXerathW,spawnXerathQ,spawnOriannaR,spawnMalphiteR,aimMalphiteR,oriannaEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,drawSizes,strokes,arcs,texts,lines,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -1889,4 +1889,25 @@ test('isolated-spell fallback still respects recovery and active-threat cap',()=
  g.setRng(1600);assert.equal(g.spawnDodgeVisitor(),false);assert.equal(g.foes.length,0);
  g.setTime(50);for(let i=0;i<2;i++){const s=g.fire(100,150+i*50,1,0,'enemy',10,1,5);Object.assign(s,{directed:true,spellName:'EZREAL Q'});}
  g.setRng(1600);assert.equal(g.spawnDodgeVisitor(),false);assert.equal(g.foes.length,0);
+});
+
+
+test('visitor spacing detects intersecting entry paths, including a stationary caster',()=>{
+ const {g}=boot('ahri');
+ const moving={x:200,y:100,phase:'enter',origin:{x:100,y:100},speed:120};
+ assert.equal(g.visitorPathsCrowded({x:100,y:100},{x:200,y:100},moving),true);
+ assert.equal(g.visitorPathsCrowded({x:100,y:350},{x:200,y:350},moving),false);
+ const stationary={x:150,y:150,phase:'cast'};
+ assert.equal(g.visitorPathsCrowded({x:100,y:100},{x:200,y:100},stationary),true);
+ assert.equal(g.visitorPathsCrowded({x:100,y:300},{x:200,y:300},stationary),false);
+});
+test('different entering Dodge casters keep separated trajectories',()=>{
+ let checked=0;
+ for(let seed=0;seed<50;seed++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(50);g.dodgeDirector.next=999;g.setRng((seed*2654435761)>>>0);
+  const first=g.enemy(160,260);Object.assign(first,{dodgeVisitor:true,spell:g.REFERENCE_SPELLS.luxDodge,phase:'enter',origin:{x:220,y:260},entry:{x:160,y:260},speed:120});g.setFoes([first]);
+  if(!g.spawnDodgeVisitor(g.REFERENCE_SPELLS.ezrealDodge,65))continue;const second=g.foes[1];
+  assert.equal(g.visitorPathsCrowded(second.entry,second.origin,first),false);checked++;
+ }
+ assert.ok(checked>0,'no mixed-caster entries sampled');
 });

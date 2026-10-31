@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v59":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v60":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -615,6 +615,20 @@ function canEvadeVelkoz(origin,angle,splitDistance,spell,witness=null){
  }
  return false;
 }
+// Forecast simultaneous entry motion so caster silhouettes remain distinct.
+// This is a presentation spacing rule; it does not change combat hitboxes.
+function visitorPathsCrowded(start,finish,other){
+ const otherEnd=other.phase==="enter"?(other.origin||other):other;
+ const duration=dist(start,finish)/120,otherDuration=other.phase==="enter"?dist(other,otherEnd)/(other.speed||120):0;
+ const at=(a,b,d,t)=>{const f=d?Math.min(1,t/d):1;return {x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f};};
+ const times=[0,Math.min(duration,otherDuration),Math.max(duration,otherDuration)];
+ for(let i=1;i<times.length;i++){
+  const a=at(start,finish,duration,times[i-1]),b=at(start,finish,duration,times[i]);
+  const c=at(other,otherEnd,otherDuration,times[i-1]),d=at(other,otherEnd,otherDuration,times[i]);
+  if(segmentDistance(a.x-c.x,a.y-c.y,b.x-d.x,b.y-d.y)<100)return true;
+ }
+ return dist(start,other)<100;
+}
 function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
  const active=foes.filter(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit"&&e.phase!=="orbFlight"&&e.phase!=="hookFlight").length+shots.filter(s=>s.alive&&s.directed).length+hazards.filter(h=>h.directed).length;
  if(active>=DODGE_DIRECTOR[difficulty].cap||(active>0&&dodgeRecovery(time))||hazards.some(h=>h.directed)||shots.some(s=>s.alive&&s.velkoz)||foes.some(e=>e.alive&&e.dodgeVisitor&&e.spell.split&&(e.phase==="enter"||e.phase==="cast")))return false;
@@ -637,8 +651,8 @@ function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
   const entryDistance=forcedSpell?followEntry:65,start={x:p.x+Math.cos(angle)*entryDistance,y:p.y+Math.sin(angle)*entryDistance};
   // Keep the entire caster silhouette on screen, including its raised sprite.
   const visible=q=>q.x>=60&&q.x<=W-60&&q.y>=145&&q.y<=H-30;
-  // Paired Ezreal sources must be separated at spawn and aim lock.
-  const crowded=forcedSpell===REFERENCE_SPELLS.ezrealDodge&&foes.some(other=>other.alive&&other.dodgeVisitor&&other.spell===spell&&other.phase==="enter"&&(dist(start,other.entry)<100||dist(p,other.origin)<100));
+  // Preserve separation throughout entry, including different spell casters.
+  const crowded=foes.some(other=>other.alive&&other.dodgeVisitor&&(other.phase==="enter"||other.phase==="cast")&&visitorPathsCrowded(start,p,other));
   if(!crowded&&visible(p)&&visible(start)&&world.pointWalkable(p,20)&&world.pointWalkable(start,20)&&world.segmentClear(start,p,20)&&canEvadeDodgeCast(p,spell)){origin=p;entry=start;break;}
  }
  if(!origin)return false;
