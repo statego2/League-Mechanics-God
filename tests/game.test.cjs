@@ -81,6 +81,25 @@ test('rare area casts count a threatened player who enters and exits before impa
   assert.equal(g.dodged,1,kind);assert.equal(g.dodgeDirector.outcomes[h.spellName].avoided,1,kind);assert.equal(g.stats.hits,0,kind);
  }
 });
+test('rare area threat detects a grazing crossing between fixed-step endpoints',()=>{
+ for(const kind of ['orianna','malphite']){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const r=kind==='orianna'?207.5:162.5,center={x:600,y:300},p=g.player;
+  p.x=599.5;p.y=center.y+r+p.hitRadius-.0005;g.moveTo(p.x+10,p.y);
+  const h={...center,r,ttl:.1,max:.1,casting:true,directed:true,threat:false,spellName:kind==='orianna'?'ORIANNA R':'MALPHITE R'};
+  if(kind==='orianna')h.orianna=true;else Object.assign(h,{malphite:true,target:{...center},start:{...center},remaining:.1});
+  assert.ok(Math.hypot(p.x-center.x,p.y-center.y)>r+p.hitRadius);g.hazards.push(h);g.update(1/120);
+  assert.ok(Math.hypot(p.x-center.x,p.y-center.y)>r+p.hitRadius);assert.equal(h.threat,true,kind);
+  advance(g,.11);assert.equal(g.stats.hits,0);assert.equal(g.dodgeDirector.outcomes[h.spellName].avoided,1);
+ }
+});
+test('rare area does not credit movement that crosses only after impact',()=>{
+ for(const kind of ['orianna','malphite']){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player;p.x=500;p.y=300;p.speed=2000;g.moveTo(700,300);
+  const h={x:600,y:300,r:10,ttl:.01,max:.01,casting:true,directed:true,threat:false,spellName:kind==='orianna'?'ORIANNA R':'MALPHITE R'};
+  if(kind==='orianna')h.orianna=true;else Object.assign(h,{malphite:true,target:{x:600,y:300},start:{x:600,y:300},remaining:.01});
+  g.hazards.push(h);g.update(.1);assert.equal(g.stats.hits,0,kind);assert.equal(g.dodged,0,kind);assert.equal(g.dodgeDirector.outcomes[h.spellName].harmless,1,kind);
+ }
+});
 test('rare area casts that never threaten the player remain harmless',()=>{
  for(const kind of ['orianna','malphite']){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.x=950;g.player.y=300;
@@ -1681,7 +1700,7 @@ test('Dodge counts Charm hits against a visitor once per released E',()=>{
 });
 test('skill-scored Dodge records stay separate while retaining the survival record',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
- const oldScore='lmg.best.v1.dodge.normal.director_v66.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
+ const oldScore='lmg.best.v1.dodge.normal.director_v67.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
  g.reset('dodge');g.setTime(10);g.stats.dodgeQHits=1;g.stats.dodgeEHits=1;g.end(false);
  assert.match(node('menuDescription').textContent,/150 points/);assert.match(node('menuDescription').textContent,/Best survival: 120.0s/);
  assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v2'),'150');assert.equal(values.get(survival),'120');

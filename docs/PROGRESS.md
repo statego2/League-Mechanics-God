@@ -904,3 +904,9 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 - Added a short, fading shockwave effect at Orianna R impact, centered on the ball. It appears only when the spell resolves, so it does not reveal a pre-cast target circle; collision, damage and no-CC Dodge policy are unchanged. This is original placeholder VFX rather than the live game's art, and its fading edge is not an exact hitbox overlay.
 - Added a render regression checking the effect is absent before impact and appears on release. `node --test tests/*.test.cjs`: 341/341 pass; `node --check game.js`, generated Ahri data check and `git diff --check` pass. Browser visual review was unavailable because the Mac was locked.
 - Next: visually review the impact effect and conduct sustained human Expert playtests of readability, timing, overlaps and rare encounters; continue the unfinished Gauntlet and CS work.
+
+## Rare area threat crossings (31 October 2026)
+
+- Orianna R and Malphite R now evaluate whether the player's actual piecewise path touches their area during each simulation step, instead of checking only one position per step. This preserves threat qualification for narrow grazing crossings. The final hit still checks the position at impact; movement after impact cannot turn a harmless cast into a dodge. This remains a geometric threat proxy rather than a measured human reaction. Dodge records use `director_v67.endless`.
+- Added fixed-step grazing tests at normal Ahri speed for both ultimates and separate tests for crossings after impact. `node --test tests/*.test.cjs`: 343/343 pass; `node --check game.js`, generated Ahri data check and `git diff --check` pass. Browser verification was unavailable because the Mac was locked; these exact edge cases were tested in simulation.
+- Next: browser and sustained human Expert sessions on rare-event readability, density and fair counterplay; continue the remaining Gauntlet and CS work.

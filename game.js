@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v66":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v67":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -1040,7 +1040,7 @@ for(const h of hazards){
    h.casting=true;h.target=plan.target;h.remaining=h.ttl=plan.duration;h.start={x:h.x,y:h.y};h.threat=dist(player,h.target)<=h.r+player.hitRadius;
    h.direct=!!plan.flashWitness;dodgeDirector.attempted++;dodgeDirector.malphite++;if(h.direct)dodgeDirector.malDirect++;
   }else if(h.casting){
-   if(dist(effectPlayer,h.target)<=h.r+player.hitRadius)h.threat=true;
+   if(Number.isFinite(playerContact(h.target.x,h.target.y,h.target.x,h.target.y,0,impactFraction,h.r+player.hitRadius)))h.threat=true;
    const f=clamp(1-h.ttl/h.remaining,0,1);h.x=h.start.x+(h.target.x-h.start.x)*f;h.y=h.start.y+(h.target.y-h.start.y)*f;
    if(h.ttl<=0){const collision=dist(effectPlayer,h.target)<=h.r+player.hitRadius;
     if(collision){if(player.invuln>0){recordDodgeOutcome(h,"blocked");stats.blocked++;}else{recordDodgeOutcome(h,"hit");takeHit(physicalDamage(MALPHITE_R.raw,30));}}
@@ -1052,7 +1052,7 @@ for(const h of hazards){
  }
  if(h.orianna){
   h.ttl-=dt;
-  if(h.casting&&dist(effectPlayer,h)<=h.r+player.hitRadius)h.threat=true;
+  if(h.casting&&Number.isFinite(playerContact(h.x,h.y,h.x,h.y,0,impactFraction,h.r+player.hitRadius)))h.threat=true;
   if(!h.casting){
    const elapsed=h.max-h.ttl,priorX=h.x,priorY=h.y,f=clamp(elapsed/h.travelDuration,0,1);
    h.x=h.source.x+(h.destination.x-h.source.x)*f;h.y=h.source.y+(h.destination.y-h.source.y)*f;
