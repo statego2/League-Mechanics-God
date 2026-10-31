@@ -1612,3 +1612,23 @@ test('Velkoz splits from first swept contact, including a moving champion',()=>{
   assert.equal(g.stats.hits,1);
  }
 });
+
+
+test('Dodge resolves lethal projectile impacts before the survival deadline',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setTime(59.95);g.player.hp=10;
+ const s=g.fire(g.player.x-(g.player.hitRadius+10+30),g.player.y,1000,0,'enemy',100,10,1);s.directed=true;s.spellName='EZREAL Q';s.threat=true;
+ g.update(.1);assert.equal(g.state,'ended');assert.equal(g.stats.hits,1);assert.match(node('menuTitle').innerHTML,/FELL/);assert.ok(Math.abs(g.time-60)<1e-8);
+});
+test('Dodge stops at the deadline before a later projectile impact',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setTime(59.95);g.player.hp=10;
+ const s=g.fire(g.player.x-(g.player.hitRadius+10+70),g.player.y,1000,0,'enemy',100,10,1);s.directed=true;s.spellName='EZREAL Q';s.threat=true;
+ g.update(.1);assert.equal(g.state,'ended');assert.equal(g.stats.hits,0);assert.match(node('menuTitle').innerHTML,/COMPLETE/);assert.ok(Math.abs(g.time-60)<1e-8);
+});
+
+test('Dodge resolves an area impact before the deadline and excludes one after it',()=>{
+ for(const [ttl,hit] of [[.03,true],[.07,false]]){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setTime(59.95);g.player.hp=10;
+  g.hazards.push({x:g.player.x,y:g.player.y,r:40,ttl,max:ttl,directed:true,threat:true,spellName:'TEST AREA'});
+  g.update(.1);assert.equal(g.state,'ended');assert.equal(g.stats.hits,Number(hit),`ttl ${ttl}`);
+ }
+});
