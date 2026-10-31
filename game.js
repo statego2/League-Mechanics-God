@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v38":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v39":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -80,7 +80,7 @@ function beamTouchesPlayer(beam,point,radius){
 function segmentDistance(ax,ay,bx,by){const dx=bx-ax,dy=by-ay;const t=clamp(-(ax*dx+ay*dy)/(dx*dx+dy*dy||1),0,1);return Math.hypot(ax+dx*t,ay+dy*t);}
 // Earliest swept-circle contact, in [0,1], or Infinity when paths miss.
 function segmentHitTime(ax,ay,bx,by,r){const dx=bx-ax,dy=by-ay,c=ax*ax+ay*ay-r*r;if(c<=0)return 0;const a=dx*dx+dy*dy;if(a<1e-12)return Infinity;const b=2*(ax*dx+ay*dy),disc=b*b-4*a*c;if(disc<0)return Infinity;const t=(-b-Math.sqrt(disc))/(2*a);return t>=0&&t<=1?t:Infinity;}
-function threatening(s){const v2=s.vx*s.vx+s.vy*s.vy;if(!v2)return false;const t=((player.x-s.x)*s.vx+(player.y-s.y)*s.vy)/v2;return t>0&&t<=Math.min(.8,s.ttl)&&Math.hypot(s.x+s.vx*t-player.x,s.y+s.vy*t-player.y)<=s.r+player.hitRadius;}
+function threatening(s,point=player){const v2=s.vx*s.vx+s.vy*s.vy;if(!v2)return false;const t=((point.x-s.x)*s.vx+(point.y-s.y)*s.vy)/v2;return t>0&&t<=Math.min(.8,s.ttl)&&Math.hypot(s.x+s.vx*t-point.x,s.y+s.vy*t-point.y)<=s.r+player.hitRadius;}
 const CD={q:3,w:6,e:9,r:15,f:18};
 // Optional synthesized cues: created only after the player enables sound.
 const audio={enabled:false,context:null,last:{}};
@@ -883,9 +883,13 @@ for(const h of hazards){
    h.x=h.source.x+(h.destination.x-h.source.x)*f;h.y=h.source.y+(h.destination.y-h.source.y)*f;
    if(!h.q.phaseResolved){
     const vx=(h.destination.x-h.source.x)/h.travelDuration,vy=(h.destination.y-h.source.y)/h.travelDuration;
-    if(threatening({x:priorX,y:priorY,vx,vy,r:ORIANNA_Q.radius,ttl:Math.max(0,h.travelDuration-(elapsed-dt))})||dist(player,h.destination)<=ORIANNA_Q.arrival)h.q.threat=true;
-    const pathHit=segmentDistance(priorX-oldX,priorY-oldY,h.x-player.x,h.y-player.y)<=ORIANNA_Q.radius+player.hitRadius;
-    const arrivalHit=f>=1&&dist(player,h.destination)<=ORIANNA_Q.arrival;
+    // Q stops travelling as soon as the ball reaches its destination; later
+    // player movement in this step cannot collide with that completed phase.
+    const flightLeft=Math.max(0,h.travelDuration-(elapsed-dt)),fraction=dt>0?clamp(flightLeft/dt,0,1):0;
+    const atFlightEnd={x:oldX+(player.x-oldX)*fraction,y:oldY+(player.y-oldY)*fraction};
+    if(threatening({x:priorX,y:priorY,vx,vy,r:ORIANNA_Q.radius,ttl:flightLeft},{x:oldX,y:oldY})||dist(atFlightEnd,h.destination)<=ORIANNA_Q.arrival)h.q.threat=true;
+    const pathHit=segmentDistance(priorX-oldX,priorY-oldY,h.x-atFlightEnd.x,h.y-atFlightEnd.y)<=ORIANNA_Q.radius+player.hitRadius;
+    const arrivalHit=f>=1&&dist(atFlightEnd,h.destination)<=ORIANNA_Q.arrival;
     if(pathHit||arrivalHit){if(player.invuln>0){recordDodgeOutcome(h.q,"blocked");stats.blocked++;}else{recordDodgeOutcome(h.q,"hit");takeHit(physicalDamage(ORIANNA_Q.raw,30));}if(state!=="playing")return;}
     else if(f>=1){recordDodgeOutcome(h.q,h.q.threat?"avoided":"harmless");if(h.q.threat){dodged++;cue("dodge");}}
    }

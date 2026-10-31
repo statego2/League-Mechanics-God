@@ -1505,3 +1505,16 @@ test('Xerath W center damage uses the position at impact',()=>{
  g.hazards.push({x:p.x+70,y:p.y,r:137.5,xerath:true,ttl:.01,max:1,directed:true,spellName:'XERATH W'});g.update(.1);
  assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.stats.damage-50/1.3)<1e-8);
 });
+
+test('Orianna Q arrival ignores movement after the ball has arrived',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.x=500;g.player.y=400;g.moveTo(500,200);
+ const q={directed:true,spellName:'ORIANNA Q',phaseResolved:false,threat:false};
+ g.hazards.push({x:499,y:300,source:{x:400,y:300},destination:{x:500,y:300},travelDuration:1,ttl:1.01,max:2,orianna:true,casting:false,r:207.5,directed:true,q});
+ g.update(.1);assert.equal(g.stats.hits,0);assert.equal(g.dodged,0);
+});
+test('Orianna Q arrival hits a player who leaves only after arrival',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.x=500;g.player.y=386;g.moveTo(500,550);
+ const q={directed:true,spellName:'ORIANNA Q',phaseResolved:false,threat:false};
+ g.hazards.push({x:499.9,y:300,source:{x:400,y:300},destination:{x:500,y:300},travelDuration:1,ttl:1.001,max:2,orianna:true,casting:false,r:207.5,directed:true,q});
+ g.update(.1);assert.equal(g.stats.hits,1);assert.equal(g.dodgeDirector.outcomes['ORIANNA Q'].hit,1);
+});
