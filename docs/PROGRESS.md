@@ -830,3 +830,9 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 - Reset the fixed-step frame clock and accumulator when pausing, resuming or starting a drill. If the browser suspends animation frames during a pause, the first frame after resuming no longer advances up to 0.25 seconds of gameplay without a reaction opportunity. This applies to all modes; it does not change spell timing during uninterrupted play.
 - Added regressions for a long gap with no animation frames during pause and for starting a new drill after stale frame time. `node --test tests/*.test.cjs`: 311/311 pass; `node --check game.js`, generated Ahri data check and `git diff --check` pass. Browser smoke started Expert Dodge, paused and resumed; the long suspended-frame case was tested in simulation. A screenshot also confirmed the arena renders; this was not a sustained human playtest.
 - Next: sustained human Expert sessions for threat readability and fairness, including Vel'Koz and rare encounters, followed by the remaining Gauntlet and CS work.
+
+## Dodge caster windups (31 October 2026)
+
+- Visible Dodge visitors now progressively enter their cast pose over the spell's existing cast time; the original Blitz silhouette also leans. This is an original animation approximation meant to make the source easier to read, without an aim-line guide or a change to cast timing, hitboxes or damage. Non-visitor poses are unchanged.
+- Added a render regression for Ezreal and Blitz pose progression and absence of a projected aim line. `node --test tests/*.test.cjs`: 312/312 pass; `node --check game.js`, generated Ahri data check and `git diff --check` pass. Browser smoke started Expert Dodge and rendered the arena; the short windup's visibility still needs human evaluation in motion.
+- Next: sustained human Expert sessions for windup readability, overlap fairness and rare encounters; continue the unfinished Gauntlet and CS work.
