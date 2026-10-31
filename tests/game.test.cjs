@@ -1873,3 +1873,20 @@ test('Expert recovery still schedules an isolated encounter',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(86);g.setRng(1);g.dodgeDirector.next=0;
  g.update(1/120);assert.ok(g.foes.length||g.hazards.length);
 });
+
+
+test('Expert falls back to a safe Ezreal when a selected isolated spell cannot overlap',()=>{
+ for(const [lo,hi,name] of [[.83,.91,'Velkoz'],[.94,1,'Xerath Q']]){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(50);g.dodgeDirector.next=999;
+  const active=g.fire(100,100,1,0,'enemy',10,1,5);Object.assign(active,{directed:true,spellName:'EZREAL Q'});
+  let seed=0;while(seed<100000){const roll=((Math.imul(1664525,seed)+1013904223)>>>0)/4294967296;if(roll>=lo&&roll<hi)break;seed++;}
+  assert.ok(seed<100000);g.setRng(seed);assert.equal(g.spawnDodgeVisitor(),true,name);assert.equal(g.foes[0].spell, g.REFERENCE_SPELLS.ezrealDodge,name);
+ }
+});
+test('isolated-spell fallback still respects recovery and active-threat cap',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(86);
+ const active=g.fire(100,100,1,0,'enemy',10,1,5);Object.assign(active,{directed:true,spellName:'EZREAL Q'});
+ g.setRng(1600);assert.equal(g.spawnDodgeVisitor(),false);assert.equal(g.foes.length,0);
+ g.setTime(50);for(let i=0;i<2;i++){const s=g.fire(100,150+i*50,1,0,'enemy',10,1,5);Object.assign(s,{directed:true,spellName:'EZREAL Q'});}
+ g.setRng(1600);assert.equal(g.spawnDodgeVisitor(),false);assert.equal(g.foes.length,0);
+});
