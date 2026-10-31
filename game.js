@@ -110,7 +110,7 @@ function pause(){attackMove=false;if(state==="playing"||state==="paused"){last=0
 // Records are local and partitioned by drill and difficulty; storage can be unavailable.
 function saveRecord(value){
  try{
-  const key="lmg.best.v1."+mode+"."+difficulty+recordSuffix();
+  const key="lmg.best.v1."+mode+"."+difficulty+recordSuffix()+(mode==="dodge"&&dodgeDirector?".skill_v1":"");
   const previous=Number(window.localStorage.getItem(key));
   const best=Math.max(Number.isFinite(previous)?previous:0,value);
   window.localStorage.setItem(key,String(best));return best;
@@ -163,7 +163,9 @@ function end(win){
  if(state!=="playing")return;
  if(mode==="lastHit"||mode==="lane")stats.unresolved=foes.filter(e=>e.alive&&e.minion).length;
  updateUI();
- const score=mode==="dodge"||referenceSpell()?Math.round(time*10+dodged*15):kills*100+Math.round(player.hp);
+ // Reward offensive skillshot practice without changing survival or combat.
+ const skillPoints=dodgeDirector?stats.dodgeQHits*20+stats.dodgeEHits*30:0;
+ const score=mode==="dodge"||referenceSpell()?Math.round(time*10+dodged*15)+skillPoints:kills*100+Math.round(player.hp);
  let description;
  if(mode==="lane")description=`${stats.cs} / 15 CS · ${stats.missed} missed · ${stats.unresolved} unresolved · ${kills} enemies defeated · ${dodged} threats avoided · ${stats.hits} hits · ${Number(stats.damage.toFixed(1))} damage taken.`;
  else if(mode==="bait")description=`${bait.casts} spells baited · ${bait.dodges} dodged · ${bait.cs} / 3 CS · ${bait.missed} missed · ${Number(stats.damage.toFixed(1))} damage taken.`;
@@ -187,7 +189,7 @@ function end(win){
   const cassioLesson=d.cassio?"\nTurning away avoids the stun in League, but still takes damage inside the cone. This drill applies neither stun nor slow.":"";
   const malphiteLesson=d.malDirect?`\nMalphite direct casts: ${d.malDirect} / Flash used during ${d.malDirectFlash}`:"";
   const openQ=shots.filter(s=>s.alive&&s.trainingSkill==="q"&&!s.trainingHit).length,openE=shots.filter(s=>s.alive&&s.trainingSkill==="e"&&!s.trainingHit).length;
-  $("dodgeBreakdownText").textContent=`Casts: ${d.ezreal} Ezreal, ${d.lux} Lux, ${d.ahri} Ahri, ${d.blitz} Blitz, ${d.velkoz} Vel’Koz, ${d.xerath} Xerath W, ${d.xerathQ} Xerath Q, ${d.oriannaQ} Orianna Q, ${d.orianna} Orianna R, ${d.malphite} Malphite R, ${d.cassio} Cassiopeia R${malphiteLesson}\nCassiopeia: ${d.cassTurns} turned away / ${d.cassFails} facing her / ${d.cassEscapes} outside cone${cassioLesson}\nAhri skillshots: Q ${stats.dodgeQHits}/${stats.dodgeQShots} casts hit (${openQ} in flight) / E ${stats.dodgeEHits}/${stats.dodgeEShots} casts hit (${openE} in flight)\n\n${dodgeOutcomeSummary()}`;
+  $("dodgeBreakdownText").textContent=`Casts: ${d.ezreal} Ezreal, ${d.lux} Lux, ${d.ahri} Ahri, ${d.blitz} Blitz, ${d.velkoz} Vel’Koz, ${d.xerath} Xerath W, ${d.xerathQ} Xerath Q, ${d.oriannaQ} Orianna Q, ${d.orianna} Orianna R, ${d.malphite} Malphite R, ${d.cassio} Cassiopeia R${malphiteLesson}\nCassiopeia: ${d.cassTurns} turned away / ${d.cassFails} facing her / ${d.cassEscapes} outside cone${cassioLesson}\nAhri skillshots: Q ${stats.dodgeQHits}/${stats.dodgeQShots} casts hit (${openQ} in flight) / E ${stats.dodgeEHits}/${stats.dodgeEShots} casts hit (${openE} in flight) · ${skillPoints} skill points (+20 Q / +30 E)\n\n${dodgeOutcomeSummary()}`;
   $("dodgeBreakdown").hidden=false;
  }
 }

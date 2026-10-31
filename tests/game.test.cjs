@@ -1650,6 +1650,7 @@ test('Dodge counts Q once across both orb legs and counts a missed cast separate
  g.player.cd.q=0;node('arena').listeners.pointermove({clientX:g.player.x,clientY:g.player.y-300,buttons:0});g.cast('q');advance(g,1.6);
  assert.equal(g.stats.dodgeQShots,2);assert.equal(g.stats.dodgeQHits,1);g.end(false);
  assert.match(node('dodgeBreakdownText').textContent,/Q 1\/2 casts hit \(0 in flight\)/);
+ assert.match(node('dodgeBreakdownText').textContent,/20 skill points/);
 });
 test('Dodge skill results distinguish a released in-flight E from a miss',()=>{
  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
@@ -1662,7 +1663,15 @@ test('Dodge counts Charm hits against a visitor once per released E',()=>{
  const e=g.enemy(g.player.x+150,g.player.y),spec=g.REFERENCE_SPELLS.ezrealDodge;
  Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'cast',charge:999,pending:{angle:0,spell:spec},hp:1000,maxHp:1000});g.setFoes([e]);
  node('arena').listeners.pointermove({clientX:e.x,clientY:e.y,buttons:0});g.cast('e');advance(g,.7);
- assert.equal(g.stats.dodgeEShots,1);assert.equal(g.stats.dodgeEHits,1);assert.ok(e.hp<1000);
+ assert.equal(g.stats.dodgeEShots,1);assert.equal(g.stats.dodgeEHits,1);assert.ok(e.hp<1000);g.end(false);
+ assert.match(node('dodgeBreakdownText').textContent,/30 skill points/);
+});
+test('skill-scored Dodge records stay separate while retaining the survival record',()=>{
+ const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
+ const oldScore='lmg.best.v1.dodge.normal.director_v65.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
+ g.reset('dodge');g.setTime(10);g.stats.dodgeQHits=1;g.stats.dodgeEHits=1;g.end(false);
+ assert.match(node('menuDescription').textContent,/150 points/);assert.match(node('menuDescription').textContent,/Best survival: 120.0s/);
+ assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v1'),'150');assert.equal(values.get(survival),'120');
 });
 
 test('paired Ezreal escapes remain safe with existing movement and W decay',()=>{
