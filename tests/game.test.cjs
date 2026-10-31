@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnXerathW,spawnXerathQ,spawnOriannaR,spawnMalphiteR,aimMalphiteR,oriannaEscape,sampleAreaEscape,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnXerathW,spawnXerathQ,spawnOriannaR,spawnMalphiteR,aimMalphiteR,oriannaEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,drawSizes,strokes,arcs,texts,lines,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -1366,4 +1366,31 @@ test('Malphite planned landing remains escapable from a moving player',()=>{
  assert.ok(g.sampleAreaEscape(.2,plan.duration,p=>Math.hypot(p.x-plan.target.x,p.y-plan.target.y)<=162.5+g.player.hitRadius+8,witness));
  g.hazards.push({...source,malphite:true,casting:true,target:plan.target,start:source,remaining:plan.duration,ttl:plan.duration,max:plan.duration,r:162.5,directed:true,spellName:'MALPHITE R'});
  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,plan.duration);assert.equal(g.stats.hits,0);
+});
+
+
+test('forecast accounts for W decay and soft caps across movement and expiration',()=>{
+ for(const elapsed of [.2,.5,1.5,2.5]){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.cast('w');g.moveTo(1100,g.player.y);
+  const predicted=g.forecastTravel(0,elapsed),start=g.player.x;advance(g,elapsed);
+  assert.ok(Math.abs((g.player.x-start)-predicted)<.5,`elapsed ${elapsed}: actual ${g.player.x-start}, forecast ${predicted}`);
+ }
+});
+test('W decays during root before the existing movement order resumes',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.cast('w');g.moveTo(1100,g.player.y);g.player.root=.1;
+ const expected=g.dodgeReactionPath(.3).end,start=g.player.x;advance(g,.3);
+ assert.ok(Math.abs(expected.x-g.player.x)<.5,`${start} to ${g.player.x}, expected ${expected.x}`);
+});
+test('boosted moving-player witness clears an actual Ezreal shot',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.cast('w');g.moveTo(g.player.x,g.player.y+160);
+ const origin={x:140,y:g.player.y},spell=g.REFERENCE_SPELLS.ezrealDodge,witness={};assert.ok(g.canEvadeDodgeCast(origin,spell,witness));
+ const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'cast',entry:{...origin},speed:120,charge:spell.cast,pending:{angle:0,spell}});g.setFoes([e]);
+ advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.5);assert.equal(g.stats.hits,0);
+});
+
+test('boosted area-escape witness survives Xerath impact after continuing its move',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.cast('w');g.moveTo(g.player.x,g.player.y+150);
+ assert.ok(g.spawnXerathQ());const h=g.hazards[0],witness={};
+ assert.ok(g.sampleAreaEscape(.2,.528,p=>g.beamTouchesPlayer(h,p,g.player.hitRadius+8),witness));
+ advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,.4);assert.equal(g.stats.hits,0);
 });

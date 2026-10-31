@@ -34,16 +34,35 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v33":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v34":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
 // Units here are canvas units; no slows, items or runes are modeled yet.
-function playerMoveSpeed(){
- const raw=player.speed*(1+.4*player.boost/2);
- if(!ahriBase()||player.boost<=0)return raw;
+function moveSpeedAtBoost(boost){
+ const raw=player.speed*(1+.4*boost/2);
+ if(!ahriBase()||boost<=0)return raw;
  const worldSpeed=SIMULATION.toWorld(raw);
  return SIMULATION.toCanvas(worldSpeed>490?worldSpeed*.5+230:worldSpeed>415?worldSpeed*.8+83:worldSpeed);
+}
+function playerMoveSpeed(){return moveSpeedAtBoost(player.boost);}
+// Integrate the current W decay and soft caps across a future interval.
+// The engine updates at fixed steps; this continuous integral approximates
+// those steps and does not predict a new W cast or other future inputs.
+function forecastTravel(from,to){
+ if(to<=from)return 0;
+ const boost=player.boost,points=[from,to];
+ if(boost>from&&boost<to)points.push(boost);
+ if(ahriBase()&&player.speed>0)for(const threshold of [415,490]){
+  const crossing=boost-(SIMULATION.toCanvas(threshold)/player.speed-1)/.2;
+  if(crossing>from&&crossing<to&&crossing>0&&crossing<boost)points.push(crossing);
+ }
+ points.sort((a,b)=>a-b);let distance=0;
+ for(let i=1;i<points.length;i++){
+  const a=points[i-1],b=points[i];
+  distance+=(b-a)*(moveSpeedAtBoost(Math.max(0,boost-a))+moveSpeedAtBoost(Math.max(0,boost-b)))/2;
+ }
+ return distance;
 }
 function recordLabel(){return difficulty+(attackPreset==="standard"?"":", "+ATTACK_PRESETS[attackPreset].label+" AS");}
 const STEP=1/120;let accumulator=0;
@@ -409,7 +428,7 @@ const ORIANNA_R={radius:SIMULATION.toCanvas(415),cast:.5,raw:225};
 function sampleAreaEscape(reaction,impact,unsafe,witness=null){
  const route=dodgeReactionPath(reaction),start=route.at(Math.min(reaction,impact));
  if(!unsafe(start)){if(witness)witness.destination=start;return true;}
- const distance=player.speed*Math.max(0,impact-reaction);
+ const distance=forecastTravel(reaction,Math.max(reaction,impact));
  if(distance<=0)return false;
  for(let i=0;i<32;i++){
   const angle=i*TAU/32,destination={x:start.x+Math.cos(angle)*distance,y:start.y+Math.sin(angle)*distance};
@@ -463,14 +482,13 @@ function aimMalphiteR(source){
  return null;
 }
 // Approximate the existing right-click route before a new response arrives.
-// Cast/root/windup lock movement. Speed is sampled now; W decay and future
-// attack orders are not predicted, so this is not a complete fairness solver.
+// Cast/root/windup lock movement. W decays while locked; future attack
+// orders are not predicted, so this is not a complete fairness solver.
 function dodgeReactionPath(reaction){
  const start={x:player.x,y:player.y},locked=Math.max(player.root||0,player.casting?.remaining||0,player.windup||0);
  const route=player.target?world.path(start,world.nearestWalkable(player.target),player.r):[];
- const speed=playerMoveSpeed();
  const at=t=>{
-  let remaining=speed*Math.max(0,Math.min(t,reaction)-locked),point=start;
+  let remaining=forecastTravel(locked,Math.max(locked,Math.min(t,reaction))),point=start;
   for(const next of route){const length=dist(point,next);if(length>remaining&&length>0)return {x:point.x+(next.x-point.x)*remaining/length,y:point.y+(next.y-point.y)*remaining/length};remaining-=length;point=next;}
   return {x:point.x,y:point.y};
  };
@@ -479,10 +497,10 @@ function dodgeReactionPath(reaction){
 // Sample a response against moving projectiles, including existing movement
 // during the reaction period. This remains an approximate training forecast.
 function forecastDodgePath(incoming,destination,reaction,margin=0){
- const approach=dodgeReactionPath(reaction),start=approach.end,length=dist(start,destination),moveTime=length/player.speed;
+ const approach=dodgeReactionPath(reaction),start=approach.end,length=dist(start,destination);
  const position=t=>{
   if(t<=reaction)return approach.at(t);
-  const f=moveTime>0?clamp((t-reaction)/moveTime,0,1):1;
+  const f=length>0?clamp(forecastTravel(reaction,t)/length,0,1):1;
   return {x:start.x+(destination.x-start.x)*f,y:start.y+(destination.y-start.y)*f};
  };
  for(const shot of incoming){
