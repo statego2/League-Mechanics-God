@@ -364,7 +364,7 @@ test('Ahri timing uses level-one cadence and 20 percent windup',()=>{
 test('Ahri CS profile uses 53 damage and separates old timing-only records',()=>{
  const {g,node,window}=boot(),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
  node('attackSpeed').listeners.change({target:{value:'ahri'}});g.reset('lastHit');g.disableSpawn();g.addWave();g.setAllies([]);const e=g.foes[0];assert.equal(e.hp,465);assert.equal(g.player.speed,165);e.x=g.player.x+220;e.y=g.player.y;e.tick=999;e.hp=54;g.attackOrder(e);advance(g,.7);assert.equal(e.hp,1);assert.equal(g.stats.cs,0);
- g.moveTo(600,337.5);e.hp=53;g.attackOrder(e);advance(g,2);assert.equal(e.alive,false);assert.equal(node('killsValue').textContent,1);g.end(true);assert.equal(values.get('lmg.best.v1.lastHit.normal.cs_ahri_v13'),'1');assert.match(node('menuDescription').textContent,/53 damage/);
+ g.moveTo(600,337.5);e.hp=53;g.attackOrder(e);advance(g,2);assert.equal(e.alive,false);assert.equal(node('killsValue').textContent,1);g.end(true);assert.equal(values.get('lmg.best.v1.lastHit.normal.cs_ahri_v14'),'1');assert.match(node('menuDescription').textContent,/53 damage/);
 });
 test('Ahri CS unattended waves resolve without breaking the drill',()=>{
  for(const difficulty of ['easy','normal','hard']){const {g,node}=boot();node('attackSpeed').listeners.change({target:{value:'ahri'}});node('difficulty').listeners.change({target:{value:difficulty}});g.reset('lastHit');advance(g,600.02);assert.equal(g.state,'ended');assert.equal(g.stats.missed+g.stats.unresolved,126);}
@@ -1676,7 +1676,7 @@ test('Dodge counts Charm hits against a visitor once per released E',()=>{
 });
 test('skill-scored Dodge records stay separate while retaining the survival record',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
- const oldScore='lmg.best.v1.dodge.normal.director_v65.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
+ const oldScore='lmg.best.v1.dodge.normal.director_v66.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
  g.reset('dodge');g.setTime(10);g.stats.dodgeQHits=1;g.stats.dodgeEHits=1;g.end(false);
  assert.match(node('menuDescription').textContent,/150 points/);assert.match(node('menuDescription').textContent,/Best survival: 120.0s/);
  assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v2'),'150');assert.equal(values.get(survival),'120');
@@ -1788,6 +1788,46 @@ test('Ahri Q and E can hit a target that enters during the active interval',()=>
   node('arena').listeners.pointermove({clientX:e.x,clientY:e.y,buttons:0});g.cast(key);g.player.casting.remaining=.09;g.update(.1);
   assert.ok(e.hp<1000,`${key}: missed a target during active interval`);
  }
+});
+test('queued movement starts only after a cast or root expires within the step',()=>{
+ for(const lock of ['cast','root']){
+  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+  const x=g.player.x;if(lock==='cast'){node('arena').listeners.pointermove({clientX:x+200,clientY:g.player.y,buttons:0});g.cast('q');g.player.casting.remaining=.09;}else g.player.root=.09;
+  g.moveTo(x+200,g.player.y);g.update(.1);assert.ok(Math.abs(g.player.x-x-1.65)<1e-7,`${lock}: moved ${g.player.x-x}`);
+ }
+});
+test('area impact samples the player before queued movement begins',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player;
+ node('arena').listeners.pointermove({clientX:p.x+200,clientY:p.y,buttons:0});g.cast('q');p.casting.remaining=.09;g.moveTo(p.x+200,p.y);
+ g.hazards.push({x:p.x-137,y:p.y,r:137.5,xerath:true,ttl:.05,max:1,directed:true,spellName:'XERATH W'});g.update(.1);
+ assert.equal(g.stats.hits,1);
+});
+test('projectile collision respects movement beginning after a cast lock',()=>{
+ for(const [lifetime,hits] of [[.085,0],[.095,1]]){
+  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player;p.speed=1000;
+  node('arena').listeners.pointermove({clientX:p.x+200,clientY:p.y,buttons:0});g.cast('q');p.casting.remaining=.08;g.moveTo(p.x+200,p.y);
+  g.fire(p.x+45,p.y,0,0,'enemy',10,5,lifetime);g.update(.1);assert.equal(g.stats.hits,hits,`lifetime ${lifetime}`);
+ }
+});
+test('Cassiopeia checks facing before a queued turn actually begins',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player;
+ node('arena').listeners.pointermove({clientX:p.x-200,clientY:p.y,buttons:0});g.cast('q');p.casting.remaining=.09;g.moveTo(p.x+200,p.y);
+ g.hazards.push({x:p.x-200,y:p.y,angle:0,cassio:true,casting:true,ttl:.05,directed:true,spellName:'CASSIOPEIA R'});g.update(.1);
+ assert.equal(g.dodgeDirector.cassFails,1);assert.equal(g.dodgeDirector.cassTurns,0);
+});
+test('area and missile impacts account for reaching a nearby move destination early',()=>{
+ for(const kind of ['area','missile']){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player;p.speed=1000;g.moveTo(p.x+5,p.y);
+  if(kind==='area')g.hazards.push({x:p.x-134,y:p.y,r:137.5,xerath:true,ttl:.05,max:1,directed:true,spellName:'XERATH W'});
+  else g.fire(p.x+40,p.y,0,0,'enemy',10,5,.03);
+  g.update(.1);assert.equal(g.stats.hits,kind==='area'?0:1,kind);
+ }
+});
+test('queued move does not reuse a completed dash step',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const x=g.player.x,y=g.player.y;
+ node('arena').listeners.pointermove({clientX:x+10,clientY:y,buttons:0});g.cast('r');g.moveTo(x+200,y);
+ g.update(.1);assert.ok(Math.abs(g.player.x-x-10)<1e-7);assert.equal(g.player.dashing,null);
+ g.update(.1);assert.ok(g.player.x>x+10);
 });
 
 test('projectile does not collide with player movement before its release',()=>{

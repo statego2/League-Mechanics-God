@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v65":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v66":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -947,6 +947,9 @@ if(mode==="lane"){
  }
 }
 if(mode==="bait")updateBait(dt);if(state!=="playing")return;
+// A queued move starts only after the current cast/root/windup finishes.
+// Dash motion is handled separately and is already active at step start.
+const wasDashing=!!player.dashing,moveLock=wasDashing?0:clamp(Math.max(player.root||0,player.windup||0,player.casting?.remaining||0),0,dt);
 for(const k of Object.keys(CD))player.cd[k]=Math.max(0,player.cd[k]-dt);player.hitFlash=Math.max(0,player.hitFlash-dt);player.root=Math.max(0,player.root-dt);player.boost=Math.max(0,player.boost-dt);player.rushWindow=Math.max(0,player.rushWindow-dt);player.rushLock=Math.max(0,player.rushLock-dt);player.invuln=Math.max(0,player.invuln-dt);player.attackTimer=Math.max(0,player.attackTimer-dt);
 if(player.casting){player.casting.remaining-=dt;if(player.casting.remaining<=0){const cast=player.casting;player.casting=null;const speed=AHRI.q.speed,orb=cast.kind==="orb";const s=fire(player.x,player.y,Math.cos(cast.angle)*speed,Math.sin(cast.angle)*speed,cast.kind,orb?35:80,orb?AHRI.q.radius:30,(orb?AHRI.q.range:500)/speed);s.spawnOffset=clamp(dt+cast.remaining,0,dt);if(orb){s.phase="out";s.hitIds=new Set();}if(dodgeDirector){s.trainingSkill=orb?"q":"e";stats[orb?"dodgeQShots":"dodgeEShots"]++;}burst(player.x,player.y,orb?"#8cf4ff":"#f6a7da",7);}}
 if(player.fox){const f=player.fox;f.remaining-=dt;f.next-=dt;
@@ -954,8 +957,9 @@ if(player.fox){const f=player.fox;f.remaining-=dt;f.next-=dt;
   if(targets.length){const target=targets[0],angle=Math.atan2(target.y-player.y,target.x-player.x),shot=fire(player.x,player.y,Math.cos(angle)*700,Math.sin(angle)*700,"fox",40,7,1);shot.targetId=target.id;shot.foxCast=f;f.count--;f.next=.12;}}
  if(f.remaining<=0||(f.count===0))player.fox=null;
 }
-const oldX=player.x,oldY=player.y;
+const oldX=player.x,oldY=player.y,oldFacing=player.facing;let moveEnd=dt;
 if(player.dashing){const dest=player.dashing,dx=dest.x-player.x,dy=dest.y-player.y,len=Math.hypot(dx,dy),step=Math.min(len,dest.speed*dt),point={x:player.x+(len?dx/len*step:0),y:player.y+(len?dy/len*step:0)};const next=dest.throughTerrain?point:world.clip(player,point);const blocked=Math.hypot(next.x-player.x,next.y-player.y)<step-1e-4;player.x=next.x;player.y=next.y;
+ moveEnd=dest.speed>0?Math.min(dt,Math.hypot(player.x-oldX,player.y-oldY)/dest.speed):0;
  if(len<=step+1e-6||blocked){player.dashing=null;const targets=foes.filter(e=>e.alive&&!e.minion&&!e.baitCaster&&!e.referenceCaster&&dist(player,e)<=300).sort((a,b)=>dist(player,a)-dist(player,b)).slice(0,3);for(const target of targets){const a=Math.atan2(target.y-player.y,target.x-player.x),s=fire(player.x,player.y,Math.cos(a)*700,Math.sin(a)*700,"rush",75,7,1);s.targetId=target.id;}burst(player.x,player.y,"#b4eaff",10);}}
 if(!player.casting&&!player.dashing)updateOrder();
 // Time with a target in range and the attack ready, but no windup. This is
@@ -965,19 +969,30 @@ if(player.windup>0){player.windup=Math.max(0,player.windup-dt);if(player.windup<
  if(t&&dist(player,t)<=attackReach(t)+35){const a=Math.atan2(t.y-player.y,t.x-player.x);const shot=fire(player.x,player.y,Math.cos(a)*autoSpeed(),Math.sin(a)*autoSpeed(),"auto",autoDamage(),5,1.5);shot.targetId=t.id;stats.released++;cue("attack");player.attackTimer=ATTACK.period-ATTACK.windup;}else stats.cancelled++;
  player.windupTarget=null;
 }}
-if(player.target&&player.windup<=0&&player.root<=0&&!player.casting&&!player.dashing){
+if(player.target&&player.windup<=0&&player.root<=0&&!player.casting&&!player.dashing&&!wasDashing){
  const goal=world.nearestWalkable(player.target);
  if(!player.routeGoal||dist(player.routeGoal,goal)>14||(!player.route.length&&dist(player,goal)>1)){
   player.route=world.path(player,goal);player.routeGoal=goal;
  }
  const waypoint=player.route[0];
- if(waypoint){const dx=waypoint.x-player.x,dy=waypoint.y-player.y,len=Math.hypot(dx,dy),step=Math.min(playerMoveSpeed()*dt,len);
-  if(len>0){const next=world.clip(player,{x:player.x+dx/len*step,y:player.y+dy/len*step});player.x=next.x;player.y=next.y;player.facing=Math.atan2(dy,dx);if(step>0){stats.moving+=dt;player.motion+=dt*15;}}
+ if(waypoint){const dx=waypoint.x-player.x,dy=waypoint.y-player.y,len=Math.hypot(dx,dy),moveDt=Math.max(0,dt-moveLock),speed=playerMoveSpeed(),step=Math.min(speed*moveDt,len);
+  if(len>0&&step>0){const next=world.clip(player,{x:player.x+dx/len*step,y:player.y+dy/len*step});player.x=next.x;player.y=next.y;moveEnd=moveLock+(speed>0?Math.hypot(player.x-oldX,player.y-oldY)/speed:0);player.facing=Math.atan2(dy,dx);stats.moving+=moveEnd-moveLock;player.motion+=(moveEnd-moveLock)*15;}
   if(len<=step+1e-6){player.route.shift();if(!player.route.length&&dist(player,goal)<1)player.target=null;}
  }else if(dist(player,goal)<1)player.target=null;
 }
 
 player.x=clamp(player.x,22,W-22);player.y=clamp(player.y,59,H-36);
+const positionAt=f=>{const span=moveEnd-moveLock,t=span>0?clamp((f*dt-moveLock)/span,0,1):0;return {x:oldX+(player.x-oldX)*t,y:oldY+(player.y-oldY)*t};};
+// Split swept collision where movement begins or ends within the step.
+function playerContact(sx,sy,ex,ey,startF,endF,r){
+ const parts=[0,1];if(dt>0&&endF>startF)for(const boundary of [moveLock,moveEnd]){const split=(boundary/dt-startF)/(endF-startF);if(split>0&&split<1)parts.push(split);}parts.sort((a,b)=>a-b);
+ for(let i=1;i<parts.length;i++){
+  const a=parts[i-1],b=parts[i],pa=positionAt(startF+(endF-startF)*a),pb=positionAt(startF+(endF-startF)*b);
+  const t=segmentHitTime(sx+(ex-sx)*a-pa.x,sy+(ey-sy)*a-pa.y,sx+(ex-sx)*b-pb.x,sy+(ey-sy)*b-pb.y,r);
+  if(Number.isFinite(t))return a+(b-a)*t;
+ }
+ return Infinity;
+}
 const previousFoes=new Map(foes.map(e=>[e.id,{x:e.x,y:e.y}])),previousAllies=new Map(allies.map(e=>[e.id,{x:e.x,y:e.y}]));
 for(const e of foes){if(!e.alive)continue;if(e.dodgeVisitor){updateDodgeVisitor(e,dt);continue;}if(e.referenceCaster){if(e.pending){e.charge-=dt;if(e.charge<=0)releaseEnemy(e);}else{e.shoot-=dt;if(e.shoot<=0)shootEnemy(e);}continue;}if(e.baitCaster)continue;if(e.charm>0){e.charm=Math.max(0,e.charm-dt);const dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1,step=Math.min(d,e.speed*.35*dt);const next=world.clip(e,{x:e.x+dx/d*step,y:e.y+dy/d*step},e.r);e.x=next.x;e.y=next.y;continue;}if(e.minion){if(mode!=="bait"||bait.phase==="window")updateMinion(e,dt);continue;}if(e.targetDummy){updateTarget(e,dt);continue;}e.hit=Math.max(0,e.hit-dt);e.spin+=dt*e.strafe;const dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;let vx=0,vy=0;if(d>230){vx=dx/d;vy=dy/d;}else if(d<155){vx=-dx/d;vy=-dy/d;}vx+=(-dy/d)*Math.sin(e.spin)*.5;vy+=(dx/d)*Math.sin(e.spin)*.5;const mag=Math.hypot(vx,vy)||1;if(!e.pending){
  // Chase around walls when direct pursuit is blocked; refresh as the player moves.
@@ -995,7 +1010,7 @@ for(const h of hazards){
  // Test instantaneous impacts where the player was when this timer expired,
  // not at a later point in the same simulation step.
  const impactFraction=dt>0?clamp(h.ttl/dt,0,1):0;
- const effectPlayer={x:oldX+(player.x-oldX)*impactFraction,y:oldY+(player.y-oldY)*impactFraction};
+ const effectPlayer=positionAt(impactFraction);
  if(h.cassio){
   h.ttl-=dt;
   if(!h.casting&&h.ttl<=0){
@@ -1008,7 +1023,8 @@ for(const h of hazards){
    // This is the released spell effect, not a pre-cast targeting guide.
    fx.push({x:h.x,y:h.y,vx:0,vy:0,angle:h.angle,r:CASSIO_R.range,ttl:.24,max:.24,cassio:true});
    if(cassioConeContains(h,effectPlayer)){
-    if(facingCassio(h,effectPlayer,player.facing))dodgeDirector.cassFails++;else dodgeDirector.cassTurns++;
+    const impactFacing=impactFraction*dt<moveLock?oldFacing:player.facing;
+    if(facingCassio(h,effectPlayer,impactFacing))dodgeDirector.cassFails++;else dodgeDirector.cassTurns++;
     if(player.invuln>0){recordDodgeOutcome(h,"blocked");stats.blocked++;}else{recordDodgeOutcome(h,"hit");takeHit(physicalDamage(CASSIO_R.raw,30));}
    }else{dodgeDirector.cassEscapes++;recordDodgeOutcome(h,"avoided");dodged++;cue("dodge");}
    if(state!=="playing")return;
@@ -1045,9 +1061,9 @@ for(const h of hazards){
     // Q stops travelling as soon as the ball reaches its destination; later
     // player movement in this step cannot collide with that completed phase.
     const flightLeft=Math.max(0,h.travelDuration-(elapsed-dt)),fraction=dt>0?clamp(flightLeft/dt,0,1):0;
-    const atFlightEnd={x:oldX+(player.x-oldX)*fraction,y:oldY+(player.y-oldY)*fraction};
+    const atFlightEnd=positionAt(fraction);
     if(threatening({x:priorX,y:priorY,vx,vy,r:ORIANNA_Q.radius,ttl:flightLeft},{x:oldX,y:oldY})||dist(atFlightEnd,h.destination)<=ORIANNA_Q.arrival)h.q.threat=true;
-    const pathHit=segmentDistance(priorX-oldX,priorY-oldY,h.x-atFlightEnd.x,h.y-atFlightEnd.y)<=ORIANNA_Q.radius+player.hitRadius;
+    const pathHit=Number.isFinite(playerContact(priorX,priorY,h.x,h.y,0,fraction,ORIANNA_Q.radius+player.hitRadius));
     const arrivalHit=f>=1&&dist(atFlightEnd,h.destination)<=ORIANNA_Q.arrival;
     if(pathHit||arrivalHit){if(player.invuln>0){recordDodgeOutcome(h.q,"blocked");stats.blocked++;}else{recordDodgeOutcome(h.q,"hit");takeHit(physicalDamage(ORIANNA_Q.raw,30));}if(state!=="playing")return;}
     else if(f>=1){recordDodgeOutcome(h.q,h.q.threat?"avoided":"harmless");if(h.q.threat){dodged++;cue("dodge");}}
@@ -1113,8 +1129,7 @@ for(const s of shots){if(!s.alive)continue;
  // A missile that expires or reaches its return anchor partway through this
  // step cannot collide with motion that occurs after its own travel ended.
  const travelFraction=dt>0?(offset+travelDt)/dt:0,startFraction=dt>0?offset/dt:0;
- const playerStartX=oldX+(player.x-oldX)*startFraction,playerStartY=oldY+(player.y-oldY)*startFraction;
- const playerEndX=oldX+(player.x-oldX)*travelFraction,playerEndY=oldY+(player.y-oldY)*travelFraction;
+ const endPlayer=positionAt(travelFraction),playerEndX=endPlayer.x,playerEndY=endPlayer.y;
  const targetStart=(prev,target)=>({x:prev.x+(target.x-prev.x)*startFraction,y:prev.y+(target.y-prev.y)*startFraction});
  const targetEnd=(prev,target)=>({x:prev.x+(target.x-prev.x)*travelFraction,y:prev.y+(target.y-prev.y)*travelFraction});
  if(s.kind==="orb"){
@@ -1123,7 +1138,7 @@ for(const s of shots){if(!s.alive)continue;
   if(s.phase==="out"&&s.ttl<=0){s.phase="return";s.ttl=3;s.hitIds.clear();}
   else if(s.phase==="return"&&(dist(s,player)<1||s.ttl<=0))s.alive=false;
  }else if(s.kind==="enemyOrb"){
-  const collision=!s.phaseHit&&segmentDistance(s.px-playerStartX,s.py-playerStartY,s.x-playerEndX,s.y-playerEndY)<=s.r+player.hitRadius;
+  const collision=!s.phaseHit&&Number.isFinite(playerContact(s.px,s.py,s.x,s.y,startFraction,travelFraction,s.r+player.hitRadius));
   if(collision){s.phaseHit=true;if(player.invuln>0){recordDodgeOutcome(s,"blocked");stats.blocked++;}else{recordDodgeOutcome(s,"hit");takeHit(s.phase==="out"?physicalDamage(s.damage,30):s.damage);}if(state!=="playing")return;}
   const phaseFinished=s.phase==="out"?s.ttl<=0:(dist(s,s.anchor)<1||s.ttl<=0);
   if(phaseFinished){
@@ -1140,8 +1155,7 @@ for(const s of shots){if(!s.alive)continue;
      if(threatening(s,{x:playerEndX,y:playerEndY}))s.threat=true;
      s.x+=s.vx*flight;s.y+=s.vy*flight;s.ttl-=remaining;
      const endFraction=dt>0?(offset+travelDt+flight)/dt:0;
-     const returnEndX=oldX+(player.x-oldX)*endFraction,returnEndY=oldY+(player.y-oldY)*endFraction;
-     const returnHit=segmentDistance(s.px-playerEndX,s.py-playerEndY,s.x-returnEndX,s.y-returnEndY)<=s.r+player.hitRadius;
+     const returnHit=Number.isFinite(playerContact(s.px,s.py,s.x,s.y,travelFraction,endFraction,s.r+player.hitRadius));
      if(returnHit){s.phaseHit=true;if(player.invuln>0){recordDodgeOutcome(s,"blocked");stats.blocked++;}else{recordDodgeOutcome(s,"hit");takeHit(s.damage);}if(state!=="playing")return;}
      if(flight>=rd/700||s.ttl<=0){if(!s.phaseHit){recordDodgeOutcome(s,s.threat?"avoided":"harmless");if(s.threat){dodged++;cue("dodge");}}s.alive=false;}
     }
@@ -1152,7 +1166,7 @@ for(const s of shots){if(!s.alive)continue;
   if(target&&segmentDistance(s.px-prev.x,s.py-prev.y,s.x-targetEnd(prev,target).x,s.y-targetEnd(prev,target).y)<=s.r+targetHitRadius(target)){applyImpact(target,{sourceId:s.sourceId??null,sourceTeam:"enemy",kind:"minionProjectile",raw:s.damage,damageType:"physical",minionBonus:s.minionBonus});s.alive=false;}
   if(s.ttl<=0)s.alive=false;
  }else if(s.kind==="enemy"){
-  const contact=!s.ignorePlayer&&!(s.group&&s.group.hit)?segmentHitTime(s.px-playerStartX,s.py-playerStartY,s.x-playerEndX,s.y-playerEndY,s.r+player.hitRadius):Infinity;
+  const contact=!s.ignorePlayer&&!(s.group&&s.group.hit)?playerContact(s.px,s.py,s.x,s.y,startFraction,travelFraction,s.r+player.hitRadius):Infinity;
   const collision=Number.isFinite(contact);
   // Vel’Koz splits at the first contact, not where the bolt would have
   // ended its step if the champion had not stopped it.
