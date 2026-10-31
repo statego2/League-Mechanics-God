@@ -45,3 +45,7 @@ The ranger has three directional illustrations with left/right mirroring and pro
 ## Dodge clockwork caster (2026-10-31)
 
 - `clockwork-caster.png` is an original generated transparent sprite for the Orianna-pattern encounter, created with the built-in image generator. Prompt requested a single violet-and-brass clockwork automaton, full body, three-quarter MOBA presentation, with no ball, floor or text. It is not an official Riot asset. The sprite is static and does not reproduce Orianna's actual in-game model or animations; its small on-screen legibility still needs human review in a live encounter.
+
+## Dodge explorer caster (2026-10-31)
+
+- `explorer-caster.png` is an original transparent sprite generated with the built-in image generator for the Ezreal Q-pattern visitor. Prompt: "Create a single original transparent character sprite for a small MOBA browser-game battlefield. A youthful blond male fantasy explorer in a fitted blue and brown jacket, leather boots and goggles, one prominent ornate golden magical gauntlet emitting a subtle blue glow, no bow or arrows. Full body, dynamic readable stance, viewed from an elevated three-quarter gameplay camera, stylized painted 3D game art, clear silhouette legible at 80 pixels high. Center the figure, include whole body and both feet. One figure only, no ground, no shadow, no background, no text, no logo, no watermark." This static illustration is not a Riot asset or an animated model; collision and spell stats are unchanged.

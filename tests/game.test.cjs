@@ -727,8 +727,8 @@ test('Dodge director completes a long session with bounded directed threats',()=
  assert.equal(g.state,'ended');assert.ok(g.dodgeDirector.attempted>100);assert.ok(g.dodgeDirector.xerathQ>0,'long session never scheduled Xerath Q');assert.ok(g.dodgeDirector.velkoz>0,'long session never scheduled Velkoz Q');assert.ok(g.dodgeDirector.orianna>0,'long session never scheduled Orianna R');assert.ok(g.dodgeDirector.malphite>0,'long session never scheduled Malphite R');assert.equal(g.dodgeDirector.attempted,g.dodgeDirector.ezreal+g.dodgeDirector.lux+g.dodgeDirector.ahri+g.dodgeDirector.blitz+g.dodgeDirector.velkoz+g.dodgeDirector.xerath+g.dodgeDirector.xerathQ+g.dodgeDirector.oriannaQ+g.dodgeDirector.orianna+g.dodgeDirector.malphite);
 });
 test('Dodge visitor uses distinct existing visual profiles and projectile colours',()=>{
- const {g,node,draws,strokes}=boot('ahri');for(const id of ['mageArt','rangerArt']){node(id).complete=true;node(id).naturalWidth=100;}
- g.drawChampion(500,300,0,false,false,0,0,'ezreal');g.drawChampion(500,300,0,false,false,0,0);assert.ok(draws.includes(node('rangerArt')));assert.ok(draws.includes(node('mageArt')));
+ const {g,node,draws,strokes}=boot('ahri');for(const id of ['mageArt','explorerArt']){node(id).complete=true;node(id).naturalWidth=100;}
+ g.drawChampion(500,300,0,false,false,0,0,'ezreal');g.drawChampion(500,300,0,false,false,0,0);assert.ok(draws.includes(node('explorerArt')));assert.ok(draws.includes(node('mageArt')));
  const e=g.fire(200,200,100,0,'enemy',10,8,1);e.spellName='EZREAL Q';const l=g.fire(250,250,100,0,'enemy',10,8,1);l.spellName='LUX Q';g.render();assert.ok(strokes.includes('#7bd9ff99'));assert.ok(strokes.includes('#ffe4a099'));
 });
 
@@ -1548,4 +1548,26 @@ test('double Ezreal projectiles occur naturally on Standard and Expert but not F
   }
   assert.equal(found,expected,difficulty);
  }
+});
+
+test('paired Ezreal escapes remain safe with existing movement and W decay',()=>{
+ let accepted=0,boosted=0;
+ for(let seedOffset=0;seedOffset<100;seedOffset++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
+  g.reset('dodge');g.setTime(50);g.dodgeDirector.next=999;const spell=g.REFERENCE_SPELLS.ezrealDodge;
+  if(!g.spawnDodgeVisitor())continue;const follow=g.foes.find(x=>x.followUp&&x.spell===spell);if(!follow)continue;
+  g.moveTo(g.player.x+(seedOffset%2?120:-120),g.player.y+100);if(seedOffset%2)g.cast('w');
+  for(let i=0;i<120&&follow.phase==='enter';i++)g.update(1/120);
+  if(follow.phase!=='cast')continue;const witness={};if(!g.canEvadeDodgeCast(follow,spell,witness))continue;
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.5);
+  assert.equal(g.stats.hits,0,`seed ${seedOffset}`);accepted++;if(seedOffset%2)boosted++;
+ }
+ assert.ok(accepted>=2,`only ${accepted} moving witnesses`);assert.ok(boosted>=1,`no W-boosted witnesses`);
+});
+
+
+test('Ezreal-pattern sprite has normal dimensions and a safe fallback',()=>{
+ const {g,node,draws,drawSizes}=boot('ahri');g.reset('dodge');const explorer=node('explorerArt');explorer.complete=true;explorer.naturalWidth=100;
+ g.drawChampion(600,300,0,false,false,0,0,'ezreal');assert.ok(draws.includes(explorer));assert.deepEqual(drawSizes.find(x=>x[0]===explorer).slice(1),[-37,-79,74,80]);
+ explorer.naturalWidth=0;draws.length=0;assert.doesNotThrow(()=>g.drawChampion(600,300,0,false,false,0,0,'ezreal'));assert.ok(!draws.includes(explorer));
 });
