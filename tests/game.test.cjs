@@ -1390,6 +1390,14 @@ test('Malphite does not require Flash when it is on cooldown',()=>{
  const plan=g.aimMalphiteR({x:200,y:g.player.y}),witness={};assert.ok(plan);assert.equal(plan.flashWitness,undefined);
  assert.ok(g.sampleAreaEscape(.2,plan.duration,p=>Math.hypot(p.x-plan.target.x,p.y-plan.target.y)<=162.5+g.player.hitRadius+8,witness));
 });
+test('direct Malphite results report Flash use during the cast without claiming a dodge',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.setRng(1);
+ const source={x:200,y:g.player.y};g.hazards.push({...source,approach:source,startApproach:source,malphite:true,casting:false,ttl:.001,max:1,r:162.5,directed:true,spellName:'MALPHITE R'});
+ g.update(.01);assert.equal(g.dodgeDirector.malDirect,1);assert.equal(g.dodgeDirector.malDirectFlash,0);
+ node('arena').listeners.pointermove({clientX:g.player.x+200,clientY:g.player.y,buttons:0});g.cast('f');g.cast('f');
+ assert.equal(g.dodgeDirector.malDirectFlash,1);g.end(false);
+ assert.match(node('dodgeBreakdownText').textContent,/Malphite direct casts: 1 \/ Flash used during 1/);
+});
 test('direct Malphite Flash witnesses survive existing movement and W decay',()=>{
  let checked=0;
  for(const side of [-1,1])for(const boosted of [false,true]){
@@ -1397,10 +1405,22 @@ test('direct Malphite Flash witnesses survive existing movement and W decay',()=
   const source={x:g.player.x+side*400,y:g.player.y};g.moveTo(g.player.x,g.player.y+80);if(boosted)g.cast('w');
   const plan=g.aimMalphiteR(source);if(!plan?.flashWitness)continue;
   g.hazards.push({...source,malphite:true,casting:true,target:plan.target,start:source,remaining:plan.duration,ttl:plan.duration,max:plan.duration,r:162.5,directed:true,spellName:'MALPHITE R'});
-  advance(g,.2);node('arena').listeners.pointermove({clientX:plan.flashWitness.x,clientY:plan.flashWitness.y,buttons:0});g.cast('f');g.moveTo(plan.walkWitness.x,plan.walkWitness.y);advance(g,plan.duration);
+  advance(g,.2);node('arena').listeners.pointermove({clientX:plan.flashWitness.x,clientY:plan.flashWitness.y,buttons:0});g.cast('f');advance(g,.1);g.moveTo(plan.walkWitness.x,plan.walkWitness.y);advance(g,plan.duration);
   assert.equal(g.stats.hits,0,`side ${side}, boosted ${boosted}`);checked++;
  }
  assert.ok(checked>=2,`only ${checked} Flash witnesses`);
+});
+test('direct Malphite Flash plans remain safe across sampled arena positions',()=>{
+ let checked=0;
+ for(const x of [450,600,750])for(const y of [230,337,480])for(const side of [-1,1])for(const boosted of [false,true])for(const [mx,my] of [[0,80],[0,-80],[80,0],[-80,0]]){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.setRng(1);
+  const p=g.player;p.x=x;p.y=y;g.moveTo(x+mx,y+my);if(boosted)g.cast('w');
+  const source={x:x+side*380,y},plan=g.aimMalphiteR(source);if(!plan?.flashWitness)continue;
+  g.hazards.push({...source,malphite:true,casting:true,target:plan.target,start:source,remaining:plan.duration,ttl:plan.duration,max:plan.duration,r:162.5,directed:true,spellName:'MALPHITE R'});
+  advance(g,.2);node('arena').listeners.pointermove({clientX:plan.flashWitness.x,clientY:plan.flashWitness.y,buttons:0});g.cast('f');advance(g,.1);g.moveTo(plan.walkWitness.x,plan.walkWitness.y);advance(g,plan.duration);
+  assert.equal(g.stats.hits,0,`${x},${y} side ${side} boosted ${boosted} move ${mx},${my}`);checked++;
+ }
+ assert.ok(checked>=8,`only ${checked} accepted Flash witnesses`);
 });
 
 
@@ -1939,7 +1959,7 @@ test('Expert endless cadence stays active across twelve simulated minutes',t=>{
    if(step%360===0){const [x,y]=points[Math.floor(step/360)%4];g.moveTo(x,y);}if(step%1440===0)g.cast('w');g.update(1/120);
    if((step+1)%(60*120)===0){buckets.push(g.dodgeDirector.attempted-last);last=g.dodgeDirector.attempted;}
   }
-  runs.push(buckets);const d=g.dodgeDirector;mix.push({ezreal:d.ezreal,ahri:d.ahri,lux:d.lux,blitz:d.blitz,velkoz:d.velkoz,xerath:d.xerath+d.xerathQ,orianna:d.orianna,malphite:d.malphite,cassio:d.cassio});
+  runs.push(buckets);const d=g.dodgeDirector;mix.push({ezreal:d.ezreal,ahri:d.ahri,lux:d.lux,blitz:d.blitz,velkoz:d.velkoz,xerath:d.xerath+d.xerathQ,orianna:d.orianna,malphite:d.malphite,malDirect:d.malDirect,cassio:d.cassio});
   phases.push(Object.values(d.outcomes).reduce((a,v)=>({avoided:a.avoided+v.avoided,hit:a.hit+v.hit,blocked:a.blocked+v.blocked,harmless:a.harmless+v.harmless}),{avoided:0,hit:0,blocked:0,harmless:0}));
   assert.equal(g.state,'playing');assert.ok(buckets.every(n=>n>=5));
   for(const name of ['ezreal','ahri','lux','blitz','velkoz'])assert.ok(d[name]>0,`seed ${seed}: no ${name} casts`);
