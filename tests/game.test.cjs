@@ -1783,3 +1783,18 @@ test('straight-shot director can use an oblique escape against a second missile'
  }
  assert.ok(accepted>0,'no oblique route was exercised');
 });
+
+
+test('straight-shot director can accept a safe shortened route near a boundary',()=>{
+ let accepted=0;
+ for(const [x,y] of [[400,65],[600,65],[800,65],[400,630],[600,630],[800,630]])for(let m=0;m<8;m++)for(let a=0;a<8;a++){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.x=x;g.player.y=y;g.cast('w');
+  g.moveTo(x+Math.cos(m*Math.PI/4)*120,y+Math.sin(m*Math.PI/4)*120);
+  const spell=g.REFERENCE_SPELLS.ezrealDodge,origin={x:x+Math.cos(a*Math.PI/4)*470,y:y+Math.sin(a*Math.PI/4)*470},start=g.dodgeReactionPath(.2).end,witness={};
+  if(!g.canEvadeDodgeCast(origin,spell,witness))continue;
+  if(Math.hypot(witness.destination.x-start.x,witness.destination.y-start.y)>=spell.radius+g.player.hitRadius+7.9)continue;
+  const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'cast',charge:spell.cast,entry:{...origin},speed:120,hp:10000,pending:{angle:Math.atan2(y-origin.y,x-origin.x),spell}});g.setFoes([e]);
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.2);assert.equal(g.stats.hits,0,`${x},${y} move ${m} angle ${a}`);accepted++;
+ }
+ assert.ok(accepted>0,'no shortened safe route was exercised');
+});
