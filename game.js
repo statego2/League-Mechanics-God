@@ -31,7 +31,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v12":mode==="dodge"?(ahriBase()?".director_v20":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
+function recordSuffix(){return ahriCS()?".cs_ahri_v12":mode==="dodge"?(ahriBase()?".director_v21":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 function recordLabel(){return difficulty+(attackPreset==="standard"?"":", "+ATTACK_PRESETS[attackPreset].label+" AS");}
@@ -505,7 +505,9 @@ function spawnDodgeVisitor(){
  if(spell.split&&active>0)return false;
  let origin=null,entry=null;
  for(let i=0;i<80;i++){
-  const angle=rand(0,TAU),distance=rand(340,470),p={x:player.x+Math.cos(angle)*distance,y:player.y+Math.sin(angle)*distance};
+  // Ahri's broad orb needs more room for the same 200 ms reaction allowance.
+  // Distance is measured to centres; hit radii still permit contact at range.
+  const angle=rand(0,TAU),distance=rand(340,spell.returning?520:470),p={x:player.x+Math.cos(angle)*distance,y:player.y+Math.sin(angle)*distance};
   const start={x:p.x+Math.cos(angle)*65,y:p.y+Math.sin(angle)*65};
   // Keep the entire caster silhouette on screen, including its raised sprite.
   const visible=q=>q.x>=60&&q.x<=W-60&&q.y>=145&&q.y<=H-30;

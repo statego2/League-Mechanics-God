@@ -630,6 +630,13 @@ test('Dodge director sends single-cast visitors with deterministic Ezreal-heavy 
  function run(){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,55);return [g.dodgeDirector.ezreal,g.dodgeDirector.lux,g.dodgeDirector.ahri,g.dodgeDirector.blitz,g.dodgeDirector.velkoz,g.dodgeDirector.xerath,g.dodgeDirector.xerathQ,g.dodgeDirector.oriannaQ,g.dodgeDirector.orianna,g.dodgeDirector.malphite,g.dodgeDirector.attempted];}
  const a=run(),b=run();assert.deepEqual(a,b);assert.equal(a[0]+a[1]+a[2]+a[3]+a[4]+a[5]+a[6]+a[7]+a[8]+a[9],a[10]);assert.ok(a[0]>a[1]);assert.ok(a[10]>=10,`too few casts: ${a}`);
 });
+test('Ahri Q is actually scheduled on every difficulty in the default seeded long drill',()=>{
+ for(const difficulty of ['easy','normal','hard']){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});node('dodgeLength').listeners.change({target:{value:'180'}});
+  g.reset('dodge');g.player.hp=g.player.maxHp=1000000;advance(g,90);
+  assert.ok(g.dodgeDirector.ahri>0,`${difficulty}: no Ahri casts`);assert.ok(g.dodgeDirector.ezreal>g.dodgeDirector.ahri,`${difficulty}: Ezreal should remain common`);
+ }
+});
 test('Dodge visitor enters, casts only once, then exits without deleting its missile',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,.02);const visitor=g.foes.find(e=>e.dodgeVisitor);assert.ok(visitor);advance(g,1.1);assert.equal(g.dodgeDirector.attempted,1);assert.equal(visitor.phase,'exit');advance(g,1);assert.ok(!g.foes.includes(visitor));assert.equal(g.dodgeDirector.attempted,1);
 });
