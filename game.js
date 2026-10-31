@@ -20,6 +20,9 @@ function validAhriData(data){
 }
 const AHRI_DATA=validAhriData(window.LMGAhriData)?window.LMGAhriData:AHRI_FALLBACK;
 const AHRI={hp:AHRI_DATA.base.hp,speed:SIMULATION.toCanvas(AHRI_DATA.base.moveSpeed),range:SIMULATION.toCanvas(AHRI_DATA.base.attackRange),attackSpeed:AHRI_DATA.base.attackSpeed,damage:AHRI_DATA.base.attackDamage,missileSpeed:SIMULATION.toCanvas(AHRI_DATA.attack.missileSpeed),radius:SIMULATION.toCanvas(AHRI_DATA.gameplayRadius),q:{cast:AHRI_DATA.q.cast,range:SIMULATION.toCanvas(AHRI_DATA.q.range),speed:SIMULATION.toCanvas(AHRI_DATA.q.speed),radius:SIMULATION.toCanvas(AHRI_DATA.q.width/2)}};
+// Ahri level-one base health regeneration, 2.5 health per five seconds.
+// Applied continuously as a fixed-step approximation; no items or level growth.
+const AHRI_HEALTH_REGEN_PER_SECOND=2.5/5;
 const ATTACK={range:AHRI.range,windup:.18,period:.72};
 const ATTACK_PRESETS={ahri:{period:1/AHRI.attackSpeed,windup:AHRI_DATA.attack.windupFraction/AHRI.attackSpeed,label:"0.668"},slow:{period:1.25,windup:.3125,label:"0.80"},standard:{period:.72,windup:.18,label:"1.39"},fast:{period:.5,windup:.125,label:"2.00"}};
 let attackPreset="ahri",dodgeDuration=60;
@@ -31,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v12":mode==="dodge"?(ahriBase()?".director_v28":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v3":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v12":mode==="dodge"?(ahriBase()?".director_v29":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v4":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -743,6 +746,7 @@ function moveTo(x,y){cancelAttack();attackMove=false;player.order=null;player.ta
 // Stop cancels movement, chase and an uncommitted attack, never a fired missile.
 function stopPlayer(){cancelAttack();attackMove=false;player.order=null;player.target=null;player.focus=null;player.route=[];player.routeGoal=null;stopHeldRight=true;}
 function update(dt){if(state!=="playing")return;time+=dt;if(((mode==="lane"||referenceSpell()||mode==="lastHit"&&!ahriCS())&&time>=60)||(mode==="dodge"&&time>=dodgeDuration)||(ahriCS()&&time>=600)||(mode==="skillshot"&&time>=45)){end(true);return;}
+if((ahriBase()||referenceSpell())&&player.hp>0)player.hp=Math.min(player.maxHp,player.hp+AHRI_HEALTH_REGEN_PER_SECOND*dt);
 if(referenceSpell()&&!foes.length){const caster=enemy(970,337.5);caster.referenceCaster=true;caster.shoot=1.5;foes.push(caster);}
 if(dodgeDirector)updateDodgeDirector(dt);
 spawn-=dt;if(spawn<=0&&!referenceSpell()&&!dodgeDirector){if(mode==="lastHit"||mode==="lane")addWave();else if(mode==="bait"){}else if(mode==="skillshot")addTarget();else addEnemy();spawn=(mode==="dodge"?Math.max(1.35,3.5-time*.026):Math.max(.9,1.6-time*.015))*PRESETS[difficulty].spawn;if(mode==="lastHit"||mode==="lane")spawn=ahriCS()?30:10;else if(mode==="bait")spawn=999;else if(mode==="skillshot")spawn=.8;}

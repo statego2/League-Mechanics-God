@@ -753,7 +753,7 @@ test('enemy Ahri orb can hit once on each leg with true damage on its return',()
  const shot=g.fire(400,g.player.y,775,0,'enemyOrb',35,50,450/775);
  Object.assign(shot,{phase:'out',phaseHit:false,anchor:{x:400,y:g.player.y},casterId:-999});
  advance(g,1.5);
- assert.equal(g.stats.hits,2);assert.ok(Math.abs(g.player.hp-(590-35/1.3-35))<1e-7);assert.ok(!shot.alive);
+ assert.equal(g.stats.hits,2);assert.ok(Math.abs(g.stats.damage-(35/1.3+35))<1e-7);assert.ok(!shot.alive);
 });
 test('enemy Ahri return orb homes toward its still-living caster',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.disableSpawn();g.dodgeDirector.next=999;
@@ -805,7 +805,7 @@ test('ambient Xerath W has a readable delay, center damage and no caster entity'
  assert.equal(g.spawnXerathW(),true);assert.equal(g.foes.length,0);assert.equal(g.dodgeDirector.xerath,1);
  const h=g.hazards[0];g.player.x=h.x;g.player.y=h.y;
  advance(g,.7);assert.equal(g.stats.hits,0);advance(g,.1);
- assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.player.hp-(590-50*1.667/1.3))<1e-7);
+ assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.stats.damage-(50*1.667/1.3))<1e-7);
  assert.equal(g.dodgeDirector.outcomes['XERATH W'].hit,1);
 });
 test('Xerath W can be escaped and rejects an unsupported directed encounter',()=>{
@@ -888,7 +888,7 @@ test('Xerath W rejects unsafe or unsupported overlaps and respects Foundation ca
 test('Xerath W uses center based edge and outside hits use base damage',()=>{
  for(const [offset,expected] of [[62.5,50*1.667/1.3],[62.6,50/1.3],[137.5,50/1.3],[137.6,0]]){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnXerathW());const h=g.hazards[0];
-  g.player.x=h.x+offset;g.player.y=h.y;advance(g,.8);assert.ok(Math.abs(590-g.player.hp-expected)<1e-7,`offset ${offset}`);
+  g.player.x=h.x+offset;g.player.y=h.y;advance(g,.8);assert.ok(Math.abs(g.stats.damage-expected)<1e-7,`offset ${offset}`);
  }
 });
 
@@ -898,7 +898,7 @@ test('Blitz Q visitor commits one hook, waits for its flight and does not stun o
  const e=g.enemy(300,g.player.y);Object.assign(e,{dodgeVisitor:true,spell:g.REFERENCE_SPELLS.blitzDodge,phase:'cast',charge:.001,pending:{angle:0,spell:g.REFERENCE_SPELLS.blitzDodge},entry:{x:250,y:g.player.y},speed:120});g.setFoes([e]);
  g.update(1/120);assert.equal(e.phase,'hookFlight');assert.equal(g.dodgeDirector.blitz,1);assert.equal(g.shots[0].spellName,'BLITZ Q');
  const start={x:g.player.x,y:g.player.y};advance(g,.1);assert.equal(e.phase,'hookFlight');advance(g,.4);
- assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.player.hp-(590-110/1.3))<1e-7);assert.equal(g.player.root,0);assert.equal(g.player.x,start.x);assert.equal(g.player.y,start.y);assert.equal(g.dodgeDirector.outcomes['BLITZ Q'].hit,1);
+ assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.stats.damage-(110/1.3))<1e-7);assert.equal(g.player.root,0);assert.equal(g.player.x,start.x);assert.equal(g.player.y,start.y);assert.equal(g.dodgeDirector.outcomes['BLITZ Q'].hit,1);
 });
 test('Blitz hook expires at its configured range and retains first collision swept detection',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
@@ -991,7 +991,7 @@ test('ambient Xerath Q resolves after its cue with no on-screen caster',()=>{
  assert.ok(g.spawnXerathQ());assert.equal(g.foes.length,0);assert.equal(g.dodgeDirector.xerathQ,1);
  const h=g.hazards[0];g.render();assert.ok(!strokes.includes('#b5e5ff'),'beam leaked its exact line before firing');
  advance(g,.5);assert.equal(g.stats.hits,0);advance(g,.05);
- assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.player.hp-(590-70/1.3))<1e-7);assert.equal(g.dodgeDirector.outcomes['XERATH Q'].hit,1);
+ assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.stats.damage-(70/1.3))<1e-7);assert.equal(g.dodgeDirector.outcomes['XERATH Q'].hit,1);
  g.render();assert.ok(strokes.includes('#b5e5ff'),'impact beam was not rendered');
 });
 test('Xerath Q has a walkable sidestep after the training reaction delay and no overlap',()=>{
@@ -1029,14 +1029,14 @@ test('Velkoz Q splits into two perpendicular faster bolts after a short delay',(
 test('Velkoz main-bolt hit cannot damage the same champion again with its split',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
  const e=g.enemy(400,g.player.y),spec=g.REFERENCE_SPELLS.velkozDodge;Object.assign(e,{dodgeVisitor:true,pending:{angle:0,spell:spec}});g.releaseEnemy(e);advance(g,1);
- assert.equal(g.stats.hits,1);assert.equal(g.player.root,0);assert.ok(Math.abs(g.player.hp-(590-80/1.3))<1e-7);
+ assert.equal(g.stats.hits,1);assert.equal(g.player.root,0);assert.ok(Math.abs(g.stats.damage-(80/1.3))<1e-7);
 });
 
 
 test('Velkoz angled split can threaten the player outside the main bolt path',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
  const e=g.enemy(300,g.player.y),spec=g.REFERENCE_SPELLS.velkozDodge;Object.assign(e,{dodgeVisitor:true,pending:{angle:.32,spell:spec,splitDistance:300*Math.cos(.32)}});g.releaseEnemy(e);advance(g,1);
- assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.player.hp-(590-80/1.3))<1e-7);
+ assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.stats.damage-(80/1.3))<1e-7);
 });
 
 
@@ -1077,7 +1077,7 @@ test('Orianna ball is shown before its shockwave, with no stun or pull on hit',(
  advance(g,1.55);assert.equal(h.casting,true);assert.equal(g.dodgeDirector.orianna,1);
  g.player.x=h.x;g.player.y=h.y;const pos={x:g.player.x,y:g.player.y};advance(g,.51);
  assert.equal(g.stats.hits,1);assert.equal(g.player.root,0);assert.equal(g.player.x,pos.x);assert.equal(g.player.y,pos.y);
- assert.ok(Math.abs(g.player.hp-(590-225/1.3))<1e-7);assert.equal(g.dodgeDirector.outcomes['ORIANNA R'].hit,1);
+ assert.ok(Math.abs(g.stats.damage-(225/1.3))<1e-7);assert.equal(g.dodgeDirector.outcomes['ORIANNA R'].hit,1);
 });
 test('Orianna cancels the shockwave if the player has no ordinary escape when it would cast',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;assert.ok(g.spawnOriannaR());const h=g.hazards[0];
@@ -1117,7 +1117,7 @@ test('Malphite approaches before dashing and hit deals damage without immobiliza
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
  assert.ok(g.spawnMalphiteR());const h=g.hazards[0];assert.equal(h.casting,false);assert.equal(g.spawnDodgeVisitor(),false);const startX=h.x,startY=h.y;advance(g,.5);assert.ok(Math.hypot(h.x-startX,h.y-startY)>1);advance(g,.8);
  assert.equal(h.casting,true);assert.equal(g.dodgeDirector.malphite,1);g.player.x=h.target.x;g.player.y=h.target.y;const pos={x:g.player.x,y:g.player.y};advance(g,.7);
- assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.player.hp-(590-200/1.3))<1e-7);assert.equal(g.player.root,0);assert.equal(g.player.x,pos.x);assert.equal(g.player.y,pos.y);
+ assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.stats.damage-(200/1.3))<1e-7);assert.equal(g.player.root,0);assert.equal(g.player.x,pos.x);assert.equal(g.player.y,pos.y);
 });
 test('Malphite R has a walkable response after a 200ms reaction delay',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
@@ -1146,7 +1146,7 @@ test('Orianna encounter renders a caster and ball during setup',()=>{
 test('Orianna Q hits along its moving path once and records its own damage',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;assert.ok(g.spawnOriannaR());const h=g.hazards[0];
  g.player.x=h.source.x+(h.destination.x-h.source.x)*.4;g.player.y=h.source.y+(h.destination.y-h.source.y)*.4;
- advance(g,.5);assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.player.hp-(590-60/1.3))<1e-7);assert.equal(g.dodgeDirector.outcomes['ORIANNA Q'].hit,1);assert.equal(g.dodgeDirector.oriannaQ,1);
+ advance(g,.5);assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.stats.damage-(60/1.3))<1e-7);assert.equal(g.dodgeDirector.outcomes['ORIANNA Q'].hit,1);assert.equal(g.dodgeDirector.oriannaQ,1);
 });
 test('Orianna Q arrival area uses its own radius without applying a second hit',()=>{
  for(const [offset,hit] of [[87.4,true],[87.6,false]]){
@@ -1266,4 +1266,23 @@ test('fresh later waves acquire matching melee rows instead of collapsing on one
    assert.ok(target,`missing target for row ${unit.row}`);assert.equal(target.row,unit.row);
   }
  }
+});
+
+
+test('Ahri regenerates base health over time without exceeding max or while paused',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.hp=500;
+ advance(g,10);assert.ok(Math.abs(g.player.hp-505)<1e-8);
+ g.pause();advance(g,5);assert.ok(Math.abs(g.player.hp-505)<1e-8);g.pause();
+ g.player.hp=589.9;advance(g,1);assert.equal(g.player.hp,590);
+});
+test('arcade presets do not receive Ahri health regeneration',()=>{
+ const {g}=boot('standard');g.reset('kite');g.disableSpawn();g.player.hp=100;advance(g,3);assert.equal(g.player.hp,100);
+});
+
+test('regeneration restores health after damage without changing recorded damage',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ g.applyImpact(g.player,{sourceTeam:'enemy',kind:'test',raw:100,damageType:'true'});
+ advance(g,8);assert.ok(Math.abs(g.player.hp-494)<1e-8);assert.equal(g.stats.damage,100);assert.equal(g.stats.hits,1);
+ g.applyImpact(g.player,{sourceTeam:'enemy',kind:'test',raw:1000,damageType:'true'});advance(g,3);
+ assert.equal(g.state,'ended');assert.equal(g.player.hp,0);
 });
