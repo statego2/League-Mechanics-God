@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v47":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v48":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -795,6 +795,9 @@ if(key==="w"||key==="f"){
  // test and overshoot rule are training approximations, not Riot thresholds.
  const keepMove=key==="f"&&(ahriBase()||referenceSpell())&&priorTarget&&waypoint&&sx*sx+sy*sy>1e-8&&
   (waypoint.x-x)*sx+(waypoint.y-y)*sy>0&&(priorTarget.x-landing.x)*sx+(priorTarget.y-landing.y)*sy>0;
+ // Flash changes champion facing, while an already locked spell keeps its
+ // original cast angle. Preserve facing if no displacement was possible.
+ if(key==="f"&&sx*sx+sy*sy>1e-8)player.facing=Math.atan2(sy,sx);
  player.x=landing.x;player.y=landing.y;player.route=[];player.routeGoal=null;player.target=keepMove?priorTarget:null;player.focus=null;player.order=null;player.windup=0;
  player.invuln=(referenceSpell()||ahriBase())&&key==="f"?0:key==="w"?.26:.16;
  for(let i=0;i<13;i++)fx.push({x:x+(player.x-x)*i/13,y:y+(player.y-y)*i/13,vx:cosmetic(-20,20),vy:cosmetic(-20,20),ttl:.35,max:.35,color:key==="f"?"#f8cf7c":"#74f0eb",r:cosmetic(2,6)});

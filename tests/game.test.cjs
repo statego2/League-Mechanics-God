@@ -1700,3 +1700,17 @@ test('Dodge permits a W-boosted escape that base movement alone cannot make',()=
  const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'cast',entry:{...origin},speed:120,charge:spell.cast,pending:{angle:0,spell}});g.setFoes([e]);
  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.5);assert.equal(g.stats.hits,0);
 });
+
+
+test('Flash faces its displacement and leaves facing unchanged on zero displacement',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.facing=0;
+ node('arena').listeners.pointermove({clientX:g.player.x-100,clientY:g.player.y,buttons:0});g.cast('f');assert.ok(Math.abs(Math.abs(g.player.facing)-Math.PI)<1e-9);
+ g.player.cd.f=0;g.player.facing=1.2;node('arena').listeners.pointermove({clientX:g.player.x,clientY:g.player.y,buttons:0});g.cast('f');assert.equal(g.player.facing,1.2);
+});
+test('Flash changes facing without redirecting an Ahri spell already casting',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ node('arena').listeners.pointermove({clientX:g.player.x+100,clientY:g.player.y,buttons:0});g.cast('q');assert.equal(g.player.casting.angle,0);
+ node('arena').listeners.pointermove({clientX:g.player.x-100,clientY:g.player.y,buttons:0});g.cast('f');
+ assert.ok(Math.abs(Math.abs(g.player.facing)-Math.PI)<1e-9);assert.equal(g.player.casting.angle,0);
+ advance(g,.3);const orb=g.shots.find(s=>s.kind==='orb');assert.ok(orb&&orb.vx>0);
+});

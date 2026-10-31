@@ -706,3 +706,9 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 
 - User requested training to turn away from Cassiopeia R. Added it to the existing Dodge Gauntlet roadmap, after current encounter stability/playtesting and before declaring the Gauntlet complete. It is not implemented and does not add a separate mode. The design preserves the user's no-stun-in-Dodge constraint: distinguish would-be stun, turned-away hit and full escape, without immobilizing the player. See `docs/DODGE_GAUNTLET_RHYTHM.md` for sources, uncertainties and acceptance checks.
 - Documentation-only change; no gameplay or assets changed. Next: continue Gauntlet fairness and playtesting, then implement the planned facing-based encounter.
+
+## Flash facing for direction-sensitive mechanics (31 October 2026)
+
+- Flash now turns the champion toward its actual displacement, while a zero-distance Flash preserves the existing facing. An Ahri spell already in its cast windup retains its locked spell angle when Flash changes champion facing. This addresses a prerequisite for the planned Cassiopeia R reaction; Cassiopeia R itself remains unimplemented. The direction behavior is supported by the [community Flash reference](https://wiki.leagueoflegends.com/en-us/Flash); exact live-client wall snap and zero-distance behavior remain approximations. Dodge records use `director_v48`.
+- Added tests for turn direction, zero displacement and Flash during Q. `node --test tests/*.test.cjs`: 274/274 pass; `node --check game.js`, generated Ahri data check and `git diff --check` pass. Browser smoke started Expert Dodge, moved and used Flash (cooldown displayed); the facing and cast-angle cases were verified in simulation.
+- Next: finish current encounter fairness and human playtests, then implement the planned Cassiopeia R turn-away encounter; continue faithful CS waves and turret behavior. The Gauntlet and full game remain unfinished.
