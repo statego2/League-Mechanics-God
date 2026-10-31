@@ -1779,7 +1779,7 @@ test('skill-scored Dodge records stay separate while retaining the survival reco
  const oldScore='lmg.best.v1.dodge.normal.director_v69.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
  g.reset('dodge');g.setTime(10);g.stats.dodgeQHits=1;g.stats.dodgeEHits=1;g.end(false);
  assert.match(node('menuDescription').textContent,/150 points/);assert.match(node('menuDescription').textContent,/Best survival: 120.0s/);
- assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v2'),'150');assert.equal(values.get(survival),'120');
+ assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v3'),'150');assert.equal(values.get(survival),'120');
 });
 
 test('paired Ezreal escapes remain safe with existing movement and W decay',()=>{
@@ -2128,6 +2128,18 @@ test('enemy Ahri orb returns and can hit during the remainder of its turn step',
  Object.assign(s,{phase:'out',phaseHit:false,anchor:{x:g.player.x-200,y:g.player.y},casterId:-1,directed:true,spellName:'AHRI Q'});
  g.update(.05);assert.equal(g.stats.hits,1);assert.equal(g.stats.damage,35);assert.equal(s.phase,'return');
  assert.equal(g.dodgeDirector.outcomes['AHRI Q'].hit,1);
+});
+test('player Ahri orb returns and hits during the remainder of its turn step',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const e=g.enemy(g.player.x,g.player.y);Object.assign(e,{speed:0,shoot:999,hp:1000,maxHp:1000,mr:30});g.setFoes([e]);
+ const s=g.fire(g.player.x+83,g.player.y,1000,0,'orb',35,50,.005);Object.assign(s,{phase:'out',hitIds:new Set()});
+ g.update(.05);assert.equal(e.hp,965);assert.equal(s.phase,'return');
+});
+test('player Ahri orb does not hit target movement after its return ends',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const e=g.enemy(g.player.x+250,g.player.y);Object.assign(e,{speed:2000,shoot:999,spin:0,strafe:0,hp:1000,maxHp:1000});g.setFoes([e]);
+ const s=g.fire(g.player.x+4,g.player.y,1000,0,'orb',35,50,.001);Object.assign(s,{phase:'out',hitIds:new Set()});
+ g.update(.1);assert.equal(e.hp,1000);assert.equal(s.alive,false);
 });
 test('enemy Ahri return does not hit movement completed before the turn',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.speed=300;g.moveTo(g.player.x-150,g.player.y);

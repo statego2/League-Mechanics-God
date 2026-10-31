@@ -110,7 +110,7 @@ function pause(){attackMove=false;if(state==="playing"||state==="paused"){last=0
 // Records are local and partitioned by drill and difficulty; storage can be unavailable.
 function saveRecord(value){
  try{
-  const key="lmg.best.v1."+mode+"."+difficulty+recordSuffix()+(mode==="dodge"&&dodgeDirector?".skill_v2":"");
+  const key="lmg.best.v1."+mode+"."+difficulty+recordSuffix()+(mode==="dodge"&&dodgeDirector?".skill_v3":"");
   const previous=Number(window.localStorage.getItem(key));
   const best=Math.max(Number.isFinite(previous)?previous:0,value);
   window.localStorage.setItem(key,String(best));return best;
@@ -1160,7 +1160,20 @@ for(const s of shots){if(!s.alive)continue;
  if(s.kind==="orb"){
   for(const e of foes){if(!e.alive||s.hitIds.has(e.id))continue;const prev=previousFoes.get(e.id)||e;
    if(segmentDistance(s.px-targetStart(prev,e).x,s.py-targetStart(prev,e).y,s.x-targetEnd(prev,e).x,s.y-targetEnd(prev,e).y)<=s.r+targetHitRadius(e)){s.hitIds.add(e.id);recordDodgeSkillHit(s,e);applyImpact(e,{sourceId:"player",sourceTeam:"player",kind:"orb",raw:s.damage,damageType:s.phase==="out"?"magic":"true"});if(state!=="playing")break;}}
-  if(s.phase==="out"&&s.ttl<=0){s.phase="return";s.ttl=3;s.hitIds.clear();}
+  if(s.phase==="out"&&s.ttl<=0){
+   s.phase="return";s.ttl=3;s.hitIds.clear();
+   // The orb turns at expiry, not at the next simulation step. Only targets
+   // present during the remaining return interval may be hit on this leg.
+   const remaining=Math.max(0,activeDt-travelDt),dx=player.x-s.x,dy=player.y-s.y,d=Math.hypot(dx,dy);
+   if(remaining>0){
+    const flight=Math.min(remaining,d/700),startX=s.x,startY=s.y,endFraction=dt>0?(offset+travelDt+flight)/dt:0;
+    s.vx=d?dx/d*700:0;s.vy=d?dy/d*700:0;s.px=s.x;s.py=s.y;s.x+=s.vx*flight;s.y+=s.vy*flight;s.ttl-=remaining;
+    for(const e of foes){if(!e.alive||s.hitIds.has(e.id))continue;const prev=previousFoes.get(e.id)||e;
+     const ex0=prev.x+(e.x-prev.x)*travelFraction,ey0=prev.y+(e.y-prev.y)*travelFraction,ex1=prev.x+(e.x-prev.x)*endFraction,ey1=prev.y+(e.y-prev.y)*endFraction;
+     if(segmentDistance(startX-ex0,startY-ey0,s.x-ex1,s.y-ey1)<=s.r+targetHitRadius(e)){s.hitIds.add(e.id);recordDodgeSkillHit(s,e);applyImpact(e,{sourceId:"player",sourceTeam:"player",kind:"orb",raw:s.damage,damageType:"true"});if(state!=="playing")break;}}
+    if(flight>=d/700||s.ttl<=0)s.alive=false;
+   }
+  }
   else if(s.phase==="return"&&(dist(s,player)<1||s.ttl<=0))s.alive=false;
  }else if(s.kind==="enemyOrb"){
   const collision=!s.phaseHit&&Number.isFinite(playerContact(s.px,s.py,s.x,s.y,startFraction,travelFraction,s.r+player.hitRadius));
