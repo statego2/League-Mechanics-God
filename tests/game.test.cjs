@@ -1714,3 +1714,29 @@ test('Flash changes facing without redirecting an Ahri spell already casting',()
  assert.ok(Math.abs(Math.abs(g.player.facing)-Math.PI)<1e-9);assert.equal(g.player.casting.angle,0);
  advance(g,.3);const orb=g.shots.find(s=>s.kind==='orb');assert.ok(orb&&orb.vx>0);
 });
+
+
+test('Xerath W and Ezreal Q witnesses remain safe with existing movement and W',()=>{
+ let accepted=0;
+ for(let i=0;i<24;i++){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setRng((i*2654435761)>>>0);
+  const a=i*Math.PI/12,shot=g.fire(g.player.x+Math.cos(a)*380,g.player.y+Math.sin(a)*380,-Math.cos(a)*1000,-Math.sin(a)*1000,'enemy',40,30,.6);
+  shot.directed=true;shot.spellName='EZREAL Q';
+  g.moveTo(g.player.x+Math.cos(a+.8)*120,g.player.y+Math.sin(a+.8)*120);g.cast('w');
+  const witness={};if(!g.spawnXerathW(witness))continue;
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1);
+  assert.equal(g.stats.hits,0,`angle ${i}`);accepted++;
+ }
+ assert.ok(accepted>=3,`only ${accepted} accepted combinations`);
+});
+
+test('Xerath W may use a safe shortened route near arena boundaries',()=>{
+ let checked=0;
+ for(const [x,y] of [[35,340],[1165,340],[600,70],[600,630]])for(let seed=1;seed<=16;seed++){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.x=x;g.player.y=y;g.setRng((seed*2654435761)>>>0);g.cast('w');
+  const start=g.dodgeReactionPath(.2).end,witness={};if(!g.spawnXerathW(witness))continue;
+  if(Math.hypot(start.x-witness.destination.x,start.y-witness.destination.y)>=g.forecastTravel(.2,.778)-.1)continue;
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,.7);assert.equal(g.stats.hits,0,`${x},${y} seed ${seed}`);checked++;
+ }
+ assert.ok(checked>0,'no clipped safe path was exercised');
+});

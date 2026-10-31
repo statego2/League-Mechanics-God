@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v48":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v49":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -380,7 +380,7 @@ function dodgeReactionDelay(){return player.dashing?Infinity:Math.max(.2,player.
 // 0.528 s delay, rank-one 50 magic and 66.7% centre amplification.
 // Placement and visible warning timing are training policies; slow is omitted.
 const XERATH_W={radius:SIMULATION.toCanvas(275),center:SIMULATION.toCanvas(125),delay:.25+.528,raw:50};
-function spawnXerathW(){
+function spawnXerathW(witness=null){
  // Allow one committed or in-flight Ezreal Q when one escape clears both.
  // Other pending casters, split/return shots and other AoEs remain isolated.
  if(!regularAllowed("XERATH W")||hazards.some(h=>h.directed))return false;
@@ -396,12 +396,16 @@ function spawnXerathW(){
   const a=angle+i*TAU/16,dx=Math.cos(a),dy=Math.sin(a),offset=90;
   const center={x:player.x+dx*offset,y:player.y+dy*offset};
   // Reserve 0.2 s for recognition; the escape ends comfortably outside the AoE.
-  const travelTime=Math.max(0,XERATH_W.delay-reaction),start=dodgeReactionPath(reaction).end,escape={x:start.x-dx*player.speed*travelTime,y:start.y-dy*player.speed*travelTime};
+  const start=dodgeReactionPath(reaction).end,distance=forecastTravel(reaction,XERATH_W.delay);
+  const raw={x:start.x-dx*distance,y:start.y-dy*distance};
+  const bounded={x:clamp(raw.x,world.bounds.left,world.bounds.right),y:clamp(raw.y,world.bounds.top,world.bounds.bottom)};
+  const escape=world.clip(start,bounded,player.r);
   if(!world.pointWalkable(escape,player.r)||!world.segmentClear(start,escape,player.r))continue;
   if(dist(center,escape)<XERATH_W.radius+10)continue;
   const incoming=active.map(s=>({x:s.x,y:s.y,vx:s.vx,vy:s.vy,r:s.r,start:0,end:s.ttl}));
   for(const e of casters){const s=e.pending.spell;incoming.push({x:e.x,y:e.y,vx:Math.cos(e.pending.angle)*s.speed,vy:Math.sin(e.pending.angle)*s.speed,r:s.radius,start:e.charge,end:e.charge+s.range/s.speed});}
   if(!forecastDodgePath(incoming,escape,reaction))continue;
+  if(witness)witness.destination=escape;
   hazards.push({...center,r:XERATH_W.radius,ttl:XERATH_W.delay,max:XERATH_W.delay,threat:true,directed:true,spellName:"XERATH W",xerath:true});
   dodgeDirector.attempted++;dodgeDirector.xerath++;recordRegular("XERATH W");return true;
  }
