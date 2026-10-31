@@ -1020,11 +1020,11 @@ function drawChampion(x,y,a,friendly,hit,windup,motion,profile=null){
   ctx.fillRect(-28,-48,12,25);ctx.fillRect(16,-48,12,25);ctx.fillRect(-14,-19,10,19);ctx.fillRect(4,-19,10,19);
   circle(0,-63,11,"#a98b53");circle(-4,-65,2,"#8af4ff");circle(4,-65,2,"#8af4ff");ctx.restore();return;
  }
- const ahriSprite=$("ahriArt"),backSprite=$("ahriBackArt"),useAhri=((friendly&&ahriBase())||profile==="ahriEnemy")&&ahriSprite.complete&&ahriSprite.naturalWidth;
- const useBack=useAhri&&Math.sin(a)<-.65&&backSprite.complete&&backSprite.naturalWidth;
+ const ahriSprite=$("ahriArt"),backSprite=$("ahriBackArt"),useAhri=((friendly&&ahriBase())||profile==="ahriEnemy")&&ahriSprite?.complete&&ahriSprite.naturalWidth;
+ const useBack=useAhri&&Math.sin(a)<-.65&&backSprite?.complete&&backSprite.naturalWidth;
  let sprite=useBack?backSprite:useAhri?ahriSprite:$(profile==="void"?"voidArt":profile==="clockwork"?"clockworkArt":profile==="ahriEnemy"?"ahriArt":profile==="ezreal"?"explorerArt":friendly?"rangerArt":"mageArt");
- if(friendly&&!useAhri&&Math.abs(Math.sin(a))>.65){const directional=$(Math.sin(a)<0?"rangerBackArt":"rangerFrontArt");if(directional.complete&&directional.naturalWidth)sprite=directional;}
- if(sprite.complete&&sprite.naturalWidth){
+ if(friendly&&!useAhri&&Math.abs(Math.sin(a))>.65){const directional=$(Math.sin(a)<0?"rangerBackArt":"rangerFrontArt");if(directional?.complete&&directional.naturalWidth)sprite=directional;}
+ if(sprite?.complete&&sprite.naturalWidth){
   ctx.save();ctx.translate(x,y);ctx.save();ctx.scale(1,.43);circle(0,3,25,"#0009");ctx.restore();
   const side=Math.cos(a)>=0?1:-1;const bob=(friendly?player.target:!windup)?Math.abs(Math.sin(motion))*2:0;
   ctx.translate(0,-bob);ctx.scale(side,1);ctx.rotate(windup*-.08);if(useAhri)ctx.drawImage(sprite,useBack?-33:-60,-58,77,63);else if(profile==="clockwork")ctx.drawImage(sprite,-27,-79,54,80);else ctx.drawImage(sprite,-37,-79,74,80);

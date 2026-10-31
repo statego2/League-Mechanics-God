@@ -652,3 +652,9 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 - Added a paired-Ezreal regression sampling moving-player situations with W speed decay: accepted encounters must retain a shared escape path that avoids both shots. This covers sampled seeds, not every possible route or overlap. The sprite-selection test and missing-image fallback also pass.
 - `node --test tests/*.test.cjs`: 259/259 pass. `node --check game.js`, generated Ahri data check and `git diff --check` pass. Browser smoke showed the new caster during an Expert Dodge round. An automated Standard round reached 52.7 seconds but viewport interruption affected movement, and the paired encounter was not visually isolated. These runs are not human playtests.
 - Next: human 3/12-minute Gauntlet sessions, visually confirm paired encounters and Orianna, review moving-player fairness and then continue faithful CS waves and turret behavior. The Gauntlet and full game remain unfinished.
+
+## Missing sprite-node fallback (31 October 2026)
+
+- `drawChampion` now tolerates missing sprite DOM elements as well as failed images. A cached older HTML page paired with newer JavaScript can lack recently added caster image elements; previously attempting to draw one could stop the render loop. Missing Ahri and directional ranger nodes also use the existing procedural fallback. No gameplay or hitboxes changed.
+- Regression covers missing explorer, void, clockwork, Ahri and directional image nodes. `node --test tests/*.test.cjs`: 260/260 pass; `node --check game.js`, generated Ahri data check and `git diff --check` pass. Browser smoke started Expert Dodge normally; the mixed cached-HTML case was tested in the DOM harness, not reproduced in the browser.
+- Next: human 3/12-minute Gauntlet sessions, visually confirm paired encounters and Orianna, review moving-player fairness, then continue faithful CS waves and turret behavior. The Gauntlet and full game remain unfinished.

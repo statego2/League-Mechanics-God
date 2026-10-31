@@ -9,7 +9,7 @@ function boot(preset="standard", options={}){
  const ctx=new Proxy({drawImage(img,...args){draws.push(img);drawSizes.push([img,...args])},arc(x,y,r){arcs.push({x,y,r})},fillText(t){texts.push(String(t))},stroke(){strokes.push(this.strokeStyle)},lineTo(x,y){lines.push({x,y})},createRadialGradient(){return {addColorStop(){}};}},{get(o,k){return o[k]||(()=>{});}});
  node('arena').getContext=()=>ctx;
  const window={devicePixelRatio:1,listeners:{},addEventListener(k,f){this.listeners[k]=f;}};
- const document={getElementById:node,querySelectorAll:()=>[],addEventListener(){}};
+ const document={getElementById:id=>options.missingNodes?.includes(id)?null:node(id),querySelectorAll:()=>[],addEventListener(){}};
  const sandbox={document,window,requestAnimationFrame(){},Math:Object.create(Math)};
  sandbox.Math.random=()=>.5;
  vm.createContext(sandbox);
@@ -1570,4 +1570,14 @@ test('Ezreal-pattern sprite has normal dimensions and a safe fallback',()=>{
  const {g,node,draws,drawSizes}=boot('ahri');g.reset('dodge');const explorer=node('explorerArt');explorer.complete=true;explorer.naturalWidth=100;
  g.drawChampion(600,300,0,false,false,0,0,'ezreal');assert.ok(draws.includes(explorer));assert.deepEqual(drawSizes.find(x=>x[0]===explorer).slice(1),[-37,-79,74,80]);
  explorer.naturalWidth=0;draws.length=0;assert.doesNotThrow(()=>g.drawChampion(600,300,0,false,false,0,0,'ezreal'));assert.ok(!draws.includes(explorer));
+});
+
+
+test('cached HTML without new caster image nodes keeps the arena rendering',()=>{
+ for(const [profile,id] of [['ezreal','explorerArt'],['void','voidArt'],['clockwork','clockworkArt']]){
+  const {g}=boot('ahri',{missingNodes:[id]});g.reset('dodge');g.dodgeDirector.next=999;
+  assert.doesNotThrow(()=>g.drawChampion(500,300,0,false,false,0,0,profile),profile);
+ }
+ const {g}=boot('ahri',{missingNodes:['ahriArt','ahriBackArt','rangerBackArt']});g.reset('dodge');
+ assert.doesNotThrow(()=>g.drawChampion(500,300,-Math.PI/2,true,false,0,0));
 });
