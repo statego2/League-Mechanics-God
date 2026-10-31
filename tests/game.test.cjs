@@ -1846,3 +1846,17 @@ test('Expert endless round remains active beyond twelve simulated minutes and en
  g.applyImpact(g.player,{sourceTeam:'enemy',kind:'test',raw:2000000,damageType:'true'});assert.equal(g.state,'ended');
  assert.match(node('menuDescription').textContent,/Survived 780/);
 });
+
+test('Expert endless cadence stays active across twelve simulated minutes',t=>{
+ const runs=[];
+ for(let seed=0;seed<3;seed++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});for(let i=0;i<seed;i++)node('newSeed').listeners.click();g.reset('dodge');g.player.hp=g.player.maxHp=1e6;
+  const buckets=[],points=[[500,250],[700,250],[700,450],[500,450]];let last=0;
+  for(let step=0;step<720*120;step++){
+   if(step%360===0){const [x,y]=points[Math.floor(step/360)%4];g.moveTo(x,y);}if(step%1440===0)g.cast('w');g.update(1/120);
+   if((step+1)%(60*120)===0){buckets.push(g.dodgeDirector.attempted-last);last=g.dodgeDirector.attempted;}
+  }
+  runs.push(buckets);assert.equal(g.state,'playing');assert.ok(buckets.every(n=>n>=5));
+ }
+ t.diagnostic(`casts/min per seed ${JSON.stringify(runs)}`);
+});
