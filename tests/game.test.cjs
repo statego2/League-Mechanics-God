@@ -1984,3 +1984,13 @@ test('Cassiopeia release shows its effect only at impact, not as a targeting gui
  const h={x:g.player.x-200,y:g.player.y,angle:0,cassio:true,casting:true,ttl:.05,directed:true,spellName:'CASSIOPEIA R'};g.hazards.push(h);
  g.render();assert.ok(!arcs.some(a=>a.r===425));g.update(.06);arcs.length=0;g.render();assert.ok(arcs.some(a=>a.r===425));
 });
+
+test('Cassiopeia cast cue grows during windup without revealing the cone',()=>{
+ const {g,node,arcs}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const art=node('serpentArt');art.complete=true;art.naturalWidth=100;
+ const h={x:g.player.x-200,y:g.player.y,angle:0,cassio:true,casting:true,ttl:.45,directed:true,spellName:'CASSIOPEIA R'};g.hazards.push(h);
+ g.render();const early=arcs.find(a=>a.x===0&&a.y===-57);assert.ok(early);
+ arcs.length=0;h.ttl=.1;g.render();const late=arcs.find(a=>a.x===0&&a.y===-57);
+ assert.ok(late.r>early.r);assert.ok(!arcs.some(a=>a.r===425));
+ arcs.length=0;h.casting=false;g.render();assert.ok(!arcs.some(a=>a.x===0&&a.y===-57));
+});

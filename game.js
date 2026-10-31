@@ -1164,10 +1164,10 @@ function drawChampion(x,y,a,friendly,hit,windup,motion,profile=null){
  if(profile==="cassio"){
   const sprite=$("serpentArt");
   if(sprite?.complete&&sprite.naturalWidth){
-   ctx.save();ctx.translate(x,y);ctx.scale(Math.cos(a)>=0?1:-1,1);ctx.drawImage(sprite,-37,-79,74,80);
-   if(windup)circle(0,-57,8,"#d6ffc688");ctx.restore();return;
+   ctx.save();ctx.translate(x,y);ctx.scale(Math.cos(a)>=0?1:-1,1);ctx.rotate(-windup*.12);ctx.drawImage(sprite,-37,-79,74,80);
+   if(windup)circle(0,-57,4+windup*6,`rgba(214,255,198,${windup*.55})`);ctx.restore();return;
   }
-  ctx.save();ctx.translate(x,y);ctx.scale(Math.cos(a)>=0?1:-1,1);
+  ctx.save();ctx.translate(x,y);ctx.scale(Math.cos(a)>=0?1:-1,1);ctx.rotate(-windup*.12);
   ctx.strokeStyle="#275e51";ctx.lineWidth=13;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(0,-12);ctx.bezierCurveTo(-28,3,-30,-11,-15,-20);ctx.stroke();
   ctx.fillStyle=hit?"#fff1d6":"#458b6e";ctx.beginPath();ctx.moveTo(-12,-12);ctx.lineTo(-10,-50);ctx.lineTo(8,-53);ctx.lineTo(13,-14);ctx.closePath();ctx.fill();
   circle(0,-57,10,"#c2aa86");circle(5,-59,3,windup?"#fff1a0":"#a1e5a2");ctx.restore();return;
@@ -1263,7 +1263,7 @@ for(const wall of sweeps){
  ctx.beginPath();ctx.moveTo(0,top);ctx.lineTo(W,top);ctx.moveTo(0,bottom);ctx.lineTo(W,bottom);ctx.stroke();ctx.restore();
  ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="left";ctx.fillStyle="#ffe1b5";ctx.fillText("SAFE GAP",46,wall.gap+4);
 }
-for(const h of hazards){if(h.cassio){drawChampion(h.x,h.y,h.casting?h.angle:Math.atan2(player.y-h.y,player.x-h.x),false,false,h.casting?1:0,time*7,"cassio");continue;}if(h.malphite){ctx.save();ctx.translate(h.x,h.y);ctx.fillStyle="#665f59";ctx.strokeStyle="#c1aa93";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-25,-16);ctx.lineTo(-22,-52);ctx.lineTo(0,-72);ctx.lineTo(23,-52);ctx.lineTo(27,-15);ctx.lineTo(10,0);ctx.lineTo(-12,0);ctx.closePath();ctx.fill();ctx.stroke();circle(-7,-45,3,"#aad4ee");circle(7,-45,3,"#aad4ee");ctx.restore();continue;}if(h.orianna){drawChampion(h.source.x,h.source.y,Math.atan2(h.y-h.source.y,h.x-h.source.x),false,false,h.casting?1:0,time*7,"clockwork");circle(h.x,h.y,12,h.casting?"#f4d5ff":"#a989d8");circle(h.x,h.y,5,"#f4e6ff");continue;}if(h.beam){
+for(const h of hazards){if(h.cassio){drawChampion(h.x,h.y,h.casting?h.angle:Math.atan2(player.y-h.y,player.x-h.x),false,false,h.casting?clamp(1-h.ttl/CASSIO_R.cast,0,1):0,time*7,"cassio");continue;}if(h.malphite){ctx.save();ctx.translate(h.x,h.y);ctx.fillStyle="#665f59";ctx.strokeStyle="#c1aa93";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-25,-16);ctx.lineTo(-22,-52);ctx.lineTo(0,-72);ctx.lineTo(23,-52);ctx.lineTo(27,-15);ctx.lineTo(10,0);ctx.lineTo(-12,0);ctx.closePath();ctx.fill();ctx.stroke();circle(-7,-45,3,"#aad4ee");circle(7,-45,3,"#aad4ee");ctx.restore();continue;}if(h.orianna){drawChampion(h.source.x,h.source.y,Math.atan2(h.y-h.source.y,h.x-h.source.x),false,false,h.casting?1:0,time*7,"clockwork");circle(h.x,h.y,12,h.casting?"#f4d5ff":"#a989d8");circle(h.x,h.y,5,"#f4e6ff");continue;}if(h.beam){
  // A short charged beam points from the source without revealing the full
  // projected line. Geometry remains the simulation's private information.
  const dx=h.endX-h.x,dy=h.endY-h.y,len=Math.hypot(dx,dy)||1;
