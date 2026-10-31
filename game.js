@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v69":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v70":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -635,13 +635,33 @@ function forecastExistingOrb(shot,incoming){
  if(!shot.phaseHit){const dx=anchor.x-shot.x,dy=anchor.y-shot.y,d=Math.hypot(dx,dy);if(d<1e-8)return false;incoming.push({x:shot.x,y:shot.y,vx:dx/d*700,vy:dy/d*700,r:shot.r,start:0,end:Math.min(shot.ttl,d/700)});}
  return true;
 }
+// A Vel'Koz main bolt can split early at the arena edge or on the player.
+// Only forecast the split when its intended endpoint stays inside the arena;
+// the shared witness must also avoid the main bolt before that point.
+function forecastExistingSplit(shot,incoming){
+ if(shot.spawnOffset>0)return false;
+ if(shot.ignorePlayer||(shot.group&&shot.group.hit))return true;
+ if(shot.velkoz==="child"){
+  incoming.push({x:shot.x,y:shot.y,vx:shot.vx,vy:shot.vy,r:shot.r,start:0,end:shot.ttl});return true;
+ }
+ if(!Number.isFinite(shot.splitAngle)||shot.ttl<0)return false;
+ let x=shot.x,y=shot.y,start=shot.ttl;
+ if(shot.velkoz==="main"){
+  if(x<0||x>W||y<0||y>H)return false;
+  incoming.push({x,y,vx:shot.vx,vy:shot.vy,r:shot.r,start:0,end:shot.ttl});
+  x+=shot.vx*shot.ttl;y+=shot.vy*shot.ttl;start+=.25;
+  if(x<0||x>W||y<0||y>H)return false;
+ }else if(shot.velkoz!=="delay")return false;
+ for(const side of [-1,1]){const a=shot.splitAngle+side*Math.PI/2;incoming.push({x,y,vx:Math.cos(a)*1050,vy:Math.sin(a)*1050,r:27.5,start,end:start+550/1050});}
+ return true;
+}
 // Forecast existing missiles, committed casts and the new shot.
 function dodgeEscapeClear(origin,spell,destination,reaction,aimPoint=player){
  const incoming=[];
  for(const shot of shots){
   if(!shot.alive||!shot.directed)continue;
   if(shot.kind==="enemyOrb"){if(spell!==REFERENCE_SPELLS.ezrealDodge||!forecastExistingOrb(shot,incoming))return false;continue;}
-  if(shot.velkoz)return false;
+  if(shot.velkoz){if(difficulty!=="hard"||spell!==REFERENCE_SPELLS.ezrealDodge||!forecastExistingSplit(shot,incoming))return false;continue;}
   incoming.push({x:shot.x,y:shot.y,vx:shot.vx,vy:shot.vy,r:shot.r,start:0,end:shot.ttl});
  }
  for(const e of foes){
@@ -715,7 +735,7 @@ function visitorPathsCrowded(start,finish,other){
 }
 function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
  const active=foes.filter(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit"&&e.phase!=="orbFlight"&&e.phase!=="hookFlight").length+shots.filter(s=>s.alive&&s.directed).length+hazards.filter(h=>h.directed).length;
- if(active>=DODGE_DIRECTOR[difficulty].cap||(active>0&&dodgeRecovery(time))||hazards.some(h=>h.directed)||shots.some(s=>s.alive&&s.velkoz)||foes.some(e=>e.alive&&e.dodgeVisitor&&e.spell.split&&(e.phase==="enter"||e.phase==="cast")))return false;
+ if(active>=DODGE_DIRECTOR[difficulty].cap||(active>0&&dodgeRecovery(time))||hazards.some(h=>h.directed)||foes.some(e=>e.alive&&e.dodgeVisitor&&e.spell.split&&(e.phase==="enter"||e.phase==="cast")))return false;
  let spell=forcedSpell;
  if(!spell){
   const roll=random()*(time>=45?100:71);
@@ -725,8 +745,9 @@ function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
  }
  if(!regularAllowed(spell.name)){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
  if(shots.some(s=>s.alive&&s.directed&&s.kind==="enemyOrb")&&spell!==REFERENCE_SPELLS.ezrealDodge){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
+ if(shots.some(s=>s.alive&&s.velkoz)&&(difficulty!=="hard"||spell!==REFERENCE_SPELLS.ezrealDodge)){if(difficulty!=="hard"||forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
  if(spell.split&&active>0){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
- const joiningOrb=spell===REFERENCE_SPELLS.ezrealDodge&&shots.some(s=>s.alive&&s.directed&&s.kind==="enemyOrb");
+ const joiningMultiPhase=spell===REFERENCE_SPELLS.ezrealDodge&&shots.some(s=>s.alive&&s.directed&&(s.kind==="enemyOrb"||s.velkoz));
  let origin=null,entry=null;
  for(let i=0;i<80;i++){
   // Ahri's broad orb needs more room for the same 200 ms reaction allowance.
@@ -734,7 +755,7 @@ function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
   const angle=rand(0,TAU),distance=rand(340,spell.returning?520:470),p={x:player.x+Math.cos(angle)*distance,y:player.y+Math.sin(angle)*distance};
   // A follow-up enters from farther away so the first cast has a readable
   // response window before the next caster commits its own attack.
-  const entryDistance=forcedSpell?followEntry:joiningOrb?35:65,start={x:p.x+Math.cos(angle)*entryDistance,y:p.y+Math.sin(angle)*entryDistance};
+  const entryDistance=forcedSpell?followEntry:joiningMultiPhase?35:65,start={x:p.x+Math.cos(angle)*entryDistance,y:p.y+Math.sin(angle)*entryDistance};
   // Keep the entire caster silhouette on screen, including its raised sprite.
   const visible=q=>q.x>=60&&q.x<=W-60&&q.y>=145&&q.y<=H-30;
   // Preserve separation throughout entry, including different spell casters.

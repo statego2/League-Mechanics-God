@@ -1183,6 +1183,29 @@ test('Velkoz forecast rejects a point-blank split with no ordinary escape',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const spec=g.REFERENCE_SPELLS.velkozDodge;
  assert.equal(g.canEvadeVelkoz({x:g.player.x-10,y:g.player.y},0,10,spec),false);
 });
+test('Ezreal and active Velkoz phases share an executable walking escape',()=>{
+ const counts={main:0,delay:0,child:0};
+ for(const phase of ['main','delay','child'])for(const side of [-1,1])for(let i=0;i<16;i++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.setTime(10);
+  const p=g.player,y=p.y+side*(phase==='main'?70:200),group={hit:false,remaining:2,threatened:false};
+  if(phase==='child')for(const branch of [-1,1]){const s=g.fire(750,y,0,branch*1050,'enemy',60,27.5,550/1050);Object.assign(s,{directed:true,spellName:'VELKOZ Q',velkoz:'child',group});}
+  else{const s=g.fire(phase==='main'?350:750,y,phase==='main'?650:0,0,'enemy',60,30,phase==='main'?.4:.25);Object.assign(s,{directed:true,spellName:'VELKOZ Q',velkoz:phase,splitAngle:0,phaseResolved:phase==='delay'});}
+  const a=i*Math.PI/8,origin={x:p.x+Math.cos(a)*450,y:p.y+Math.sin(a)*450},spec=g.REFERENCE_SPELLS.ezrealDodge,witness={};
+  if(!g.canEvadeDodgeCast(origin,spec,witness))continue;
+  const enemy=g.enemy(origin.x,origin.y);Object.assign(enemy,{dodgeVisitor:true,spell:spec,phase:'cast',charge:spec.cast,pending:{angle:Math.atan2(p.y-origin.y,p.x-origin.x),spell:spec,threat:true},entry:{...origin}});g.setFoes([enemy]);
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,2);
+  assert.equal(g.stats.hits,0,`${phase} side ${side} angle ${i}`);counts[phase]++;
+ }
+ for(const phase of Object.keys(counts))assert.ok(counts[phase]>0,JSON.stringify(counts));
+});
+test('Velkoz overlap defers offscreen split predictions and non-Expert modes',()=>{
+ for(const scenario of ['offscreen','normal','unsupported']){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:scenario==='normal'?'normal':'hard'}});g.reset('dodge');g.dodgeDirector.next=999;
+  const s=g.fire(scenario==='offscreen'?1100:350,g.player.y+150,650,0,'enemy',60,30,.4);Object.assign(s,{directed:true,spellName:'VELKOZ Q',velkoz:'main',splitAngle:0});
+  const spell=scenario==='unsupported'?g.REFERENCE_SPELLS.luxDodge:g.REFERENCE_SPELLS.ezrealDodge;
+  assert.equal(g.canEvadeDodgeCast({x:140,y:g.player.y},spell),false,scenario);
+ }
+});
 
 test('Orianna ball is shown before its shockwave, with no stun or pull on hit',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;
@@ -1776,7 +1799,7 @@ test('Dodge counts Charm hits against a visitor once per released E',()=>{
 });
 test('skill-scored Dodge records stay separate while retaining the survival record',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
- const oldScore='lmg.best.v1.dodge.normal.director_v69.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
+ const oldScore='lmg.best.v1.dodge.normal.director_v70.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
  g.reset('dodge');g.setTime(10);g.stats.dodgeQHits=1;g.stats.dodgeEHits=1;g.end(false);
  assert.match(node('menuDescription').textContent,/150 points/);assert.match(node('menuDescription').textContent,/Best survival: 120.0s/);
  assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v3'),'150');assert.equal(values.get(survival),'120');
