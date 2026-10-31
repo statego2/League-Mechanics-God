@@ -2,6 +2,13 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Expert Dodge: Vel’Koz and Ezreal overlap (2026-10-31)
+
+- Expert can schedule Ezreal Q during an active Vel’Koz Q, including the main missile, split delay and split bolts. A sampled walking response must clear all existing phases and the new cast. Uncertain split predictions defer; other difficulties and unsupported overlaps retain isolation. This conservative training forecast cannot guarantee safety after arbitrary player movement.
+- The shorter entry for multi-phase follow-ups enables overlap while preserving cast-time safety checks, active-threat caps and recovery. Dodge record key advances to director_v70 because difficulty changes.
+- Validation: node --test tests/*.test.cjs passed 355/355; node --check game.js and git diff --check passed. Chrome loaded Expert Dodge and reached the result screen; the unattended smoke run ended at 14.5s, so human balance testing remains necessary. Tests execute sampled escape routes against actual main, delay and child phases.
+- Next: observe natural occurrence across long Expert sessions and tune readable pressure through manual playtesting; avoid targeting guides or stun.
+
 ## Visual direction clarified by user
 
 The user expects the game to look and feel like League of Dodge / League: a convincing three-quarter, pseudo-3D MOBA camera, substantial champion-like characters and a cohesive lane environment. The current flat vector arena does not meet this bar. Treat this as a high-priority product requirement, not optional polish. Observe the reference in a browser and compare actual gameplay before implementing; retain functional controls and hitbox readability. The repository contains analysis and import tools, not a complete copied game or its original assets.
