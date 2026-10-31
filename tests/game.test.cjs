@@ -1957,6 +1957,14 @@ test('Cassiopeia outcome is preserved in the result after a lethal hit',()=>{
  const h={x:g.player.x-200,y:g.player.y,angle:0,cassio:true,casting:true,ttl:.001,directed:true,spellName:'CASSIOPEIA R'};g.hazards.push(h);
  g.update(.01);assert.equal(g.state,'ended');assert.match(node('dodgeBreakdownText').textContent,/1 facing her/);assert.match(node('dodgeBreakdownText').textContent,/CASSIOPEIA R: 0 avoided \/ 1 hit/);
 });
+test('Cassiopeia results explain the turn-away lesson only after a cast',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ g.end(false);assert.doesNotMatch(node('dodgeBreakdownText').textContent,/Turning away avoids/);
+ g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.cassio=1;g.end(false);
+ const text=node('dodgeBreakdownText').textContent;
+ assert.match(text,/Turning away avoids the stun in League, but still takes damage inside the cone/);
+ assert.match(text,/This drill applies neither stun nor slow/);
+});
 
 test('Cassiopeia is scheduled in sustained Expert endless play',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=1000000;

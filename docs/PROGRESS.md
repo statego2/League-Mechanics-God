@@ -812,3 +812,9 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 - Cassiopeia now defers her R if Ahri has already left its approximate 850-unit range during the visible setup. Previously an out-of-range cast could be recorded as a successful escape even though it was never a threat. A cast begun at the range boundary can still be escaped and credited normally. This changes the training director and record version to `director_v62.endless`; it is not a claim about live enemy AI.
 - Added regression tests for out-of-range deferral and an actual subsequent escape from the range boundary. `node --test tests/*.test.cjs`: 307/307 pass; `node --check game.js`, generated Ahri data check and `git diff --check` pass. Browser smoke started Expert endless Dodge; the rare range edge was exercised in simulation rather than visually.
 - Next: sustained human Expert playtests of cast visibility, facing, rhythm and solvability; verify Cassiopeia geometry against live play, then continue the unfinished Gauntlet and CS work.
+
+## Cassiopeia result explanation (31 October 2026)
+
+- After a Cassiopeia cast, the existing Dodge breakdown now explains that turning away avoids the stun in League but still takes damage inside the cone, and explicitly says this drill applies neither stun nor slow. No in-game visual overlay or gameplay change was added. The explanation is omitted when no Cassiopeia cast occurred.
+- Added a result-screen regression for both cases. `node --test tests/*.test.cjs`: 308/308 pass; `node --check game.js`, generated Ahri data check and `git diff --check` pass. The text was verified in the test DOM; a separate browser review of the result screen remains useful.
+- Next: human Expert playtests of cast visibility, facing, rhythm and solvability; verify Cassiopeia geometry against live play, then continue the unfinished Gauntlet and CS work.
