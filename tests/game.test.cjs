@@ -1940,6 +1940,18 @@ test('Cassiopeia defers an unreactable cast rather than immobilizing the player'
  const h={x:g.player.x-200,y:g.player.y,cassio:true,casting:false,ttl:.001,directed:true,spellName:'CASSIOPEIA R',directorScheduled:true};g.hazards.push(h);
  g.update(.01);assert.equal(g.dodgeDirector.cassio,0);assert.equal(g.hazards.length,0);assert.ok(g.dodgeDirector.cassAt>g.time);
 });
+test('Cassiopeia defers if the player leaves range during setup, without a false dodge',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const h={x:g.player.x-426,y:g.player.y,cassio:true,casting:false,ttl:.001,directed:true,spellName:'CASSIOPEIA R',directorScheduled:true};g.hazards.push(h);
+ g.update(.01);assert.equal(g.dodgeDirector.cassio,0);assert.equal(g.dodgeDirector.attempted,0);
+ assert.equal(g.dodgeDirector.cassEscapes,0);assert.equal(g.dodged,0);assert.equal(g.hazards.length,0);assert.ok(g.dodgeDirector.cassAt>g.time);
+});
+test('Cassiopeia can commit at the range boundary and credit a subsequent escape',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const h={x:g.player.x-425,y:g.player.y,cassio:true,casting:false,ttl:.001,directed:true,spellName:'CASSIOPEIA R'};g.hazards.push(h);
+ g.update(.01);assert.equal(h.casting,true);assert.equal(g.dodgeDirector.cassio,1);
+ g.moveTo(g.player.x+100,g.player.y);advance(g,.51);assert.equal(g.dodgeDirector.cassEscapes,1);assert.equal(g.dodged,1);
+});
 test('Cassiopeia outcome is preserved in the result after a lethal hit',()=>{
  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.hp=1;g.player.facing=Math.PI;
  const h={x:g.player.x-200,y:g.player.y,angle:0,cassio:true,casting:true,ttl:.001,directed:true,spellName:'CASSIOPEIA R'};g.hazards.push(h);
