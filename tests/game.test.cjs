@@ -457,6 +457,20 @@ test('Spirit Rush snapshots capped movement speed when the dash starts',()=>{
 test('Spirit Rush cannot ignore enemy collisions or cast while rooted',()=>{
  const {g}=boot('ahri');g.reset('kite');g.disableSpawn();g.player.root=1;g.cast('r');assert.equal(g.player.cd.r,0);g.player.root=0;g.fire(670,g.player.y,0,0,'enemy',18,5,1);g.cast('r');advance(g,.3);assert.equal(g.stats.hits,1);assert.equal(g.player.invuln,0);
 });
+test('Spirit Rush crosses a wall only when its destination is walkable',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.x=600;g.player.y=580;
+ node('arena').listeners.pointermove({clientX:850,clientY:580,buttons:0});g.cast('r');assert.equal(g.player.dashing.throughTerrain,true);
+ advance(g,.15);assert.ok(g.player.x>653&&g.player.x<792,'dash should traverse the wall over time');assert.ok(g.player.dashing);
+ advance(g,.3);assert.ok(Math.abs(g.player.x-850)<.1);assert.equal(g.player.dashing,null);
+ g.reset('dodge');g.dodgeDirector.next=999;g.player.x=600;g.player.y=580;
+ node('arena').listeners.pointermove({clientX:720,clientY:580,buttons:0});g.cast('r');assert.equal(g.player.dashing.throughTerrain,false);
+ advance(g,.4);assert.ok(g.player.x<=653.01);assert.equal(g.player.dashing,null);
+});
+test('Spirit Rush remains vulnerable while crossing terrain and roots cannot strand it',()=>{
+ const world=require('../world.js'),{g,node}=boot('ahri');g.reset('kite');g.disableSpawn();g.player.x=600;g.player.y=580;
+ node('arena').listeners.pointermove({clientX:850,clientY:580,buttons:0});const shot=g.fire(710,580,0,0,'enemy',10,5,1);shot.root=1;g.cast('r');advance(g,.25);
+ assert.equal(g.stats.hits,1);assert.ok(g.player.root>0);assert.equal(g.player.dashing,null);assert.ok(world.pointWalkable(g.player,g.player.r));
+});
 
 test('Spirit Rush recast window freezes during pause and expires without refreshing cooldown',()=>{
  const {g}=boot('ahri');g.reset('kite');g.disableSpawn();g.cast('r');advance(g,.5);g.pause();const remaining=g.player.rushWindow;advance(g,3);assert.equal(g.player.rushWindow,remaining);g.pause();advance(g,15);assert.equal(g.player.rushWindow,0);const charges=g.player.rushCharges;g.cast('r');assert.equal(g.player.rushCharges,charges);assert.ok(g.player.cd.r>120);
@@ -1241,4 +1255,15 @@ test('Ahri can flash during a spell cast without cancelling the spell',()=>{
 });
 test('Ahri flash in kite has no artificial damage immunity',()=>{
  const {g}=boot('ahri');g.reset('kite');g.disableSpawn();g.cast('f');assert.equal(g.player.invuln,0);
+});
+
+
+test('fresh later waves acquire matching melee rows instead of collapsing on one target',()=>{
+ const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();g.setAllies([]);g.setFoes([]);g.addWave();advance(g,2);
+ for(const [friends,enemies] of [[g.allies,g.foes],[g.foes,g.allies]]){
+  for(const unit of friends.filter(x=>x.wave===2&&x.minionType==='melee')){
+   const target=enemies.find(x=>x.id===unit.targetId);
+   assert.ok(target,`missing target for row ${unit.row}`);assert.equal(target.row,unit.row);
+  }
+ }
 });

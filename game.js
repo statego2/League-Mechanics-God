@@ -31,7 +31,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v12":mode==="dodge"?(ahriBase()?".director_v27":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v2":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v12":mode==="dodge"?(ahriBase()?".director_v28":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v3":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -225,7 +225,9 @@ function updateCSWave(dt){
   const priority=t=>friendly.some(f=>f.alive&&f.id===t.targetId)?0:1;
   const choices=targets.filter(t=>t.alive&&dist(unit,t)<=MINION_TRAINING.acquire);
   choices.sort((a,b)=>{
-   const firstWaveRank=t=>unit.wave===1&&!unit.firstAcquired&&t.wave===1&&t.minionType==="melee"?(t.row===unit.row?0:1):2;
+   // Formation matching is a practice approximation for each fresh wave,
+   // not just wave one. Existing targets remain sticky when reinforcements arrive.
+   const firstWaveRank=t=>!unit.firstAcquired&&t.wave===unit.wave&&t.minionType==="melee"?(t.row===unit.row?0:1):2;
    return firstWaveRank(a)-firstWaveRank(b)||priority(a)-priority(b)||dist(unit,a)-dist(unit,b)||a.id-b.id;
   });
   const candidate=choices[0];
@@ -711,7 +713,10 @@ function cast(key){if(state!=="playing"||(player.casting&&!(key==="f"&&(ahriBase
  if(player.rushCharges<=0)return;cancelAttack();player.rushCharges--;player.rushLock=1;player.target=null;player.order=null;player.focus=null;player.route=[];player.routeGoal=null;
  // Spirit Rush: 1200 game units/s plus movement speed. Capturing speed at
  // cast time is a training approximation until live-client timing is verified.
- const length=Math.min(250,dist(player,aim));player.dashing={x:clamp(player.x+d.x*length,22,W-22),y:clamp(player.y+d.y*length,59,H-36),speed:SIMULATION.toCanvas(1200)+playerMoveSpeed()};player.facing=a;updateUI();return;
+ const length=Math.min(250,dist(player,aim)),landing={x:clamp(player.x+d.x*length,22,W-22),y:clamp(player.y+d.y*length,59,H-36)};
+ // Allow travel through terrain only when the requested endpoint is walkable.
+ // Live-client wall snapping is more forgiving and remains unverified here.
+ player.dashing={...landing,speed:SIMULATION.toCanvas(1200)+playerMoveSpeed(),throughTerrain:world.pointWalkable(landing,player.r)};player.facing=a;updateUI();return;
  }if(key==="w"&&ahriBase()){
  player.cd.w=9;player.boost=2;player.fox={remaining:2.5,next:.4,count:3,hits:{}};burst(player.x,player.y,"#a1d7ff",8);updateUI();return;
  }cancelAttack();if((key==="e"||key==="q")&&ahriBase()){
@@ -758,7 +763,7 @@ if(player.fox){const f=player.fox;f.remaining-=dt;f.next-=dt;
  if(f.remaining<=0||(f.count===0))player.fox=null;
 }
 const oldX=player.x,oldY=player.y;
-if(player.dashing){const dest=player.dashing,dx=dest.x-player.x,dy=dest.y-player.y,len=Math.hypot(dx,dy),step=Math.min(len,dest.speed*dt);const next=world.clip(player,{x:player.x+(len?dx/len*step:0),y:player.y+(len?dy/len*step:0)});const blocked=Math.hypot(next.x-player.x,next.y-player.y)<step-1e-4;player.x=next.x;player.y=next.y;
+if(player.dashing){const dest=player.dashing,dx=dest.x-player.x,dy=dest.y-player.y,len=Math.hypot(dx,dy),step=Math.min(len,dest.speed*dt),point={x:player.x+(len?dx/len*step:0),y:player.y+(len?dy/len*step:0)};const next=dest.throughTerrain?point:world.clip(player,point);const blocked=Math.hypot(next.x-player.x,next.y-player.y)<step-1e-4;player.x=next.x;player.y=next.y;
  if(len<=step+1e-6||blocked){player.dashing=null;const targets=foes.filter(e=>e.alive&&!e.minion&&!e.baitCaster&&!e.referenceCaster&&dist(player,e)<=300).sort((a,b)=>dist(player,a)-dist(player,b)).slice(0,3);for(const target of targets){const a=Math.atan2(target.y-player.y,target.x-player.x),s=fire(player.x,player.y,Math.cos(a)*700,Math.sin(a)*700,"rush",75,7,1);s.targetId=target.id;}burst(player.x,player.y,"#b4eaff",10);}}
 if(!player.casting&&!player.dashing)updateOrder();
 // Time with a target in range and the attack ready, but no windup. This is
@@ -902,7 +907,12 @@ for(const s of shots){if(!s.alive)continue;
   if(s.ttl<=0)s.alive=false;
  }else if(s.kind==="enemy"){
   const collision=!s.ignorePlayer&&!(s.group&&s.group.hit)&&segmentDistance(s.px-oldX,s.py-oldY,s.x-player.x,s.y-player.y)<=s.r+player.hitRadius;
-  if(collision){s.alive=false;if(s.group)s.group.hit=true;if(player.invuln>0){recordDodgeOutcome(s,"blocked");stats.blocked++;}else {recordDodgeOutcome(s,"hit");takeHit(s.damage);if(state==="playing"&&s.root&&mode!=="dodge"){player.root=s.root;player.dashing=null;}}if(s.bait&&state==="playing")resolveBait(false);}
+  if(collision){s.alive=false;if(s.group)s.group.hit=true;if(player.invuln>0){recordDodgeOutcome(s,"blocked");stats.blocked++;}else {recordDodgeOutcome(s,"hit");takeHit(s.damage);if(state==="playing"&&s.root&&mode!=="dodge"){
+   player.root=s.root;
+   // A dash interrupted inside a wall must leave the player on walkable ground.
+   if(player.dashing&&!world.pointWalkable(player,player.r)){const safe=world.nearestWalkable(player,player.r);player.x=safe.x;player.y=safe.y;}
+   player.dashing=null;
+  }}if(s.bait&&state==="playing")resolveBait(false);}
   else if(s.ttl<=0||s.x<0||s.x>W||s.y<0||s.y>H||(s.bait&&((player.x-s.x)*s.vx+(player.y-s.y)*s.vy)<=0)){s.alive=false;if(s.ignorePlayer||(s.group&&s.group.hit)){s.threat=false;s.phaseResolved=true;}recordDodgeOutcome(s,s.threat?"avoided":"harmless");if(s.threat){dodged++;if(!s.bait)cue("dodge");}if(s.bait)resolveBait(true);}
   if(s.velkoz==="main"&&!s.alive&&state==="playing"){
    s.alive=true;s.velkoz="delay";s.ttl=.25;s.vx=s.vy=0;s.ignorePlayer=collision;s.phaseResolved=true;
