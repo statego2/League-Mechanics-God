@@ -31,6 +31,13 @@ test('Ahri orb uses a blue effect extending to its actual radius for both teams'
   assert.ok(strokes.includes('#9cdbff99'));assert.equal(shot.r,50);
  }
 });
+test('directed energy shots draw their effect over the existing projectile radius',()=>{
+ for(const [name,r,trail] of [['EZREAL Q',30,'#7bd9ff99'],['LUX Q',35,'#ffe4a099'],['BLITZ Q',35,'#e6cb8199'],['VELKOZ Q',30,'#d18bff99'],['VELKOZ Q',27.5,'#d18bff99']]){
+  const {g,arcs,strokes}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+  const shot=g.fire(300,200,100,0,'enemy',30,r,1);shot.spellName=name;g.render();
+  assert.ok(arcs.some(a=>a.x===shot.x&&a.y===shot.y&&a.r===r),name);assert.ok(strokes.includes(trail),name);assert.equal(shot.r,r);
+ }
+});
 test('Velkoz visitor uses a distinct sprite and still renders when it is unavailable',()=>{
  const {g,node,draws}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;node('mageArt').complete=true;node('mageArt').naturalWidth=100;
  const e=g.enemy(850,300);Object.assign(e,{dodgeVisitor:true,spell:g.REFERENCE_SPELLS.velkozDodge,phase:'enter'});g.setFoes([e]);

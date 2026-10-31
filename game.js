@@ -1021,16 +1021,22 @@ if(e.charm>0){ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="center"
 ctx.fillStyle="#101e23";ctx.fillRect(e.x-25,e.y-86,50,5);ctx.fillStyle="#ff9290";ctx.fillRect(e.x-25,e.y-86,50*clamp(e.hp/e.maxHp,0,1),5);}
 for(const s of shots){
  if(s.spellName==="BLITZ Q"&&s.anchor){ctx.beginPath();ctx.moveTo(s.anchor.x,s.anchor.y-25);ctx.lineTo(s.x,s.y);ctx.lineWidth=4;ctx.strokeStyle="#d0ba86";ctx.stroke();}
- const orb=s.kind==="orb"||s.kind==="enemyOrb",blitz=s.spellName==="BLITZ Q",ez=s.spellName==="EZREAL Q",lux=s.spellName==="LUX Q",vel=s.spellName==="VELKOZ Q";
- // The translucent orb extends to its gameplay radius; it is spell art, not
- // an extra hitbox ring. Other missiles retain their previous visual sizes.
- const visualRadius=orb?s.r*.55:s.kind==="charm"?10:s.kind==="enemy"&&s.r>15?11:s.r;
+ const orb=s.kind==="orb"||s.kind==="enemyOrb",blitz=s.spellName==="BLITZ Q",ez=s.spellName==="EZREAL Q",lux=s.spellName==="LUX Q",vel=s.spellName==="VELKOZ Q",energy=s.kind==="enemy"&&(ez||lux||vel||blitz);
+ // Translucent spell art extends to projectile radius without a debug ring.
+ // It fades at the edge, so this is not an exact visual collision boundary.
+ const visualRadius=orb?s.r*.55:energy?s.r*.48:s.kind==="charm"?10:s.kind==="enemy"&&s.r>15?11:s.r;
  ctx.strokeStyle=vel?"#d18bff99":blitz?"#e6cb8199":orb?"#9cdbff99":ez?"#7bd9ff99":lux?"#ffe4a099":(s.kind==="enemy"||s.kind==="enemyMinion")?"#f1797999":s.kind==="charm"?"#ffa8d999":"#7bf4e899";
  ctx.save();ctx.lineCap="round";ctx.lineWidth=visualRadius*1.5;ctx.beginPath();ctx.moveTo(s.x-s.vx*.04,s.y-s.vy*.04);ctx.lineTo(s.x,s.y);ctx.stroke();ctx.restore();
- if(orb){
+ if(orb||energy){
   const glow=ctx.createRadialGradient(s.x-s.r*.12,s.y-s.r*.16,s.r*.04,s.x,s.y,s.r);
-  glow.addColorStop(0,"#f3fcff");glow.addColorStop(.32,"#a9e7fbe8");glow.addColorStop(.7,"#6bc7ed77");glow.addColorStop(1,"#6bc7ed00");
+  const colors=vel?["#f8efff","#d9a5ffe8","#ad66e577","#ad66e500"]:lux?["#fffbed","#ffe5a2e8","#e9b95e77","#e9b95e00"]:blitz?["#fff6d5","#e4c88de8","#bf955577","#bf955500"]:orb?["#f3fcff","#a9e7fbe8","#6bc7ed77","#6bc7ed00"]:["#f1fdff","#a1ecffe8","#56c8f477","#56c8f400"];
+  glow.addColorStop(0,colors[0]);glow.addColorStop(.32,colors[1]);glow.addColorStop(.7,colors[2]);glow.addColorStop(1,colors[3]);
   circle(s.x,s.y,s.r,glow);
+  if(blitz){
+   // A compact mechanical hand sits over the chain, oriented along travel.
+   ctx.save();ctx.translate(s.x,s.y);ctx.rotate(Math.atan2(s.vy,s.vx));ctx.fillStyle="#947a4d";ctx.strokeStyle="#f0d9a3";ctx.lineWidth=2;
+   ctx.beginPath();ctx.moveTo(-s.r*.45,-s.r*.31);ctx.lineTo(s.r*.15,-s.r*.38);ctx.lineTo(s.r*.48,-s.r*.22);ctx.lineTo(s.r*.48,s.r*.22);ctx.lineTo(s.r*.15,s.r*.38);ctx.lineTo(-s.r*.45,s.r*.31);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();
+  }
  }else{
   circle(s.x,s.y,visualRadius,vel?"#e6c0ff":blitz?"#ead7a2":ez?"#b2f0ff":lux?"#ffe8aa":(s.kind==="enemy"||s.kind==="enemyMinion")?"#ff9c85":s.kind==="charm"?"#ffb1df":s.kind==="r"?"#f5d47d":"#81fdf1");
   circle(s.x,s.y,visualRadius*1.7,vel?"#c574ff44":blitz?"#ebc87244":ez?"#6bcfff44":lux?"#ffe09c44":(s.kind==="enemy"||s.kind==="enemyMinion")?"#fe626344":"#8df5dd44");
