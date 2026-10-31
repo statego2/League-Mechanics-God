@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v35":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v36":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -104,7 +104,7 @@ function cue(kind){
  }catch{/* audio must never interrupt the drill */}
 }
 let state="menu",mode="dodge",time=0,last=0,kills=0,dodged=0,spawn=0,aim={x:W/2+120,y:H/2},mouse={x:W/2,y:H/2},player,foes=[],allies=[],shots=[],fx=[],keys=new Set(),attackMove=false,stopHeldRight=false,toastTime=0,enemySeq=0,impactSeq=0,stats;
-function reset(nextMode){Object.assign(ATTACK,ATTACK_PRESETS[attackPreset]);mode=nextMode;time=0;kills=0;dodged=0;spawn=0;toastTime=0;ui.toast.classList.remove("show");enemySeq=0;impactSeq=0;rng=seed;hazards=[];sweeps=[];sweepTimer=14;waves=0;laneEnemyTimer=0;dodgeDirector=nextMode==="dodge"&&attackPreset==="ahri"?{next:0,attempted:0,ezreal:0,lux:0,ahri:0,blitz:0,velkoz:0,xerath:0,xerathQ:0,orianna:0,oriannaQ:0,malphite:0,rareAt:90+(seed%6001)/100,malAt:150+((seed*31)%9001)/100,rareGuardUntil:0,outcomes:{}}:null;bait=nextMode==="bait"?{phase:"setup",round:0,casts:0,dodges:0,cs:0,missed:0,timer:0}:null;stats={released:0,cancelled:0,hits:0,blocked:0,damage:0,moving:0,autoDamage:0,readyIdle:0,missed:0,unresolved:0,cs:0,gold:0,missedGold:0,skillShots:0,skillHits:0};accumulator=0;foes=[];allies=[];shots=[];fx=[];keys.clear();attackMove=false;stopHeldRight=false;player={x:ahriCS()?420:W/2,y:ahriCS()?535:H/2,r:17,hitRadius:referenceSpell()||ahriBase()?AHRI.radius:12.75,hp:referenceSpell()||ahriBase()?AHRI.hp:160,maxHp:referenceSpell()||ahriBase()?AHRI.hp:160,speed:ahriBase()||referenceSpell()?AHRI.speed:270,target:null,route:[],routeGoal:null,focus:null,order:null,facing:0,motion:0,hitFlash:0,attackTimer:0,windup:0,windupTarget:null,casting:null,fox:null,boost:0,essence:0,rushWindow:0,rushCharges:0,rushLock:0,dashing:null,cd:{q:0,w:0,e:0,r:0,f:0},invuln:0,root:0,flashTrail:0};state="playing";ui.pause.textContent="PAUSE P";$("encounterValue").textContent=difficulty.toUpperCase()+" · AS "+ATTACK_PRESETS[attackPreset].label+" · SEED "+seed+(AHRI_DATA===AHRI_FALLBACK?" · DATA FALLBACK":"");ui.overlay.classList.add("hidden");ui.pause.disabled=false;ui.restart.disabled=false;$("settings").hidden=false;ui.mode.textContent=referenceSpell()?referenceSpell().name+" DODGE":mode==="dodge"?"DODGE TRIAL":mode==="lastHit"?"CS PRACTICE":mode==="lane"?"LANE SCENARIO":mode==="bait"?"BAIT · DODGE · CS":mode==="skillshot"?"SKILLSHOT LAB":"KITE ARENA";$("killsLabel").textContent=(mode==="dodge"||referenceSpell())?"HITS":(mode==="lastHit"||mode==="bait"||mode==="lane")?"CS":mode==="skillshot"?"HITS":"KILLS";$("dodgedLabel").textContent=mode==="bait"?"DODGES":mode==="lastHit"?"MISSED":mode==="skillshot"?"SHOTS":"DODGED";updateUI();}
+function reset(nextMode){Object.assign(ATTACK,ATTACK_PRESETS[attackPreset]);mode=nextMode;time=0;kills=0;dodged=0;spawn=0;toastTime=0;ui.toast.classList.remove("show");enemySeq=0;impactSeq=0;rng=seed;hazards=[];sweeps=[];sweepTimer=14;waves=0;laneEnemyTimer=0;dodgeDirector=nextMode==="dodge"&&attackPreset==="ahri"?{next:0,attempted:0,ezreal:0,lux:0,ahri:0,blitz:0,velkoz:0,xerath:0,xerathQ:0,orianna:0,oriannaQ:0,malphite:0,rareAt:90+(seed%6001)/100,malAt:150+((seed*31)%9001)/100,rareGuardUntil:0,lastRegular:null,regularStreak:0,outcomes:{}}:null;bait=nextMode==="bait"?{phase:"setup",round:0,casts:0,dodges:0,cs:0,missed:0,timer:0}:null;stats={released:0,cancelled:0,hits:0,blocked:0,damage:0,moving:0,autoDamage:0,readyIdle:0,missed:0,unresolved:0,cs:0,gold:0,missedGold:0,skillShots:0,skillHits:0};accumulator=0;foes=[];allies=[];shots=[];fx=[];keys.clear();attackMove=false;stopHeldRight=false;player={x:ahriCS()?420:W/2,y:ahriCS()?535:H/2,r:17,hitRadius:referenceSpell()||ahriBase()?AHRI.radius:12.75,hp:referenceSpell()||ahriBase()?AHRI.hp:160,maxHp:referenceSpell()||ahriBase()?AHRI.hp:160,speed:ahriBase()||referenceSpell()?AHRI.speed:270,target:null,route:[],routeGoal:null,focus:null,order:null,facing:0,motion:0,hitFlash:0,attackTimer:0,windup:0,windupTarget:null,casting:null,fox:null,boost:0,essence:0,rushWindow:0,rushCharges:0,rushLock:0,dashing:null,cd:{q:0,w:0,e:0,r:0,f:0},invuln:0,root:0,flashTrail:0};state="playing";ui.pause.textContent="PAUSE P";$("encounterValue").textContent=difficulty.toUpperCase()+" · AS "+ATTACK_PRESETS[attackPreset].label+" · SEED "+seed+(AHRI_DATA===AHRI_FALLBACK?" · DATA FALLBACK":"");ui.overlay.classList.add("hidden");ui.pause.disabled=false;ui.restart.disabled=false;$("settings").hidden=false;ui.mode.textContent=referenceSpell()?referenceSpell().name+" DODGE":mode==="dodge"?"DODGE TRIAL":mode==="lastHit"?"CS PRACTICE":mode==="lane"?"LANE SCENARIO":mode==="bait"?"BAIT · DODGE · CS":mode==="skillshot"?"SKILLSHOT LAB":"KITE ARENA";$("killsLabel").textContent=(mode==="dodge"||referenceSpell())?"HITS":(mode==="lastHit"||mode==="bait"||mode==="lane")?"CS":mode==="skillshot"?"HITS":"KILLS";$("dodgedLabel").textContent=mode==="bait"?"DODGES":mode==="lastHit"?"MISSED":mode==="skillshot"?"SHOTS":"DODGED";updateUI();}
 function showMenu(title,desc,finished=false){$("menu").scrollTop=0;attackMove=false;ui.pause.disabled=true;state=finished?"ended":"menu";ui.overlay.classList.remove("hidden");ui.title.innerHTML=title;ui.desc.textContent=desc;ui.buttons.hidden=false;ui.foot.hidden=false;ui.resume.hidden=true;$("settings").hidden=false;ui.pause.textContent="PAUSE P";}
 function pause(){attackMove=false;if(state==="playing"){$("menu").scrollTop=0;state="paused";ui.overlay.classList.remove("hidden");ui.title.innerHTML="PAUSED<span>.</span>";ui.desc.textContent="Take a moment, then return to the arena.";ui.buttons.hidden=true;ui.foot.hidden=true;ui.resume.hidden=false;$("settings").hidden=true;ui.pause.textContent="RESUME P";}else if(state==="paused"){state="playing";ui.overlay.classList.add("hidden");ui.pause.textContent="PAUSE P";}}
 // Records are local and partitioned by drill and difficulty; storage can be unavailable.
@@ -364,6 +364,10 @@ function addEnemy(){
 // Each visitor casts once, so no individual champion cooldown is faked.
 // Spawn interval and concurrency are training policies, not game spell stats.
 const DODGE_DIRECTOR={easy:{interval:5,cap:1},normal:{interval:3.2,cap:2},hard:{interval:2.5,cap:3}};
+// Avoid three identical complex encounters in a row; repeated Ezreal Q is
+// intentional. Record a visitor at aim lock, and ambient casts at creation.
+function regularAllowed(name){return name==="EZREAL Q"||dodgeDirector.lastRegular!==name||dodgeDirector.regularStreak<2;}
+function recordRegular(name){dodgeDirector.regularStreak=dodgeDirector.lastRegular===name?dodgeDirector.regularStreak+1:1;dodgeDirector.lastRegular=name;}
 // Walking can interrupt an attack windup, but not a spell cast, root or dash.
 // Dash displacement is not forecast here, so delay new threats until it ends.
 function dodgeReactionDelay(){return player.dashing?Infinity:Math.max(.2,player.root||0,player.casting?.remaining||0);}
@@ -374,7 +378,7 @@ const XERATH_W={radius:SIMULATION.toCanvas(275),center:SIMULATION.toCanvas(125),
 function spawnXerathW(){
  // Allow one committed or in-flight Ezreal Q when one escape clears both.
  // Other pending casters, split/return shots and other AoEs remain isolated.
- if(hazards.some(h=>h.directed))return false;
+ if(!regularAllowed("XERATH W")||hazards.some(h=>h.directed))return false;
  const casters=foes.filter(e=>e.alive&&e.dodgeVisitor&&(e.phase==="enter"||e.phase==="cast"));
  const active=shots.filter(s=>s.alive&&s.directed);
  if(casters.length+active.length>1)return false;
@@ -394,7 +398,7 @@ function spawnXerathW(){
   for(const e of casters){const s=e.pending.spell;incoming.push({x:e.x,y:e.y,vx:Math.cos(e.pending.angle)*s.speed,vy:Math.sin(e.pending.angle)*s.speed,r:s.radius,start:e.charge,end:e.charge+s.range/s.speed});}
   if(!forecastDodgePath(incoming,escape,reaction))continue;
   hazards.push({...center,r:XERATH_W.radius,ttl:XERATH_W.delay,max:XERATH_W.delay,threat:true,directed:true,spellName:"XERATH W",xerath:true});
-  dodgeDirector.attempted++;dodgeDirector.xerath++;return true;
+  dodgeDirector.attempted++;dodgeDirector.xerath++;recordRegular("XERATH W");return true;
  }
  return false;
 }
@@ -403,6 +407,7 @@ function spawnXerathW(){
 // 0.528 s timing are deliberate training approximations.
 const XERATH_Q={radius:SIMULATION.toCanvas(145/2),range:SIMULATION.toCanvas(1450),delay:.528,raw:70};
 function spawnXerathQ(){
+ if(!regularAllowed("XERATH Q"))return false;
  if(foes.some(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit"&&e.phase!=="orbFlight"&&e.phase!=="hookFlight")||shots.some(s=>s.alive&&s.directed)||hazards.some(h=>h.directed))return false;
  const reaction=dodgeReactionDelay();if(!Number.isFinite(reaction))return false;
  const angle=rand(0,TAU),offset=45;
@@ -414,7 +419,7 @@ function spawnXerathQ(){
   const beam={x,y,endX,endY,r:XERATH_Q.radius};
   if(!sampleAreaEscape(reaction,XERATH_Q.delay,p=>beamTouchesPlayer(beam,p,player.hitRadius+8)))continue;
   hazards.push({x,y,endX,endY,r:XERATH_Q.radius,ttl:XERATH_Q.delay,max:XERATH_Q.delay,threat:true,directed:true,spellName:"XERATH Q",beam:true});
-  dodgeDirector.attempted++;dodgeDirector.xerathQ++;return true;
+  dodgeDirector.attempted++;dodgeDirector.xerathQ++;recordRegular("XERATH Q");return true;
  }
  return false;
 }
@@ -574,10 +579,11 @@ function spawnDodgeVisitor(forcedSpell=null){
  let spell=forcedSpell;
  if(!spell){
   const roll=random()*(time>=45?100:71);
-  if(time>=45&&roll>=94)return spawnXerathQ();
-  if(time>=45&&roll>=91)return spawnXerathW();
+  if(time>=45&&roll>=94&&regularAllowed("XERATH Q"))return spawnXerathQ();
+  if(time>=45&&roll>=91&&roll<94&&regularAllowed("XERATH W"))return spawnXerathW();
   spell=roll<45?REFERENCE_SPELLS.ezrealDodge:roll<60?REFERENCE_SPELLS.luxDodge:roll<71?REFERENCE_SPELLS.ahriDodge:roll<83?REFERENCE_SPELLS.blitzDodge:REFERENCE_SPELLS.velkozDodge;
  }
+ if(!regularAllowed(spell.name)){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
  if(spell.split&&active>0)return false;
  let origin=null,entry=null;
  for(let i=0;i<80;i++){
@@ -612,9 +618,9 @@ function updateDodgeVisitor(e,dt){
   if(d<=step+.01){if(e.phase==="enter"){
   const offset=e.spell.split?(random()<.5?-.32:.32):0,angle=Math.atan2(player.y-e.y,player.x-e.x)+offset,splitDistance=e.spell.split?dist(e,player)*Math.cos(offset):undefined;
   const isolated=!e.spell.split||(!shots.some(s=>s.alive&&s.directed)&&!hazards.some(h=>h.directed)&&!foes.some(other=>other!==e&&other.alive&&other.dodgeVisitor&&(other.phase==="enter"||other.phase==="cast")));
-  const safe=isolated&&canEvadeDodgeCast(e,e.spell)&&(!e.spell.split||canEvadeVelkoz(e,angle,splitDistance,e.spell));
+  const safe=isolated&&regularAllowed(e.spell.name)&&canEvadeDodgeCast(e,e.spell)&&(!e.spell.split||canEvadeVelkoz(e,angle,splitDistance,e.spell));
   if(!safe)e.phase="exit";else{
-   e.pending={angle,fan:false,spell:e.spell,splitDistance,threat:!e.spell.split};e.charge=e.spell.cast;e.phase="cast";
+   e.pending={angle,fan:false,spell:e.spell,splitDistance,threat:!e.spell.split};e.charge=e.spell.cast;e.phase="cast";recordRegular(e.spell.name);
    // One seeded opportunity per Ezreal cast. Each candidate must pass its
    // own shared-path forecast and the normal active-threat limit.
    if(e.spell===REFERENCE_SPELLS.ezrealDodge&&time>=45&&difficulty!=="easy"){

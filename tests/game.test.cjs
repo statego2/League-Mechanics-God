@@ -1432,3 +1432,30 @@ test('clipped area escape never claims a point through a wall is reachable',()=>
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.x=650;g.player.y=580;
  assert.equal(g.sampleAreaEscape(.2,.5,p=>p.x<=660),false);
 });
+
+test('moving-player seeded sessions sustain mixed pressure without impossible state',t=>{
+ const runs=[];
+ for(let seedIndex=0;seedIndex<3;seedIndex++){
+  const {g,node}=boot('ahri');node('dodgeLength').listeners.change({target:{value:'180'}});for(let n=0;n<seedIndex;n++)node('newSeed').listeners.click();
+  g.reset('dodge');g.player.hp=g.player.maxHp=1e6;
+  const points=[[500,250],[700,250],[700,450],[500,450]];
+  for(let step=0;step<179*120;step++){
+   if(step%360===0){const [x,y]=points[Math.floor(step/360)%points.length];g.moveTo(x,y);}
+   if(step%1440===0)g.cast('w');g.update(1/120);
+   assert.ok(Number.isFinite(g.player.x)&&Number.isFinite(g.player.y)&&Number.isFinite(g.player.hp));
+   const d=g.dodgeDirector;assert.ok(d.lastRegular==='EZREAL Q'||d.regularStreak<=2,`seed ${seedIndex}: ${d.lastRegular} repeated`);
+  }
+  const d=g.dodgeDirector;runs.push({casts:d.attempted,ezreal:d.ezreal,orianna:d.orianna,malphite:d.malphite});
+  assert.ok(d.attempted>25,`seed ${seedIndex}: ${d.attempted}`);assert.ok(d.ezreal>0);assert.equal(g.state,'playing');
+ }
+ t.diagnostic(JSON.stringify(runs));
+});
+
+
+test('a third identical complex visitor is deferred while repeated Ezreal remains allowed',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const d=g.dodgeDirector;
+ for(const [name,spellKey,expected] of [['LUX Q','luxDodge','exit'],['EZREAL Q','ezrealDodge','cast']]){
+  d.lastRegular=name;d.regularStreak=2;const origin={x:140,y:g.player.y},spell=g.REFERENCE_SPELLS[spellKey],e=g.enemy(origin.x,origin.y);
+  Object.assign(e,{dodgeVisitor:true,spell,phase:'enter',origin:{...origin},entry:{...origin},speed:120});g.setFoes([e]);g.update(1/120);assert.equal(e.phase,expected,name);
+ }
+});
