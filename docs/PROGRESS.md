@@ -818,3 +818,9 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 - After a Cassiopeia cast, the existing Dodge breakdown now explains that turning away avoids the stun in League but still takes damage inside the cone, and explicitly says this drill applies neither stun nor slow. No in-game visual overlay or gameplay change was added. The explanation is omitted when no Cassiopeia cast occurred.
 - Added a result-screen regression for both cases. `node --test tests/*.test.cjs`: 308/308 pass; `node --check game.js`, generated Ahri data check and `git diff --check` pass. The text was verified in the test DOM; a separate browser review of the result screen remains useful.
 - Next: human Expert playtests of cast visibility, facing, rhythm and solvability; verify Cassiopeia geometry against live play, then continue the unfinished Gauntlet and CS work.
+
+## Vel'Koz split result accounting (31 October 2026)
+
+- The two Q split bolts now produce a single shared split-phase outcome in the detailed results. A first missed branch no longer records an avoidance before the other can hit; two misses record one avoidance or harmless outcome, and two live branches count as one unresolved opportunity. Main-bolt and split phases remain distinct. Damage, collision and the existing main dodge counter are unchanged.
+- Extended regressions for two misses, a later sibling hit, and two live unresolved branches. `node --test tests/*.test.cjs`: 309/309 pass; `node --check game.js`, generated Ahri data check and `git diff --check` pass. Browser smoke started Expert endless Dodge; split results were exercised in simulation, not in a sustained browser playtest.
+- Next: sustained human Expert playtests, including split readability, overlap fairness and rare encounters. The Gauntlet and broader game remain unfinished.

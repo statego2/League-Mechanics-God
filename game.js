@@ -146,7 +146,8 @@ function dodgeOutcomeSummary(){
  const entries=Object.entries(dodgeDirector.outcomes).map(([name,v])=>`${name}: ${v.avoided} avoided / ${v.hit} hit / ${v.blocked} blocked / ${v.harmless} harmless`);
  // A split delay is a live phase only if its children can still hit the player.
  // Once one branch hits, its sibling is no longer a possible player outcome.
- const unresolved=shots.filter(s=>s.alive&&s.directed&&!s.ignorePlayer&&!(s.group&&s.group.hit)&&(s.velkoz==="delay"||!s.phaseResolved)).length+hazards.filter(h=>h.directed&&!h.phaseResolved&&(!(h.orianna||h.malphite||h.cassio)||h.casting)).length+hazards.filter(h=>h.orianna&&h.q&&!h.q.phaseResolved).length;
+ const pendingShots=shots.filter(s=>s.alive&&s.directed&&!s.ignorePlayer&&!(s.group&&s.group.hit)&&(s.velkoz==="delay"||!s.phaseResolved));
+ const unresolved=new Set(pendingShots.map(s=>s.group||s)).size+hazards.filter(h=>h.directed&&!h.phaseResolved&&(!(h.orianna||h.malphite||h.cassio)||h.casting)).length+hazards.filter(h=>h.orianna&&h.q&&!h.q.phaseResolved).length;
  return `Phase outcomes${entries.length?`\n${entries.join("\n")}`:": none"}\n${unresolved} unresolved phase${unresolved===1?"":"s"}`;
 }
 function end(win){
@@ -1125,13 +1126,12 @@ for(const s of shots){if(!s.alive)continue;
   else if(s.ttl<=0||s.x<0||s.x>W||s.y<0||s.y>H||(s.bait&&((player.x-s.x)*s.vx+(player.y-s.y)*s.vy)<=0)){
    s.alive=false;const suppressed=s.ignorePlayer||(s.group&&s.group.hit);
    if(suppressed){s.threat=false;s.phaseResolved=true;}
-   recordDodgeOutcome(s,s.threat?"avoided":"harmless");
    if(s.velkoz==="child"&&s.group&&!suppressed){
     // The two split bolts are one opportunity: wait for both to miss before
     // awarding it. A later hit by the sibling must not leave dodge credit.
     s.group.threatened=s.group.threatened||s.threat;s.group.remaining--;
-    if(s.group.remaining===0&&s.group.threatened){dodged++;cue("dodge");}
-   }else if(s.threat){dodged++;if(!s.bait)cue("dodge");}
+    if(s.group.remaining===0){recordDodgeOutcome(s,s.group.threatened?"avoided":"harmless");if(s.group.threatened){dodged++;cue("dodge");}}
+   }else{recordDodgeOutcome(s,s.threat?"avoided":"harmless");if(s.threat){dodged++;if(!s.bait)cue("dodge");}}
    if(s.bait)resolveBait(true);
   }
   if(s.velkoz==="main"&&!s.alive&&state==="playing"){
