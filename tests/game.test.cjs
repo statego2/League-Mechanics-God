@@ -1690,3 +1690,13 @@ test('unsafe lead falls back to a separately verified direct shot',()=>{
  assert.ok(found,'no case found');const e=g.enemy(found.origin.x,found.origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'enter',origin:{...found.origin},entry:{...found.origin},speed:120});g.setFoes([e]);g.setRng(1);
  g.updateDodgeVisitor(e,1/120);assert.equal(e.phase,'cast');assert.ok(Math.abs(e.pending.angle-Math.atan2(g.player.y-e.y,g.player.x-e.x))<1e-10);
 });
+
+
+test('Dodge permits a W-boosted escape that base movement alone cannot make',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const origin={x:g.player.x-400,y:g.player.y},spell=g.REFERENCE_SPELLS.ezrealDodge,witness={};
+ assert.equal(g.canEvadeDodgeCast(origin,spell),false);g.cast('w');
+ assert.ok(g.canEvadeDodgeCast(origin,spell,witness));
+ const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'cast',entry:{...origin},speed:120,charge:spell.cast,pending:{angle:0,spell}});g.setFoes([e]);
+ advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.5);assert.equal(g.stats.hits,0);
+});
