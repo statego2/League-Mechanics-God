@@ -1641,6 +1641,29 @@ test('Dodge allows an Ahri skillshot followed by movement to evade an incoming a
  advance(g,.26);g.moveTo(p.x,p.y+150);advance(g,.8);
  assert.ok(e.hp<e.maxHp,'Ahri Q did not hit');assert.equal(g.stats.hits,0,'incoming attack hit');
 });
+test('Dodge counts Q once across both orb legs and counts a missed cast separately',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const e=g.enemy(g.player.x+220,g.player.y),spec=g.REFERENCE_SPELLS.ezrealDodge;
+ Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'cast',charge:999,pending:{angle:0,spell:spec},hp:1000,maxHp:1000});g.setFoes([e]);
+ node('arena').listeners.pointermove({clientX:e.x,clientY:e.y,buttons:0});g.cast('q');advance(g,1.6);
+ assert.equal(g.stats.dodgeQShots,1);assert.equal(g.stats.dodgeQHits,1);
+ g.player.cd.q=0;node('arena').listeners.pointermove({clientX:g.player.x,clientY:g.player.y-300,buttons:0});g.cast('q');advance(g,1.6);
+ assert.equal(g.stats.dodgeQShots,2);assert.equal(g.stats.dodgeQHits,1);g.end(false);
+ assert.match(node('dodgeBreakdownText').textContent,/Q 1\/2 casts hit \(0 in flight\)/);
+});
+test('Dodge skill results distinguish a released in-flight E from a miss',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ node('arena').listeners.pointermove({clientX:g.player.x+200,clientY:g.player.y,buttons:0});g.cast('e');advance(g,.26);
+ assert.equal(g.stats.dodgeEShots,1);assert.equal(g.stats.dodgeEHits,0);g.end(false);
+ assert.match(node('dodgeBreakdownText').textContent,/E 0\/1 casts hit \(1 in flight\)/);
+});
+test('Dodge counts Charm hits against a visitor once per released E',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const e=g.enemy(g.player.x+150,g.player.y),spec=g.REFERENCE_SPELLS.ezrealDodge;
+ Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'cast',charge:999,pending:{angle:0,spell:spec},hp:1000,maxHp:1000});g.setFoes([e]);
+ node('arena').listeners.pointermove({clientX:e.x,clientY:e.y,buttons:0});g.cast('e');advance(g,.7);
+ assert.equal(g.stats.dodgeEShots,1);assert.equal(g.stats.dodgeEHits,1);assert.ok(e.hp<1000);
+});
 
 test('paired Ezreal escapes remain safe with existing movement and W decay',()=>{
  let accepted=0,boosted=0,led=0;
