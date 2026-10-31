@@ -23,6 +23,24 @@ function boot(preset="standard", options={}){
 }
 function foe(g,x=800,y=337.5){const e=g.enemy(x,y);e.speed=0;e.shoot=999;e.hp=e.maxHp=10000;g.setFoes([e]);return e;}
 function advance(g,seconds){for(let i=0;i<Math.round(seconds*120);i++)g.update(1/120);}
+test('director escape witnesses survive actual straight shots from varied angles and overlaps',()=>{
+ let accepted=0,overlaps=0;
+ for(const [key,distance] of [['ezrealDodge',470],['luxDodge',400],['blitzDodge',470],['ahriDodge',500]]){
+  for(let i=0;i<16;i++)for(const overlap of [false,true]){
+   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.hp=g.player.maxHp=100000;
+   const a=i*Math.PI/8,origin={x:g.player.x+Math.cos(a)*distance,y:g.player.y+Math.sin(a)*distance};
+   if(origin.x<60||origin.x>1140||origin.y<145||origin.y>645)continue;
+   const spell=g.REFERENCE_SPELLS[key];
+   if(overlap){const s=g.fire(160,g.player.y-75,500,0,'enemy',10,15,2);s.directed=true;s.spellName='EZREAL Q';}
+   const witness={};if(!g.canEvadeDodgeCast(origin,spell,witness))continue;
+   accepted++;if(overlap)overlaps++;
+   const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'cast',entry:{...origin},speed:120,charge:spell.cast,pending:{angle:Math.atan2(g.player.y-origin.y,g.player.x-origin.x),spell}});g.setFoes([e]);
+   advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.8);
+   assert.equal(g.stats.hits,0,`${key} angle ${i} overlap ${overlap}`);
+  }
+ }
+ assert.ok(accepted>=24,`only ${accepted} safe casts checked`);assert.ok(overlaps>=8,`only ${overlaps} overlaps checked`);
+});
 test('Ahri orb uses a blue effect extending to its actual radius for both teams',()=>{
  for(const kind of ['orb','enemyOrb']){
   const {g,arcs,strokes}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
@@ -407,6 +425,14 @@ test('Ahri orb follows the player on return after they move',()=>{
 
 test('Ahri Fox-Fire boosts movement and its three flames deal reduced repeat damage',()=>{
  const {g}=boot('ahri');g.reset('kite');g.disableSpawn();const e=foe(g,800);e.mr=100;const x=g.player.x;g.moveTo(700,g.player.y);g.cast('w');assert.equal(g.player.cd.w,9);advance(g,.2);assert.ok(g.player.x-x>33);advance(g,1.5);assert.ok(Math.abs(e.hp-9964)<1e-7);assert.equal(g.player.fox,null);
+});
+test('Ahri Fox-Fire movement observes the upper speed soft cap and decays',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.moveTo(1100,g.player.y);g.cast('w');
+ const dt=1/120,start=g.player.x;g.update(dt);
+ const raw=330*(1+.4*(2-dt)/2),expected=(raw*.8+83)*.5*dt;
+ assert.ok(Math.abs(g.player.x-start-expected)<1e-8);const first=g.player.x-start;
+ advance(g,.8);const before=g.player.x;g.update(dt);const later=g.player.x-before;
+ assert.ok(later<first);assert.ok(later>165*dt);
 });
 test('Ahri Fox-Fire does not cancel an auto windup and is locked in auto-only CS',()=>{
  const {g,node}=boot('ahri');g.reset('kite');g.disableSpawn();const e=foe(g,800);g.attackOrder(e);advance(g,.1);const windup=g.player.windup;g.cast('w');assert.equal(g.player.windup,windup);advance(g,.25);assert.equal(g.stats.released,1);g.reset('lastHit');g.cast('w');assert.equal(g.player.cd.w,0);assert.equal(node('cdW').textContent,'—');

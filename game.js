@@ -31,9 +31,17 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v12":mode==="dodge"?(ahriBase()?".director_v22":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset;}
+function recordSuffix(){return ahriCS()?".cs_ahri_v12":mode==="dodge"?(ahriBase()?".director_v23":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v1":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
+// League's upper movement-speed soft caps apply after bonus speed is added.
+// Units here are canvas units; no slows, items or runes are modeled yet.
+function playerMoveSpeed(){
+ const raw=player.speed*(1+.4*player.boost/2);
+ if(!ahriBase()||player.boost<=0)return raw;
+ const worldSpeed=SIMULATION.toWorld(raw);
+ return SIMULATION.toCanvas(worldSpeed>490?worldSpeed*.5+230:worldSpeed>415?worldSpeed*.8+83:worldSpeed);
+}
 function recordLabel(){return difficulty+(attackPreset==="standard"?"":", "+ATTACK_PRESETS[attackPreset].label+" AS");}
 const STEP=1/120;let accumulator=0;
 // Circle against an oriented rectangle, including rounded contact from the
@@ -455,7 +463,7 @@ function dodgeEscapeClear(origin,spell,destination){
  return true;
 }
 // Sample two perpendicular escapes and forecast existing directed missiles.
-function canEvadeDodgeCast(origin,spell){
+function canEvadeDodgeCast(origin,spell,witness=null){
  const dx=player.x-origin.x,dy=player.y-origin.y,d=Math.hypot(dx,dy);
  if(d<1)return false;
  // A straight projectile must be able to reach the player's current hitbox.
@@ -466,7 +474,7 @@ function canEvadeDodgeCast(origin,spell){
  if(available<=0||player.speed*available<clearance)return false;
  for(const side of [-1,1]){
   const destination={x:player.x-side*dy/d*clearance,y:player.y+side*dx/d*clearance};
-  if(world.pointWalkable(destination,player.r)&&world.segmentClear(player,destination,player.r)&&dodgeEscapeClear(origin,spell,destination))return true;
+  if(world.pointWalkable(destination,player.r)&&world.segmentClear(player,destination,player.r)&&dodgeEscapeClear(origin,spell,destination)){if(witness)witness.destination=destination;return true;}
  }
  return false;
 }
@@ -727,7 +735,7 @@ if(player.target&&player.windup<=0&&player.root<=0&&!player.casting&&!player.das
   player.route=world.path(player,goal);player.routeGoal=goal;
  }
  const waypoint=player.route[0];
- if(waypoint){const dx=waypoint.x-player.x,dy=waypoint.y-player.y,len=Math.hypot(dx,dy),step=Math.min(player.speed*(1+.4*player.boost/2)*dt,len);
+ if(waypoint){const dx=waypoint.x-player.x,dy=waypoint.y-player.y,len=Math.hypot(dx,dy),step=Math.min(playerMoveSpeed()*dt,len);
   if(len>0){const next=world.clip(player,{x:player.x+dx/len*step,y:player.y+dy/len*step});player.x=next.x;player.y=next.y;player.facing=Math.atan2(dy,dx);if(step>0){stats.moving+=dt;player.motion+=dt*15;}}
   if(len<=step+1e-6){player.route.shift();if(!player.route.length&&dist(player,goal)<1)player.target=null;}
  }else if(dist(player,goal)<1)player.target=null;
