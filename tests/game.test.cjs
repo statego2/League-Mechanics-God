@@ -1655,3 +1655,20 @@ test('Velkoz child can hit during the remainder of the split activation step',()
  Object.assign(main,{directed:true,spellName:'VELKOZ Q',velkoz:'delay',splitAngle:0,phaseResolved:true});
  g.update(.25);assert.equal(g.stats.hits,1);
 });
+
+test('seeded straight visitors sometimes lead existing movement and retain a walking escape',()=>{
+ let led=0,direct=0;
+ for(let seed=1;seed<=80;seed++){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setRng((seed*2654435761)>>>0);
+  const spell=g.REFERENCE_SPELLS.ezrealDodge,origin={x:130,y:g.player.y};
+  const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'enter',origin:{...origin},entry:{...origin},speed:120});g.setFoes([e]);
+  g.moveTo(g.player.x,g.player.y+180);g.update(1/120);if(e.phase!=='cast')continue;
+  const directAngle=Math.atan2(g.player.y-e.y,g.player.x-e.x),angle=e.pending.angle;
+  if(Math.abs(angle-directAngle)<1e-5){direct++;continue;}
+  led++;const aim={x:e.x+Math.cos(angle)*400,y:e.y+Math.sin(angle)*400},witness={};
+  assert.ok(g.canEvadeDodgeCast(e,spell,witness,aim));
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.5);
+  assert.equal(g.stats.hits,0,`seed ${seed}`);
+ }
+ assert.ok(led>0,`no led shots; direct=${direct}`);assert.ok(direct>0,'no direct shots');
+});

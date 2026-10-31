@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v44":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v45":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -528,7 +528,7 @@ function forecastDodgePath(incoming,destination,reaction,margin=0){
  return true;
 }
 // Forecast existing non-returning missiles, committed casts and the new shot.
-function dodgeEscapeClear(origin,spell,destination,reaction){
+function dodgeEscapeClear(origin,spell,destination,reaction,aimPoint=player){
  const incoming=[];
  for(const shot of shots){
   if(!shot.alive||!shot.directed)continue;
@@ -541,24 +541,24 @@ function dodgeEscapeClear(origin,spell,destination,reaction){
   const spec=e.pending.spell;if(spec.returning||spec.split)return false;
   incoming.push({x:e.x,y:e.y,vx:Math.cos(e.pending.angle)*spec.speed,vy:Math.sin(e.pending.angle)*spec.speed,r:spec.radius,start:e.charge,end:e.charge+spec.range/spec.speed});
  }
- const dx=player.x-origin.x,dy=player.y-origin.y,d=Math.hypot(dx,dy)||1;
+ const dx=aimPoint.x-origin.x,dy=aimPoint.y-origin.y,d=Math.hypot(dx,dy)||1;
  incoming.push({x:origin.x,y:origin.y,vx:dx/d*spell.speed,vy:dy/d*spell.speed,r:spell.radius,start:spell.cast,end:spell.cast+spell.range/spell.speed});
  return forecastDodgePath(incoming,destination,reaction);
 }
 // Sample two perpendicular escapes and forecast existing directed missiles.
-function canEvadeDodgeCast(origin,spell,witness=null){
+function canEvadeDodgeCast(origin,spell,witness=null,aimPoint=player){
  const reaction=dodgeReactionDelay();if(!Number.isFinite(reaction))return false;
- const dx=player.x-origin.x,dy=player.y-origin.y,d=Math.hypot(dx,dy);
+ const dx=aimPoint.x-origin.x,dy=aimPoint.y-origin.y,d=Math.hypot(dx,dy),playerDistance=dist(player,origin);
  if(d<1)return false;
  // A straight projectile must be able to reach the player's current hitbox.
  // The split shot can threaten beyond its main missile's straight path.
- if(!spell.split&&d>spell.range+spell.radius+player.hitRadius)return false;
+ if(!spell.split&&playerDistance>spell.range+spell.radius+player.hitRadius)return false;
  const clearance=spell.radius+player.hitRadius+8;
- const available=spell.cast+Math.max(0,d-clearance)/spell.speed-reaction;
+ const available=spell.cast+Math.max(0,playerDistance-clearance)/spell.speed-reaction;
  if(available<=0||player.speed*available<clearance)return false;
  for(const side of [-1,1]){
   const start=dodgeReactionPath(reaction).end,destination={x:start.x-side*dy/d*clearance,y:start.y+side*dx/d*clearance};
-  if(world.pointWalkable(destination,player.r)&&world.segmentClear(start,destination,player.r)&&dodgeEscapeClear(origin,spell,destination,reaction)){if(witness)witness.destination=destination;return true;}
+  if(world.pointWalkable(destination,player.r)&&world.segmentClear(start,destination,player.r)&&dodgeEscapeClear(origin,spell,destination,reaction,aimPoint)){if(witness)witness.destination=destination;return true;}
  }
  return false;
 }
@@ -626,9 +626,13 @@ function updateDodgeVisitor(e,dt){
   const dx=goal.x-e.x,dy=goal.y-e.y,d=Math.hypot(dx,dy),step=Math.min(d,e.speed*dt);
   if(d>0){const next=world.clip(e,{x:e.x+dx/d*step,y:e.y+dy/d*step},e.r);e.x=next.x;e.y=next.y;}
   if(d<=step+.01){if(e.phase==="enter"){
-  const offset=e.spell.split?(random()<.5?-.32:.32):0,angle=Math.atan2(player.y-e.y,player.x-e.x)+offset,splitDistance=e.spell.split?dist(e,player)*Math.cos(offset):undefined;
+  // Some straight shots lead only the player's existing route through the
+  // windup. This is a seeded training policy, not hidden knowledge of inputs.
+  const canLead=!e.spell.split&&!e.spell.returning&&!!player.target;
+  const aimPoint=canLead&&random()<.25?dodgeReactionPath(e.spell.cast).end:player;
+  const offset=e.spell.split?(random()<.5?-.32:.32):0,angle=Math.atan2(aimPoint.y-e.y,aimPoint.x-e.x)+offset,splitDistance=e.spell.split?dist(e,player)*Math.cos(offset):undefined;
   const isolated=!e.spell.split||(!shots.some(s=>s.alive&&s.directed)&&!hazards.some(h=>h.directed)&&!foes.some(other=>other!==e&&other.alive&&other.dodgeVisitor&&(other.phase==="enter"||other.phase==="cast")));
-  const safe=isolated&&regularAllowed(e.spell.name)&&canEvadeDodgeCast(e,e.spell)&&(!e.spell.split||canEvadeVelkoz(e,angle,splitDistance,e.spell));
+  const safe=isolated&&regularAllowed(e.spell.name)&&canEvadeDodgeCast(e,e.spell,null,aimPoint)&&(!e.spell.split||canEvadeVelkoz(e,angle,splitDistance,e.spell));
   if(!safe)e.phase="exit";else{
    e.pending={angle,fan:false,spell:e.spell,splitDistance,threat:!e.spell.split};e.charge=e.spell.cast;e.phase="cast";recordRegular(e.spell.name);
    // One seeded opportunity per Ezreal cast. Each candidate must pass its
