@@ -962,6 +962,8 @@ for(const h of hazards){
    h.casting=true;h.angle=Math.atan2(player.y-h.y,player.x-h.x);h.ttl=CASSIO_R.cast;h.threat=true;
    dodgeDirector.attempted++;dodgeDirector.cassio++;cue("ready");
   }else if(h.casting&&h.ttl<=0){
+   // This is the released spell effect, not a pre-cast targeting guide.
+   fx.push({x:h.x,y:h.y,vx:0,vy:0,angle:h.angle,r:CASSIO_R.range,ttl:.24,max:.24,cassio:true});
    if(cassioConeContains(h,effectPlayer)){
     if(facingCassio(h,effectPlayer,player.facing))dodgeDirector.cassFails++;else dodgeDirector.cassTurns++;
     if(player.invuln>0){recordDodgeOutcome(h,"blocked");stats.blocked++;}else{recordDodgeOutcome(h,"hit");takeHit(physicalDamage(CASSIO_R.raw,30));}
@@ -1334,7 +1336,11 @@ for(const s of shots){
  }
 }
 }
-for(const f of fx){ctx.globalAlpha=clamp(f.ttl/f.max,0,1);if(f.beam){ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(f.endX,f.endY);ctx.strokeStyle=f.color;ctx.lineWidth=XERATH_Q.radius*2;ctx.lineCap="butt";ctx.stroke();}else if(f.text){ctx.font="bold 15px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y);}else circle(f.x,f.y,f.r,f.color);}ctx.globalAlpha=1;
+for(const f of fx){ctx.globalAlpha=clamp(f.ttl/f.max,0,1);if(f.cassio){
+ ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);const glow=ctx.createRadialGradient(0,0,0,0,0,f.r);
+ glow.addColorStop(0,"#e8ffd9bb");glow.addColorStop(.35,"#9ff9a777");glow.addColorStop(1,"#45d99100");
+ ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,f.r,-CASSIO_R.halfAngle,CASSIO_R.halfAngle);ctx.closePath();ctx.fillStyle=glow;ctx.fill();ctx.restore();
+}else if(f.beam){ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(f.endX,f.endY);ctx.strokeStyle=f.color;ctx.lineWidth=XERATH_Q.radius*2;ctx.lineCap="butt";ctx.stroke();}else if(f.text){ctx.font="bold 15px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y);}else circle(f.x,f.y,f.r,f.color);}ctx.globalAlpha=1;
 if(state==="playing"&&(referenceSpell()||mode==="dodge"||mode==="lastHit"||mode==="lane"||mode==="skillshot"||mode==="bait")){ctx.font="700 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#b7d9d9aa";ctx.fillText(referenceSpell()?`${referenceSpell().name} · MOVE OR FLASH · ${Math.max(0,60-Math.floor(time))}s`:mode==="lane"?"FARM, EVADE AND TRADE · "+Math.max(0,60-Math.floor(time))+"s":mode==="bait"?baitLabel():mode==="skillshot"?"AIM WITH THE CURSOR · Q TO FIRE · "+Math.max(0,45-Math.floor(time))+"s":mode==="lastHit"?`${autoDamage()} AUTO DAMAGE · WAVE `+waves+(ahriCS()?` / 20 · GOLD ${stats.gold} · GOLD MISSED ${stats.missedGold}`:" / 5"):"SURVIVE",W/2,90);}
 }
 function loop(ts){const dt=last?Math.min((ts-last)/1000,.25):0;last=ts;if(state==="playing"){accumulator+=dt;while(accumulator>=STEP&&state==="playing"){update(STEP);accumulator-=STEP;}}else accumulator=0;render();requestAnimationFrame(loop);}

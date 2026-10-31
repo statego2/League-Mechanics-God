@@ -1977,3 +1977,10 @@ test('Cassiopeia uses a bounded sprite with a safe missing-image fallback',()=>{
  art.naturalWidth=0;assert.doesNotThrow(()=>g.drawChampion(600,300,0,false,false,1,0,'cassio'));
  const missing=boot('ahri',{missingNodes:['serpentArt']});missing.g.reset('dodge');assert.doesNotThrow(()=>missing.g.drawChampion(600,300,0,false,false,1,0,'cassio'));
 });
+
+
+test('Cassiopeia release shows its effect only at impact, not as a targeting guide',()=>{
+ const {g,arcs}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const h={x:g.player.x-200,y:g.player.y,angle:0,cassio:true,casting:true,ttl:.05,directed:true,spellName:'CASSIOPEIA R'};g.hazards.push(h);
+ g.render();assert.ok(!arcs.some(a=>a.r===425));g.update(.06);arcs.length=0;g.render();assert.ok(arcs.some(a=>a.r===425));
+});
