@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v39":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v13":mode==="dodge"?(ahriBase()?".director_v40":".no_line_"+attackPreset)+".time_"+dodgeDuration:attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -578,7 +578,7 @@ function canEvadeVelkoz(origin,angle,splitDistance,spell,witness=null){
  }
  return false;
 }
-function spawnDodgeVisitor(forcedSpell=null){
+function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
  const active=foes.filter(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit"&&e.phase!=="orbFlight"&&e.phase!=="hookFlight").length+shots.filter(s=>s.alive&&s.directed).length+hazards.filter(h=>h.directed).length;
  if(active>=DODGE_DIRECTOR[difficulty].cap||hazards.some(h=>h.directed)||shots.some(s=>s.alive&&s.velkoz)||foes.some(e=>e.alive&&e.dodgeVisitor&&e.spell.split&&(e.phase==="enter"||e.phase==="cast")))return false;
  let spell=forcedSpell;
@@ -597,13 +597,18 @@ function spawnDodgeVisitor(forcedSpell=null){
   const angle=rand(0,TAU),distance=rand(340,spell.returning?520:470),p={x:player.x+Math.cos(angle)*distance,y:player.y+Math.sin(angle)*distance};
   // A follow-up enters from farther away so the first cast has a readable
   // response window before the next caster commits its own attack.
-  const entryDistance=forcedSpell?110:65,start={x:p.x+Math.cos(angle)*entryDistance,y:p.y+Math.sin(angle)*entryDistance};
+  const entryDistance=forcedSpell?followEntry:65,start={x:p.x+Math.cos(angle)*entryDistance,y:p.y+Math.sin(angle)*entryDistance};
   // Keep the entire caster silhouette on screen, including its raised sprite.
   const visible=q=>q.x>=60&&q.x<=W-60&&q.y>=145&&q.y<=H-30;
-  if(visible(p)&&visible(start)&&world.pointWalkable(p,20)&&world.pointWalkable(start,20)&&world.segmentClear(start,p,20)&&canEvadeDodgeCast(p,spell)){origin=p;entry=start;break;}
+  // Paired Ezreal sources must be separated at spawn and aim lock.
+  const crowded=forcedSpell===REFERENCE_SPELLS.ezrealDodge&&foes.some(other=>other.alive&&other.dodgeVisitor&&other.spell===spell&&other.phase==="enter"&&(dist(start,other.entry)<100||dist(p,other.origin)<100));
+  if(!crowded&&visible(p)&&visible(start)&&world.pointWalkable(p,20)&&world.pointWalkable(start,20)&&world.segmentClear(start,p,20)&&canEvadeDodgeCast(p,spell)){origin=p;entry=start;break;}
  }
  if(!origin)return false;
  const e=enemy(entry.x,entry.y);e.dodgeVisitor=true;e.followUp=!!forcedSpell;e.spell=spell;e.phase="enter";e.origin=origin;e.entry=entry;e.speed=120;e.hp=e.maxHp=160;e.shoot=999;foes.push(e);
+ // Two distinct visitors enter visibly together. The later aim lock rechecks
+ // one shared escape against the first caster before committing its shot.
+ if(!forcedSpell&&spell===REFERENCE_SPELLS.ezrealDodge&&time>=45&&difficulty!=="easy"&&random()<(difficulty==="hard"?.18:.12))spawnDodgeVisitor(spell,65);
  return true;
 }
 function updateDodgeVisitor(e,dt){
@@ -628,7 +633,7 @@ function updateDodgeVisitor(e,dt){
    e.pending={angle,fan:false,spell:e.spell,splitDistance,threat:!e.spell.split};e.charge=e.spell.cast;e.phase="cast";recordRegular(e.spell.name);
    // One seeded opportunity per Ezreal cast. Each candidate must pass its
    // own shared-path forecast and the normal active-threat limit.
-   if(e.spell===REFERENCE_SPELLS.ezrealDodge&&time>=45&&difficulty!=="easy"){
+   if(e.spell===REFERENCE_SPELLS.ezrealDodge&&!e.followUp&&time>=45&&difficulty!=="easy"){
     const roll=random(),wChance=difficulty==="hard"?.2:.12,followChance=difficulty==="hard"?.22:.12;
     if(roll<wChance)spawnXerathW();
     else if(roll<wChance+followChance&&!shots.some(s=>s.alive&&s.directed)&&!foes.some(other=>other!==e&&other.alive&&other.dodgeVisitor&&(other.phase==="enter"||other.phase==="cast")))spawnDodgeVisitor(REFERENCE_SPELLS.luxDodge);

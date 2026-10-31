@@ -856,7 +856,7 @@ test('a seeded Lux follow-up permits ordinary movement to avoid both casts',()=>
   g.reset('dodge');g.setTime(50);g.dodgeDirector.next=999;g.player.hp=g.player.maxHp=100000;
   const spell=g.REFERENCE_SPELLS.ezrealDodge,e=g.enemy(130,g.player.y),first={};assert.ok(g.canEvadeDodgeCast(e,spell,first));
   Object.assign(e,{dodgeVisitor:true,phase:'enter',spell,origin:{x:e.x,y:e.y},entry:{x:80,y:e.y},speed:120});g.setFoes([e]);g.update(1/120);
-  const follow=g.foes.find(x=>x.followUp);if(!follow)continue;checked=true;
+  const follow=g.foes.find(x=>x.followUp&&x.spell===g.REFERENCE_SPELLS.luxDodge);if(!follow)continue;checked=true;
   assert.equal(follow.spell,g.REFERENCE_SPELLS.luxDodge);advance(g,.2-1/120);g.moveTo(first.destination.x,first.destination.y);
   for(let i=0;i<180&&follow.phase==='enter';i++)g.update(1/120);
   assert.equal(follow.phase,'cast');assert.equal(g.stats.hits,0);
@@ -871,7 +871,7 @@ test('Lux follow-ups occur in natural Expert sessions but not Foundation',()=>{
   for(let seedOffset=0;seedOffset<5&&!found;seedOffset++){
    const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});node('dodgeLength').listeners.change({target:{value:'180'}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
    g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
-   while(g.time<179&&!found){g.update(1/120);found=g.foes.some(e=>e.alive&&e.followUp&&e.phase==='cast');}
+   while(g.time<179&&!found){g.update(1/120);found=g.foes.some(e=>e.alive&&e.followUp&&e.phase==='cast'&&e.spell===g.REFERENCE_SPELLS.luxDodge);}
   }
   assert.equal(found,expected,difficulty);
  }
@@ -1517,4 +1517,35 @@ test('Orianna Q arrival hits a player who leaves only after arrival',()=>{
  const q={directed:true,spellName:'ORIANNA Q',phaseResolved:false,threat:false};
  g.hazards.push({x:499.9,y:300,source:{x:400,y:300},destination:{x:500,y:300},travelDuration:1,ttl:1.001,max:2,orianna:true,casting:false,r:207.5,directed:true,q});
  g.update(.1);assert.equal(g.stats.hits,1);assert.equal(g.dodgeDirector.outcomes['ORIANNA Q'].hit,1);
+});
+
+test('a seeded double Ezreal encounter admits a shared walking escape',()=>{
+ let checked=0;
+ for(let seedOffset=0;seedOffset<60;seedOffset++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
+  g.reset('dodge');g.setTime(50);g.dodgeDirector.next=999;const spell=g.REFERENCE_SPELLS.ezrealDodge;
+  if(!g.spawnDodgeVisitor())continue;
+  const follow=g.foes.find(x=>x.followUp&&x.spell===spell);if(!follow)continue;
+  assert.ok(Math.hypot(follow.entry.x-follow.origin.x,follow.entry.y-follow.origin.y)>60);
+  const first=g.foes.find(x=>x!==follow&&x.spell===spell);assert.ok(first);
+  assert.ok(Math.hypot(follow.entry.x-first.entry.x,follow.entry.y-first.entry.y)>=100);
+  assert.ok(Math.hypot(follow.origin.x-first.origin.x,follow.origin.y-first.origin.y)>=100);
+  for(let i=0;i<120&&follow.phase==='enter';i++)g.update(1/120);
+  if(follow.phase!=='cast')continue;
+  const witness={};if(!g.canEvadeDodgeCast(follow,spell,witness))continue;
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.5);
+  assert.equal(g.stats.hits,0,`seed ${seedOffset}`);assert.equal(g.dodgeDirector.ezreal,2);checked++;
+ }
+ assert.ok(checked>=2,`only ${checked} safe double Ezreal witnesses`);
+});
+test('double Ezreal projectiles occur naturally on Standard and Expert but not Foundation',t=>{
+ for(const [difficulty,expected] of [['easy',false],['normal',true],['hard',true]]){
+  let found=false;
+  for(let seedOffset=0;seedOffset<5&&!found;seedOffset++){
+   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});node('dodgeLength').listeners.change({target:{value:'180'}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
+   g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
+   while(g.time<179&&!found){g.update(1/120);found=g.shots.filter(s=>s.alive&&s.spellName==='EZREAL Q').length>=2;}
+  }
+  assert.equal(found,expected,difficulty);
+ }
 });
