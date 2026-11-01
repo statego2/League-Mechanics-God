@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Expert Ahri orb with different straight shots (2026-11-01)
+
+- Expert can now combine an existing enemy Ahri Q orb with Lux Q or Blitz Q, in addition to Ezreal Q. The shared forecast continues to check the orb's outgoing and returning legs, caster/anchor stability and the new projectile. Standard retains the previous Ezreal-only policy. Entering follow-ups use the existing short multi-phase entry and must pass both spawn and aim-lock checks.
+- Added executable witness cases for both spells against outbound and returning orb phases, plus a seeded integration test that separately observes Lux and Blitz missiles naturally overlapping the orb. Full suite 368/368 passed, and the stronger test for each distinct overlap passed separately. This increases variety rather than guaranteeing five simultaneous missiles. Browser smoke: Expert launch and right-click movement; sustained human balance testing remains needed. Record namespace is director_v76.
+
 ## Expert escape forecast reuse (2026-11-01)
 
 - Each straight-shot safety decision now builds its incoming missile phases once and reuses the existing reaction path across candidate destinations; Vel’Koz's isolated split forecast likewise reuses the reaction path. The data is scoped to the synchronous decision, so later changes still receive a fresh forecast. Candidate ordering and hit geometry remain unchanged; record namespace remains director_v75.

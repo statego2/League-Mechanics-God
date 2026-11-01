@@ -1124,6 +1124,36 @@ test('Ezreal walking witnesses clear an existing Ahri orb and its return',()=>{
  }
  assert.ok(counts.out>0&&counts.return>0,JSON.stringify(counts));
 });
+test('Expert Lux and Blitz witnesses clear both phases of an existing Ahri orb',()=>{
+ const counts={};
+ for(const key of ['luxDodge','blitzDodge'])for(const phase of ['out','return']){
+  let accepted=0;
+  for(const side of [-1,1])for(let i=0;i<16;i++){
+   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.cassAt=g.dodgeDirector.rareAt=g.dodgeDirector.malAt=Infinity;
+   const p=g.player,y=p.y+side*70,caster=g.enemy(300,y),s=g.fire(phase==='out'?350:850,y,phase==='out'?775:-700,0,'enemyOrb',35,50,phase==='out'?.4:2);
+   Object.assign(caster,{dodgeVisitor:true,phase:'orbFlight',spell:g.REFERENCE_SPELLS.ahriDodge,charm:0,orbShot:s,entry:{x:300,y},speed:120,hp:10000,maxHp:10000});
+   Object.assign(s,{directed:true,spellName:'AHRI Q',phase,phaseHit:false,anchor:{x:300,y},casterId:caster.id});g.setFoes([caster]);
+   const a=i*Math.PI/8,origin={x:p.x+Math.cos(a)*450,y:p.y+Math.sin(a)*450},spell=g.REFERENCE_SPELLS[key],witness={};
+   if(!g.canEvadeDodgeCast(origin,spell,witness))continue;
+   const enemy=g.enemy(origin.x,origin.y);Object.assign(enemy,{dodgeVisitor:true,spell,phase:'cast',charge:spell.cast,pending:{angle:Math.atan2(p.y-origin.y,p.x-origin.x),spell,threat:true},entry:{...origin}});g.setFoes([caster,enemy]);
+   advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,2);
+   assert.equal(g.stats.hits,0,`${key} ${phase} ${side} ${i}`);accepted++;
+  }
+  counts[`${key}-${phase}`]=accepted;assert.ok(accepted>0,JSON.stringify(counts));
+ }
+});
+test('Expert naturally fires Lux and Blitz while an Ahri orb is active',()=>{
+ for(const name of ['LUX Q','BLITZ Q']){
+  let found=false;
+  for(let seed=1;seed<=8&&!found;seed++){
+   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed*1234567);g.player.hp=g.player.maxHp=1e6;
+   for(let i=0;i<120*180&&!found;i++){
+    g.update(1/120);found=g.shots.some(s=>s.alive&&s.kind==='enemyOrb')&&g.shots.some(s=>s.alive&&s.spellName===name);
+   }
+  }
+  assert.ok(found,`no Ahri + ${name} projectile overlap found`);
+ }
+});
 test('Ahri orb and Ezreal shared escapes survive existing movement and W decay',()=>{
  const counts={out:0,return:0,boosted:0};
  for(const phase of ['out','return'])for(const side of [-1,1])for(const boosted of [false,true])for(let i=0;i<16;i++){
@@ -1148,14 +1178,14 @@ test('Expert naturally schedules Ezreal pressure while an Ahri orb is active',()
  }
  assert.ok(found,'no natural Ahri orb + Ezreal overlap');
 });
-test('an Ezreal joining an active Ahri orb still enters visibly before casting',()=>{
+test('a straight-shot visitor joining an Ahri orb still enters visibly before casting',()=>{
  let spawned=0;
  for(let seed=1;seed<=40;seed++){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(10);g.setRng(seed*2654435761>>>0);
   const p=g.player,y=p.y+150,caster=g.enemy(300,y),orb=g.fire(350,y,775,0,'enemyOrb',35,50,.4);
   Object.assign(caster,{dodgeVisitor:true,spell:g.REFERENCE_SPELLS.ahriDodge,phase:'orbFlight',charm:0,orbShot:orb,entry:{x:300,y}});Object.assign(orb,{directed:true,spellName:'AHRI Q',phase:'out',phaseHit:false,anchor:{x:300,y},casterId:caster.id});g.setFoes([caster]);
   if(!g.spawnDodgeVisitor())continue;const visitor=g.foes.find(e=>e!==caster);if(!visitor)continue;
-  assert.equal(visitor.spell,g.REFERENCE_SPELLS.ezrealDodge);assert.equal(visitor.phase,'enter');
+  assert.ok([g.REFERENCE_SPELLS.ezrealDodge,g.REFERENCE_SPELLS.luxDodge,g.REFERENCE_SPELLS.blitzDodge].includes(visitor.spell));assert.equal(visitor.phase,'enter');
   assert.ok(Math.abs(Math.hypot(visitor.entry.x-visitor.origin.x,visitor.entry.y-visitor.origin.y)-35)<1e-6);spawned++;
  }
  assert.ok(spawned>0,'no overlap entry sampled');
@@ -1900,7 +1930,7 @@ test('Dodge counts Charm hits against a visitor once per released E',()=>{
 });
 test('skill-scored Dodge records stay separate while retaining the survival record',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
- const oldScore='lmg.best.v1.dodge.normal.director_v75.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
+ const oldScore='lmg.best.v1.dodge.normal.director_v76.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
  g.reset('dodge');g.setTime(10);g.stats.dodgeQHits=1;g.stats.dodgeEHits=1;g.end(false);
  assert.match(node('menuDescription').textContent,/150 points/);assert.match(node('menuDescription').textContent,/Best survival: 120.0s/);
  assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v3'),'150');assert.equal(values.get(survival),'120');
