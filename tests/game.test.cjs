@@ -1007,11 +1007,12 @@ test('Lux follow-ups occur in natural Expert sessions but not Foundation',()=>{
  }
 });
 test('Xerath W rejects unsafe or unsupported overlaps and respects Foundation cap',()=>{
- for(const scenario of ['imminent','foundation','orb','split','multiple','pending']){
+ for(const scenario of ['imminent','foundation','orb','split','cap','unknownCast','charmedCast']){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:scenario==='foundation'?'easy':'hard'}});g.reset('dodge');g.dodgeDirector.next=999;
   const s=g.fire(scenario==='imminent'?g.player.x-70:10,g.player.y,1000,0,scenario==='orb'?'enemyOrb':'enemy',10,30,.6);Object.assign(s,{directed:true,spellName:scenario==='orb'?'AHRI Q':'EZREAL Q'});
-  if(scenario==='split')s.velkoz='main';if(scenario==='multiple'){const extra=g.fire(10,100,1000,0,'enemy',10,30,.6);extra.directed=true;extra.spellName='EZREAL Q';}
-  if(scenario==='pending'){const e=g.enemy(200,200);Object.assign(e,{dodgeVisitor:true,phase:'enter'});g.setFoes([e]);}
+  if(scenario==='split')s.velkoz='main';if(scenario==='cap')for(let i=0;i<4;i++){const extra=g.fire(10,100+i*30,1000,0,'enemy',10,30,.6);extra.directed=true;extra.spellName='EZREAL Q';}
+  if(scenario==='unknownCast'){const e=g.enemy(200,200);Object.assign(e,{dodgeVisitor:true,phase:'cast'});g.setFoes([e]);}
+  if(scenario==='charmedCast'){const e=g.enemy(200,200);Object.assign(e,{dodgeVisitor:true,phase:'cast',charm:1,charge:.25,pending:{spell:g.REFERENCE_SPELLS.ezrealDodge,angle:0}});g.setFoes([e]);}
   assert.equal(g.spawnXerathW(),false,scenario);assert.equal(g.hazards.length,0,scenario);
  }
 });
@@ -2043,7 +2044,7 @@ test('Dodge counts Charm hits against a visitor once per released E',()=>{
 });
 test('skill-scored Dodge records stay separate while retaining the survival record',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
- const oldScore='lmg.best.v1.dodge.normal.director_v79.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
+ const oldScore='lmg.best.v1.dodge.normal.director_v80.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
  g.reset('dodge');g.setTime(10);g.stats.dodgeQHits=1;g.stats.dodgeEHits=1;g.end(false);
  assert.match(node('menuDescription').textContent,/150 points/);assert.match(node('menuDescription').textContent,/Best survival: 120.0s/);
  assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v3'),'150');assert.equal(values.get(survival),'120');
@@ -2316,6 +2317,47 @@ test('Xerath W and Ezreal Q witnesses remain safe with existing movement and W',
   assert.equal(g.stats.hits,0,`angle ${i}`);accepted++;
  }
  assert.ok(accepted>=3,`only ${accepted} accepted combinations`);
+});
+test('Expert Xerath W can share one executable escape with multiple different missiles',()=>{
+ let checked=0;
+ for(let i=0;i<24;i++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.setRng((i*2654435761)>>>0);
+  const p=g.player;
+  for(const [x,y,vx,name] of [[p.x-300,p.y+120,500,'EZREAL Q'],[p.x+300,p.y-120,-500,'LUX Q']]){
+   const s=g.fire(x,y,vx,0,'enemy',20,20,2);Object.assign(s,{directed:true,spellName:name});
+  }
+  const witness={};if(!g.spawnXerathW(witness))continue;
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.4);assert.equal(g.stats.hits,0,`seed ${i}`);checked++;
+ }
+ assert.ok(checked>=3,`only ${checked} shared escapes`);
+});
+test('Expert visitor witnesses avoid an already-active Xerath W at impact',()=>{
+ let checked=0;
+ for(let i=0;i<24;i++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;
+  const p=g.player;g.hazards.push({x:p.x+90,y:p.y,r:137.5,ttl:.778,max:.778,xerath:true,directed:true,spellName:'XERATH W',threat:true});
+  const a=i*Math.PI/12,origin={x:p.x+Math.cos(a)*470,y:p.y+Math.sin(a)*470},spell=g.REFERENCE_SPELLS.ezrealDodge,witness={};
+  if(!g.canEvadeDodgeCast(origin,spell,witness))continue;
+  const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'cast',charge:spell.cast,entry:{...origin},pending:{angle:Math.atan2(p.y-origin.y,p.x-origin.x),spell,threat:true}});g.setFoes([e]);
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.2);assert.equal(g.stats.hits,0,`angle ${i}`);checked++;
+ }
+ assert.ok(checked>0,'no combined W and projectile response found');
+});
+test('Expert naturally combines Xerath W with multiple live straight missiles',()=>{
+ let found=false;
+ for(let seed=1;seed<=5&&!found;seed++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed*1234567);g.player.hp=g.player.maxHp=1e6;
+  for(let i=0;i<120*150&&!found;i++){
+   g.update(1/120);found=g.hazards.some(h=>h.xerath&&h.ttl>0)&&g.shots.filter(s=>s.alive&&s.directed&&['EZREAL Q','LUX Q','BLITZ Q'].includes(s.spellName)).length>=2;
+  }
+ }
+ assert.ok(found,'no Xerath W with two live missiles in seeded sessions');
+});
+test('queued Xerath follow-up expires without its missiles and resets cleanly',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.areaFollow=true;
+ g.pause();advance(g,1);assert.equal(g.dodgeDirector.areaFollow,true);g.pause();g.update(1/120);
+ assert.equal(g.dodgeDirector.areaFollow,false);assert.equal(g.hazards.length,0);
+ g.dodgeDirector.areaFollow=true;g.reset('dodge');assert.ok(!g.dodgeDirector.areaFollow);
 });
 
 test('Xerath W may use a safe shortened route near arena boundaries',()=>{

@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Expert Xerath W with multiple missiles (2026-11-01)
+
+- Expert Xerath W can overlap multiple committed Ezreal, Lux or Blitz shots when a shared walking route clears the shots and the area at impact. Entering visitors are allowed because they have not locked an aim; any subsequent cast must also forecast the active W or be cancelled. Existing area, split/return projectiles, unknown or charmed committed casters and cap violations still defer the W. Standard retains its one-Ezreal limit.
+- A seeded follow-up opportunity can schedule W after two straight missiles are released, subject to the same checks. Tests execute shared escapes, check new visitors against active W at impact, observe a natural W plus two live missiles and verify queued follow-ups clear on restart. Full suite passed 381/381; the additional charmed-caster and queue lifecycle checks passed separately. Browser smoke verified Expert launch and movement. Full human playtesting and five simultaneously eligible missiles remain open. Record namespace advances to director_v80.
+
 ## Follow-up during a committed Vel’Koz cast (2026-11-01)
 
 - Expert can introduce an independently positioned Ezreal, Lux or Blitz while Vel’Koz is already casting. The shared forecast models its remaining windup, angled main missile, split delay and both branches. Entering Vel’Koz still reserves its encounter until it commits; offscreen, invalid or otherwise unpredictable split geometry is rejected. Standard retains its earlier isolation policy. Record namespace is director_v79.

@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v79":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v80":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -417,15 +417,21 @@ function dodgeReactionDelay(){return player.dashing?Infinity:Math.max(.2,player.
 // Placement and visible warning timing are training policies; slow is omitted.
 const XERATH_W={radius:SIMULATION.toCanvas(275),center:SIMULATION.toCanvas(125),delay:.25+.528,raw:50};
 function spawnXerathW(witness=null){
- // Allow one committed or in-flight Ezreal Q when one escape clears both.
- // Other pending casters, split/return shots and other AoEs remain isolated.
+ // Expert can combine W with multiple committed straight shots when one
+ // walking response clears every missile and the area at impact.
+ // Split/return shots, entering casters and other AoEs remain isolated.
  if(!regularAllowed("XERATH W")||hazards.some(h=>h.directed))return false;
- const casters=foes.filter(e=>e.alive&&e.dodgeVisitor&&(e.phase==="enter"||e.phase==="cast"));
+ const visitors=foes.filter(e=>e.alive&&e.dodgeVisitor&&(e.phase==="enter"||e.phase==="cast"));
+ // Entering Expert visitors have not committed an aim yet; their later cast
+ // is independently checked against this area and can be cancelled.
+ const casters=difficulty==="hard"?visitors.filter(e=>e.phase==="cast"):visitors;
  const active=shots.filter(s=>s.alive&&s.directed);
- if(casters.length+active.length>1||(dodgeRecovery(time)&&(casters.length||active.length)))return false;
- if(casters.length&&(casters[0].phase!=="cast"||casters[0].pending?.spell!==REFERENCE_SPELLS.ezrealDodge))return false;
- if(active.length&&(active[0].kind!=="enemy"||active[0].spellName!=="EZREAL Q"||active[0].velkoz))return false;
- if((casters.length||active.length)&&DODGE_DIRECTOR[difficulty].cap<2)return false;
+ const count=visitors.length+active.length,limit=difficulty==="hard"?DODGE_DIRECTOR.hard.cap-1:1;
+ if(count>limit||(dodgeRecovery(time)&&count))return false;
+ const allowed=difficulty==="hard"?[REFERENCE_SPELLS.ezrealDodge,REFERENCE_SPELLS.luxDodge,REFERENCE_SPELLS.blitzDodge]:[REFERENCE_SPELLS.ezrealDodge];
+ if(casters.some(e=>e.phase!=="cast"||e.charm>0||!allowed.includes(e.pending?.spell)||!Number.isFinite(e.pending?.angle)||!Number.isFinite(e.charge)))return false;
+ if(active.some(s=>s.kind!=="enemy"||!allowed.some(spec=>spec.name===s.spellName)||s.velkoz||s.spawnOffset>0))return false;
+ if(count&&DODGE_DIRECTOR[difficulty].cap<2)return false;
  const reaction=dodgeReactionDelay();if(!Number.isFinite(reaction))return false;
  const angle=rand(0,TAU);
  for(let i=0;i<16;i++){
@@ -603,7 +609,7 @@ function dodgeReactionPath(reaction){
 }
 // Sample a response against moving projectiles, including existing movement
 // during the reaction period. This remains an approximate training forecast.
-function forecastDodgePath(incoming,destination,reaction,margin=0,approach=dodgeReactionPath(reaction)){
+function forecastDodgePath(incoming,destination,reaction,margin=0,approach=dodgeReactionPath(reaction),areas=[]){
  const start=approach.end,length=dist(start,destination);
  const position=t=>{
   if(t<=reaction)return approach.at(t);
@@ -619,6 +625,7 @@ function forecastDodgePath(incoming,destination,reaction,margin=0,approach=dodge
    t=next;
   }
  }
+ for(const area of areas)if(area.ttl>=0&&dist(position(area.ttl),area)<area.r+10)return false;
  return true;
 }
 // Forecast a stationary-anchor Ahri orb, including its future return. A
@@ -661,6 +668,7 @@ function forecastExistingSplit(shot,incoming){
 }
 // Forecast existing missiles, committed casts and the new shot.
 function dodgeIncoming(origin,spell,aimPoint=player){
+ if(hazards.some(h=>h.directed&&!(difficulty==="hard"&&h.xerath)))return null;
  const incoming=[];
  for(const shot of shots){
   if(!shot.alive||!shot.directed)continue;
@@ -703,7 +711,7 @@ function dodgeIncoming(origin,spell,aimPoint=player){
 }
 function dodgeEscapeClear(origin,spell,destination,reaction,aimPoint=player){
  const incoming=dodgeIncoming(origin,spell,aimPoint);
- return incoming!==null&&forecastDodgePath(incoming,destination,reaction);
+ return incoming!==null&&forecastDodgePath(incoming,destination,reaction,0,dodgeReactionPath(reaction),hazards.filter(h=>h.directed&&h.xerath));
 }
 // Sample perpendicular and oblique escapes against existing directed missiles.
 function canEvadeDodgeCast(origin,spell,witness=null,aimPoint=player){
@@ -716,7 +724,7 @@ function canEvadeDodgeCast(origin,spell,witness=null,aimPoint=player){
  const clearance=spell.radius+player.hitRadius+8;
  const available=spell.cast+Math.max(0,playerDistance-clearance)/spell.speed-reaction;
  if(available<=0||forecastTravel(reaction,reaction+available)<clearance)return false;
- const approach=dodgeReactionPath(reaction),start=approach.end,shotAngle=Math.atan2(dy,dx),incoming=dodgeIncoming(origin,spell,aimPoint);
+ const approach=dodgeReactionPath(reaction),start=approach.end,shotAngle=Math.atan2(dy,dx),incoming=dodgeIncoming(origin,spell,aimPoint),areas=hazards.filter(h=>h.directed&&h.xerath);
  if(incoming===null)return false;
  // Prioritize short perpendicular dodges, then test longer and oblique
  // responses; crossing shots can require continuing past the first sidestep.
@@ -725,7 +733,7 @@ function canEvadeDodgeCast(origin,spell,witness=null,aimPoint=player){
   const raw={x:start.x+Math.cos(angle)*clearance*scale,y:start.y+Math.sin(angle)*clearance*scale};
   const bounded={x:clamp(raw.x,world.bounds.left,world.bounds.right),y:clamp(raw.y,world.bounds.top,world.bounds.bottom)};
   const destination=world.clip(start,bounded,player.r);
-  if(world.pointWalkable(destination,player.r)&&world.segmentClear(start,destination,player.r)&&forecastDodgePath(incoming,destination,reaction,0,approach)){if(witness)witness.destination=destination;return true;}
+  if(world.pointWalkable(destination,player.r)&&world.segmentClear(start,destination,player.r)&&forecastDodgePath(incoming,destination,reaction,0,approach,areas)){if(witness)witness.destination=destination;return true;}
  }
  return false;
 }
@@ -767,7 +775,7 @@ function visitorPathsCrowded(start,finish,other){
 }
 function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
  const active=foes.filter(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit"&&e.phase!=="orbFlight"&&e.phase!=="hookFlight").length+shots.filter(s=>s.alive&&s.directed).length+hazards.filter(h=>h.directed).length;
- if(active>=DODGE_DIRECTOR[difficulty].cap||(active>0&&dodgeRecovery(time))||hazards.some(h=>h.directed)||foes.some(e=>e.alive&&e.dodgeVisitor&&e.spell.split&&(e.phase==="enter"||(e.phase==="cast"&&difficulty!=="hard"))))return false;
+ if(active>=DODGE_DIRECTOR[difficulty].cap||(active>0&&dodgeRecovery(time))||hazards.some(h=>h.directed&&!(difficulty==="hard"&&h.xerath))||foes.some(e=>e.alive&&e.dodgeVisitor&&e.spell.split&&(e.phase==="enter"||(e.phase==="cast"&&difficulty!=="hard"))))return false;
  let spell=forcedSpell;
  if(!spell){
   const fullRoster=difficulty==="hard"||time>=45,roll=random()*(fullRoster?100:71);
@@ -852,6 +860,7 @@ function updateDodgeVisitor(e,dt){
  }else if(e.phase==="cast"){
   e.charge-=dt;if(e.charge<=0){
    releaseEnemy(e,Math.max(0,dt+e.charge));e.phase=e.spell.returning?"orbFlight":e.spell.hook?"hookFlight":"exit";
+   if(difficulty==="hard"&&!e.spell.split&&!e.spell.returning&&shots.filter(s=>s.alive&&s.directed&&s.kind==="enemy"&&!s.velkoz).length>=2&&random()<.4)dodgeDirector.areaFollow=true;
    // Give Expert a visible, early follow-up opportunity while the split
    // missile is still travelling. Spawn and aim lock both verify a shared
    // walking escape; failure simply leaves the original shot isolated.
@@ -865,6 +874,10 @@ function updateDodgeVisitor(e,dt){
  }
 }
 function updateDodgeDirector(dt){
+ if(dodgeDirector.areaFollow){
+  dodgeDirector.areaFollow=false;
+  if(shots.filter(s=>s.alive&&s.directed&&s.kind==="enemy"&&!s.velkoz).length>=2)spawnXerathW();
+ }
  // The missile's spawn offset has been consumed by the preceding update;
  // forecasting it in the release frame would see an incomplete trajectory.
  if(dodgeDirector.splitFollow){
