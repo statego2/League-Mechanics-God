@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Expert Vel’Koz split with different straight shots (2026-11-01)
+
+- Expert now permits Lux Q and Blitz Q alongside an active Vel’Koz Q, using the same shared walking forecast for its main bolt, split delay and child missiles. Unsafe, offscreen or unpredictable split phases still defer; Standard and unsupported returning/splitting combinations remain unchanged. The short entry and aim-lock recheck apply. To make these combinations occur more often, a split release gets a seeded 65% opportunity to queue one of Ezreal, Lux or Blitz on the next update; the ordinary cap and forecasts still apply. Record namespace advances to director_v77.
+- Executed sampled escape witnesses against each of the three actual Vel’Koz phases for both new spells. A separate integration test observed both Vel’Koz + Lux and Vel’Koz + Blitz actual missiles overlap in seeded sessions, excluding split missiles that can no longer hit the player; this is not proof of five simultaneous missiles. Full suite passed 370/370 and the strengthened missile-eligibility test passed separately. Browser smoke verified Expert start and movement. Manual high-skill balance and visual assessment remain open.
+
 ## Expert Ahri orb with different straight shots (2026-11-01)
 
 - Expert can now combine an existing enemy Ahri Q orb with Lux Q or Blitz Q, in addition to Ezreal Q. The shared forecast continues to check the orb's outgoing and returning legs, caster/anchor stability and the new projectile. Standard retains the previous Ezreal-only policy. Entering follow-ups use the existing short multi-phase entry and must pass both spawn and aim-lock checks.

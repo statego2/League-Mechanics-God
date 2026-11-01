@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v76":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v77":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -668,7 +668,10 @@ function dodgeIncoming(origin,spell,aimPoint=player){
    const supported=spell===REFERENCE_SPELLS.ezrealDodge||(difficulty==="hard"&&(spell===REFERENCE_SPELLS.luxDodge||spell===REFERENCE_SPELLS.blitzDodge));
    if(!supported||!forecastExistingOrb(shot,incoming))return null;continue;
   }
-  if(shot.velkoz){if(difficulty!=="hard"||spell!==REFERENCE_SPELLS.ezrealDodge||!forecastExistingSplit(shot,incoming))return null;continue;}
+  if(shot.velkoz){
+   const supported=spell===REFERENCE_SPELLS.ezrealDodge||spell===REFERENCE_SPELLS.luxDodge||spell===REFERENCE_SPELLS.blitzDodge;
+   if(difficulty!=="hard"||!supported||!forecastExistingSplit(shot,incoming))return null;continue;
+  }
   incoming.push({x:shot.x,y:shot.y,vx:shot.vx,vy:shot.vy,r:shot.r,start:0,end:shot.ttl});
  }
  for(const e of foes){
@@ -758,7 +761,7 @@ function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
  }
  if(!regularAllowed(spell.name)){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
  if(shots.some(s=>s.alive&&s.directed&&s.kind==="enemyOrb")&&spell!==REFERENCE_SPELLS.ezrealDodge&&!(difficulty==="hard"&&(spell===REFERENCE_SPELLS.luxDodge||spell===REFERENCE_SPELLS.blitzDodge))){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
- if(shots.some(s=>s.alive&&s.velkoz)&&(difficulty!=="hard"||spell!==REFERENCE_SPELLS.ezrealDodge)){if(difficulty!=="hard"||forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
+ if(shots.some(s=>s.alive&&s.velkoz)&&(difficulty!=="hard"||![REFERENCE_SPELLS.ezrealDodge,REFERENCE_SPELLS.luxDodge,REFERENCE_SPELLS.blitzDodge].includes(spell))){if(difficulty!=="hard"||forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
  if(spell.split&&active>0){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
  // Concurrent visitors are independently chosen. Prefer a different straight
  // spell when another visitor or missile already uses the selected one.
@@ -767,8 +770,7 @@ function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
   // identical champions on screen look like a synchronized duplicate.
   const used=new Set([...foes.filter(e=>e.alive&&e.dodgeVisitor).map(e=>e.spell?.name),...shots.filter(s=>s.alive&&s.directed).map(s=>s.spellName)]);
   if(used.has(spell.name)){
-   const split=shots.some(s=>s.alive&&s.directed&&s.velkoz);
-   const choices=forcedSpell||split?[]:[REFERENCE_SPELLS.ezrealDodge,REFERENCE_SPELLS.luxDodge,REFERENCE_SPELLS.blitzDodge].filter(s=>!used.has(s.name));
+   const choices=forcedSpell?[]:[REFERENCE_SPELLS.ezrealDodge,REFERENCE_SPELLS.luxDodge,REFERENCE_SPELLS.blitzDodge].filter(s=>!used.has(s.name));
    if(choices.length)spell=choices[Math.floor(random()*choices.length)];
    else if(used.size<3)return false;
   }
@@ -837,7 +839,10 @@ function updateDodgeVisitor(e,dt){
    // Give Expert a visible, early follow-up opportunity while the split
    // missile is still travelling. Spawn and aim lock both verify a shared
    // walking escape; failure simply leaves the original shot isolated.
-   if(difficulty==="hard"&&e.spell.split&&random()<.4)dodgeDirector.splitFollow=true;
+   if(difficulty==="hard"&&e.spell.split&&random()<.65){
+    const followUps=[REFERENCE_SPELLS.ezrealDodge,REFERENCE_SPELLS.luxDodge,REFERENCE_SPELLS.blitzDodge];
+    dodgeDirector.splitFollow=followUps[Math.floor(random()*followUps.length)];
+   }
   }
  }else if(e.phase==="orbFlight"||e.phase==="hookFlight"){
   if(!e.orbShot||!e.orbShot.alive)e.phase="exit";
@@ -847,10 +852,10 @@ function updateDodgeDirector(dt){
  // The missile's spawn offset has been consumed by the preceding update;
  // forecasting it in the release frame would see an incomplete trajectory.
  if(dodgeDirector.splitFollow){
-  dodgeDirector.splitFollow=false;
+  const followUp=dodgeDirector.splitFollow;dodgeDirector.splitFollow=false;
   // A hit in the release step makes the split harmless to this player. Do
   // not turn a vanished or already-resolved combination into a fresh cast.
-  if(shots.some(s=>s.alive&&s.directed&&s.velkoz&&!s.ignorePlayer&&!(s.group&&s.group.hit)))spawnDodgeVisitor(REFERENCE_SPELLS.ezrealDodge,20);
+  if(shots.some(s=>s.alive&&s.directed&&s.velkoz&&!s.ignorePlayer&&!(s.group&&s.group.hit)))spawnDodgeVisitor(followUp===true?REFERENCE_SPELLS.ezrealDodge:followUp,20);
  }
  if(difficulty==="hard"&&time>=dodgeDirector.cassAt&&time>=dodgeDirector.rareGuardUntil){
   if(spawnCassioR()){hazards[hazards.length-1].directorScheduled=true;dodgeDirector.cassAt=time+(difficulty==="hard"?rand(32,45):rand(150,240));dodgeDirector.rareGuardUntil=time+(difficulty==="hard"?8:35);return;}
