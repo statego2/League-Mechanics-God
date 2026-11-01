@@ -101,6 +101,17 @@ test('multi-shot forecast can use and execute a longer walking response',()=>{
  }
  assert.ok(found,'no safe response requiring a longer movement was found');
 });
+test('candidate escape remains valid when checked independently against live threats',()=>{
+ let checked=0;
+ for(let i=0;i<24;i++){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+  const angle=i*Math.PI/12,p=g.player,origin={x:p.x+Math.cos(angle)*470,y:p.y+Math.sin(angle)*470},spell=g.REFERENCE_SPELLS.ezrealDodge;
+  const shot=g.fire(p.x-300,p.y+140,500,0,'enemy',10,20,2);Object.assign(shot,{directed:true,spellName:'LUX Q'});
+  const witness={};if(!g.canEvadeDodgeCast(origin,spell,witness))continue;
+  assert.ok(g.dodgeEscapeClear(origin,spell,witness.destination,.2));checked++;
+ }
+ assert.ok(checked>=8,`only ${checked} candidates checked`);
+});
 test('Ahri orb uses a blue effect extending to its actual radius for both teams',()=>{
  for(const kind of ['orb','enemyOrb']){
   const {g,arcs,strokes}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;

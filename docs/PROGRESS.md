@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Expert escape forecast reuse (2026-11-01)
+
+- Each straight-shot safety decision now builds its incoming missile phases once and reuses the existing reaction path across candidate destinations; Vel’Koz's isolated split forecast likewise reuses the reaction path. The data is scoped to the synchronous decision, so later changes still receive a fresh forecast. Candidate ordering and hit geometry remain unchanged; record namespace remains director_v75.
+- A seeded comparison before and after retained 62 casts in the first minute, peak five combined threats and peak three actual missiles. One local test run took approximately 2.65 seconds before and 2.56 seconds after; this small sample does not establish a robust browser performance improvement. A regression test independently rechecks accepted witnesses against the live threats; existing tests execute witnesses against actual collisions. Full suite passed 366/366; browser smoke verified Expert launch and right-click movement.
+
 ## Multi-shot walking responses (2026-11-01)
 
 - Measured the earlier five-threat scenario more precisely: the sample reached five visitors/projectiles but only three actual missiles in flight at once. Raising the cap to seven or doubling spawn attempts did not improve that number in the sample, so neither experimental change was retained.

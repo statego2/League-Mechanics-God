@@ -603,8 +603,8 @@ function dodgeReactionPath(reaction){
 }
 // Sample a response against moving projectiles, including existing movement
 // during the reaction period. This remains an approximate training forecast.
-function forecastDodgePath(incoming,destination,reaction,margin=0){
- const approach=dodgeReactionPath(reaction),start=approach.end,length=dist(start,destination);
+function forecastDodgePath(incoming,destination,reaction,margin=0,approach=dodgeReactionPath(reaction)){
+ const start=approach.end,length=dist(start,destination);
  const position=t=>{
   if(t<=reaction)return approach.at(t);
   const f=length>0?clamp(forecastTravel(reaction,t)/length,0,1):1;
@@ -660,17 +660,17 @@ function forecastExistingSplit(shot,incoming){
  return true;
 }
 // Forecast existing missiles, committed casts and the new shot.
-function dodgeEscapeClear(origin,spell,destination,reaction,aimPoint=player){
+function dodgeIncoming(origin,spell,aimPoint=player){
  const incoming=[];
  for(const shot of shots){
   if(!shot.alive||!shot.directed)continue;
-  if(shot.kind==="enemyOrb"){if(spell!==REFERENCE_SPELLS.ezrealDodge||!forecastExistingOrb(shot,incoming))return false;continue;}
-  if(shot.velkoz){if(difficulty!=="hard"||spell!==REFERENCE_SPELLS.ezrealDodge||!forecastExistingSplit(shot,incoming))return false;continue;}
+  if(shot.kind==="enemyOrb"){if(spell!==REFERENCE_SPELLS.ezrealDodge||!forecastExistingOrb(shot,incoming))return null;continue;}
+  if(shot.velkoz){if(difficulty!=="hard"||spell!==REFERENCE_SPELLS.ezrealDodge||!forecastExistingSplit(shot,incoming))return null;continue;}
   incoming.push({x:shot.x,y:shot.y,vx:shot.vx,vy:shot.vy,r:shot.r,start:0,end:shot.ttl});
  }
  for(const e of foes){
   if(!e.alive||!e.dodgeVisitor||e.phase!=="cast"||!e.pending)continue;
-  const spec=e.pending.spell;if(spec.returning||spec.split)return false;
+  const spec=e.pending.spell;if(spec.returning||spec.split)return null;
   incoming.push({x:e.x,y:e.y,vx:Math.cos(e.pending.angle)*spec.speed,vy:Math.sin(e.pending.angle)*spec.speed,r:spec.radius,start:e.charge,end:e.charge+spec.range/spec.speed});
  }
  const dx=aimPoint.x-origin.x,dy=aimPoint.y-origin.y,d=Math.hypot(dx,dy)||1;
@@ -682,7 +682,11 @@ function dodgeEscapeClear(origin,spell,destination,reaction,aimPoint=player){
   const turn=spell.cast+spell.range/spell.speed,returnSpeed=700;
   incoming.push({x:origin.x+dx/d*spell.range,y:origin.y+dy/d*spell.range,vx:-dx/d*returnSpeed,vy:-dy/d*returnSpeed,r:spell.radius,start:turn,end:turn+spell.range/returnSpeed});
  }
- return forecastDodgePath(incoming,destination,reaction);
+ return incoming;
+}
+function dodgeEscapeClear(origin,spell,destination,reaction,aimPoint=player){
+ const incoming=dodgeIncoming(origin,spell,aimPoint);
+ return incoming!==null&&forecastDodgePath(incoming,destination,reaction);
 }
 // Sample perpendicular and oblique escapes against existing directed missiles.
 function canEvadeDodgeCast(origin,spell,witness=null,aimPoint=player){
@@ -695,7 +699,8 @@ function canEvadeDodgeCast(origin,spell,witness=null,aimPoint=player){
  const clearance=spell.radius+player.hitRadius+8;
  const available=spell.cast+Math.max(0,playerDistance-clearance)/spell.speed-reaction;
  if(available<=0||forecastTravel(reaction,reaction+available)<clearance)return false;
- const start=dodgeReactionPath(reaction).end,shotAngle=Math.atan2(dy,dx);
+ const approach=dodgeReactionPath(reaction),start=approach.end,shotAngle=Math.atan2(dy,dx),incoming=dodgeIncoming(origin,spell,aimPoint);
+ if(incoming===null)return false;
  // Prioritize short perpendicular dodges, then test longer and oblique
  // responses; crossing shots can require continuing past the first sidestep.
  for(const scale of [1,1.5,2])for(const turn of [0,1,-1,2,-2,3,-3])for(const side of [-1,1]){
@@ -703,7 +708,7 @@ function canEvadeDodgeCast(origin,spell,witness=null,aimPoint=player){
   const raw={x:start.x+Math.cos(angle)*clearance*scale,y:start.y+Math.sin(angle)*clearance*scale};
   const bounded={x:clamp(raw.x,world.bounds.left,world.bounds.right),y:clamp(raw.y,world.bounds.top,world.bounds.bottom)};
   const destination=world.clip(start,bounded,player.r);
-  if(world.pointWalkable(destination,player.r)&&world.segmentClear(start,destination,player.r)&&dodgeEscapeClear(origin,spell,destination,reaction,aimPoint)){if(witness)witness.destination=destination;return true;}
+  if(world.pointWalkable(destination,player.r)&&world.segmentClear(start,destination,player.r)&&forecastDodgePath(incoming,destination,reaction,0,approach)){if(witness)witness.destination=destination;return true;}
  }
  return false;
 }
@@ -716,10 +721,11 @@ function canEvadeVelkoz(origin,angle,splitDistance,spell,witness=null){
  const splitStart=spell.cast+travel+.25;
  const phases=[{x:origin.x,y:origin.y,vx:ux*spell.speed,vy:uy*spell.speed,r:spell.radius,start:spell.cast,end:spell.cast+travel}];
  for(const side of [-1,1])phases.push({x:splitX,y:splitY,vx:-uy*side*1050,vy:ux*side*1050,r:27.5,start:splitStart,end:splitStart+550/1050});
+ const approach=dodgeReactionPath(reaction),start=approach.end;
  for(let i=0;i<24;i++){
-  const a=i*TAU/24,step=130,start=dodgeReactionPath(reaction).end,dest={x:start.x+Math.cos(a)*step,y:start.y+Math.sin(a)*step};
+  const a=i*TAU/24,step=130,dest={x:start.x+Math.cos(a)*step,y:start.y+Math.sin(a)*step};
   if(!world.pointWalkable(dest,player.r)||!world.segmentClear(start,dest,player.r))continue;
-  if(forecastDodgePath(phases,dest,reaction,5)){if(witness)witness.destination=dest;return true;}
+  if(forecastDodgePath(phases,dest,reaction,5,approach)){if(witness)witness.destination=dest;return true;}
  }
  return false;
 }
