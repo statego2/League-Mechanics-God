@@ -55,6 +55,16 @@ test('Expert independently schedules five concurrent threats in seeded play',t=>
  }
  t.diagnostic(`peak ${peak}, distinct spells ${spellMix}, simultaneous missiles ${missilePeak}`);assert.ok(peak>=5);assert.ok(spellMix>=2);
 });
+test('Expert creates overlapping live missiles during sustained seeded play',t=>{
+ let peak=0;
+ for(let seed=1;seed<=4;seed++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed*1234567);g.player.hp=g.player.maxHp=1000000;
+  for(let i=0;i<120*90;i++){
+   g.update(1/120);peak=Math.max(peak,g.shots.filter(s=>s.alive&&s.directed&&s.velkoz!=='delay'&&!s.ignorePlayer&&!(s.group&&s.group.hit)).length);
+  }
+ }
+ t.diagnostic(`peak eligible missiles ${peak}`);assert.ok(peak>=3);
+});
 test('Expert avoids a duplicate champion while an earlier visitor is still visible',()=>{
  let spawned=0;
  for(let seed=1;seed<=40;seed++){
@@ -1271,6 +1281,38 @@ test('entering Velkoz reserves its encounter until cast or cancellation',()=>{
  const e=g.enemy(200,300);Object.assign(e,{dodgeVisitor:true,phase:'enter',spell:g.REFERENCE_SPELLS.velkozDodge});g.setFoes([e]);
  assert.equal(g.spawnDodgeVisitor(),false);
 });
+test('Expert forecasts a committed Velkoz split alongside new straight shots',()=>{
+ for(const key of ['ezrealDodge','luxDodge','blitzDodge']){
+  let accepted=0;
+  for(const side of [-1,1])for(let i=0;i<16;i++){
+   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;
+   const p=g.player,y=p.y+side*70,spec=g.REFERENCE_SPELLS.velkozDodge,caster=g.enemy(350,y);
+   Object.assign(caster,{dodgeVisitor:true,spell:spec,phase:'cast',charge:.25,entry:{x:350,y},speed:120,pending:{angle:0,spell:spec,splitDistance:260}});g.setFoes([caster]);
+   const a=i*Math.PI/8,origin={x:p.x+Math.cos(a)*450,y:p.y+Math.sin(a)*450},spell=g.REFERENCE_SPELLS[key],witness={};
+   if(!g.canEvadeDodgeCast(origin,spell,witness))continue;
+   const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'cast',charge:spell.cast,entry:{...origin},pending:{angle:Math.atan2(p.y-origin.y,p.x-origin.x),spell,threat:true}});g.setFoes([caster,e]);
+   advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);
+   for(let step=0;step<240;step++){g.update(1/120);g.dodgeDirector.splitFollow=false;}
+   assert.equal(g.stats.hits,0,`${key} ${side} ${i} ${JSON.stringify(g.dodgeDirector.outcomes)}`);accepted++;
+  }
+  assert.ok(accepted>0,`no shared ${key} response`);
+ }
+});
+test('committed Velkoz forecast defers unpredictable split trajectories',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;
+ const spec=g.REFERENCE_SPELLS.velkozDodge,e=g.enemy(1100,300);Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'cast',charge:.25,pending:{angle:0,spell:spec,splitDistance:300}});g.setFoes([e]);
+ assert.equal(g.canEvadeDodgeCast({x:140,y:g.player.y},g.REFERENCE_SPELLS.ezrealDodge),false);
+});
+test('Expert can introduce a separate visitor during a committed Velkoz cast',()=>{
+ let accepted=0;
+ for(let seed=1;seed<=32;seed++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.setRng(seed*1234567);
+  const p=g.player,spec=g.REFERENCE_SPELLS.velkozDodge,e=g.enemy(350,p.y+70);
+  Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'cast',charge:.25,entry:{x:e.x,y:e.y},pending:{angle:0,spell:spec,splitDistance:260}});g.setFoes([e]);
+  if(g.spawnDodgeVisitor()){const next=g.foes.find(f=>f!==e);assert.ok(next);assert.notEqual(next.spell.name,'VELKOZ Q');accepted++;}
+ }
+ assert.ok(accepted>0,'no follow-up visitor entered');
+});
 
 
 test('a sampled Velkoz escape survives the actual split after 200ms reaction',()=>{
@@ -2001,7 +2043,7 @@ test('Dodge counts Charm hits against a visitor once per released E',()=>{
 });
 test('skill-scored Dodge records stay separate while retaining the survival record',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
- const oldScore='lmg.best.v1.dodge.normal.director_v78.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
+ const oldScore='lmg.best.v1.dodge.normal.director_v79.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
  g.reset('dodge');g.setTime(10);g.stats.dodgeQHits=1;g.stats.dodgeEHits=1;g.end(false);
  assert.match(node('menuDescription').textContent,/150 points/);assert.match(node('menuDescription').textContent,/Best survival: 120.0s/);
  assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v3'),'150');assert.equal(values.get(survival),'120');

@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v78":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v79":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -676,7 +676,18 @@ function dodgeIncoming(origin,spell,aimPoint=player){
  }
  for(const e of foes){
   if(!e.alive||!e.dodgeVisitor||e.phase!=="cast"||!e.pending)continue;
-  const spec=e.pending.spell;if(spec.returning||spec.split)return null;
+  const spec=e.pending.spell;if(spec.returning)return null;
+  if(spec.split){
+   const supported=spell===REFERENCE_SPELLS.ezrealDodge||spell===REFERENCE_SPELLS.luxDodge||spell===REFERENCE_SPELLS.blitzDodge;
+   if(difficulty!=="hard"||!supported||e.charm>0||!Number.isFinite(e.charge)||e.charge<0||!Number.isFinite(e.pending.angle))return null;
+   const angle=e.pending.angle,travel=clamp((e.pending.splitDistance??spec.speed*.6)/spec.speed,.25,spec.range/spec.speed);
+   const x=e.x+Math.cos(angle)*spec.speed*travel,y=e.y+Math.sin(angle)*spec.speed*travel;
+   if(!Number.isFinite(x)||!Number.isFinite(y)||e.x<0||e.x>W||e.y<0||e.y>H||x<0||x>W||y<0||y>H)return null;
+   incoming.push({x:e.x,y:e.y,vx:Math.cos(angle)*spec.speed,vy:Math.sin(angle)*spec.speed,r:spec.radius,start:e.charge,end:e.charge+travel});
+   const start=e.charge+travel+.25;
+   for(const side of [-1,1]){const a=angle+side*Math.PI/2;incoming.push({x,y,vx:Math.cos(a)*1050,vy:Math.sin(a)*1050,r:27.5,start,end:start+550/1050});}
+   continue;
+  }
   incoming.push({x:e.x,y:e.y,vx:Math.cos(e.pending.angle)*spec.speed,vy:Math.sin(e.pending.angle)*spec.speed,r:spec.radius,start:e.charge,end:e.charge+spec.range/spec.speed});
  }
  const dx=aimPoint.x-origin.x,dy=aimPoint.y-origin.y,d=Math.hypot(dx,dy)||1;
@@ -756,7 +767,7 @@ function visitorPathsCrowded(start,finish,other){
 }
 function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
  const active=foes.filter(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit"&&e.phase!=="orbFlight"&&e.phase!=="hookFlight").length+shots.filter(s=>s.alive&&s.directed).length+hazards.filter(h=>h.directed).length;
- if(active>=DODGE_DIRECTOR[difficulty].cap||(active>0&&dodgeRecovery(time))||hazards.some(h=>h.directed)||foes.some(e=>e.alive&&e.dodgeVisitor&&e.spell.split&&(e.phase==="enter"||e.phase==="cast")))return false;
+ if(active>=DODGE_DIRECTOR[difficulty].cap||(active>0&&dodgeRecovery(time))||hazards.some(h=>h.directed)||foes.some(e=>e.alive&&e.dodgeVisitor&&e.spell.split&&(e.phase==="enter"||(e.phase==="cast"&&difficulty!=="hard"))))return false;
  let spell=forcedSpell;
  if(!spell){
   const fullRoster=difficulty==="hard"||time>=45,roll=random()*(fullRoster?100:71);
@@ -780,7 +791,7 @@ function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
    else if(used.size<3)return false;
   }
  }
- const joiningMultiPhase=shots.some(s=>s.alive&&s.directed&&(s.kind==="enemyOrb"||s.velkoz));
+ const joiningMultiPhase=shots.some(s=>s.alive&&s.directed&&(s.kind==="enemyOrb"||s.velkoz))||foes.some(e=>e.alive&&e.dodgeVisitor&&e.phase==="cast"&&e.pending?.spell.split);
  let origin=null,entry=null;
  for(let i=0;i<80;i++){
   // Ahri's broad orb needs more room for the same 200 ms reaction allowance.

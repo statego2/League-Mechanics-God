@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Follow-up during a committed Vel’Koz cast (2026-11-01)
+
+- Expert can introduce an independently positioned Ezreal, Lux or Blitz while Vel’Koz is already casting. The shared forecast models its remaining windup, angled main missile, split delay and both branches. Entering Vel’Koz still reserves its encounter until it commits; offscreen, invalid or otherwise unpredictable split geometry is rejected. Standard retains its earlier isolation policy. Record namespace is director_v79.
+- Tests execute sampled shared walking responses against the actual committed cast and new projectile, reject unpredictable split geometry, and verify that a separate visitor can enter. Full suite passed 378/378. In four 90-second seeded simulations the measured peak was three eligible missiles simultaneously; five actual missiles remain unproven. Browser smoke verified Expert start and right-click movement. Human balance and visual testing remain needed.
+
 ## Vel’Koz joining an existing straight shot (2026-11-01)
 
 - Expert can now select and commit Vel’Koz Q while an earlier straight projectile is active. A single sampled walking response must avoid every existing directed shot and the angled main bolt plus both future split bolts. Unknown multi-phase trajectories, directed areas, out-of-bounds split points and paths with no sampled escape defer. Standard keeps the earlier isolated-split scheduling. The generic direct-shot candidate is replaced by the actual angled split in this combined forecast; record namespace advances to director_v78.
