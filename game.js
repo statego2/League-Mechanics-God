@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v73":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v74":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -395,7 +395,7 @@ function addEnemy(){
 // Training director: weights are normalized over the currently implemented roster.
 // Each visitor casts once, so no individual champion cooldown is faked.
 // Spawn interval and concurrency are training policies, not game spell stats.
-const DODGE_DIRECTOR={easy:{interval:5,cap:1},normal:{interval:3.2,cap:2},hard:{interval:.28,cap:5}};
+const DODGE_DIRECTOR={easy:{interval:5,cap:1},normal:{interval:3.2,cap:2},hard:{interval:.16,cap:5}};
 // Expert starts at full cadence. Standard retains its slower rhythm.
 function dodgeRhythmMultiplier(now){
  if(difficulty==="hard")return 1;
@@ -753,11 +753,15 @@ function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
  if(spell.split&&active>0){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
  // Concurrent visitors are independently chosen. Prefer a different straight
  // spell when another visitor or missile already uses the selected one.
- if(difficulty==="hard"&&!forcedSpell){
-  const used=new Set([...foes.filter(e=>e.alive&&e.dodgeVisitor&&(e.phase==="enter"||e.phase==="cast")).map(e=>e.spell.name),...shots.filter(s=>s.alive&&s.directed).map(s=>s.spellName)]);
+ if(difficulty==="hard"){
+  // Include exiting and returning visitors: they are still visible, and two
+  // identical champions on screen look like a synchronized duplicate.
+  const used=new Set([...foes.filter(e=>e.alive&&e.dodgeVisitor).map(e=>e.spell?.name),...shots.filter(s=>s.alive&&s.directed).map(s=>s.spellName)]);
   if(used.has(spell.name)){
-   const choices=[REFERENCE_SPELLS.ezrealDodge,REFERENCE_SPELLS.luxDodge,REFERENCE_SPELLS.blitzDodge].filter(s=>!used.has(s.name));
+   const complex=shots.some(s=>s.alive&&s.directed&&(s.kind==="enemyOrb"||s.velkoz));
+   const choices=forcedSpell||complex?[]:[REFERENCE_SPELLS.ezrealDodge,REFERENCE_SPELLS.luxDodge,REFERENCE_SPELLS.blitzDodge].filter(s=>!used.has(s.name));
    if(choices.length)spell=choices[Math.floor(random()*choices.length)];
+   else if(used.size<3)return false;
   }
  }
  const joiningMultiPhase=spell===REFERENCE_SPELLS.ezrealDodge&&shots.some(s=>s.alive&&s.directed&&(s.kind==="enemyOrb"||s.velkoz));
@@ -853,7 +857,7 @@ function updateDodgeDirector(dt){
  }
  dodgeDirector.next-=dt;if(dodgeDirector.next>0)return;
  if(spawnDodgeVisitor())dodgeDirector.next=DODGE_DIRECTOR[difficulty].interval*dodgeRhythmMultiplier(time)*rand(.88,1.12);
- else dodgeDirector.next=.25;
+ else dodgeDirector.next=difficulty==="hard"?.08:.25;
 }
 // An unsafe, uncommitted ultimate is deferred instead of consuming its full
 // rare-event interval. A short guard avoids chaining Orianna Q attempts.

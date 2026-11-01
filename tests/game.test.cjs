@@ -42,6 +42,27 @@ test('Expert starts with sustained mixed pressure and early Cassiopeia and Malph
  assert.ok(g.dodgeDirector.orianna>0,'Orianna missing');
  t.diagnostic(`peak ${maxActive} simultaneous threats; ${g.dodgeDirector.attempted} casts; Cassiopeia ${g.dodgeDirector.cassio}, Malphite ${g.dodgeDirector.malphite}`);
 });
+test('Expert independently schedules five concurrent threats in seeded play',t=>{
+ let peak=0,spellMix=0;
+ for(let seed=1;seed<=12&&peak<5;seed++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed*1234567);g.player.hp=g.player.maxHp=1000000;
+  for(let i=0;i<120*120;i++){
+   g.update(1/120);
+   const live=[...g.foes.filter(e=>e.alive&&e.dodgeVisitor&&(e.phase==='enter'||e.phase==='cast')).map(e=>e.spell.name),...g.shots.filter(s=>s.alive&&s.directed).map(s=>s.spellName)];
+   if(live.length>peak){peak=live.length;spellMix=new Set(live).size;}
+  }
+ }
+ t.diagnostic(`peak ${peak}, distinct spells ${spellMix}`);assert.ok(peak>=5);assert.ok(spellMix>=2);
+});
+test('Expert avoids a duplicate champion while an earlier visitor is still visible',()=>{
+ let spawned=0;
+ for(let seed=1;seed<=40;seed++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed*1234567);
+  const previous=g.enemy(100,150);Object.assign(previous,{dodgeVisitor:true,spell:g.REFERENCE_SPELLS.ezrealDodge,phase:'exit'});g.setFoes([previous]);
+  if(g.spawnDodgeVisitor()){assert.notEqual(g.foes[1].spell.name,previous.spell.name);spawned++;}
+ }
+ assert.ok(spawned>0);
+});
 test('Dodge reaction forecast follows the retained movement route',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
  Object.assign(g.player,{x:250,y:300,target:{x:400,y:300},routeGoal:{x:400,y:300},route:[{x:250,y:400},{x:400,y:300}]});
@@ -1855,7 +1876,7 @@ test('Dodge counts Charm hits against a visitor once per released E',()=>{
 });
 test('skill-scored Dodge records stay separate while retaining the survival record',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
- const oldScore='lmg.best.v1.dodge.normal.director_v73.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
+ const oldScore='lmg.best.v1.dodge.normal.director_v74.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
  g.reset('dodge');g.setTime(10);g.stats.dodgeQHits=1;g.stats.dodgeEHits=1;g.end(false);
  assert.match(node('menuDescription').textContent,/150 points/);assert.match(node('menuDescription').textContent,/Best survival: 120.0s/);
  assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v3'),'150');assert.equal(values.get(survival),'120');
@@ -2231,7 +2252,7 @@ test('enemy Ahri return does not hit movement completed before the turn',()=>{
 test('Expert encounter interval is fast and consistent from the start',()=>{
  for(const time of [0,50,78,86,500]){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(time);g.setRng(1);g.dodgeDirector.next=0;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=Infinity;
-  g.update(1/120);assert.ok(g.dodgeDirector.next>=.28*.88&&g.dodgeDirector.next<=.28*1.12);
+  g.update(1/120);assert.ok(g.dodgeDirector.next>=.16*.88&&g.dodgeDirector.next<=.16*1.12);
  }
 });
 test('Velkoz split awards one dodge only after both threatened branches miss',()=>{
@@ -2256,7 +2277,7 @@ test('Velkoz split counts as one unresolved opportunity while both branches are 
 
 test('Expert pressure does not wait minutes to become difficult',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(1);g.update(1/120);
- assert.ok(g.dodgeDirector.next<.32);
+ assert.ok(g.dodgeDirector.next<.18);
 });
 test('endless Dodge keeps best survival separately from score',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};

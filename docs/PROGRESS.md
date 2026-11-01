@@ -2,6 +2,12 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Expert five-threat cadence and visible diversity (2026-11-01)
+
+- The prior five-threat limit did not actually produce five in twelve seeded runs. Expert now attempts a spawn every 0.16 seconds, retries a rejected attempt after 0.08 seconds, and continues to enforce the shared escape forecast and cap. One first-minute simulation reached five active threats and 54 casts; a separate seeded integration test observed five threats with four distinct spells. Counts include entering/casting visitors and missiles, not five missiles simultaneously.
+- Spell selection includes visitors still visible while leaving, so an isolated earlier champion is not immediately duplicated. If three different spell types are already present and no compatible unused straight spell exists, duplicates may still occur to sustain five-threat pressure. This is a deliberate compromise until more concurrent-safe champion patterns exist.
+- Tested movement in the localhost browser. Full suite passed 364/364, including 12 simulated minutes over three seeds; a skilled human must still judge readability, fairness, visual quality and sustained performance. Record namespace is director_v74.
+
 ## Expert Dodge overhaul after player feedback (2026-11-01)
 
 - User reported the mode was far too easy, wanted multiple different spells from independent directions immediately, earlier Cassiopeia/Malphite and a better Orianna R. Revisited Dodge V2 Hard and Skill + Dodge Hard in the browser. Expert now attempts an encounter every 0.28 seconds with a five-threat cap, the entire spell roster available from the start, no delayed difficulty ramp or periodic recovery window, and no scripted identical Ezreal pair. Independent concurrent visitors prefer different straight spells. Forecast checks, spell timings and collision remain in place, so actual concurrency can be below the cap.
