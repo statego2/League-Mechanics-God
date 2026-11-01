@@ -43,16 +43,17 @@ test('Expert starts with sustained mixed pressure and early Cassiopeia and Malph
  t.diagnostic(`peak ${maxActive} simultaneous threats; ${g.dodgeDirector.attempted} casts; Cassiopeia ${g.dodgeDirector.cassio}, Malphite ${g.dodgeDirector.malphite}`);
 });
 test('Expert independently schedules five concurrent threats in seeded play',t=>{
- let peak=0,spellMix=0;
+ let peak=0,spellMix=0,missilePeak=0;
  for(let seed=1;seed<=12&&peak<5;seed++){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed*1234567);g.player.hp=g.player.maxHp=1000000;
   for(let i=0;i<120*120;i++){
    g.update(1/120);
-   const live=[...g.foes.filter(e=>e.alive&&e.dodgeVisitor&&(e.phase==='enter'||e.phase==='cast')).map(e=>e.spell.name),...g.shots.filter(s=>s.alive&&s.directed).map(s=>s.spellName)];
+   const missiles=g.shots.filter(s=>s.alive&&s.directed&&s.velkoz!=='delay');missilePeak=Math.max(missilePeak,missiles.length);
+   const live=[...g.foes.filter(e=>e.alive&&e.dodgeVisitor&&(e.phase==='enter'||e.phase==='cast')).map(e=>e.spell.name),...missiles.map(s=>s.spellName)];
    if(live.length>peak){peak=live.length;spellMix=new Set(live).size;}
   }
  }
- t.diagnostic(`peak ${peak}, distinct spells ${spellMix}`);assert.ok(peak>=5);assert.ok(spellMix>=2);
+ t.diagnostic(`peak ${peak}, distinct spells ${spellMix}, simultaneous missiles ${missilePeak}`);assert.ok(peak>=5);assert.ok(spellMix>=2);
 });
 test('Expert avoids a duplicate champion while an earlier visitor is still visible',()=>{
  let spawned=0;
@@ -87,6 +88,18 @@ test('director escape witnesses survive actual straight shots from varied angles
   }
  }
  assert.ok(accepted>=24,`only ${accepted} safe casts checked`);assert.ok(overlaps>=8,`only ${overlaps} overlaps checked`);
+});
+test('multi-shot forecast can use and execute a longer walking response',()=>{
+ let found=false;
+ for(let y=-100;y<=100&&!found;y+=20)for(let x=320;x<=880&&!found;x+=40)for(const side of [-1,1]){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+  const p=g.player,s=g.fire(x,p.y+y,0,side*500,'enemy',10,30,2);Object.assign(s,{directed:true,spellName:'EZREAL Q'});
+  const origin={x:p.x-440,y:p.y},spell=g.REFERENCE_SPELLS.luxDodge,witness={};
+  if(!g.canEvadeDodgeCast(origin,spell,witness)||Math.hypot(witness.destination.x-p.x,witness.destination.y-p.y)<75)continue;
+  const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'cast',charge:spell.cast,pending:{angle:0,spell},entry:{...origin}});g.setFoes([e]);
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,2);assert.equal(g.stats.hits,0);found=true;
+ }
+ assert.ok(found,'no safe response requiring a longer movement was found');
 });
 test('Ahri orb uses a blue effect extending to its actual radius for both teams',()=>{
  for(const kind of ['orb','enemyOrb']){
@@ -1876,7 +1889,7 @@ test('Dodge counts Charm hits against a visitor once per released E',()=>{
 });
 test('skill-scored Dodge records stay separate while retaining the survival record',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
- const oldScore='lmg.best.v1.dodge.normal.director_v74.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
+ const oldScore='lmg.best.v1.dodge.normal.director_v75.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
  g.reset('dodge');g.setTime(10);g.stats.dodgeQHits=1;g.stats.dodgeEHits=1;g.end(false);
  assert.match(node('menuDescription').textContent,/150 points/);assert.match(node('menuDescription').textContent,/Best survival: 120.0s/);
  assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v3'),'150');assert.equal(values.get(survival),'120');
@@ -2100,10 +2113,11 @@ test('seeded straight visitors sometimes lead existing movement and retain a wal
 
 test('unsafe lead falls back to a separately verified direct shot',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const spell=g.REFERENCE_SPELLS.ezrealDodge;
- let found=null;
- search: for(const x of [250,400,600,800,950])for(const y of [130,210,340,480,590])for(let move=0;move<8;move++)for(let shot=0;shot<8;shot++){
+ let found=null;const blocker=g.fire(0,0,0,500,'enemy',10,20,2);Object.assign(blocker,{directed:true,spellName:'LUX Q'});
+ search: for(const shift of [-100,-50,0,50,100])for(const distance of [340,470,620])for(const x of [250,400,600,800,950])for(const y of [130,210,340,480,590])for(let move=0;move<8;move++)for(let shot=0;shot<8;shot++){
   g.player.x=x;g.player.y=y;g.moveTo(x+Math.cos(move*Math.PI/4)*180,y+Math.sin(move*Math.PI/4)*180);
-  const origin={x:x+Math.cos(shot*Math.PI/4)*470,y:y+Math.sin(shot*Math.PI/4)*470},lead=g.dodgeReactionPath(spell.cast).end;
+  blocker.x=x+shift;blocker.y=y-220;
+  const origin={x:x+Math.cos(shot*Math.PI/4)*distance,y:y+Math.sin(shot*Math.PI/4)*distance},lead=g.dodgeReactionPath(spell.cast).end;
   if(Math.hypot(lead.x-x,lead.y-y)<5)continue;
   if(!g.canEvadeDodgeCast(origin,spell,null,lead)&&g.canEvadeDodgeCast(origin,spell)){found={origin};break search;}
  }

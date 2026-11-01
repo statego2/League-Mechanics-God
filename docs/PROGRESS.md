@@ -2,6 +2,12 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Multi-shot walking responses (2026-11-01)
+
+- Measured the earlier five-threat scenario more precisely: the sample reached five visitors/projectiles but only three actual missiles in flight at once. Raising the cap to seven or doubling spawn attempts did not improve that number in the sample, so neither experimental change was retained.
+- The straight-shot director now samples longer walking responses as well as the original short sidesteps. A regression test constructs a multi-shot situation requiring a longer response and executes the resulting witness in the real simulation without a hit. In the default 60-second simulation the director now commits 62 casts, compared with 54 under the prior policy, while preserving existing projectile speeds and the shared path check. This remains an approximate forecast and does not prove every possible overlap fair.
+- Localhost browser smoke: Expert starts and right-click movement works with multiple visitors. Full suite passed 365/365, including 12-minute seeded runs. Continue researching richer, independently timed patterns if the objective is five simultaneous missiles; the current test does not demonstrate that. Record namespace is director_v75.
+
 ## Expert five-threat cadence and visible diversity (2026-11-01)
 
 - The prior five-threat limit did not actually produce five in twelve seeded runs. Expert now attempts a spawn every 0.16 seconds, retries a rejected attempt after 0.08 seconds, and continues to enforce the shared escape forecast and cap. One first-minute simulation reached five active threats and 54 casts; a separate seeded integration test observed five threats with four distinct spells. Counts include entering/casting visitors and missiles, not five missiles simultaneously.
