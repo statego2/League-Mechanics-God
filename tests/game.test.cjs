@@ -16,13 +16,39 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,visitorPathsCrowded,updateDodgeVisitor,spawnXerathW,spawnXerathQ,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,visitorPathsCrowded,updateDodgeVisitor,spawnXerathW,spawnXerathQ,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,drawSizes,strokes,arcs,texts,lines,rotations,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
 }
 function foe(g,x=800,y=337.5){const e=g.enemy(x,y);e.speed=0;e.shoot=999;e.hp=e.maxHp=10000;g.setFoes([e]);return e;}
 function advance(g,seconds){for(let i=0;i<Math.round(seconds*120);i++)g.update(1/120);}
+test('Orianna shockwave draws animated impact arcs',()=>{
+ const {g,strokes}=boot('ahri');g.reset('dodge');
+ g.fx.push({x:600,y:330,r:207.5,ttl:.1,max:.2,shockwave:true});g.render();
+ assert.ok(strokes.includes('#eed6ffff'));assert.ok(strokes.includes('#bf8dffff'));
+});
+test('Expert starts with sustained mixed pressure and early Cassiopeia and Malphite',t=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
+ let maxActive=0,mixed=false;
+ for(let i=0;i<60*120;i++){
+  g.update(1/120);
+  const names=[...g.foes.filter(e=>e.alive&&e.dodgeVisitor&&(e.phase==='enter'||e.phase==='cast')).map(e=>e.spell.name),...g.shots.filter(s=>s.alive&&s.directed).map(s=>s.spellName)];
+  maxActive=Math.max(maxActive,names.length);if(names.length>=2&&new Set(names).size>=2)mixed=true;
+ }
+ assert.ok(maxActive>=3,`peak ${maxActive}`);assert.ok(mixed,'no mixed simultaneous threats');
+ assert.ok(g.dodgeDirector.attempted>=20,`only ${g.dodgeDirector.attempted} casts`);
+ assert.ok(g.dodgeDirector.cassio>0,'Cassiopeia missing');assert.ok(g.dodgeDirector.malphite>0,'Malphite missing');
+ assert.ok(g.dodgeDirector.orianna>0,'Orianna missing');
+ t.diagnostic(`peak ${maxActive} simultaneous threats; ${g.dodgeDirector.attempted} casts; Cassiopeia ${g.dodgeDirector.cassio}, Malphite ${g.dodgeDirector.malphite}`);
+});
+test('Dodge reaction forecast follows the retained movement route',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ Object.assign(g.player,{x:250,y:300,target:{x:400,y:300},routeGoal:{x:400,y:300},route:[{x:250,y:400},{x:400,y:300}]});
+ const predicted=g.dodgeReactionPath(.2).end;advance(g,.2);
+ assert.ok(Math.hypot(g.player.x-predicted.x,g.player.y-predicted.y)<.1,`actual ${g.player.x},${g.player.y}; forecast ${predicted.x},${predicted.y}`);
+ assert.ok(predicted.y>330,'the forecast must follow the existing waypoint rather than a newly calculated direct route');
+});
 test('director escape witnesses survive actual straight shots from varied angles and overlaps',()=>{
  let accepted=0,overlaps=0;
  for(const [key,distance] of [['ezrealDodge',470],['luxDodge',400],['blitzDodge',470],['ahriDodge',500]]){
@@ -726,8 +752,8 @@ test('successive melee waves receive the sourced 90-second health upgrade',()=>{
 });
 
 test('Dodge director sends single-cast visitors with deterministic Ezreal-heavy spell selection',()=>{
- function run(){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,55);return [g.dodgeDirector.ezreal,g.dodgeDirector.lux,g.dodgeDirector.ahri,g.dodgeDirector.blitz,g.dodgeDirector.velkoz,g.dodgeDirector.xerath,g.dodgeDirector.xerathQ,g.dodgeDirector.oriannaQ,g.dodgeDirector.orianna,g.dodgeDirector.malphite,g.dodgeDirector.attempted];}
- const a=run(),b=run();assert.deepEqual(a,b);assert.equal(a[0]+a[1]+a[2]+a[3]+a[4]+a[5]+a[6]+a[7]+a[8]+a[9],a[10]);assert.ok(a[0]>a[1]);assert.ok(a[10]>=10,`too few casts: ${a}`);
+ function run(){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,55);return [g.dodgeDirector.ezreal,g.dodgeDirector.lux,g.dodgeDirector.ahri,g.dodgeDirector.blitz,g.dodgeDirector.velkoz,g.dodgeDirector.xerath,g.dodgeDirector.xerathQ,g.dodgeDirector.oriannaQ,g.dodgeDirector.orianna,g.dodgeDirector.malphite,g.dodgeDirector.cassio,g.dodgeDirector.attempted];}
+ const a=run(),b=run();assert.deepEqual(a,b);assert.equal(a.slice(0,-1).reduce((sum,n)=>sum+n,0),a.at(-1));assert.ok(a[0]>a[1]);assert.ok(a.at(-1)>=10,`too few casts: ${a}`);
 });
 test('Ahri Q is actually scheduled on every difficulty in the default seeded long drill',()=>{
  for(const difficulty of ['easy','normal','hard']){
@@ -1753,7 +1779,7 @@ test('Orianna Q arrival hits a player who leaves only after arrival',()=>{
 test('a seeded double Ezreal encounter admits a shared walking escape',()=>{
  let checked=0;
  for(let seedOffset=0;seedOffset<60;seedOffset++){
-  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'normal'}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
   g.reset('dodge');g.setTime(50);g.dodgeDirector.next=999;const spell=g.REFERENCE_SPELLS.ezrealDodge;
   if(!g.spawnDodgeVisitor())continue;
   const follow=g.foes.find(x=>x.followUp&&x.spell===spell);if(!follow)continue;
@@ -1769,8 +1795,8 @@ test('a seeded double Ezreal encounter admits a shared walking escape',()=>{
  }
  assert.ok(checked>=2,`only ${checked} safe double Ezreal witnesses`);
 });
-test('double Ezreal projectiles occur naturally on Standard and Expert but not Foundation',t=>{
- for(const [difficulty,expected] of [['easy',false],['normal',true],['hard',true]]){
+test('double Ezreal projectiles occur naturally on Standard but not Foundation',t=>{
+ for(const [difficulty,expected] of [['easy',false],['normal',true]]){
   let found=false;
   for(let seedOffset=0;seedOffset<5&&!found;seedOffset++){
    const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
@@ -1780,14 +1806,10 @@ test('double Ezreal projectiles occur naturally on Standard and Expert but not F
   assert.equal(found,expected,difficulty);
  }
 });
-test('Expert can introduce paired Ezreal pressure before 45 seconds without changing Standard',()=>{
- for(const difficulty of ['hard','normal']){
-  let paired=0;
-  for(let seed=1;seed<=80;seed++){
-   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});g.reset('dodge');g.setTime(10);g.setRng(seed*2654435761>>>0);
-   if(g.spawnDodgeVisitor()&&g.foes.some(e=>e.followUp))paired++;
-  }
-  if(difficulty==='hard')assert.ok(paired>0,'no early Expert pairs');else assert.equal(paired,0);
+test('Expert does not generate scripted duplicate Ezreal pairs',()=>{
+ for(let seed=1;seed<=80;seed++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(10);g.setRng(seed*2654435761>>>0);
+  g.spawnDodgeVisitor();assert.ok(!g.foes.some(e=>e.followUp),'unexpected scripted duplicate');
  }
 });
 test('Dodge allows an Ahri skillshot followed by movement to evade an incoming attack',()=>{
@@ -1833,7 +1855,7 @@ test('Dodge counts Charm hits against a visitor once per released E',()=>{
 });
 test('skill-scored Dodge records stay separate while retaining the survival record',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
- const oldScore='lmg.best.v1.dodge.normal.director_v71.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
+ const oldScore='lmg.best.v1.dodge.normal.director_v73.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
  g.reset('dodge');g.setTime(10);g.stats.dodgeQHits=1;g.stats.dodgeEHits=1;g.end(false);
  assert.match(node('menuDescription').textContent,/150 points/);assert.match(node('menuDescription').textContent,/Best survival: 120.0s/);
  assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v3'),'150');assert.equal(values.get(survival),'120');
@@ -1842,7 +1864,7 @@ test('skill-scored Dodge records stay separate while retaining the survival reco
 test('paired Ezreal escapes remain safe with existing movement and W decay',()=>{
  let accepted=0,boosted=0,led=0;
  for(let seedOffset=0;seedOffset<300;seedOffset++){
-  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'normal'}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
   g.reset('dodge');g.setTime(50);g.dodgeDirector.next=999;const spell=g.REFERENCE_SPELLS.ezrealDodge;
   if(!g.spawnDodgeVisitor())continue;const follow=g.foes.find(x=>x.followUp&&x.spell===spell);if(!follow)continue;
   g.moveTo(g.player.x+(seedOffset%2?120:-120),g.player.y+100);if(seedOffset%2)g.cast('w');
@@ -2206,18 +2228,12 @@ test('enemy Ahri return does not hit movement completed before the turn',()=>{
 });
 
 
-test('Dodge director changes encounter spacing in bounded pressure and recovery phases',()=>{
- function interval(difficulty,time){
-  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});g.reset('dodge');g.setTime(time);g.setRng(1);g.dodgeDirector.next=0;g.dodgeDirector.cassAt=Infinity;
-  g.update(1/120);assert.ok(g.foes.length||g.hazards.length,`no encounter at ${difficulty} ${time}`);return g.dodgeDirector.next;
+test('Expert encounter interval is fast and consistent from the start',()=>{
+ for(const time of [0,50,78,86,500]){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(time);g.setRng(1);g.dodgeDirector.next=0;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=Infinity;
+  g.update(1/120);assert.ok(g.dodgeDirector.next>=.28*.88&&g.dodgeDirector.next<=.28*1.12);
  }
- const stable=interval('hard',50),spike=interval('hard',78),recovery=interval('hard',86);
- for(const [value,multiplier] of [[stable,1],[spike,.8],[recovery,1.3]])assert.ok(value>=1.65*multiplier*.88&&value<=1.65*multiplier*1.12);
- assert.ok(recovery>stable);
- assert.ok(Math.abs(interval('easy',50)-interval('easy',78))<1e-10);
 });
-
-
 test('Velkoz split awards one dodge only after both threatened branches miss',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const group={hit:false,remaining:2,threatened:false};
  for(const ttl of [.01,.03]){const s=g.fire(100,100,1,0,'enemy',10,5,ttl);Object.assign(s,{directed:true,spellName:'VELKOZ Q',velkoz:'child',group,threat:true});}
@@ -2238,14 +2254,10 @@ test('Velkoz split counts as one unresolved opportunity while both branches are 
 });
 
 
-test('Expert endless pressure ramps after three minutes and reaches a cap',()=>{
- function interval(time){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(time);g.setRng(1);g.dodgeDirector.next=0;g.dodgeDirector.cassAt=Infinity;g.dodgeDirector.rareAt=Infinity;g.dodgeDirector.malAt=Infinity;g.update(1/120);return g.dodgeDirector.next;}
- // Times share the same phase of the 43-second rhythm.
- const early=interval(50),later=interval(50+43*10),cap=interval(50+43*20),beyond=interval(50+43*30);
- assert.ok(later<early);assert.ok(cap<later);assert.ok(Math.abs(cap-beyond)<1e-9);
+test('Expert pressure does not wait minutes to become difficult',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(1);g.update(1/120);
+ assert.ok(g.dodgeDirector.next<.32);
 });
-
-
 test('endless Dodge keeps best survival separately from score',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
  g.reset('dodge');g.setTime(130);g.end(false);assert.match(node('menuDescription').textContent,/Best survival: 130.0s/);
@@ -2313,18 +2325,14 @@ test('Expert falls back to a safe Ezreal when a selected isolated spell cannot o
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(50);g.dodgeDirector.next=999;
   const active=g.fire(100,100,1,0,'enemy',10,1,5);Object.assign(active,{directed:true,spellName:'EZREAL Q'});
   let seed=0;while(seed<100000){const roll=((Math.imul(1664525,seed)+1013904223)>>>0)/4294967296;if(roll>=lo&&roll<hi)break;seed++;}
-  assert.ok(seed<100000);g.setRng(seed);assert.equal(g.spawnDodgeVisitor(),true,name);assert.equal(g.foes[0].spell, g.REFERENCE_SPELLS.ezrealDodge,name);
+  assert.ok(seed<100000);g.setRng(seed);assert.equal(g.spawnDodgeVisitor(),true,name);assert.notEqual(g.foes[0].spell.name,'VELKOZ Q',name);
  }
 });
-test('isolated-spell fallback still respects recovery and active-threat cap',()=>{
- const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(86);
- const active=g.fire(100,100,1,0,'enemy',10,1,5);Object.assign(active,{directed:true,spellName:'EZREAL Q'});
- g.setRng(1600);assert.equal(g.spawnDodgeVisitor(),false);assert.equal(g.foes.length,0);
- g.setTime(50);for(let i=0;i<2;i++){const s=g.fire(100,150+i*50,1,0,'enemy',10,1,5);Object.assign(s,{directed:true,spellName:'EZREAL Q'});}
- g.setRng(1600);assert.equal(g.spawnDodgeVisitor(),false);assert.equal(g.foes.length,0);
+test('Expert spawn respects its five-threat cap',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(50);
+ for(let i=0;i<5;i++){const shot=g.fire(100,100+i*30,1,0,'enemy',10,1,5);Object.assign(shot,{directed:true,spellName:'EZREAL Q'});}
+ assert.equal(g.spawnDodgeVisitor(),false);assert.equal(g.foes.length,0);
 });
-
-
 test('visitor spacing detects intersecting entry paths, including a stationary caster',()=>{
  const {g}=boot('ahri');
  const moving={x:200,y:100,phase:'enter',origin:{x:100,y:100},speed:120};

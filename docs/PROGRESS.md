@@ -2,6 +2,13 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Expert Dodge overhaul after player feedback (2026-11-01)
+
+- User reported the mode was far too easy, wanted multiple different spells from independent directions immediately, earlier Cassiopeia/Malphite and a better Orianna R. Revisited Dodge V2 Hard and Skill + Dodge Hard in the browser. Expert now attempts an encounter every 0.28 seconds with a five-threat cap, the entire spell roster available from the start, no delayed difficulty ramp or periodic recovery window, and no scripted identical Ezreal pair. Independent concurrent visitors prefer different straight spells. Forecast checks, spell timings and collision remain in place, so actual concurrency can be below the cap.
+- Expert Cassiopeia, Malphite and Orianna first become due at 12, 22 and 32 seconds; after a successful encounter they recur after 32–45 seconds with an eight-second inter-ultimate guard. When a due ultimate is blocked, normal spawns pause briefly to let it enter. These are training scheduling policies, not League cooldowns.
+- Orianna R now produces animated rotating arcs and a central flash at impact; there is still no pre-cast targeting circle. Also retained the previous uncommitted fix that forecasts the player's existing movement waypoints rather than inventing a new path.
+- A 60-second seeded stationary-player simulation recorded 48 casts, peak four concurrent threats, two Cassiopeia casts and one Malphite cast. In a browser smoke run a stationary player died at 10.9 seconds; a separate short run verified mouse movement with several enemy visitors visible. This does not establish skilled-player fairness or equivalence to the reference. Full suite 361/361 passed, plus the added Orianna-effect and first-minute tests passed separately; long human playtesting remains needed. Existing records use director_v73 due to the substantial difficulty change.
+
 ## Expert split follow-up lifecycle (2026-10-31)
 
 - A queued Ezreal follow-up is now discarded if the Vel’Koz threat was removed or became unable to hit the player before the next update. This prevents a resolved combination from unexpectedly spawning an unrelated isolated attack. Pause preserves the queue and restart clears it.
