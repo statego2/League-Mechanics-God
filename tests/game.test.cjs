@@ -1280,6 +1280,49 @@ test('a sampled Velkoz escape survives the actual split after 200ms reaction',()
  const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'cast',entry:{x:origin.x,y:origin.y},speed:120,charge:spec.cast,pending:{angle,spell:spec,splitDistance:distance}});g.setFoes([e]);
  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.7);assert.equal(g.stats.hits,0);
 });
+test('Expert Velkoz and an existing straight projectile share an executable escape',()=>{
+ let checked=0;
+ for(const side of [-1,1])for(let i=0;i<16;i++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;
+  const p=g.player,s=g.fire(150,p.y+side*125,500,0,'enemy',20,20,2);Object.assign(s,{directed:true,spellName:'EZREAL Q'});
+  const a=i*Math.PI/8,origin={x:p.x+Math.cos(a)*440,y:p.y+Math.sin(a)*440},spec=g.REFERENCE_SPELLS.velkozDodge,angle=Math.atan2(p.y-origin.y,p.x-origin.x)+.32,distance=440*Math.cos(.32),witness={};
+  if(origin.x<60||origin.x>1140||origin.y<145||origin.y>645)continue;
+  if(!g.canEvadeVelkoz(origin,angle,distance,spec,witness))continue;
+  const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'cast',entry:{...origin},speed:120,charge:spec.cast,pending:{angle,spell:spec,splitDistance:distance}});g.setFoes([e]);
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,2);assert.equal(g.stats.hits,0,`side ${side} angle ${i}`);checked++;
+ }
+ assert.ok(checked>0,'no executable shared escape was sampled');
+});
+test('Expert can commit Velkoz while a prior straight missile remains active',()=>{
+ let committed=0;
+ for(let seed=1;seed<=24;seed++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.setRng(seed*1234567);
+  const s=g.fire(100,100,1,0,'enemy',10,1,5);Object.assign(s,{directed:true,spellName:'EZREAL Q'});
+  if(!g.spawnDodgeVisitor(g.REFERENCE_SPELLS.velkozDodge,20))continue;
+  const e=g.foes[0];for(let i=0;i<120&&e.phase==='enter';i++)g.update(1/120);
+  if(e.phase==='cast'&&s.alive)committed++;
+ }
+ assert.ok(committed>0,'no split cast was committed during a live straight missile');
+});
+test('Expert naturally releases Velkoz while another missile is already in flight',()=>{
+ let found=false;
+ for(let seed=1;seed<=6&&!found;seed++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed*1234567);g.player.hp=g.player.maxHp=1e6;
+  let previousVel=0;
+  for(let i=0;i<120*120&&!found;i++){
+   const prior=g.shots.filter(s=>s.alive&&s.directed&&!s.velkoz&&s.kind!=='enemyOrb');g.update(1/120);
+   if(g.dodgeDirector.velkoz>previousVel&&prior.some(s=>s.alive))found=true;
+   previousVel=g.dodgeDirector.velkoz;
+  }
+ }
+ assert.ok(found,'no natural Velkoz release joined an existing missile');
+});
+test('Velkoz defers an already unavoidable projectile or an active area effect',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player,s=g.fire(p.x-30,p.y,500,0,'enemy',20,20,1);s.directed=true;
+ assert.equal(g.canEvadeVelkoz({x:160,y:p.y},0,400,g.REFERENCE_SPELLS.velkozDodge),false);
+ s.alive=false;g.hazards.push({directed:true,x:p.x,y:p.y,r:100,ttl:1});
+ assert.equal(g.canEvadeVelkoz({x:160,y:p.y},0,400,g.REFERENCE_SPELLS.velkozDodge),false);
+});
 test('Velkoz forecast rejects a point-blank split with no ordinary escape',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const spec=g.REFERENCE_SPELLS.velkozDodge;
  assert.equal(g.canEvadeVelkoz({x:g.player.x-10,y:g.player.y},0,10,spec),false);
@@ -1958,7 +2001,7 @@ test('Dodge counts Charm hits against a visitor once per released E',()=>{
 });
 test('skill-scored Dodge records stay separate while retaining the survival record',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
- const oldScore='lmg.best.v1.dodge.normal.director_v77.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
+ const oldScore='lmg.best.v1.dodge.normal.director_v78.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
  g.reset('dodge');g.setTime(10);g.stats.dodgeQHits=1;g.stats.dodgeEHits=1;g.end(false);
  assert.match(node('menuDescription').textContent,/150 points/);assert.match(node('menuDescription').textContent,/Best survival: 120.0s/);
  assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v3'),'150');assert.equal(values.get(survival),'120');
@@ -2424,8 +2467,8 @@ test('Expert recovery still schedules an isolated encounter',()=>{
 });
 
 
-test('Expert falls back to a safe Ezreal when a selected isolated spell cannot overlap',()=>{
- for(const [lo,hi,name] of [[.83,.91,'Velkoz'],[.94,1,'Xerath Q']]){
+test('Expert falls back to a safe straight shot when Xerath Q cannot overlap',()=>{
+ for(const [lo,hi,name] of [[.94,1,'Xerath Q']]){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(50);g.dodgeDirector.next=999;
   const active=g.fire(100,100,1,0,'enemy',10,1,5);Object.assign(active,{directed:true,spellName:'EZREAL Q'});
   let seed=0;while(seed<100000){const roll=((Math.imul(1664525,seed)+1013904223)>>>0)/4294967296;if(roll>=lo&&roll<hi)break;seed++;}

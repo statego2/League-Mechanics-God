@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Vel’Koz joining an existing straight shot (2026-11-01)
+
+- Expert can now select and commit Vel’Koz Q while an earlier straight projectile is active. A single sampled walking response must avoid every existing directed shot and the angled main bolt plus both future split bolts. Unknown multi-phase trajectories, directed areas, out-of-bounds split points and paths with no sampled escape defer. Standard keeps the earlier isolated-split scheduling. The generic direct-shot candidate is replaced by the actual angled split in this combined forecast; record namespace advances to director_v78.
+- Added tests executing accepted shared escapes, rejecting an unavoidable existing missile or area, committing a visitor during a prior missile and observing a naturally scheduled release during a live missile. Full suite passed 374/374. Browser smoke verified Expert startup and movement; sustained human playtesting remains needed. This is still not evidence of five simultaneous missiles.
+
 ## Expert Vel’Koz split with different straight shots (2026-11-01)
 
 - Expert now permits Lux Q and Blitz Q alongside an active Vel’Koz Q, using the same shared walking forecast for its main bolt, split delay and child missiles. Unsafe, offscreen or unpredictable split phases still defer; Standard and unsupported returning/splitting combinations remain unchanged. The short entry and aim-lock recheck apply. To make these combinations occur more often, a split release gets a seeded 65% opportunity to queue one of Ezreal, Lux or Blitz on the next update; the ordinary cap and forecasts still apply. Record namespace advances to director_v77.

@@ -34,7 +34,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v77":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v78":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -718,14 +718,19 @@ function canEvadeDodgeCast(origin,spell,witness=null,aimPoint=player){
  }
  return false;
 }
-// Sample isolated Vel'Koz Q including both future split bolts. The same
-// straight response is tested against every phase, after a reaction allowance.
+// Sample Vel'Koz Q and both split bolts against the same response as any
+// already-active straight shots. Unpredictable multi-phase shots defer.
 function canEvadeVelkoz(origin,angle,splitDistance,spell,witness=null){
+ if(hazards.some(h=>h.directed))return false;
+ if(origin.x<0||origin.x>W||origin.y<0||origin.y>H)return false;
  const reaction=dodgeReactionDelay();if(!Number.isFinite(reaction))return false;
  const travel=clamp(splitDistance/spell.speed,.25,spell.range/spell.speed);
  const ux=Math.cos(angle),uy=Math.sin(angle),splitX=origin.x+ux*travel*spell.speed,splitY=origin.y+uy*travel*spell.speed;
+ if(splitX<0||splitX>W||splitY<0||splitY>H)return false;
  const splitStart=spell.cast+travel+.25;
- const phases=[{x:origin.x,y:origin.y,vx:ux*spell.speed,vy:uy*spell.speed,r:spell.radius,start:spell.cast,end:spell.cast+travel}];
+ const phases=dodgeIncoming(origin,spell);if(phases===null)return false;
+ // Replace the generic straight candidate with its actual angled main bolt.
+ phases.pop();phases.push({x:origin.x,y:origin.y,vx:ux*spell.speed,vy:uy*spell.speed,r:spell.radius,start:spell.cast,end:spell.cast+travel});
  for(const side of [-1,1])phases.push({x:splitX,y:splitY,vx:-uy*side*1050,vy:ux*side*1050,r:27.5,start:splitStart,end:splitStart+550/1050});
  const approach=dodgeReactionPath(reaction),start=approach.end;
  for(let i=0;i<24;i++){
@@ -762,7 +767,7 @@ function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
  if(!regularAllowed(spell.name)){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
  if(shots.some(s=>s.alive&&s.directed&&s.kind==="enemyOrb")&&spell!==REFERENCE_SPELLS.ezrealDodge&&!(difficulty==="hard"&&(spell===REFERENCE_SPELLS.luxDodge||spell===REFERENCE_SPELLS.blitzDodge))){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
  if(shots.some(s=>s.alive&&s.velkoz)&&(difficulty!=="hard"||![REFERENCE_SPELLS.ezrealDodge,REFERENCE_SPELLS.luxDodge,REFERENCE_SPELLS.blitzDodge].includes(spell))){if(difficulty!=="hard"||forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
- if(spell.split&&active>0){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
+ if(spell.split&&active>0&&difficulty!=="hard"){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
  // Concurrent visitors are independently chosen. Prefer a different straight
  // spell when another visitor or missile already uses the selected one.
  if(difficulty==="hard"){
@@ -818,8 +823,8 @@ function updateDodgeVisitor(e,dt){
   let aimPoint=canLead&&random()<.25?dodgeReactionPath(e.spell.cast).end:player;
   const offset=e.spell.split?(random()<.5?-.32:.32):0,splitDistance=e.spell.split?dist(e,player)*Math.cos(offset):undefined;
   let angle=Math.atan2(aimPoint.y-e.y,aimPoint.x-e.x)+offset;
-  const isolated=!e.spell.split||(!shots.some(s=>s.alive&&s.directed)&&!hazards.some(h=>h.directed)&&!foes.some(other=>other!==e&&other.alive&&other.dodgeVisitor&&(other.phase==="enter"||other.phase==="cast")));
-  let safe=isolated&&regularAllowed(e.spell.name)&&canEvadeDodgeCast(e,e.spell,null,aimPoint)&&(!e.spell.split||canEvadeVelkoz(e,angle,splitDistance,e.spell));
+  const isolated=!e.spell.split||difficulty==="hard"||(!shots.some(s=>s.alive&&s.directed)&&!hazards.some(h=>h.directed)&&!foes.some(other=>other!==e&&other.alive&&other.dodgeVisitor&&(other.phase==="enter"||other.phase==="cast")));
+  let safe=isolated&&regularAllowed(e.spell.name)&&(e.spell.split?canEvadeVelkoz(e,angle,splitDistance,e.spell):canEvadeDodgeCast(e,e.spell,null,aimPoint));
   // A lead that fails the safety forecast need not discard a safe direct cast.
   if(!safe&&aimPoint!==player&&isolated&&regularAllowed(e.spell.name)){aimPoint=player;angle=Math.atan2(player.y-e.y,player.x-e.x);safe=canEvadeDodgeCast(e,e.spell);}
   if(!safe)e.phase="exit";else{
