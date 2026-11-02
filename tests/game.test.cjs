@@ -23,6 +23,11 @@ function boot(preset="standard", options={}){
 }
 function foe(g,x=800,y=337.5){const e=g.enemy(x,y);e.speed=0;e.shoot=999;e.hp=e.maxHp=10000;g.setFoes([e]);return e;}
 function advance(g,seconds){for(let i=0;i<Math.round(seconds*120);i++)g.update(1/120);}
+test('Dodge restart varies the opening encounter',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});const openings=[];
+ for(let i=0;i<5;i++){g.reset('dodge');g.update(1/120);const e=g.foes.find(x=>x.dodgeVisitor);openings.push(e?`${e.spell.name}:${e.x.toFixed(1)}:${e.y.toFixed(1)}`:'deferred');}
+ assert.ok(new Set(openings).size>1,openings.join(', '));
+});
 test('Orianna shockwave draws animated impact arcs',()=>{
  const {g,strokes}=boot('ahri');g.reset('dodge');
  g.fx.push({x:600,y:330,r:207.5,ttl:.1,max:.2,shockwave:true});g.render();
@@ -2578,7 +2583,7 @@ test('Velkoz split counts as one unresolved opportunity while both branches are 
 
 test('Expert pressure does not wait minutes to become difficult',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(1);g.update(1/120);
- assert.ok(g.dodgeDirector.next>1.5&&g.dodgeDirector.next<2.1);
+ assert.ok(g.dodgeDirector.next>=.38*.88&&g.dodgeDirector.next<=.38*1.12);
 });
 test('endless Dodge keeps best survival separately from score',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
@@ -2607,7 +2612,7 @@ test('Expert endless cadence stays active across twelve simulated minutes',t=>{
   }
   runs.push(buckets);overlaps.push(overlapCasts);const d=g.dodgeDirector;mix.push({ezreal:d.ezreal,ahri:d.ahri,lux:d.lux,blitz:d.blitz,velkoz:d.velkoz,xerath:d.xerath+d.xerathQ,orianna:d.orianna,malphite:d.malphite,malDirect:d.malDirect,cassio:d.cassio});
   phases.push(Object.values(d.outcomes).reduce((a,v)=>({avoided:a.avoided+v.avoided,hit:a.hit+v.hit,blocked:a.blocked+v.blocked,harmless:a.harmless+v.harmless}),{avoided:0,hit:0,blocked:0,harmless:0}));
-  assert.equal(g.state,'playing');assert.ok(buckets.every(n=>n>=5));
+  assert.equal(g.state,'playing');assert.ok(buckets.every(n=>n>=5));assert.equal(d.xerathQ,0,'removed second laser appeared');
   for(const name of ['ezreal','ahri','lux','blitz','velkoz'])assert.ok(d[name]>0,`seed ${seed}: no ${name} casts`);
   assert.ok(d.ezreal>d.ahri,`seed ${seed}: Ezreal should remain more common than Ahri`);
  }
@@ -2701,7 +2706,7 @@ test('Cassiopeia cone and facing distinguish turn-away, face and escape',()=>{
 test('Dodge uses Tier-1 boots and compact readable collision',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.update(0);
  assert.equal(g.AHRI.speed,165);assert.equal(g.player.speed,177.5);assert.equal(g.player.hitRadius,25);
- assert.equal(g.DODGE_DIRECTOR.hard.interval,1.75);assert.equal(g.DODGE_DIRECTOR.hard.cap,2);
+ assert.equal(g.DODGE_DIRECTOR.hard.interval,.38);assert.equal(g.DODGE_DIRECTOR.hard.cap,4);
  const e=g.enemy(900,330),spell=g.REFERENCE_SPELLS.ezrealDodge;
  Object.assign(e,{dodgeVisitor:true,pending:{spell,angle:Math.PI,threat:true},charge:0});g.releaseEnemy(e);
  assert.equal(g.shots[0].r,spell.radius*.87);

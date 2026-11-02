@@ -2,6 +2,23 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Intense Expert playtest (2026-11-02)
+
+- At the player's request, Expert now attempts a regular encounter every 0.38 seconds and permits up to four concurrent threats. Ezreal's independent Lux follow-up opportunity increases to 35%; shared-route checks remain active. This is a playtest adjustment pending human feedback.
+- Three twelve-minute deterministic simulations measured 33–45 casts per minute; a separate seeded sample observed three distinct simultaneous threats. Regression confirms the removed Xerath Q laser is never scheduled in those long runs. Five focused checks pass; the full historical suite still needs reconciliation.
+
+## Randomized Dodge runs (2026-11-02)
+
+- Each Dodge restart advances the encounter seed using fresh randomness; the scheduler still uses its seeded generator within a run. This prevents identical opening encounters without exposing seed controls.
+
+## Denser Expert playtest (2026-11-02)
+
+- Player requested substantially more skills: Expert director beat is now 0.7 seconds, with up to three concurrent threats and a 0.35-second post-release floor. Forecasts still check committed projectiles and player routes. This needs a human balance playtest; historical cadence tests contain old thresholds.
+
+## Remove confusing second laser (2026-11-02)
+
+- Removed Xerath Q from natural Dodge scheduling after the player reported confusing it with a second Lux laser. Lux R remains available; the Xerath Q implementation is retained for future redesign and isolated tests. Local build key: `no-extra-laser`.
+
 ## Published build identification (2026-11-02)
 
 - Verified the public GitHub Pages HTML serves `game.js?v=20261102-expert-pressure`. Added a visible build label to the menu so the player can identify this playtest version without inspecting browser internals. Update the label and runtime cache key together when publishing another gameplay build.
