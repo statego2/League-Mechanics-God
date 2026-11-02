@@ -26,6 +26,13 @@ Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid depend
 - Cassiopeia’s exact range boundary now tolerates floating-point rounding, so a cast positioned exactly at the documented trainer range does not silently defer.
 - Focused verification: `node --check game.js`, `git diff --check`, and 10 targeted movement, collision, Cassiopeia-boundary, sustain and impact-lifetime tests pass. A broad historical suite still contains stale assertions for retired high-overlap behavior and will be reconciled separately rather than being presented as green.
 
+## Expert predictive reads and Lux identity pass (2026-11-02)
+
+- A moving Ahri is now directly tested more often than a stationary reaction: 40% forward lead, 20% reversal read and 20% lateral-cut read, versus 20% direct aim. Every candidate still passes the same movement/terrain/shared-threat escape forecast before aim lock; this increases route-reading value without silently creating impossible casts.
+- Lux Q visitors and the isolated Lux R source now use an original light-mage silhouette with ivory/gold palette, light focus and staff rather than the generic enemy caster. Lux R remains one isolated laser encounter: source tell, a visible charge lane, then its brief impact beam; it is not paired with a second directed threat.
+- `index.html` now cache-versions the new runtime as `expert-predictive` for GitHub Pages.
+- Verification: `node --check game.js`, `git diff --check`, and 11 selected tests pass, including Lux R tell/locked lane/walk escape, predictive-pattern distribution, base-vs-T1 movement scope, Spirit Rush/Fox-Fire movement and recovery/Cassiopeia behavior.
+
 ## CS wave body spacing (2026-11-02)
 
 - The two-sided CS simulation now applies a deterministic, same-team minion separation pass after each wave update. Minions that converge on the same chase/target point are pushed apart to roughly their combined gameplay radii while remaining clipped to walkable terrain. Opposing minions are intentionally not separated by this pass so melee contact remains possible. This is a compact training approximation of minion body blocking, not a claim of exact live NavMesh collision.

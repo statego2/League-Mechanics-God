@@ -126,6 +126,13 @@ test('Dodge reaction forecast follows the retained movement route',()=>{
  assert.ok(Math.hypot(g.player.x-predicted.x,g.player.y-predicted.y)<.1,`actual ${g.player.x},${g.player.y}; forecast ${predicted.x},${predicted.y}`);
  assert.ok(predicted.y>330,'the forecast must follow the existing waypoint rather than a newly calculated direct route');
 });
+test('Expert predictive aim favors lead, reversal and cut over stationary shots',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.moveTo(1000,g.player.y-80);g.setRng(73129);
+ const counts={direct:0,lead:0,reversal:0,cut:0};
+ for(let i=0;i<160;i++)counts[g.dodgeAimPoint(g.REFERENCE_SPELLS.ezrealDodge).pattern]++;
+ assert.ok(counts.direct>0&&counts.lead>0&&counts.reversal>0&&counts.cut>0,JSON.stringify(counts));
+ assert.ok(counts.lead+counts.reversal+counts.cut>counts.direct,JSON.stringify(counts));
+});
 test('director escape witnesses survive actual straight shots from varied angles and overlaps',()=>{
  let accepted=0,overlaps=0;
  for(const [key,distance] of [['ezrealDodge',470],['luxDodge',400],['blitzDodge',470],['ahriDodge',500]]){

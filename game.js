@@ -923,9 +923,12 @@ function dodgeAimPoint(spell){
  const future=dodgeReactionPath(spell.cast).end,dx=future.x-player.x,dy=future.y-player.y,d=Math.hypot(dx,dy);
  if(d<2)return {point:player,pattern:"direct"};
  const ux=dx/d,uy=dy/d,roll=random();
- if(roll<.36)return {point:player,pattern:"direct"};
- if(roll<.64)return {point:future,pattern:"lead"};
- if(roll<.84)return {point:{x:player.x-ux*70,y:player.y-uy*70},pattern:"reversal"};
+ // Expert deliberately tests route reading more often than stationary
+ // reaction: forward lead, reversal and lateral cut all remain forecasted
+ // against a walkable response before a caster is allowed to lock aim.
+ if(roll<.20)return {point:player,pattern:"direct"};
+ if(roll<.60)return {point:future,pattern:"lead"};
+ if(roll<.80)return {point:{x:player.x-ux*70,y:player.y-uy*70},pattern:"reversal"};
  const side=random()<.5?-1:1;
  return {point:{x:future.x-uy*side*58,y:future.y+ux*side*58},pattern:"cut"};
 }
@@ -1536,6 +1539,16 @@ function drawChampion(x,y,a,friendly,hit,windup,motion,profile=null){
   ctx.fillRect(-28,-48,12,25);ctx.fillRect(16,-48,12,25);ctx.fillRect(-14,-19,10,19);ctx.fillRect(4,-19,10,19);
   circle(0,-63,11,"#a98b53");circle(-4,-65,2,"#8af4ff");circle(4,-65,2,"#8af4ff");ctx.restore();return;
  }
+ if(profile==="lux"){
+  // Original light-mage silhouette for Final Spark: warm hair, ivory robe,
+  // gold staff and a visibly charging focus. It is deliberately not a copied
+  // champion asset, but separates Lux's identity from the generic caster.
+  ctx.save();ctx.translate(x,y);ctx.scale(Math.cos(a)>=0?1:-1,1);ctx.rotate(-windup*.1);
+  ctx.save();ctx.scale(1,.43);circle(0,3,25,"#0009");ctx.restore();
+  ctx.strokeStyle="#c9a85b";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(12,-19);ctx.lineTo(24,-61);ctx.stroke();circle(25,-64,5+windup*4,"#fff3ba");
+  ctx.fillStyle=hit?"#fff4d8":"#ece5d5";ctx.strokeStyle="#c9a85b";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-13,-18);ctx.lineTo(-10,-49);ctx.lineTo(10,-49);ctx.lineTo(15,-18);ctx.closePath();ctx.fill();ctx.stroke();
+  circle(0,-56,10,"#efd2b0");ctx.fillStyle="#f1d99b";ctx.beginPath();ctx.arc(0,-59,11,Math.PI,TAU);ctx.lineTo(11,-56);ctx.lineTo(-11,-56);ctx.closePath();ctx.fill();ctx.restore();return;
+ }
  const ahriSprite=$("ahriArt"),backSprite=$("ahriBackArt"),useAhri=((friendly&&ahriBase())||profile==="ahriEnemy")&&ahriSprite?.complete&&ahriSprite.naturalWidth;
  const useBack=useAhri&&Math.sin(a)<-.65&&backSprite?.complete&&backSprite.naturalWidth;
  let sprite=useBack?backSprite:useAhri?ahriSprite:$(profile==="void"?"voidArt":profile==="clockwork"?"clockworkArt":profile==="ahriEnemy"?"ahriArt":profile==="ezreal"?"explorerArt":friendly?"rangerArt":"mageArt");
@@ -1625,7 +1638,7 @@ for(const h of hazards){if(h.cassio){drawChampion(h.x,h.y,h.casting?h.angle:Math
  // charging lane so the player receives the full one-second reaction window.
  const dx=h.endX-h.x,dy=h.endY-h.y,len=Math.hypot(dx,dy)||1;
  const precast=h.luxR&&h.precast,progress=clamp(1-h.ttl/h.max,0,1),cueLength=h.luxR?len*(h.cueStart+(1-h.cueStart)*.94*progress):45;
- if(h.luxR)drawChampion(h.x,h.y,Math.atan2(dy,dx),false,false,precast?.15:progress,time*7,"mage");
+ if(h.luxR)drawChampion(h.x,h.y,Math.atan2(dy,dx),false,false,precast?.15:progress,time*7,"lux");
  if(precast){circle(h.x,h.y,28,"#ffe09a33",false,2);circle(h.x,h.y,10,"#fff2c9");continue;}
  ctx.save();ctx.lineCap="round";ctx.beginPath();ctx.moveTo(h.x,h.y);ctx.lineTo(h.x+dx/len*cueLength,h.y+dy/len*cueLength);ctx.strokeStyle=h.luxR?"#ffe5a8aa":"#9edcffaa";ctx.lineWidth=h.luxR?5:7;ctx.stroke();ctx.restore();
  circle(h.x,h.y,h.luxR?20:16,h.luxR?"#ffe09a44":"#8bcfff44");circle(h.x,h.y,h.luxR?8:7,h.luxR?"#fff2c9":"#d0edff");continue;
@@ -1677,7 +1690,7 @@ ctx.fillStyle="#102d27";ctx.fillRect(player.x-22,player.y-86,44,4);ctx.fillStyle
  ctx.save();ctx.translate(e.x,e.y-(e.moving?Math.abs(Math.sin(time*12+e.id))*2:0));ctx.save();ctx.scale(1,.45);circle(0,3,17,"#0007");ctx.restore();
  if(e.minionType==="siege")drawCannon(e);else if(minionArt.complete&&minionArt.naturalWidth){ctx.drawImage(minionArt,-24,-48,48,49);if(e.hit>0){ctx.globalAlpha=.4;circle(0,-26,16,"#fff0dc");}}else polygon(0,-10,14,5,Math.PI/2,e.hit?"#fff0dc":"#ac6a57","#dfb68c");drawCasterStaff(e);ctx.restore();
  ctx.fillStyle="#13252b";ctx.fillRect(e.x-19,e.y-55,38,5);ctx.fillStyle="#d9827d";ctx.fillRect(e.x-19,e.y-55,38*Math.max(0,e.hp/e.maxHp),5);continue;
-}drawChampion(e.x,e.y,e.pending?e.pending.angle:Math.atan2(player.y-e.y,player.x-e.x),false,e.hit>0,visitorCastPose(e),time*7,e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.ezrealDodge?"ezreal":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.ahriDodge?"ahriEnemy":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.blitzDodge?"blitz":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.velkozDodge?"void":null);
+}drawChampion(e.x,e.y,e.pending?e.pending.angle:Math.atan2(player.y-e.y,player.x-e.x),false,e.hit>0,visitorCastPose(e),time*7,e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.ezrealDodge?"ezreal":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.luxDodge?"lux":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.ahriDodge?"ahriEnemy":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.blitzDodge?"blitz":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.velkozDodge?"void":null);
 if(e.charm>0){ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#ffb2df";ctx.fillText("♥ CHARMED",e.x,e.y-96);}
 ctx.fillStyle="#101e23";ctx.fillRect(e.x-25,e.y-86,50,5);ctx.fillStyle="#ff9290";ctx.fillRect(e.x-25,e.y-86,50*clamp(e.hp/e.maxHp,0,1),5);}
 for(const s of shots){
