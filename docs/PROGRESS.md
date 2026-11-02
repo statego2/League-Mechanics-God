@@ -5,7 +5,7 @@ Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid depend
 ## Smaller Orianna R (2 November 2026)
 
 - Per player feedback, reduced Orianna R radius by 8% from the prior trainer value. The cast ring, impact effect, escape forecast and actual hitbox share the reduced radius; the 0.6 s Expert reaction window, Q and damage are unchanged. The 8% reduction is an explicit training adjustment to the sourced 415-unit radius, not a claim about current LoL values. Build `orianna-smaller`.
-- Added an actual spawned-R check at both sides of the reduced collision boundary and verified the displayed circle uses that same radius. All 33 Orianna-focused tests pass. A full suite launched before this change cannot establish the new build; rerun it separately. The reduced ring was also inspected in an isolated browser fixture frozen midway through R; the smaller ring and energy remained visible. This was not a real-time playtest. Human feel remains to be evaluated.
+- Added an actual spawned-R check at both sides of the reduced collision boundary and verified the displayed circle uses that same radius. All 33 Orianna-focused tests pass. The complete `node --test --test-reporter=dot tests/*.test.cjs` suite on the new build finished with exit 0. The reduced ring was also inspected in an isolated browser fixture frozen midway through R; the smaller ring and energy remained visible. This was not a real-time playtest. Human feel remains to be evaluated.
 
 ## Expert Cassiopeia cast-or-not (2 November 2026)
 
