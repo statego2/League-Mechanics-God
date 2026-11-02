@@ -46,6 +46,7 @@ Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid depend
 ## Remove confusing second laser (2026-11-02)
 
 - Removed Xerath Q from natural Dodge scheduling after the player reported confusing it with a second Lux laser. Lux R remains available; the Xerath Q implementation is retained for future redesign and isolated tests. Local build key: `no-extra-laser`.
+- Updated natural-scheduling regression coverage to enforce this removal across five two-minute Expert simulations, including the former random selection band with a live shot. The Expert cap regression now verifies the current four-threat limit. All three selected tests pass.
 
 ## Published build identification (2026-11-02)
 

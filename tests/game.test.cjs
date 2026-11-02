@@ -2473,15 +2473,11 @@ test('Expert visitor witnesses avoid an already-active Xerath Q at impact',()=>{
  }
  assert.ok(checked>0,'no combined Q and projectile response found');
 });
-test('Expert naturally combines Xerath Q with a live straight missile',()=>{
- let found=false;
- for(let seed=1;seed<=5&&!found;seed++){
+test('Expert does not naturally schedule the removed Xerath Q laser',()=>{
+ for(let seed=1;seed<=5;seed++){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed*1234567);g.player.hp=g.player.maxHp=1e6;
-  for(let i=0;i<120*120&&!found;i++){
-   g.update(1/120);found=g.hazards.some(h=>h.beam&&h.ttl>0)&&g.shots.some(s=>s.alive&&s.directed&&['EZREAL Q','LUX Q','BLITZ Q'].includes(s.spellName));
-  }
+  advance(g,120);assert.equal(g.dodgeDirector.xerathQ,0,`seed ${seed}`);
  }
- assert.ok(found,'no natural Xerath Q plus missile overlap found');
 });
 test('Expert does not force Xerath W above a full two-shot budget',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;
@@ -2688,17 +2684,17 @@ test('Expert recovery still schedules an isolated encounter',()=>{
 });
 
 
-test('Expert director may select Xerath Q alongside an existing straight shot',()=>{
+test('Expert director does not select Xerath Q alongside an existing straight shot',()=>{
  for(const [lo,hi,name] of [[.94,1,'Xerath Q']]){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(50);g.dodgeDirector.next=999;
   const active=g.fire(100,100,1,0,'enemy',10,1,5);Object.assign(active,{directed:true,spellName:'EZREAL Q'});
   let seed=0;while(seed<100000){const roll=((Math.imul(1664525,seed)+1013904223)>>>0)/4294967296;if(roll>=lo&&roll<hi)break;seed++;}
-  assert.ok(seed<100000);g.setRng(seed);assert.equal(g.spawnDodgeVisitor(),true,name);assert.ok(g.hazards.some(h=>h.beam),name);
+  assert.ok(seed<100000);g.setRng(seed);g.spawnDodgeVisitor();assert.ok(!g.hazards.some(h=>h.beam),name);
  }
 });
-test('Expert spawn respects its two-threat cap',()=>{
+test('Expert spawn respects its four-threat cap',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(50);
- for(let i=0;i<2;i++){const shot=g.fire(100,100+i*30,1,0,'enemy',10,1,5);Object.assign(shot,{directed:true,spellName:'EZREAL Q'});}
+ for(let i=0;i<4;i++){const shot=g.fire(100,100+i*30,1,0,'enemy',10,1,5);Object.assign(shot,{directed:true,spellName:'EZREAL Q'});}
  assert.equal(g.spawnDodgeVisitor(),false);assert.equal(g.foes.length,0);
 });
 test('visitor spacing detects intersecting entry paths, including a stationary caster',()=>{
