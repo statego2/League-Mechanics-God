@@ -1373,12 +1373,10 @@ for(const h of hazards){
    }
   }
   if(h.ttl<=0&&!h.casting){
-   if(difficulty==="hard"){
-    // Once Q is travelling, an early Flash is the player's committed response,
-    // not a reason for Orianna to cancel the already-telegraphed combo.
-    if(player.cd.f<=0&&!oriannaFlashEscape(h)){h.ttl=0;deferRareEvent(h);continue;}
-   }
-   else if(!oriannaEscape(h)){h.ttl=0;deferRareEvent(h);continue;}
+   // Expert checks Flash and a viable response before sending the ball. Once
+   // visible Q is committed, player movement or ability locks must not make R
+   // disappear: they are decisions made in response to an existing threat.
+   if(difficulty!=="hard"&&!oriannaEscape(h)){h.ttl=0;deferRareEvent(h);continue;}
    h.casting=true;h.ttl=ORIANNA_R.cast;h.threat=dist(player,h)<=h.r+player.hitRadius;
    dodgeDirector.attempted++;dodgeDirector.orianna++;
   }else if(h.ttl<=0){

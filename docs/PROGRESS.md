@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Committed Expert Orianna combo (2 November 2026)
+
+- Expert Orianna still requires an available Flash and a sampled escape before launching Q. Once the ball is visibly travelling, R now commits instead of silently disappearing when a later movement, cast lock or terrain position makes the sampled Flash response invalid. This makes the telegraphed sequence reliable, but the initial snapshot is not a guarantee of safety after the player changes their position or actions. Standard retains its existing cast-time walking check. Build `orianna-commit`.
+- Eight targeted tests pass, including Flash used during Q, a player lock after Q begins, fixed ball positioning and executable Flash responses. Complete suite is being rerun; human multi-minute play remains necessary.
+
 ## Beam impact width (2 November 2026)
 
 - Lux R and Xerath Q impact VFX previously used Xerath's fixed beam width regardless of their own collision radius, making Lux's visible hit disagree with its actual beam. Each impact now renders at its hazard diameter; collision, timings, aim and difficulty are unchanged. The thin charge cue remains a visual cue, not a hitbox overlay. Build `beam-width`.

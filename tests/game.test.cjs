@@ -51,6 +51,11 @@ test('Expert Orianna completes the ball combo if Ahri Flashes during Q travel',(
  advance(g,.47);assert.equal(h.casting,true);assert.equal(h.x,destination.x);assert.equal(h.y,destination.y);assert.equal(g.dodgeDirector.orianna,1);
  advance(g,.51);assert.equal(g.hazards.includes(h),false);
 });
+test('Expert Orianna commits R after Q even if Ahri becomes unable to Flash',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setFoes([]);g.dodgeDirector.next=999;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=g.dodgeDirector.luxRAt=Infinity;
+ assert.ok(g.spawnOriannaR());const h=g.hazards[0];g.player.root=1;
+ assert.equal(g.oriannaFlashEscape(h),false);advance(g,.47);assert.equal(h.casting,true);assert.equal(g.dodgeDirector.orianna,1);
+});
 test('centred Orianna Flash witnesses survive actual impact while Ahri is moving',()=>{
  let accepted=0;
  for(const [dx,dy] of [[100,0],[-100,0],[0,100],[0,-100]])for(const boosted of [false,true]){
