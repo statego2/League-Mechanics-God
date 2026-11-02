@@ -20,6 +20,37 @@
 
 ---
 
+## Nightmare Lane — exact owner gameplay specification (2 November 2026)
+
+This section is the **specific intended player experience**, not generic advice for implementing a competitive lane bot. It is a target to build **after the shared CS engine becomes trustworthy**, not a claim of existing functionality.
+
+> "I want an almost infallible Syndra bot that pushes with non-stop autos, misses no CS, moves left and right like a real player, farms and dodges. Whenever Q is up and I go for CS, she always pokes me. She must be so good that she destroys me unless I learn to CS under pressure, dodge her poke, bait her Q, and punish her when she farms."
+
+**Required behavior in the single continuous Mid Lane Mastery experience:**
+
+1. **Syndra is the fixed first bot opponent.** The player starts as Ahri. One difficult opponent in an actual mid lane, not a sequence of minigames or passive target dummies.
+2. **Non-stop push with auto attacks.** She continuously attacks the enemy minion wave whenever real auto timers, spacing, minion health and threat allow; no artificial idle waiting that makes farming easy. Her autos must actually change wave HP and push the lane.
+3. **Virtually flawless CS.** She calculates incoming minion/projectile damage, travel and attack windups, times her own last hits extremely well, and aims for **100% of CS physically obtainable under the actual game rules**. Track secured/missed/denied minions, and treat an avoidable missed CS as a bot-quality defect. Do **not** award phantom CS or bypass combat rules to hit a headline percentage.
+4. **Realistic active movement.** She constantly adjusts spacing and strafes left/right like a skilled mid-laner, remains positioned for farming/poke, and actively attempts to dodge the player's Q/E and other real incoming threats. She cannot know future clicks or instantly evade an already committed unavoidable skillshot.
+5. **Relentless Q-on-CS punishment.** **Whenever Q is ready and the player visibly goes for a last hit, her default behavior is to attempt Q poke, every time the cast is legitimately possible.** Aim at the player's current/predictable commitment and exploit real auto-attack windup / movement limits. This is not occasional random poke, nor a fixed scripted shot every few seconds. Real range, timing, cooldown, LoS/geometry and overlapping attack commitments still apply; she must not fire on cooldown or magically land every Q. A missed/baited Q produces a real punishable cooldown window.
+6. **Reciprocal punishment.** Syndra also visibly commits to her own real CS auto attacks. The player can exploit those moments by poking with Ahri Q/E or autos; Syndra can sidestep if her observation/reaction and current commitments permit. The training must reward skillful poking and dodging **while farming**, not only passive survival.
+7. **High but credible challenge.** It should be extremely hard, with losses and missed player CS if the player tunnel-visions farming. Difficulty comes from her legitimate timing, pressure, positioning and mechanical quality—not invisible input-reading, invulnerability, resource cheats or impossible AI reactions.
+
+**Core loop:** minions continuously fight → Syndra pushes and last-hits nearly perfectly → player moves in for CS → if Q is available, Syndra tries to punish that commitment → player chooses to bait, dodge, take the CS or concede it → Syndra's own CS commitments expose openings for the player to punish → repeat without interruptions.
+
+**No premature implementation:** First fix and human-playtest the pure CS Engine. Do not build Syndra against fake wave data, and do not change the already enjoyable Dodge balance as a side effect.
+
+### Nightmare Lane acceptance criteria
+
+- In extended seeded lane sessions without player interference, Syndra last-hits virtually every physically obtainable minion and consistently pushes via **actual autos**, rather than a hidden CS award or scripted wave health.
+- She changes positions repeatedly, keeps usable spacing, and makes real dodge attempts against player attacks while never cheating observation/reaction rules.
+- Across repeated **legal, Q-ready** player last-hit commitments, the AI consistently attempts Syndra Q poke; if Q is cooling down or cannot legally reach, it does not fabricate a cast.
+- At least one human-tested interaction demonstrates: player baits out her Q → avoids it → takes CS or punishes Syndra during the real cooldown.
+- At least one human-tested interaction demonstrates: Syndra commits to last-hitting → player attempts Q/E poke → the outcome respects both champions' actual commitments and trajectories.
+- Minions, player CS, Syndra CS, health/damage and missed/denied CS remain coherent under 30/60/120 FPS and during a continuous session.
+
+---
+
 ## 1. The experience: ONE very hard mid lane
 
 > **A credible mid lane with real fighting minion waves and ONE exceptionally demanding opponent. Both players farm. Both try to punish the other's last-hit commitments. The player must naturally bait, dodge, farm, zone and trade. No separate lessons or sub-modes.**
@@ -68,7 +99,7 @@ Only use observable or legitimately derivable state:
 
 Every decision has a **reaction and commitment delay** derived from its actor behavior, not instant omniscience.
 
-**Poke policy:** attempt Syndra Q whenever Q is ready and the player's genuine CS commitment provides an observable, legal attack opportunity (range, timing, positioning and cast rules permitting). Aim for relentless pressure, not an artificial guaranteed hit. If the cast is unavailable or impossible, do not fabricate an attack. The player can bait or dodge it and exploit the resulting cooldown; her own CS and survival remain real competing commitments.
+**Poke policy:** whenever Syndra Q is ready, consistently attempt a Q on **every visible, mechanically valid player CS commitment**; do not reinterpret this as occasional poke based on a high-level utility score. Actual range, cast time, attack commitments, reaction, geometry and cooldowns must be respected, and hitting is not guaranteed. Player bait/dodge creates genuine cooldown windows.
 
 **Bot farming policy:** continually push with repeated legitimate autos, aggressively and precisely last-hit every *obtainable* minion using actual movement, windup, missile travel, damage and death/credit rules. Track both secured and missed CS. Despite near-perfect execution, bot CS is not guaranteed when the player denies, zones, kills or interrupts her under shared engine rules; these punish windows are part of the drill.
 
@@ -130,7 +161,7 @@ Never automatically mark a skipped CS a mistake. Never say "you should have E'd"
 1. Existing real two-sided minion simulation and per-unit health/attack/windup/projectile behavior; enough reliability that HP changes predictably.
 2. One enemy champion actor with real position, HP, movement, attack range/windup, Q or E, cooldown and targetable combat.
 3. Bot attempts its own last-hits using the same damage/credit rules as the player.
-4. Bot recognizes player last-hit opportunities via visible wave HP + player movement/windup and sometimes attempts legitimate poke.
+4. Bot recognizes visible player last-hit commitments and attempts Q poke on every mechanically valid Q-ready opportunity; never uses random passive-poke scheduling as a substitute.
 5. Player can aim Q/E at bot **during its own last-hit window**, dodge bot's committed spell and keep farming.
 6. No rigid practice-phase timer, no second mode UI for bait or poke.
 7. Source-of-truth results distinguish player CS, enemy CS, enemy poke, player poke and meaningful threat dodges.
@@ -141,7 +172,7 @@ Never automatically mark a skipped CS a mistake. Never say "you should have E'd"
 - Minion reaches lethal HP through real enemy/ally attacks; player kill gets one CS, bot kill gets bot CS, allied kill gets neither; unresolved never counts as dead.
 - Bot is capable of last-hitting and being hit by Ahri Q/E while attacking; its own windup can be interrupted under correctly modeled rules.
 - Bot attacks/pokes when a player CS commitment is a valid opportunity and obeys cast cooldown, range, collision and line-of-fire.
-- Bot sometimes *doesn't* cast on a CS if on cooldown or if trade is unfavorable.
+- Bot withholds Q when it is on cooldown or the cast is mechanically invalid (range, commitment, genuine impossibility); otherwise Q-ready player CS commitments trigger a consistent poke attempt, even if the player can bait or dodge it.
 - Player bait can induce real committed cast; enemy cannot instantly re-aim after commitment.
 - Player can punish a bot CS commitment with E/Q without scripted bot immobility.
 - The same-seed scenarios give consistent outcomes under 30/60/120 FPS rendering with the fixed simulation step.
