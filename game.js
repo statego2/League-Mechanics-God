@@ -428,7 +428,7 @@ function addEnemy(){
  foes.push(enemy(x,y));
 }
 // Training director: weights are normalized over the currently implemented roster.
-// Each visitor casts once, so no individual champion cooldown is faked.
+// Visitors can occasionally leave before committing; no cooldown is faked.
 // Spawn interval and concurrency are training policies, not game spell stats.
 const DODGE_DIRECTOR={easy:{interval:5,cap:1},normal:{interval:3.2,cap:2},hard:{interval:DODGE_TUNING.expertInterval,cap:4}};
 // Expert's challenge comes in repeatable short waves, not unbroken random
@@ -934,6 +934,9 @@ function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
  // champion's sourced cast windup or missile speed. Aim is locked afterward.
  e.speed=entrySpeed;
  e.preCastWait=difficulty==="hard"?rand(0,.16):0;
+ // A small number of ordinary visitors threaten, then leave before casting.
+ e.feint=difficulty==="hard"&&!forcedSpell&&random()<.06;
+ if(e.feint)e.preCastWait=Math.max(e.preCastWait,.08);
  e.hp=e.maxHp=160;e.shoot=999;foes.push(e);
  // Two distinct visitors enter visibly together. The later aim lock rechecks
  // one shared escape against the first caster before committing its shot.
@@ -977,6 +980,8 @@ function updateDodgeVisitor(e,dt){
   // The visitor is already visible; it may hold briefly before committing.
   // Waiting remains an entry phase for threat budgets and overlap checks.
   if(e.preCastWait>0){e.preCastWait=Math.max(0,e.preCastWait-dt);return;}
+  // A feint ends before windup or projectile release and is not a cast.
+  if(e.feint){e.feint=false;e.phase="exit";return;}
   // Predict the current route through windup and projectile travel; future
   // input changes remain unknown and every commitment is safety-checked.
   const aim=dodgeAimPoint(e.spell,e);

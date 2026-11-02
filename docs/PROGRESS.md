@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Mindgame visitor feints (2 November 2026)
+
+- Added a small 6% selection chance for ordinary Expert visitors to pause visibly and leave before starting a cast. This implements the player's cast-or-not request while leaving most pressure intact. Forced follow-ups, major ultimates and other difficulties are unchanged. A feint releases no projectile, consumes no spell cast and awards no dodge; it does not cancel a committed windup. Build `mindgame-feint`.
+- Seven focused tests passed: no cast/dodge on a feint, timing and prediction distribution, shared escapes, early Malphite and a sampled Expert opening (35 casts, peak three simultaneous threats). The full suite must be rerun; human tuning of feint frequency remains open.
+
 ## Full regression and Syndra feasibility note (2 November 2026)
 
 - The complete `node --test --test-reporter=dot tests/*.test.cjs` run on the current gameplay and overlap tests finished with exit 0. This does not replace subjective human playtesting.

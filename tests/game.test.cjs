@@ -256,6 +256,12 @@ test('Mindgame Timing varies visible entry without changing the spell windup',()
  Object.assign(e,{dodgeVisitor:true,spell,phase:'enter',origin:{...origin},entry:{...origin},speed:120,preCastWait:.1});g.setFoes([e]);
  advance(g,.05);assert.equal(e.phase,'enter');assert.equal(g.shots.length,0);advance(g,.075);assert.equal(e.phase,'cast');assert.ok(e.charge<=spell.cast&&e.charge>spell.cast-.03);
 });
+test('Expert visitor feints leave without casting or awarding a dodge',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;
+ const spell=g.REFERENCE_SPELLS.ezrealDodge,origin={x:130,y:g.player.y},e=g.enemy(origin.x,origin.y);
+ Object.assign(e,{dodgeVisitor:true,spell,phase:'enter',origin:{...origin},entry:{x:80,y:origin.y},speed:120,preCastWait:.1,feint:true});g.setFoes([e]);
+ advance(g,.05);assert.equal(e.phase,'enter');advance(g,.08);assert.equal(e.phase,'exit');assert.equal(e.pending,null);assert.equal(g.shots.length,0);assert.equal(g.dodgeDirector.attempted,0);assert.equal(g.dodged,0);
+});
 test('a delayed visitor can share a real escape with an already committed cast',()=>{
  let checked=0;
  for(let seed=1;seed<=40&&checked<4;seed++){
