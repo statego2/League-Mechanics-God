@@ -22,7 +22,7 @@ const AHRI_DATA=validAhriData(window.LMGAhriData)?window.LMGAhriData:AHRI_FALLBA
 // The default trainer baseline includes Tier-1 boots: 330 base + 25 flat
 // movement speed. Dodge collision is deliberately narrower than Ahri's broad
 // gameplay radius so the visible body, not transparent empty space, defines it.
-const DODGE_TUNING={tierOneBoots:25,championRadius:SIMULATION.toCanvas(54),spellRadiusScale:.9,areaRadiusScale:.9,expertInterval:.32};
+const DODGE_TUNING={tierOneBoots:25,championRadius:SIMULATION.toCanvas(54),spellRadiusScale:.9,areaRadiusScale:.9,expertInterval:2};
 const AHRI={hp:AHRI_DATA.base.hp,speed:SIMULATION.toCanvas(AHRI_DATA.base.moveSpeed+DODGE_TUNING.tierOneBoots),range:SIMULATION.toCanvas(AHRI_DATA.base.attackRange),attackSpeed:AHRI_DATA.base.attackSpeed,damage:AHRI_DATA.base.attackDamage,missileSpeed:SIMULATION.toCanvas(AHRI_DATA.attack.missileSpeed),radius:SIMULATION.toCanvas(AHRI_DATA.gameplayRadius),q:{cast:AHRI_DATA.q.cast,range:SIMULATION.toCanvas(AHRI_DATA.q.range),speed:SIMULATION.toCanvas(AHRI_DATA.q.speed),radius:SIMULATION.toCanvas(AHRI_DATA.q.width/2)}};
 function dodgeSpellRadius(spell){return mode==="dodge"&&ahriBase()?spell.radius*DODGE_TUNING.spellRadiusScale:spell.radius;}
 function dodgeAreaRadius(radius){return mode==="dodge"&&ahriBase()?radius*DODGE_TUNING.areaRadiusScale:radius;}
@@ -410,7 +410,7 @@ function addEnemy(){
 // Training director: weights are normalized over the currently implemented roster.
 // Each visitor casts once, so no individual champion cooldown is faked.
 // Spawn interval and concurrency are training policies, not game spell stats.
-const DODGE_DIRECTOR={easy:{interval:5,cap:1},normal:{interval:3.2,cap:2},hard:{interval:DODGE_TUNING.expertInterval,cap:3}};
+const DODGE_DIRECTOR={easy:{interval:5,cap:1},normal:{interval:3.2,cap:2},hard:{interval:DODGE_TUNING.expertInterval,cap:2}};
 // Expert's challenge comes in repeatable short waves, not unbroken random
 // spam: stable flow, a brief denser spike, then a recovery-in-motion which
 // keeps ordinary threats alive while restoring a readable next decision.
@@ -956,6 +956,12 @@ function updateDodgeVisitor(e,dt){
  }
 }
 function updateDodgeDirector(dt){
+ // Expert opens with ordinary pressure first. Major patterns earn distinct
+ // reading space instead of all arriving during the opening scramble.
+ if(difficulty==="hard"&&!dodgeDirector.rhythmConfigured){
+  dodgeDirector.rhythmConfigured=true;
+  dodgeDirector.cassAt=35;dodgeDirector.rareAt=75;dodgeDirector.malAt=90;
+ }
  if(difficulty==="hard"&&dodgeDirector.luxRAt===undefined)dodgeDirector.luxRAt=26;
  if(dodgeDirector.areaFollow){
   dodgeDirector.areaFollow=false;
@@ -974,20 +980,23 @@ function updateDodgeDirector(dt){
   dodgeDirector.luxRAt=time+1;dodgeDirector.next=Math.max(dodgeDirector.next,1.1);return;
  }
  if(difficulty==="hard"&&time>=dodgeDirector.cassAt&&time>=dodgeDirector.rareGuardUntil){
-  if(spawnCassioR()){hazards[hazards.length-1].directorScheduled=true;dodgeDirector.cassAt=time+(difficulty==="hard"?rand(32,45):rand(150,240));dodgeDirector.rareGuardUntil=time+(difficulty==="hard"?8:35);return;}
+  if(spawnCassioR()){hazards[hazards.length-1].directorScheduled=true;dodgeDirector.cassAt=time+(difficulty==="hard"?rand(55,80):rand(150,240));dodgeDirector.rareGuardUntil=time+(difficulty==="hard"?8:35);return;}
   dodgeDirector.cassAt=time+1;if(difficulty==="hard"){dodgeDirector.next=Math.max(dodgeDirector.next,1.1);return;}
  }
  if(time>=dodgeDirector.malAt&&time>=dodgeDirector.rareGuardUntil){
-  if(spawnMalphiteR()){hazards[hazards.length-1].directorScheduled=true;dodgeDirector.malAt=time+(difficulty==="hard"?rand(32,45):rand(150,240));dodgeDirector.rareGuardUntil=time+(difficulty==="hard"?8:35);return;}
+  if(spawnMalphiteR()){hazards[hazards.length-1].directorScheduled=true;dodgeDirector.malAt=time+(difficulty==="hard"?rand(90,150):rand(150,240));dodgeDirector.rareGuardUntil=time+(difficulty==="hard"?8:35);return;}
   dodgeDirector.malAt=time+1;if(difficulty==="hard"){dodgeDirector.next=Math.max(dodgeDirector.next,1.1);return;}
  }
  if(time>=dodgeDirector.rareAt&&time>=dodgeDirector.rareGuardUntil){
-  if(spawnOriannaR()){hazards[hazards.length-1].directorScheduled=true;dodgeDirector.rareAt=time+(difficulty==="hard"?rand(32,45):rand(90,150));dodgeDirector.rareGuardUntil=time+(difficulty==="hard"?8:35);return;}
+  if(spawnOriannaR()){hazards[hazards.length-1].directorScheduled=true;dodgeDirector.rareAt=time+(difficulty==="hard"?rand(90,150):rand(90,150));dodgeDirector.rareGuardUntil=time+(difficulty==="hard"?8:35);return;}
   dodgeDirector.rareAt=time+1;if(difficulty==="hard"){dodgeDirector.next=Math.max(dodgeDirector.next,1.1);return;}
  }
  dodgeDirector.next-=dt;if(dodgeDirector.next>0)return;
  if(spawnDodgeVisitor())dodgeDirector.next=DODGE_DIRECTOR[difficulty].interval*dodgeRhythmMultiplier(time)*rand(.88,1.12);
- else dodgeDirector.next=difficulty==="hard"?.08:.25;
+ // A full threat budget is not an invitation to retry every frame. Waiting
+ // through most of a normal Expert beat creates the recovery space players
+ // need to reset their path after a committed dodge.
+ else dodgeDirector.next=difficulty==="hard"?DODGE_DIRECTOR.hard.interval*.75:.25;
 }
 // An unsafe, uncommitted ultimate is deferred instead of consuming its full
 // rare-event interval. A short guard avoids chaining Orianna Q attempts.

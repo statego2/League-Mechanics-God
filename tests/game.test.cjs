@@ -66,7 +66,7 @@ test('Dodge results name the last spell that actually hit Ahri',()=>{
  advance(g,.2);
  assert.equal(g.state,'ended');assert.match(node('menuDescription').textContent,/Last hit: EZREAL Q/);
 });
-test('Expert starts with sustained mixed pressure and early Cassiopeia and Malphite',t=>{
+test('Expert opens with readable mixed pressure before major ultimates',t=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
  let maxActive=0,mixed=false;
  for(let i=0;i<60*120;i++){
@@ -74,15 +74,15 @@ test('Expert starts with sustained mixed pressure and early Cassiopeia and Malph
   const names=[...g.foes.filter(e=>e.alive&&e.dodgeVisitor&&(e.phase==='enter'||e.phase==='cast')).map(e=>e.spell.name),...g.shots.filter(s=>s.alive&&s.directed).map(s=>s.spellName)];
   maxActive=Math.max(maxActive,names.length);if(names.length>=2&&new Set(names).size>=2)mixed=true;
  }
- assert.ok(maxActive>=3,`peak ${maxActive}`);assert.ok(mixed,'no mixed simultaneous threats');
- assert.ok(g.dodgeDirector.attempted>=20,`only ${g.dodgeDirector.attempted} casts`);
- assert.ok(g.dodgeDirector.cassio>0,'Cassiopeia missing');assert.ok(g.dodgeDirector.malphite>0,'Malphite missing');
- assert.ok(g.dodgeDirector.orianna>0,'Orianna missing');
+ assert.ok(maxActive<=3,`peak ${maxActive} exceeds cap`);assert.ok(mixed,'no mixed simultaneous threats');
+ assert.ok(g.dodgeDirector.attempted>=12,`only ${g.dodgeDirector.attempted} casts`);
+ assert.ok(g.dodgeDirector.cassio>0,'Cassiopeia missing');assert.equal(g.dodgeDirector.malphite,0,'Malphite arrived too early');
+ assert.equal(g.dodgeDirector.orianna,0,'Orianna arrived too early');
  t.diagnostic(`peak ${maxActive} simultaneous threats; ${g.dodgeDirector.attempted} casts; Cassiopeia ${g.dodgeDirector.cassio}, Malphite ${g.dodgeDirector.malphite}`);
 });
-test('Expert independently schedules up to three concurrent threats in seeded play',t=>{
+test('Expert independently schedules up to two concurrent threats in seeded play',t=>{
  let peak=0,spellMix=0,missilePeak=0;
- for(let seed=1;seed<=12&&peak<3;seed++){
+ for(let seed=1;seed<=12&&peak<2;seed++){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed*1234567);g.player.hp=g.player.maxHp=1000000;
   for(let i=0;i<120*120;i++){
    g.update(1/120);
@@ -91,9 +91,9 @@ test('Expert independently schedules up to three concurrent threats in seeded pl
    if(live.length>peak){peak=live.length;spellMix=new Set(live).size;}
   }
  }
- t.diagnostic(`peak ${peak}, distinct spells ${spellMix}, simultaneous missiles ${missilePeak}`);assert.ok(peak>=3);assert.ok(spellMix>=2);
+ t.diagnostic(`peak ${peak}, distinct spells ${spellMix}, simultaneous missiles ${missilePeak}`);assert.ok(peak>=2);assert.ok(spellMix>=2);
 });
-test('Expert creates overlapping live missiles during sustained seeded play',t=>{
+test('Expert retains occasional overlapping live missiles during sustained seeded play',t=>{
  let peak=0;
  for(let seed=1;seed<=4;seed++){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed*1234567);g.player.hp=g.player.maxHp=1000000;
@@ -101,7 +101,7 @@ test('Expert creates overlapping live missiles during sustained seeded play',t=>
    g.update(1/120);peak=Math.max(peak,g.shots.filter(s=>s.alive&&s.directed&&s.velkoz!=='delay'&&!s.ignorePlayer&&!(s.group&&s.group.hit)).length);
   }
  }
- t.diagnostic(`peak eligible missiles ${peak}`);assert.ok(peak>=3);
+ t.diagnostic(`peak eligible missiles ${peak}`);assert.ok(peak>=2);
 });
 test('Expert avoids a duplicate champion while an earlier visitor is still visible',()=>{
  let spawned=0;
@@ -2637,9 +2637,9 @@ test('Expert director may select Xerath Q alongside an existing straight shot',(
   assert.ok(seed<100000);g.setRng(seed);assert.equal(g.spawnDodgeVisitor(),true,name);assert.ok(g.hazards.some(h=>h.beam),name);
  }
 });
-test('Expert spawn respects its three-threat cap',()=>{
+test('Expert spawn respects its two-threat cap',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(50);
- for(let i=0;i<3;i++){const shot=g.fire(100,100+i*30,1,0,'enemy',10,1,5);Object.assign(shot,{directed:true,spellName:'EZREAL Q'});}
+ for(let i=0;i<2;i++){const shot=g.fire(100,100+i*30,1,0,'enemy',10,1,5);Object.assign(shot,{directed:true,spellName:'EZREAL Q'});}
  assert.equal(g.spawnDodgeVisitor(),false);assert.equal(g.foes.length,0);
 });
 test('visitor spacing detects intersecting entry paths, including a stationary caster',()=>{
