@@ -645,7 +645,9 @@ function spawnCassioR(){
  for(let i=0;i<24;i++){
   const a=angle+i*TAU/24,p={x:player.x+Math.cos(a)*350,y:player.y+Math.sin(a)*350};
   if(p.x<60||p.x>W-60||p.y<145||p.y>H-30||!world.pointWalkable(p,20))continue;
-  hazards.push({...p,cassio:true,casting:false,ttl:CASSIO_R.setup,max:CASSIO_R.setup,directed:true,spellName:"CASSIOPEIA R",threat:false});return true;
+  // Expert sometimes threatens R but leaves before committing the cast.
+  const feint=difficulty==="hard"&&random()<.2;
+  hazards.push({...p,cassio:true,casting:false,feint,ttl:CASSIO_R.setup,max:CASSIO_R.setup,directed:true,spellName:"CASSIOPEIA R",threat:false});return true;
  }
  return false;
 }
@@ -1322,6 +1324,11 @@ for(const h of hazards){
    // Cassio spawns on the configured range boundary. Keep floating-point
    // rounding from turning an intended readable encounter into a defer.
    if(dist(h,player)>CASSIO_R.range+1e-6||!cassioCanTurn(h)){h.ttl=0;deferRareEvent(h);continue;}
+   if(h.feint){
+    // Leaving without R is not a cast, hit or dodge. Once R starts, it is
+    // never cancelled by this branch.
+    h.feint=false;h.departing=true;h.ttl=.32;h.exitAngle=Math.atan2(h.y-player.y,h.x-player.x);continue;
+   }
    h.casting=true;h.angle=Math.atan2(player.y-h.y,player.x-h.x);h.ttl=CASSIO_R.cast;h.threat=true;
    dodgeDirector.attempted++;dodgeDirector.cassio++;cue("ready");
   }else if(h.casting&&h.ttl<=0){

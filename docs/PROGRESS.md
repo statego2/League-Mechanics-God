@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Expert Cassiopeia cast-or-not (2 November 2026)
+
+- Implemented the player's earlier request for Cassiopeia to sometimes enter range without ultimately casting R. In Expert, a 20% selection chance makes her visibly leave after the usual setup; no cast, hit or dodge is recorded. Once committed, R still resolves normally. Standard/Foundation and the R's actual timing, geometry and no-stun practice policy are unchanged. This is a training behavior, not LoL AI. Build `cassio-feint`.
+- Twenty-one focused Cassiopeia, delayed-impact, early-Malphite and Expert-opening tests pass; seeded spawn tests exercise both feints and real casts. This change is rare relative to regular skillshots and should be checked by the player for feel. Full suite pending.
+
 ## Browser smoke after Orianna animation (2 November 2026)
 
 - Opened `orianna-vortex` locally in a fresh in-app browser, started Expert, issued a move and W, and observed the result screen after a Malphite R ended the unattended run at 17.2 s; browser console had no errors. This verifies basic start, input and death/result flow, not visual quality or human performance. The complete `node --test --test-reporter=dot tests/*.test.cjs` suite on the same code subsequently finished with exit 0; the separate 30/60/120 FPS Expert determinism check also passed.

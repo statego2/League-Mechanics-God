@@ -2979,6 +2979,16 @@ test('visible Dodge casters wind up during their actual cast without drawing an 
 });
 
 
+test('Expert Cassiopeia sometimes leaves without casting and does not score a dodge',()=>{
+ let feints=0,casts=0;
+ for(let seed=1;seed<=80;seed++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setFoes([]);g.dodgeDirector.next=999;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=g.dodgeDirector.luxRAt=Infinity;g.setRng(seed*104729);
+  if(!g.spawnCassioR())continue;const h=g.hazards[0],willFeint=h.feint;advance(g,.71);
+  if(willFeint){assert.equal(h.departing,true);assert.equal(h.casting,false);assert.equal(g.dodgeDirector.cassio,0);assert.equal(g.dodgeDirector.attempted,0);assert.equal(g.dodged,0);assert.equal(g.stats.hits,0);feints++;}
+  else{assert.equal(h.casting,true);assert.equal(g.dodgeDirector.cassio,1);casts++;}
+ }
+ assert.ok(feints>0&&casts>feints,`feints ${feints}, casts ${casts}`);
+});
 test('Cassiopeia cone and facing distinguish turn-away, face and escape',()=>{
  for(const [scenario,facing,dy,hit] of [['face',Math.PI,0,true],['turn',0,0,false],['outside',Math.PI,300,false]]){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.facing=facing;
