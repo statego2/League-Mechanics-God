@@ -5,6 +5,7 @@ Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid depend
 ## Dodge collision regression geometry (2026-11-02)
 
 - Updated three subframe regression scenarios to use the current compact Dodge hit radius and Tier-1 movement speed. They continue checking actual collision and lock behavior, rather than asserting the old 65-unit hitbox and 330-unit speed. Five selected tests pass, including movement locks, missile expiry and Vel'Koz split activation. The full suite still has other unresolved failures.
+- Recalibrated the escape-forecast obstruction tests to the smaller current hitbox: two blockers at 65 canvas units still obstruct both responses, while one leaves a valid sidestep. The cast-lock and projectile-range boundaries now reflect current movement and scaled collision. Four focused checks pass.
 
 ## Ability cooldown display (2026-11-02)
 
