@@ -5,7 +5,7 @@ Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid depend
 ## Cassiopeia feint retreat (2 November 2026)
 
 - Fixed an uncommitted Cassiopeia feint disappearing abruptly and scheduling an unsafe-cast retry if the player was locked or moved outside range during setup. A feint now visibly retreats regardless of these cast-only checks; an actual R still requires a valid target and reaction. No extra cast, hit or dodge is recorded. Build `cassio-retreat`.
-- Added locked-player and out-of-range feint regressions, including visible movement and no spurious retry or scoring. All 20 Cassiopeia-focused tests pass. The existing full suite passed before this change; rerun it against the updated build.
+- Added locked-player and out-of-range feint regressions, including visible movement and no spurious retry or scoring. All 20 Cassiopeia-focused tests and the complete `node --test --test-reporter=dot tests/*.test.cjs` suite passed on this change. An isolated browser fixture forced a feint and froze during departure; Cassiopeia remained visible with no cast or damage shown. The fixture does not substitute for a live multi-minute playtest.
 
 ## Expert long-session cadence after smaller Orianna (2 November 2026)
 
