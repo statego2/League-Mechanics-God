@@ -474,9 +474,9 @@ function spawnXerathW(witness=null){
 // magic damage and ~0.5 s recast delay. Its source cue, line placement and
 // 0.528 s timing are deliberate training approximations.
 const XERATH_Q={radius:SIMULATION.toCanvas(145/2),range:SIMULATION.toCanvas(1450),delay:.528,raw:70};
-// Final Spark is a separate encounter from Lux Q. Community ability data and
-// live play both place its visible charge at roughly one second; we preserve
-// that readable lockout rather than accelerating the beam for Expert.
+// Final Spark is a separate encounter from Lux Q. The current League Wiki
+// data lists a one-second cast time. Preserve that readable lockout rather
+// than accelerating the beam for Expert.
 const LUX_R={radius:SIMULATION.toCanvas(190/2),range:SIMULATION.toCanvas(3340),cast:1,raw:300};
 function spawnLuxR(witness=null){
  if(foes.some(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit")||shots.some(s=>s.alive&&s.directed)||hazards.some(h=>h.directed))return false;
@@ -488,6 +488,14 @@ function spawnLuxR(witness=null){
   if(x<60||x>W-60||y<145||y>H-30||!world.pointWalkable({x,y},20))continue;
   const beam={x,y,endX,endY,r:dodgeAreaRadius(LUX_R.radius)};
   if(!sampleAreaEscape(reaction,LUX_R.cast,p=>beamTouchesPlayer(beam,p,player.hitRadius+8),witness))continue;
+  // The old progressive cue began short of Ahri's body when Lux appeared
+  // behind her. That silently removed roughly a quarter of Final Spark's
+  // visible one-second reaction window. Start the charge cue past the full
+  // hit envelope around the aim-locked player, then grow it toward the beam
+  // end. This changes no collision, range or cast timing.
+  const beamLength=Math.hypot(endX-x,endY-y)||1;
+  const aimedDistance=Math.hypot(player.x-x,player.y-y);
+  beam.cueStart=clamp((aimedDistance+beam.r+player.hitRadius+12)/beamLength,.22,.94);
   hazards.push({...beam,ttl:LUX_R.cast,max:LUX_R.cast,threat:true,directed:true,spellName:"LUX R",beam:true,luxR:true});
   dodgeDirector.attempted++;dodgeDirector.luxR=(dodgeDirector.luxR||0)+1;recordRegular("LUX R");return true;
  }
@@ -1532,7 +1540,7 @@ for(const h of hazards){if(h.cassio){drawChampion(h.x,h.y,h.casting?h.angle:Math
  // Xerath's source cue stays short; Final Spark intentionally reveals its
  // charging lane so the player receives the full one-second reaction window.
  const dx=h.endX-h.x,dy=h.endY-h.y,len=Math.hypot(dx,dy)||1;
- const progress=clamp(1-h.ttl/h.max,0,1),cueLength=h.luxR?len*(.22+.72*progress):45;
+ const progress=clamp(1-h.ttl/h.max,0,1),cueLength=h.luxR?len*(h.cueStart+(1-h.cueStart)*.94*progress):45;
  if(h.luxR)drawChampion(h.x,h.y,Math.atan2(dy,dx),false,false,progress,time*7,"mage");
  ctx.save();ctx.lineCap="round";ctx.beginPath();ctx.moveTo(h.x,h.y);ctx.lineTo(h.x+dx/len*cueLength,h.y+dy/len*cueLength);ctx.strokeStyle=h.luxR?"#ffe5a8aa":"#9edcffaa";ctx.lineWidth=h.luxR?5:7;ctx.stroke();ctx.restore();
  circle(h.x,h.y,h.luxR?20:16,h.luxR?"#ffe09a44":"#8bcfff44");circle(h.x,h.y,h.luxR?8:7,h.luxR?"#fff2c9":"#d0edff");continue;
