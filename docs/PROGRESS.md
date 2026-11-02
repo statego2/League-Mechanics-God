@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Full regression and current Dodge documentation (2 November 2026)
+
+- Full `node --test --test-reporter=dot tests/*.test.cjs` run started after Expert Orianna's committed-combo change completed with exit 0. The later two Lux-center tests also passed in their targeted run. The suite does not establish human reaction fairness or visual quality.
+- Corrected README's stale two-threat and repeated-seed descriptions: Expert's configured cap is four, and Dodge restart randomizes the scenario. Two focused opening/rhythm tests pass; one sampled 60-second simulation observed three concurrent threats and both Cassiopeia and Malphite. No gameplay settings changed.
+
 ## Lux R aim verification (2 November 2026)
 
 - Added deterministic multi-angle coverage proving the centerline passes through Ahri's position at Lux R spawn, plus a full impact check that a stationary player there takes damage. Existing tests cover fixed aim during the visible charge, a real sidestep and impact width. All six targeted Lux R tests pass; no gameplay values changed. Aim is locked at spawn, so moving during the source tell can put the player away from the center by the time the beam charges.

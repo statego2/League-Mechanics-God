@@ -29,7 +29,7 @@ The finished **League Mechanics God** is intentionally focused on **exactly four
 
 ### What is actually playable today (alpha)
 
-- **Dodge Trial:** an endless Expert-first Dodge Gauntlet foundation. It has visible champion entries for Ezreal Q, Lux Q, Blitz Q, Ahri Q and Vel’Koz Q, hidden-source Xerath Q/W, and rare Lux R, Cassiopeia R, Orianna R and Malphite R encounters. The director uses sampled walkable escapes and a readable two-independent-threat budget; it is still an evolving training approximation, not a claim of exact live-client parity.
+- **Dodge Trial:** an endless Expert-first Dodge Gauntlet foundation. It has visible champion entries for Ezreal Q, Lux Q, Blitz Q, Ahri Q and Vel’Koz Q, hidden-source Xerath Q/W, and rare Lux R, Cassiopeia R, Orianna R and Malphite R encounters. The director uses sampled walkable escapes and an Expert budget of up to four concurrent directed threats; it is still an evolving training approximation, not a claim of exact live-client parity.
 - **Kite Arena:** movement, autos and abilities against enemies; this is **not yet** the approved solo-versus-many Combat Survival experience.
 - **CS Practice:** farm with Ahri across 20 waves over up to ten minutes (126 possible CS), with cannon on every third wave. Two-sided combat, wave placement and attack behavior remain approximations. Melee health grows every three early waves; other minion upgrades and turrets are not yet implemented. This is the unfinished foundation for CS Mastery.
 
@@ -51,7 +51,7 @@ The default player uses an approximate level-1 Ahri profile. Q, W, E and R are e
 | F | Flash |
 | S | Stop / cancel current attack |
 | P or Escape | Pause |
-| T or Restart button | Instantly restart the current drill with the same seed |
+| T or Restart button | Instantly restart the current drill |
 
 ## Implementation
 
@@ -61,7 +61,7 @@ The painted mid-lane arena is a visual approximation based on a user-provided ga
 
 ## Repeatable encounters
 
-Choose Foundation, Standard or Expert before entering a drill. Expert is the active tuning target and is selected by default. In the Ahri profile, Dodge Trial is endless: watch each enemy’s entry/cast tell and launched missile, use movement and Flash, and recover a little health after sustained clean play. The public menu deliberately hides deterministic seeds; restart repeats the current internal scenario. Individual values, arena scale and uncommon encounter timings are transparent training approximations documented in [Dodge Rhythm](docs/DODGE_GAUNTLET_RHYTHM.md). Results store local records in this browser; unavailable storage does not prevent play.
+Choose Foundation, Standard or Expert before entering a drill. Expert is the active tuning target and is selected by default. In the Ahri profile, Dodge Trial is endless: watch each enemy’s entry/cast tell and launched missile, use movement and Flash, and recover a little health after sustained clean play. The public menu deliberately hides deterministic seeds; Expert Dodge restarts randomize the internal scenario. Individual values, arena scale and uncommon encounter timings are transparent training approximations documented in [Dodge Rhythm](docs/DODGE_GAUNTLET_RHYTHM.md). Results store local records in this browser; unavailable storage does not prevent play.
 
 ## Mechanics and checks
 
