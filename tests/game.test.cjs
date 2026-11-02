@@ -91,6 +91,14 @@ test('Flash cooldown postpones direct ultimates without stopping regular threats
  g.setTime(100);g.player.cd.f=10;g.dodgeDirector.malAt=g.dodgeDirector.rareAt=99;g.dodgeDirector.cassAt=g.dodgeDirector.luxRAt=Infinity;g.dodgeDirector.next=0;
  advance(g,2);assert.ok(g.dodgeDirector.malAt>g.time&&g.dodgeDirector.rareAt>g.time);assert.ok(g.foes.some(e=>e.dodgeVisitor)||g.dodgeDirector.attempted>0,'ordinary pressure stopped');
 });
+test('pause and blur freeze direct ultimate casts and Flash cooldown',()=>{
+ for(const kind of ['orianna','malphite']){
+  const {g,window}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.cd.f=10;
+  const h=kind==='orianna'?{x:200,y:200,r:207.5,source:{x:100,y:200},orianna:true,casting:true,ttl:.4,max:.5,directed:true,spellName:'ORIANNA R'}:{x:200,y:200,start:{x:200,y:200},target:{x:400,y:200},remaining:.5,ttl:.4,max:.5,r:162.5,malphite:true,casting:true,directed:true,spellName:'MALPHITE R'};
+  g.hazards.push(h);g.pause();const hp=g.player.hp;advance(g,2);assert.equal(h.ttl,.4,kind);assert.equal(g.player.cd.f,10,kind);assert.equal(g.player.hp,hp,kind);
+  g.pause();advance(g,.1);assert.ok(h.ttl<.4,kind);const ttl=h.ttl,cooldown=g.player.cd.f;window.listeners.blur();advance(g,1);assert.equal(h.ttl,ttl,kind);assert.equal(g.player.cd.f,cooldown,kind);
+ }
+});
 test('Expert Dodge has a bounded flow-spike-recovery rhythm',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');
  assert.equal(g.dodgeRhythmMultiplier(0),1);
