@@ -2,6 +2,10 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Expert long-session cadence after smaller Orianna (2 November 2026)
+
+- Ran the existing Expert cadence simulation across three seeds, each covering twelve simulated minutes with repeated movement and W, artificially high HP and no human reactions. It passed with 32–42 casts/minute in the sampled minute buckets; Ezreal remained more frequent than Ahri, the removed Xerath laser did not appear, and each run included Orianna, Malphite and Cassiopeia. This validates continued scheduling, not player survival, balance or real-world reaction difficulty. No gameplay settings changed.
+
 ## Smaller Orianna R (2 November 2026)
 
 - Per player feedback, reduced Orianna R radius by 8% from the prior trainer value. The cast ring, impact effect, escape forecast and actual hitbox share the reduced radius; the 0.6 s Expert reaction window, Q and damage are unchanged. The 8% reduction is an explicit training adjustment to the sourced 415-unit radius, not a claim about current LoL values. Build `orianna-smaller`.
