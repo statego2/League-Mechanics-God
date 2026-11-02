@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Orianna cast-ring visual polish (2 November 2026)
+
+- Added a soft glow and rotating bright accents to the existing Shockwave windup circle, keeping its center and radius fixed. The 0.6 s Expert cast, damage and collision are unchanged. Build `orianna-cue`.
+- All 31 Orianna-focused tests pass. Inspected the start of the cast in a temporary isolated browser fixture with the encounter forced and simulation frozen; the ball and circular cue were visible. This does not replace a real-time human reaction playtest.
+
 ## Visual cast-ring and full regression verification (2 November 2026)
 
 - The complete `node --test --test-reporter=dot tests/*.test.cjs` run after the seeded roster test correction finished with exit 0.

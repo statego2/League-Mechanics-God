@@ -1687,8 +1687,13 @@ for(const wall of sweeps){
 for(const h of hazards){if(h.cassio){drawChampion(h.x,h.y,h.casting?h.angle:Math.atan2(player.y-h.y,player.x-h.x),false,false,h.casting?clamp(1-h.ttl/CASSIO_R.cast,0,1):0,time*7,"cassio");continue;}if(h.malphite){ctx.save();ctx.translate(h.x,h.y);const art=$("stoneArt");if(art?.complete&&art.naturalWidth){ctx.drawImage(art,-42,-90,84,90);ctx.restore();continue;}ctx.fillStyle="#665f59";ctx.strokeStyle="#c1aa93";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-25,-16);ctx.lineTo(-22,-52);ctx.lineTo(0,-72);ctx.lineTo(23,-52);ctx.lineTo(27,-15);ctx.lineTo(10,0);ctx.lineTo(-12,0);ctx.closePath();ctx.fill();ctx.stroke();circle(-7,-45,3,"#aad4ee");circle(7,-45,3,"#aad4ee");ctx.restore();continue;}if(h.orianna){drawChampion(h.source.x,h.source.y,Math.atan2(h.y-h.source.y,h.x-h.source.x),false,false,h.casting?1:0,time*7,"clockwork");if(h.casting){
  // Shockwave's visible ring starts with the cast; damage resolves only at
  // the end of the windup, giving the player a readable Flash window.
- circle(h.x,h.y,h.r,"#ddb4f6cc",false,3);
- const glow=ctx.createRadialGradient(h.x,h.y,0,h.x,h.y,45);glow.addColorStop(0,"#fff0ffdd");glow.addColorStop(1,"#cb85ff00");circle(h.x,h.y,45,glow);circle(h.x,h.y,18+8*(1-h.ttl/(h.max||ORIANNA_R.cast)),"#efc4ffbb",false,3);}continue;}if(h.beam){
+ const charge=clamp(1-h.ttl/(h.max||ORIANNA_R.cast),0,1);
+ // A soft edge and moving energy distinguish the cast from a debug outline.
+ circle(h.x,h.y,h.r,"#c887ed33",false,9);
+ circle(h.x,h.y,h.r,"#ddb4f6dd",false,2.5+charge);
+ ctx.save();ctx.strokeStyle="#f5dbffdd";ctx.lineWidth=3;ctx.lineCap="round";
+ for(let i=0;i<3;i++){const a=charge*.8+i*TAU/3;ctx.beginPath();ctx.arc(h.x,h.y,h.r,a,a+.38);ctx.stroke();}ctx.restore();
+ const glow=ctx.createRadialGradient(h.x,h.y,0,h.x,h.y,45);glow.addColorStop(0,"#fff0ffdd");glow.addColorStop(1,"#cb85ff00");circle(h.x,h.y,45,glow);circle(h.x,h.y,18+8*charge,"#efc4ffbb",false,3);}continue;}if(h.beam){
  // Xerath's source cue stays short; Final Spark intentionally reveals its
  // charging lane so the player receives the full 0.9-second reaction window.
  const dx=h.endX-h.x,dy=h.endY-h.y,len=Math.hypot(dx,dy)||1;
