@@ -2997,6 +2997,14 @@ test('Expert Cassiopeia sometimes leaves without casting and does not score a do
  }
  assert.ok(feints>0&&casts>feints,`feints ${feints}, casts ${casts}`);
 });
+test('Cassiopeia feint visibly retreats even if Ahri is locked or out of range',()=>{
+ for(const scenario of ['locked','out-of-range']){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setFoes([]);g.dodgeDirector.next=999;g.dodgeDirector.cassAt=100;
+  const h={x:g.player.x-(scenario==='locked'?200:400),y:g.player.y,cassio:true,casting:false,feint:true,ttl:.001,directed:true,spellName:'CASSIOPEIA R',directorScheduled:true};g.hazards.push(h);if(scenario==='locked')g.player.root=.6;
+  g.update(.01);assert.equal(h.departing,true,scenario);assert.ok(g.hazards.includes(h),scenario);assert.equal(g.dodgeDirector.cassAt,100,scenario);assert.equal(g.dodgeDirector.attempted,0);assert.equal(g.dodged,0);assert.equal(g.stats.hits,0);
+  const x=h.x;g.update(.05);assert.ok(h.x<x,scenario);
+ }
+});
 test('Cassiopeia cone and facing distinguish turn-away, face and escape',()=>{
  for(const [scenario,facing,dy,hit] of [['face',Math.PI,0,true],['turn',0,0,false],['outside',Math.PI,300,false]]){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.facing=facing;

@@ -1321,16 +1321,14 @@ for(const h of hazards){
   if(h.departing){h.ttl-=dt;h.x+=Math.cos(h.exitAngle)*150*dt;h.y+=Math.sin(h.exitAngle)*150*dt;continue;}
   h.ttl-=dt;
   if(!h.casting&&h.ttl<=0){
-   // The player may have moved out of range during the visible setup. Do
-   // not count an already harmless cast as an earned escape.
-   // Cassio spawns on the configured range boundary. Keep floating-point
-   // rounding from turning an intended readable encounter into a defer.
-   if(dist(h,player)>CASSIO_R.range+1e-6||!cassioCanTurn(h)){h.ttl=0;deferRareEvent(h);continue;}
    if(h.feint){
-    // Leaving without R is not a cast, hit or dodge. Once R starts, it is
-    // never cancelled by this branch.
+    // No R will be cast, so an inability to turn or a changed range must not
+    // make a visible feint disappear abruptly or trigger an unsafe-cast retry.
     h.feint=false;h.departing=true;h.ttl=.32;h.exitAngle=Math.atan2(h.y-player.y,h.x-player.x);continue;
    }
+   // Only an actual cast needs a fair response and an in-range target. Cassio
+   // spawns on the boundary; allow for floating-point rounding.
+   if(dist(h,player)>CASSIO_R.range+1e-6||!cassioCanTurn(h)){h.ttl=0;deferRareEvent(h);continue;}
    h.casting=true;h.angle=Math.atan2(player.y-h.y,player.x-h.x);h.ttl=CASSIO_R.cast;h.threat=true;
    dodgeDirector.attempted++;dodgeDirector.cassio++;cue("ready");
   }else if(h.casting&&h.ttl<=0){
