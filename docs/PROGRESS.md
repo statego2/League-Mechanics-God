@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Orianna impact across delayed frames (2 November 2026)
+
+- A slow frame can advance multiple fixed simulation steps before rendering; the 0.24 s R impact effect could expire before the browser showed it. A briefly unseen Shockwave is now retained for the next render and shown for at least 0.12 s; unseen effects still expire after a bounded interval when rendering is absent. Damage timing and the radius are unchanged. Build `orianna-frame`.
+- Added a delayed-render regression using a 0.25 s simulation catch-up, confirming the actual R hit and full-radius impact render, followed by effect cleanup. All 26 Orianna-focused tests pass. A real browser playtest remains necessary.
+
 ## Orianna visible impact timing (2 November 2026)
 
 - Player reported damage before Orianna R appeared to explode. R's collision already resolved at the end of its 0.5 s cast, but its impact arcs started at only 35% of the damage radius and expanded afterward. The impact now displays arcs at the full damage radius immediately when R resolves, with the existing short fade; timing and collision are unchanged.
