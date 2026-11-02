@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Dodge Flash practice availability (2026-11-02)
+
+- Investigation found Flash was bound to F and had a 300-second cooldown, making repeated practice impractical. Dodge now uses an explicit 30-second training cooldown; other Ahri/reference drills retain 300 seconds. Trying F on cooldown shows the remaining time, and a displacement lock now gives feedback instead of silently ignoring the key.
+- Eight targeted tests pass for cursor direction/range, cooldown feedback, retained movement, terrain routing, spell casts, Cassiopeia facing and Blitz/Lux locks. This does not establish the cause of every reported Flash failure; browser verification remains necessary.
+
 ## Dodge sustain and Ahri R adjustment (2026-11-02)
 
 - Ahri's Spirit Rush maximum dash in Dodge is 450 game units (225 canvas), down 10% from 500; other modes retain 500. This is a trainer tuning choice.

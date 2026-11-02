@@ -1691,12 +1691,12 @@ test('pause freezes a pending Velkoz split and restart clears it and its outcome
 });
 
 
-test('Ahri flash respects cursor distance, maximum range and five-minute cooldown',()=>{
+test('Dodge Flash respects cursor distance, maximum range and training cooldown',()=>{
  for(const [targetX,expected] of [[650,50],[1000,200]]){
   const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
   const start=g.player.x;node('arena').listeners.pointermove({clientX:targetX,clientY:g.player.y,buttons:0});g.cast('f');
-  assert.ok(Math.abs(g.player.x-start-expected)<1e-8);assert.equal(g.player.cd.f,300);assert.equal(g.player.invuln,0);
-  const after=g.player.x;g.cast('f');assert.equal(g.player.x,after);advance(g,1);assert.ok(g.player.cd.f>298&&g.player.cd.f<300);
+  assert.ok(Math.abs(g.player.x-start-expected)<1e-8);assert.equal(g.player.cd.f,30);assert.equal(g.player.invuln,0);
+  const after=g.player.x;g.cast('f');assert.equal(g.player.x,after);assert.match(node('toast').textContent,/FLASH READY IN 30s/);advance(g,1);assert.ok(g.player.cd.f>28&&g.player.cd.f<30);
  }
 });
 test('forward Flash preserves a move order and continues walking from the landing',()=>{
