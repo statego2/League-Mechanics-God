@@ -6,6 +6,7 @@ Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid depend
 
 - Prior lead aim only projected Ahri's current route during the spell windup; a player walking continuously could often evade without making a new decision. Straight-shot visitors now estimate the player's position through both windup and projectile flight, iterating the travel estimate twice with a 1.2-second horizon. Direct, reversal and lateral-cut patterns remain mixed in; casts that do not pass the existing shared escape forecast fall back to a separately checked direct aim.
 - Added an actual simulation demonstrating that the same predictive cast hits when the player continues straight and misses when the player changes to a verified route. Five focused lead/distribution/shared-escape/fallback tests pass. This is a sampled training policy, not a claim of live champion AI or a proof of universal fairness.
+- Follow-up verification: the complete `node --test --test-reporter=dot tests/*.test.cjs` suite finished successfully (exit 0) after the projectile-flight lead change, including long Expert simulations. Player playtesting is still needed to assess the frequency and feel of the prediction.
 
 ## Local browser build verification (2026-11-02)
 
