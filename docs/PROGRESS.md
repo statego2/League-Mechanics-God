@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Dodge records for Mindgame Aim (2 November 2026)
+
+- Dodge records now use `director_v87` rather than v86. Predictive aim, faster Malphite and the fixed Orianna/Lux sequence materially changed the encounters, so mixing the two versions would make personal bests misleading. Old v86 records remain in local storage, but are no longer displayed as comparable results. No gameplay or difficulty settings changed. Local build `dodge-v87`.
+- The targeted record separation and skill-score tests pass; JavaScript syntax and diff checks pass. The complete suite passed on the previous gameplay commit. Human assessment of the new ultimate visuals and prolonged balance remains open.
+
 ## Cache-free local testing (2 November 2026)
 
 - Added `python3 scripts/dev-server.py`, a loopback-only static development server on port 8082 with `Cache-Control: no-store` for HTML and assets; use `--port` to select another port. It serves the checkout regardless of the launch directory. README documents the new local URL. The older server on 8081 was left running to avoid interrupting play.
