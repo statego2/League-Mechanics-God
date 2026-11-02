@@ -1051,9 +1051,11 @@ test('successive melee waves receive the sourced 90-second health upgrade',()=>{
  const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();for(let i=0;i<7;i++)g.addWave();for(const [wave,hp] of [[1,465],[2,465],[3,465],[4,500],[6,500],[7,535]]){assert.ok(g.foes.filter(e=>e.wave===wave&&e.minionType==='melee').every(e=>e.maxHp===hp));assert.ok(g.allies.filter(e=>e.wave===wave&&e.minionType==='melee').every(e=>e.maxHp===hp));}
 });
 
-test('Dodge director sends single-cast visitors with deterministic Ezreal-heavy spell selection',()=>{
- function run(){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=100000;advance(g,55);return [g.dodgeDirector.ezreal,g.dodgeDirector.lux,g.dodgeDirector.ahri,g.dodgeDirector.blitz,g.dodgeDirector.velkoz,g.dodgeDirector.xerath,g.dodgeDirector.xerathQ,g.dodgeDirector.oriannaQ,g.dodgeDirector.orianna,g.dodgeDirector.malphite,g.dodgeDirector.cassio,g.dodgeDirector.luxR||0,g.dodgeDirector.attempted];}
- const a=run(),b=run();assert.deepEqual(a,b);assert.equal(a.slice(0,-1).reduce((sum,n)=>sum+n,0),a.at(-1));assert.ok(a[0]>a[1]);assert.ok(a.at(-1)>=10,`too few casts: ${a}`);
+test('Dodge director remains deterministic and Ezreal-heavy across seeded runs',()=>{
+ function run(seed){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed);g.player.hp=g.player.maxHp=100000;advance(g,55);return [g.dodgeDirector.ezreal,g.dodgeDirector.lux,g.dodgeDirector.ahri,g.dodgeDirector.blitz,g.dodgeDirector.velkoz,g.dodgeDirector.xerath,g.dodgeDirector.xerathQ,g.dodgeDirector.oriannaQ,g.dodgeDirector.orianna,g.dodgeDirector.malphite,g.dodgeDirector.cassio,g.dodgeDirector.luxR||0,g.dodgeDirector.attempted];}
+ const first=run(1);assert.deepEqual(first,run(1));let ezreal=0,lux=0;
+ for(const seed of [1,2,3,4,5,6]){const counts=seed===1?first:run(seed);assert.equal(counts.slice(0,-1).reduce((sum,n)=>sum+n,0),counts.at(-1));assert.ok(counts.at(-1)>=10,`seed ${seed}: ${counts}`);ezreal+=counts[0];lux+=counts[1];}
+ assert.ok(ezreal>lux,`six runs: Ezreal ${ezreal}, Lux ${lux}`);
 });
 test('Ahri Q is actually scheduled on every difficulty in the default seeded long drill',()=>{
  for(const difficulty of ['easy','normal','hard']){

@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Seeded roster test correction (2 November 2026)
+
+- Full suite on `orianna-cast-ring` had one failure: an old test demanded Ezreal outnumber Lux in one specific 55-second random run; that run produced 8 Ezreal and 11 Lux after the feint RNG change. The six explicitly seeded 55-second runs produced 74 Ezreal and 30 Lux in total. The regression now tests actual aggregate output across those runs, deterministic replay, cast accounting and minimum activity per run; it does not require every short sample to follow the average. No director tuning changed.
+- The updated roster test and the requested Orianna cast-ring test pass. A new full suite is required after this test correction; the earlier full run cannot be reported as passing.
+
 ## Cast-ring timing regression (2 November 2026)
 
 - Four focused tests pass on `orianna-cast-ring`: visible R circle before damage, Flash-and-move after 300 ms, Expert opening pressure, and deterministic 180-second simulation at 30/60/120 FPS. One sampled opening produced 35 casts and a peak of three simultaneous threats. This is automated evidence, not a human visual playtest.
