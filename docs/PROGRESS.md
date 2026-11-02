@@ -2,6 +2,12 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Orianna visible impact timing (2 November 2026)
+
+- Player reported damage before Orianna R appeared to explode. R's collision already resolved at the end of its 0.5 s cast, but its impact arcs started at only 35% of the damage radius and expanded afterward. The impact now displays arcs at the full damage radius immediately when R resolves, with the existing short fade; timing and collision are unchanged.
+- Orianna Q independently deals damage on the ball's path or arrival before R, as documented by the existing Q simulation; added a small impact burst at the player's position so that Q contact is distinguishable. This does not remove Q damage or claim that all observed early damage was R. The player should review in a live encounter.
+- Added a simulation verifying no R damage or shockwave before impact, then actual damage and full-radius impact arcs together. All 25 Orianna-focused tests pass; syntax and diff checks pass. Local build `orianna-impact`.
+
 ## Mindgame reversal verification (2 November 2026)
 
 - Added an executed seeded visitor scenario proving a reversal-read projectile can hit when the moving player reverses, and that a separately forecast response avoids the same cast. This complements the forward-lead hit/evade and weighted-selection tests. All four targeted prediction and fallback tests pass. This is sampled evidence, not a measurement that every reversal or every delivered shot is equally threatening; no tuning changed.

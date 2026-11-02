@@ -1368,7 +1368,7 @@ for(const h of hazards){
     if(threatening({x:priorX,y:priorY,vx,vy,r:ORIANNA_Q.radius,ttl:flightLeft},{x:oldX,y:oldY})||dist(atFlightEnd,h.destination)<=ORIANNA_Q.arrival)h.q.threat=true;
     const pathHit=Number.isFinite(playerContact(priorX,priorY,h.x,h.y,0,fraction,ORIANNA_Q.radius+player.hitRadius));
     const arrivalHit=f>=1&&dist(atFlightEnd,h.destination)<=ORIANNA_Q.arrival;
-    if(pathHit||arrivalHit){if(player.invuln>0){recordDodgeOutcome(h.q,"blocked");stats.blocked++;}else{recordDodgeOutcome(h.q,"hit");takeHit(physicalDamage(ORIANNA_Q.raw,30));}if(state!=="playing")return;}
+    if(pathHit||arrivalHit){burst(player.x,player.y,"#c9a4ff",9);if(player.invuln>0){recordDodgeOutcome(h.q,"blocked");stats.blocked++;}else{recordDodgeOutcome(h.q,"hit");takeHit(physicalDamage(ORIANNA_Q.raw,30));}if(state!=="playing")return;}
     else if(f>=1){recordDodgeOutcome(h.q,h.q.threat?"avoided":"harmless");if(h.q.threat){dodged++;cue("dodge");}}
    }
   }
@@ -1753,7 +1753,7 @@ for(const f of fx){ctx.globalAlpha=clamp(f.ttl/f.max,0,1);if(f.cassio){
  ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,f.r,-CASSIO_R.halfAngle,CASSIO_R.halfAngle);ctx.closePath();ctx.fillStyle=glow;ctx.fill();ctx.restore();
 }else if(f.shockwave||f.rockImpact){const glow=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r);glow.addColorStop(0,f.rockImpact?"#ead5b5bb":"#f5dcffcc");glow.addColorStop(.5,f.rockImpact?"#a88e7277":"#c586e477");glow.addColorStop(1,f.rockImpact?"#947b5e00":"#ab68d500");circle(f.x,f.y,f.r,glow);
  if(f.shockwave){
-  const progress=clamp(1-f.ttl/f.max,0,1),radius=f.r*(.35+.65*progress);
+  const progress=clamp(1-f.ttl/f.max,0,1),radius=f.r;
   ctx.save();ctx.translate(f.x,f.y);ctx.rotate(progress*1.2);ctx.lineCap="round";
   for(let i=0;i<4;i++){ctx.beginPath();ctx.arc(0,0,radius,i*TAU/4,i*TAU/4+1.05);ctx.strokeStyle=i%2?"#eed6ffff":"#bf8dffff";ctx.lineWidth=5+5*(1-progress);ctx.stroke();}
   circle(0,0,Math.max(6,36*(1-progress)),"#fff1ffcc");ctx.restore();

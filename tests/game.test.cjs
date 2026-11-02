@@ -1713,6 +1713,12 @@ test('Orianna shockwave appears on impact without a pre-cast area guide',()=>{
  g.render();assert.ok(!arcs.some(a=>a.r===h.r));g.update(.06);arcs.length=0;g.render();assert.ok(arcs.some(a=>a.r===h.r));
 });
 
+test('Orianna R deals damage only as its full-radius shockwave appears',()=>{
+ const {g,arcs}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const h={x:g.player.x,y:g.player.y,source:{x:200,y:200},r:207.5,orianna:true,casting:true,ttl:.5,directed:true,spellName:'ORIANNA R'};g.hazards.push(h);
+ advance(g,.49);assert.equal(g.stats.hits,0);assert.ok(!g.fx.some(f=>f.shockwave));
+ advance(g,.02);assert.equal(g.stats.hits,1);assert.ok(g.fx.some(f=>f.shockwave));arcs.length=0;g.render();assert.ok(arcs.filter(a=>Math.abs(a.r-h.r)<1e-6).length>=4,'impact arcs must start at the damage radius');
+});
 test('Orianna Q hits along its moving path once and records its own damage',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;assert.ok(g.spawnOriannaR());const h=g.hazards[0];
  g.player.x=h.source.x+(h.destination.x-h.source.x)*.4;g.player.y=h.source.y+(h.destination.y-h.source.y)*.4;
