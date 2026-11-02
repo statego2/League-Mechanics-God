@@ -68,17 +68,17 @@ test('Dodge results name the last spell that actually hit Ahri',()=>{
 });
 test('Expert opens with readable mixed pressure before major ultimates',t=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
- let maxActive=0,mixed=false;
+ let maxActive=0,mixed=false,peakNames=[];
  for(let i=0;i<60*120;i++){
   g.update(1/120);
   const names=[...g.foes.filter(e=>e.alive&&e.dodgeVisitor&&(e.phase==='enter'||e.phase==='cast')).map(e=>e.spell.name),...g.shots.filter(s=>s.alive&&s.directed).map(s=>s.spellName)];
-  maxActive=Math.max(maxActive,names.length);if(names.length>=2&&new Set(names).size>=2)mixed=true;
+  if(names.length>maxActive){maxActive=names.length;peakNames=names;}if(names.length>=2&&new Set(names).size>=2)mixed=true;
  }
  assert.ok(maxActive<=3,`peak ${maxActive} exceeds cap`);assert.ok(mixed,'no mixed simultaneous threats');
  assert.ok(g.dodgeDirector.attempted>=12,`only ${g.dodgeDirector.attempted} casts`);
  assert.ok(g.dodgeDirector.cassio>0,'Cassiopeia missing');assert.equal(g.dodgeDirector.malphite,0,'Malphite arrived too early');
  assert.equal(g.dodgeDirector.orianna,0,'Orianna arrived too early');
- t.diagnostic(`peak ${maxActive} simultaneous threats; ${g.dodgeDirector.attempted} casts; Cassiopeia ${g.dodgeDirector.cassio}, Malphite ${g.dodgeDirector.malphite}`);
+ t.diagnostic(`peak ${maxActive} simultaneous threats (${peakNames.join(', ')}); ${g.dodgeDirector.attempted} casts; Cassiopeia ${g.dodgeDirector.cassio}, Malphite ${g.dodgeDirector.malphite}`);
 });
 test('Expert arms major Dodge patterns on separate readable clocks',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.disableSpawn();g.dodgeDirector.next=999;
@@ -1334,37 +1334,24 @@ test('entering Velkoz reserves its encounter until cast or cancellation',()=>{
  const e=g.enemy(200,300);Object.assign(e,{dodgeVisitor:true,phase:'enter',spell:g.REFERENCE_SPELLS.velkozDodge});g.setFoes([e]);
  assert.equal(g.spawnDodgeVisitor(),false);
 });
-test('Expert forecasts a committed Velkoz split alongside new straight shots',()=>{
- for(const key of ['ezrealDodge','luxDodge','blitzDodge']){
-  let accepted=0;
-  for(const side of [-1,1])for(let i=0;i<16;i++){
-   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;
-   const p=g.player,y=p.y+side*70,spec=g.REFERENCE_SPELLS.velkozDodge,caster=g.enemy(350,y);
-   Object.assign(caster,{dodgeVisitor:true,spell:spec,phase:'cast',charge:.25,entry:{x:350,y},speed:120,pending:{angle:0,spell:spec,splitDistance:260}});g.setFoes([caster]);
-   const a=i*Math.PI/8,origin={x:p.x+Math.cos(a)*450,y:p.y+Math.sin(a)*450},spell=g.REFERENCE_SPELLS[key],witness={};
-   if(!g.canEvadeDodgeCast(origin,spell,witness))continue;
-   const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'cast',charge:spell.cast,entry:{...origin},pending:{angle:Math.atan2(p.y-origin.y,p.x-origin.x),spell,threat:true}});g.setFoes([caster,e]);
-   advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);
-   for(let step=0;step<240;step++){g.update(1/120);g.dodgeDirector.splitFollow=false;}
-   assert.equal(g.stats.hits,0,`${key} ${side} ${i} ${JSON.stringify(g.dodgeDirector.outcomes)}`);accepted++;
-  }
-  assert.ok(accepted>0,`no shared ${key} response`);
- }
+test('Expert reserves committed Velkoz splits for an isolated read',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;
+ const spec=g.REFERENCE_SPELLS.velkozDodge,caster=g.enemy(350,g.player.y+70);
+ Object.assign(caster,{dodgeVisitor:true,spell:spec,phase:'cast',charge:.25,entry:{x:350,y:caster.y},pending:{angle:0,spell:spec,splitDistance:260}});g.setFoes([caster]);
+ assert.equal(g.spawnDodgeVisitor(),false);
 });
 test('committed Velkoz forecast defers unpredictable split trajectories',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;
  const spec=g.REFERENCE_SPELLS.velkozDodge,e=g.enemy(1100,300);Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'cast',charge:.25,pending:{angle:0,spell:spec,splitDistance:300}});g.setFoes([e]);
  assert.equal(g.canEvadeDodgeCast({x:140,y:g.player.y},g.REFERENCE_SPELLS.ezrealDodge),false);
 });
-test('Expert can introduce a separate visitor during a committed Velkoz cast',()=>{
- let accepted=0;
- for(let seed=1;seed<=32;seed++){
+test('Expert does not introduce a visitor during a committed Velkoz cast',()=>{
+ for(let seed=1;seed<=8;seed++){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.setRng(seed*1234567);
   const p=g.player,spec=g.REFERENCE_SPELLS.velkozDodge,e=g.enemy(350,p.y+70);
   Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'cast',charge:.25,entry:{x:e.x,y:e.y},pending:{angle:0,spell:spec,splitDistance:260}});g.setFoes([e]);
-  if(g.spawnDodgeVisitor()){const next=g.foes.find(f=>f!==e);assert.ok(next);assert.notEqual(next.spell.name,'VELKOZ Q');accepted++;}
+  assert.equal(g.spawnDodgeVisitor(),false);
  }
- assert.ok(accepted>0,'no follow-up visitor entered');
 });
 
 
@@ -1388,18 +1375,16 @@ test('Expert Velkoz and an existing straight projectile share an executable esca
  }
  assert.ok(checked>0,'no executable shared escape was sampled');
 });
-test('Expert can commit Velkoz while a prior straight missile remains active',()=>{
- let committed=0;
+test('Expert defers Velkoz while a prior straight missile remains active',()=>{
+ let deferred=0;
  for(let seed=1;seed<=24;seed++){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.setRng(seed*1234567);
   const s=g.fire(100,100,1,0,'enemy',10,1,5);Object.assign(s,{directed:true,spellName:'EZREAL Q'});
-  if(!g.spawnDodgeVisitor(g.REFERENCE_SPELLS.velkozDodge,20))continue;
-  const e=g.foes[0];for(let i=0;i<120&&e.phase==='enter';i++)g.update(1/120);
-  if(e.phase==='cast'&&s.alive)committed++;
+  if(!g.spawnDodgeVisitor(g.REFERENCE_SPELLS.velkozDodge,20))deferred++;
  }
- assert.ok(committed>0,'no split cast was committed during a live straight missile');
+ assert.equal(deferred,24);
 });
-test('Expert naturally releases Velkoz while another missile is already in flight',()=>{
+test('Expert never naturally releases Velkoz while another missile is already in flight',()=>{
  let found=false;
  for(let seed=1;seed<=6&&!found;seed++){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed*1234567);g.player.hp=g.player.maxHp=1e6;
@@ -1410,7 +1395,7 @@ test('Expert naturally releases Velkoz while another missile is already in fligh
    previousVel=g.dodgeDirector.velkoz;
   }
  }
- assert.ok(found,'no natural Velkoz release joined an existing missile');
+ assert.equal(found,false,'a natural Velkoz release joined an existing missile');
 });
 test('Velkoz defers an already unavoidable projectile or an active area effect',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player,s=g.fire(p.x-30,p.y,500,0,'enemy',20,20,1);s.directed=true;
@@ -1453,7 +1438,7 @@ test('Expert Lux and Blitz share executable escapes with all Velkoz phases',()=>
   assert.ok(accepted>0,`no valid ${key} ${phase} witnesses`);
  }
 });
-test('Expert naturally overlaps Velkoz missiles with Lux and Blitz',()=>{
+test('Expert keeps Velkoz missiles separate from Lux and Blitz',()=>{
  for(const name of ['LUX Q','BLITZ Q']){
   let found=false;
   for(let seed=1;seed<=6&&!found;seed++){
@@ -1462,7 +1447,7 @@ test('Expert naturally overlaps Velkoz missiles with Lux and Blitz',()=>{
     g.update(1/120);found=g.shots.some(s=>s.alive&&s.velkoz&&s.velkoz!=='delay'&&!s.ignorePlayer&&!(s.group&&s.group.hit))&&g.shots.some(s=>s.alive&&s.spellName===name);
    }
   }
-  assert.ok(found,`no Velkoz + ${name} projectile overlap found`);
+  assert.equal(found,false,`Velkoz + ${name} projectile overlap found`);
  }
 });
 test('Velkoz overlap defers offscreen split predictions and non-Expert modes',()=>{
@@ -1473,7 +1458,7 @@ test('Velkoz overlap defers offscreen split predictions and non-Expert modes',()
   assert.equal(g.canEvadeDodgeCast({x:140,y:g.player.y},spell),false,scenario);
  }
 });
-test('Expert director naturally overlaps Ezreal and Velkoz missiles',()=>{
+test('Expert director keeps Ezreal separate from Velkoz missiles',()=>{
  let overlap=false;
  for(let seed=1;seed<=12&&!overlap;seed++){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed*1234567);g.player.hp=g.player.maxHp=1000000;
@@ -1482,7 +1467,7 @@ test('Expert director naturally overlaps Ezreal and Velkoz missiles',()=>{
    overlap=g.shots.some(s=>s.alive&&s.directed&&s.velkoz)&&g.shots.some(s=>s.alive&&s.directed&&s.spellName==='EZREAL Q');
   }
  }
- assert.ok(overlap,'no Velkoz + Ezreal missile overlap appeared in twelve seeded Expert runs');
+ assert.equal(overlap,false,'Velkoz + Ezreal missile overlap appeared');
 });
 test('pending split follow-up is discarded if its original threat has resolved',()=>{
  for(const scenario of ['removed','main-hit','child-hit']){
@@ -2266,8 +2251,8 @@ test('Velkoz splits from first swept contact, including a moving champion',()=>{
   if(moving){g.player.speed=200;g.moveTo(startX+100,startY);}
   const spec=g.REFERENCE_SPELLS.velkozDodge,e=g.enemy(startX-100,startY);
   Object.assign(e,{dodgeVisitor:true,pending:{angle:0,spell:spec}});g.releaseEnemy(e);
-  g.update(.1);const main=g.shots.find(s=>s.velkoz==='delay');assert.ok(main);
-  const expectedContactTime=(100-spec.radius-g.player.hitRadius)/(spec.speed-(moving?200:0));
+  g.update(.13);const main=g.shots.find(s=>s.velkoz==='delay');assert.ok(main);
+  const expectedContactTime=(100-spec.radius*g.DODGE_TUNING.spellRadiusScale-g.player.hitRadius)/(spec.speed-(moving?200:0));
   assert.ok(Math.abs(main.x-(e.x+spec.speed*expectedContactTime))<1e-6,`moving=${moving}, split x=${main.x}`);
   assert.equal(g.stats.hits,1);
  }

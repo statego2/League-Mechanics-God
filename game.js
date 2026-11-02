@@ -844,6 +844,11 @@ function visitorPathsCrowded(start,finish,other){
 function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
  const active=foes.filter(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit"&&e.phase!=="orbFlight"&&e.phase!=="hookFlight").length+shots.filter(s=>s.alive&&s.directed).length+hazards.filter(h=>h.directed).length;
  if(active>=DODGE_DIRECTOR[difficulty].cap||(active>0&&dodgeRecovery(time))||hazards.some(h=>h.directed&&!(difficulty==="hard"&&composableAmbientHazard(h)))||foes.some(e=>e.alive&&e.dodgeVisitor&&e.spell.split&&(e.phase==="enter"||(e.phase==="cast"&&difficulty!=="hard"))))return false;
+ // A split already has two child trajectories to read. Do not let an Expert
+ // regular visitor enter before, during, or immediately after that sequence:
+ // it looks like a third simultaneous attacker even when the abstract budget
+ // only counts two encounters.
+ if(foes.some(e=>e.alive&&e.dodgeVisitor&&e.spell?.split&&(e.phase==="enter"||e.phase==="cast"))||shots.some(s=>s.alive&&s.directed&&s.velkoz))return false;
  let spell=forcedSpell;
  if(!spell){
   const fullRoster=difficulty==="hard"||time>=45,roll=random()*(fullRoster?100:71);
@@ -854,7 +859,7 @@ function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
  if(!regularAllowed(spell.name)){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
  if(shots.some(s=>s.alive&&s.directed&&s.kind==="enemyOrb")&&spell!==REFERENCE_SPELLS.ezrealDodge&&!(difficulty==="hard"&&(spell===REFERENCE_SPELLS.luxDodge||spell===REFERENCE_SPELLS.blitzDodge))){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
  if(shots.some(s=>s.alive&&s.velkoz)&&(difficulty!=="hard"||![REFERENCE_SPELLS.ezrealDodge,REFERENCE_SPELLS.luxDodge,REFERENCE_SPELLS.blitzDodge].includes(spell))){if(difficulty!=="hard"||forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
- if(spell.split&&active>0&&difficulty!=="hard"){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
+ if(spell.split&&active>0){if(forcedSpell)return false;spell=REFERENCE_SPELLS.ezrealDodge;}
  // Concurrent visitors are independently chosen. Prefer a different straight
  // spell when another visitor or missile already uses the selected one.
  if(difficulty==="hard"){
@@ -948,13 +953,6 @@ function updateDodgeVisitor(e,dt){
    releaseEnemy(e,Math.max(0,dt+e.charge));e.phase=e.spell.returning?"orbFlight":e.spell.hook?"hookFlight":"exit";
    // Do not automatically add Xerath W above a full two-shot budget. The
    // area spell remains eligible through its own safely-validated encounter.
-   // Give Expert a visible, early follow-up opportunity while the split
-   // missile is still travelling. Spawn and aim lock both verify a shared
-   // walking escape; failure simply leaves the original shot isolated.
-   if(difficulty==="hard"&&e.spell.split&&random()<.65){
-    const followUps=[REFERENCE_SPELLS.ezrealDodge,REFERENCE_SPELLS.luxDodge,REFERENCE_SPELLS.blitzDodge];
-    dodgeDirector.splitFollow=followUps[Math.floor(random()*followUps.length)];
-   }
   }
  }else if(e.phase==="orbFlight"||e.phase==="hookFlight"){
   if(!e.orbShot||!e.orbShot.alive)e.phase="exit";
