@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Cast-ring timing regression (2 November 2026)
+
+- Four focused tests pass on `orianna-cast-ring`: visible R circle before damage, Flash-and-move after 300 ms, Expert opening pressure, and deterministic 180-second simulation at 30/60/120 FPS. One sampled opening produced 35 casts and a peak of three simultaneous threats. This is automated evidence, not a human visual playtest.
+- A fresh full suite was started after commit `da79e43`; record its result when it finishes. The earlier full suite began before this gameplay change and cannot validate the final build.
+
 ## Orianna R circle at cast start (2 November 2026)
 
 - Player clarified that the Shockwave circle must be visible during R's windup, giving time to Flash, instead of first appearing at impact. The full-radius purple cast ring now appears as soon as R starts; damage still resolves at the end of the existing 0.6-second Expert / 0.5-second Standard cast. Ball Q can still deal its separate earlier damage. This supersedes older notes saying there is no pre-cast area cue. Build `orianna-cast-ring`.
