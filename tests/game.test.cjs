@@ -60,6 +60,12 @@ test('Lux R locks its beam direction throughout the charge',()=>{
  g.moveTo(g.player.x+160,g.player.y-120);advance(g,.45);
  assert.deepEqual({x:h.endX,y:h.endY},end);assert.ok(h.ttl>.5,'charge unexpectedly resolved');
 });
+test('Dodge results name the last spell that actually hit Ahri',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.disableSpawn();g.dodgeDirector.next=999;g.player.hp=1;
+ const s=g.fire(g.player.x-140,g.player.y,1000,0,'enemy',20,8,1);Object.assign(s,{directed:true,spellName:'EZREAL Q'});
+ advance(g,.2);
+ assert.equal(g.state,'ended');assert.match(node('menuDescription').textContent,/Last hit: EZREAL Q/);
+});
 test('Expert starts with sustained mixed pressure and early Cassiopeia and Malphite',t=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
  let maxActive=0,mixed=false;
