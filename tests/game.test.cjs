@@ -1697,6 +1697,12 @@ test('Flash works with the physical F key on a Greek keyboard layout',()=>{
  window.listeners.keydown({key:'φ',code:'KeyF',repeat:false,preventDefault(){prevented=true;}});
  assert.ok(prevented);assert.equal(g.player.x,x+200);assert.equal(g.player.cd.f,30);
 });
+test('Flash aimed at Ahri herself does not waste its cooldown',()=>{
+ const {g,node,window}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ node('arena').listeners.pointermove({clientX:g.player.x,clientY:g.player.y,buttons:0});
+ window.listeners.keydown({key:'φ',code:'KeyF',repeat:false,preventDefault(){}});
+ assert.equal(g.player.cd.f,0);assert.match(node('toast').textContent,/MOVE CURSOR AWAY/);
+});
 test('Dodge Flash respects cursor distance, maximum range and training cooldown',()=>{
  for(const [targetX,expected] of [[650,50],[1000,200]]){
   const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;

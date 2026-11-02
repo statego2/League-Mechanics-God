@@ -5,6 +5,7 @@ Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid depend
 ## Keyboard-layout Flash fix (2026-11-02)
 
 - The key handler previously relied on the typed character (`event.key`), so F could produce `φ` on a Greek keyboard and never trigger Flash. Game letter controls now use physical `event.code` when available, with the old key fallback. Added a regression that sends `key: φ`, `code: KeyF` through the actual keydown handler and verifies Flash moves toward the cursor.
+- Flash aimed directly at the champion now gives a cursor instruction without spending cooldown. A landing that resolves to the current position also refunds cooldown and reports the failed landing; these checks avoid a silent consumed Flash.
 
 ## Dodge Flash practice availability (2026-11-02)
 

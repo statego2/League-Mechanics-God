@@ -1152,7 +1152,7 @@ function cast(key){if(key==="f"&&state==="playing"){if(player.cd.f>0){notify(`FL
  player.dashing={...landing,speed:SIMULATION.toCanvas(1200)+playerMoveSpeed(),throughTerrain:world.pointWalkable(landing,player.r)};player.facing=a;updateUI();return;
  }if(key==="w"&&ahriBase()){
  player.cd.w=9;player.boost=2;player.fox={remaining:2.5,next:.4,count:3,hits:{}};burst(player.x,player.y,"#a1d7ff",8);updateUI();return;
- }cancelAttack();if((key==="e"||key==="q")&&ahriBase()){
+ }if(key==="f"&&dist(player,aim)<1){notify("MOVE CURSOR AWAY TO FLASH");return;}cancelAttack();if((key==="e"||key==="q")&&ahriBase()){
  player.cd[key]=key==="e"?12:7;player.casting={kind:key==="e"?"charm":"orb",angle:a,remaining:AHRI.q.cast};player.facing=a;player.target=null;player.order=null;player.focus=null;updateUI();return;
  }player.cd[key]=key==="f"&&(ahriBase()||referenceSpell())?(dodgeDirector?30:300):mode==="skillshot"&&key==="q"?.8:CD[key];if(key==="q"){if(mode==="skillshot")stats.skillShots++;fire(player.x+d.x*24,player.y+d.y*24,d.x*770,d.y*770,"q",45,10,1);burst(player.x,player.y,"#76ffff",7);}
 if(key==="w"||key==="f"){
@@ -1161,6 +1161,7 @@ if(key==="w"||key==="f"){
  const waypoint=player.route.length?player.route[0]:priorTarget;
  const desired={x:clamp(x+d.x*len,25,W-25),y:clamp(y+d.y*len,65,H-38)};
  const landing=key==="w"?world.clip(player,desired):world.nearestWalkable(desired),sx=landing.x-x,sy=landing.y-y;
+ if(key==="f"&&sx*sx+sy*sy<1e-8){player.cd.f=0;notify("NO FLASH LANDING");updateUI();return;}
  // Forward Flash retains a plain movement order. The positive-dot direction
  // test and overshoot rule are training approximations, not Riot thresholds.
  const keepMove=key==="f"&&(ahriBase()||referenceSpell())&&priorTarget&&waypoint&&sx*sx+sy*sy>1e-8&&
