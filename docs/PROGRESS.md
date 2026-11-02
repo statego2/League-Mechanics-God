@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Timing regression follow-up (2 November 2026)
+
+- A full suite started before the spacing correction failed early-Malphite and cross-FPS determinism checks after the game file changed during that run; its mixed-code result cannot characterize the final checkout. Both cases passed when rerun individually against the committed spacing correction, including the full 180-second 30/60/120 FPS simulation. A fresh complete run against the fixed checkout is still in progress; record its result separately.
+- Confirmed the local cache-free server shows `Build: timing-spacing`. This is a menu load check; it is not a human playtest of the new rhythm.
+
 ## Mindgame entry spacing (2 November 2026)
 
 - Entry-spacing prediction now uses each new visitor's sampled approach speed, rather than assuming 120 canvas units/s while the visitor actually uses 108–132. This keeps the intended visual separation consistent with the new timing variety; cast speed, probabilities and threat caps are unchanged. Build `timing-spacing`.
