@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Local Orianna build smoke test (2 November 2026)
+
+- In a fresh browser on `orianna-ball`, started Expert Dodge, issued a right-click movement order and pressed F; the ability bar showed the 30-second Flash cooldown and the browser reported no console errors. This was a brief input/load smoke test, not a human balance assessment or an observed Orianna encounter.
+- Added an actual Standard-mode Orianna spawn test confirming its R remains 0.5 s while Expert uses 0.6 s. Eight focused Standard/Expert and render-order tests pass. No gameplay code changed in this follow-up.
+
 ## Orianna ball foreground visibility (2 November 2026)
 
 - The ball was drawn before the player sprite, so Ahri could cover it when Q targeted her position. The existing ball is now drawn above champion sprites; the ground glow, ball coordinates, cast duration and collision remain unchanged. This changes render ordering only and adds no hitbox indicator. Build `orianna-ball`.

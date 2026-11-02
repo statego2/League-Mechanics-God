@@ -39,6 +39,11 @@ test('Expert Orianna centres her shockwave and a Flash response escapes the real
  const hits=g.stats.hits,witness={};assert.ok(g.oriannaFlashEscape(h,witness));advance(g,.2);node('arena').listeners.pointermove({clientX:witness.flash.x,clientY:witness.flash.y,buttons:0});g.cast('f');g.moveTo(witness.destination.x,witness.destination.y);advance(g,.41);
  assert.equal(g.dodgeDirector.outcomes['ORIANNA R'].avoided,1);assert.equal(g.stats.hits,hits);
 });
+test('Standard Orianna retains the sourced 0.5 second cast',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=Infinity;
+ assert.ok(g.spawnOriannaR());const h=g.hazards[0];while(!h.casting&&g.hazards.includes(h))g.update(1/120);
+ assert.equal(h.casting,true);assert.ok(Math.abs(h.ttl-.5)<1e-8);assert.equal(h.max,.5);
+});
 test('Expert Orianna gives a visible 0.6 second Flash window',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setFoes([]);g.dodgeDirector.next=999;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=g.dodgeDirector.luxRAt=Infinity;
  assert.ok(g.spawnOriannaR());const h=g.hazards[0];while(!h.casting)g.update(1/120);assert.ok(Math.abs(h.ttl-.6)<1e-8);const hits=g.stats.hits;
