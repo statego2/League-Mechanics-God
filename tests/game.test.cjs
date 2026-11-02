@@ -35,15 +35,14 @@ test('Orianna shockwave draws animated impact arcs',()=>{
 });
 test('Expert Orianna centres her shockwave and a Flash response escapes the real impact',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setFoes([]);g.dodgeDirector.next=999;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=g.dodgeDirector.luxRAt=Infinity;
- assert.ok(g.spawnOriannaR());const h=g.hazards[0];advance(g,1.51);assert.equal(h.casting,true);assert.ok(Math.hypot(h.x-g.player.x,h.y-g.player.y)<1);
+ assert.ok(g.spawnOriannaR());const h=g.hazards[0];advance(g,.47);assert.equal(h.casting,true);assert.ok(Math.hypot(h.x-g.player.x,h.y-g.player.y)<1);
  const hits=g.stats.hits,witness={};assert.ok(g.oriannaFlashEscape(h,witness));advance(g,.2);node('arena').listeners.pointermove({clientX:witness.flash.x,clientY:witness.flash.y,buttons:0});g.cast('f');g.moveTo(witness.destination.x,witness.destination.y);advance(g,.31);
  assert.equal(g.dodgeDirector.outcomes['ORIANNA R'].avoided,1);assert.equal(g.stats.hits,hits);
 });
-test('Expert Orianna ball visibly follows the player after arriving and locks at cast',()=>{
+test('Expert Orianna ball arrives at a fixed destination and never follows Ahri',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setFoes([]);g.dodgeDirector.next=999;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=g.dodgeDirector.luxRAt=Infinity;
- assert.ok(g.spawnOriannaR());const h=g.hazards[0];advance(g,.6);assert.equal(h.casting,false);
- g.moveTo(g.player.x+100,g.player.y);advance(g,.2);assert.ok(Math.hypot(h.x-g.player.x,h.y-g.player.y)<1);
- advance(g,.71);assert.equal(h.casting,true);const center={x:h.x,y:h.y};advance(g,.1);assert.equal(h.x,center.x);assert.equal(h.y,center.y);
+ assert.ok(g.spawnOriannaR());const h=g.hazards[0],target={...h.destination};advance(g,.37);assert.equal(h.casting,false);assert.ok(Math.hypot(h.x-target.x,h.y-target.y)<.01);
+ g.moveTo(g.player.x+100,g.player.y);advance(g,.12);assert.equal(h.casting,true);assert.equal(h.x,target.x);assert.equal(h.y,target.y);assert.ok(Math.hypot(h.x-g.player.x,h.y-g.player.y)>1);
 });
 test('centred Orianna Flash witnesses survive actual impact while Ahri is moving',()=>{
  let accepted=0;
@@ -108,12 +107,12 @@ test('Expert Dodge has a bounded flow-spike-recovery rhythm',()=>{
  assert.ok(g.DODGE_DIRECTOR.hard.interval*.9<g.DODGE_DIRECTOR.hard.interval,'spike must be denser than flow');
  assert.ok(g.DODGE_DIRECTOR.hard.interval*1.38>g.DODGE_DIRECTOR.hard.interval,'recovery must create more space');
 });
-test('Expert Lux R shows a source tell before its full one-second visible charge',()=>{
+test('Expert Lux R shows a source tell before its 0.9 second visible charge',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.disableSpawn();g.dodgeDirector.next=999;g.setTime(26);
  g.update(1/120);const h=g.hazards.find(x=>x.luxR);assert.ok(h,'Lux R was not scheduled');assert.equal(h.precast,true);assert.equal(h.max,.4);assert.ok(h.ttl>.39&&h.ttl<=.4);
  const beamLength=Math.hypot(h.endX-h.x,h.endY-h.y),aimedDistance=Math.hypot(g.player.x-h.x,g.player.y-h.y);
  assert.ok(h.cueStart*beamLength>=aimedDistance+h.r+g.player.hitRadius+11.9,'the charge cue must already cover Ahri\'s full hit envelope');
- assert.equal(g.foes.length,0);assert.equal(g.shots.length,0);assert.equal(g.spawnDodgeVisitor(),false,'Lux R must not gain a follow-up during its charge');advance(g,.41);assert.equal(h.precast,false);assert.equal(h.max,1);assert.ok(h.ttl>.98&&h.ttl<=1);advance(g,.49);assert.ok(h.ttl>.49&&h.ttl<.52,'beam fired before its readable charge completed');
+ assert.equal(g.foes.length,0);assert.equal(g.shots.length,0);assert.equal(g.spawnDodgeVisitor(),false,'Lux R must not gain a follow-up during its charge');advance(g,.41);assert.equal(h.precast,false);assert.equal(h.max,.9);assert.ok(h.ttl>.88&&h.ttl<=.9);advance(g,.39);assert.ok(h.ttl>.49&&h.ttl<.52,'beam fired before its readable charge completed');
 });
 test('Lux R supplies and executes a normal walking sidestep',()=>{
  let checked=0;
@@ -197,12 +196,15 @@ test('Dodge reaction forecast follows the retained movement route',()=>{
  assert.ok(Math.hypot(g.player.x-predicted.x,g.player.y-predicted.y)<.1,`actual ${g.player.x},${g.player.y}; forecast ${predicted.x},${predicted.y}`);
  assert.ok(predicted.y>330,'the forecast must follow the existing waypoint rather than a newly calculated direct route');
 });
-test('Expert predictive aim favors lead, reversal and cut over stationary shots',()=>{
+test('Mindgame Aim selects approximately 75% leads with direct and reversal reads',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.moveTo(1000,g.player.y-80);g.setRng(73129);
- const counts={direct:0,lead:0,reversal:0,cut:0};
- for(let i=0;i<160;i++)counts[g.dodgeAimPoint(g.REFERENCE_SPELLS.ezrealDodge).pattern]++;
- assert.ok(counts.direct>0&&counts.lead>0&&counts.reversal>0&&counts.cut>0,JSON.stringify(counts));
- assert.ok(counts.lead+counts.reversal+counts.cut>counts.direct,JSON.stringify(counts));
+ const counts={direct:0,lead:0,reversal:0};
+ for(let i=0;i<2000;i++)counts[g.dodgeAimPoint(g.REFERENCE_SPELLS.ezrealDodge).pattern]++;
+ assert.ok(counts.direct>0&&counts.reversal>0,JSON.stringify(counts));assert.ok(counts.lead>=1400&&counts.lead<=1600,JSON.stringify(counts));
+});
+test('Expert Malphite visibly approaches for 0.8 seconds before committing',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;
+ assert.ok(g.spawnMalphiteR());const h=g.hazards[0];assert.equal(h.ttl,.8);advance(g,.79);assert.equal(h.casting,false);advance(g,.03);assert.equal(h.casting,true);
 });
 test('director escape witnesses survive actual straight shots from varied angles and overlaps',()=>{
  let accepted=0,overlaps=0;

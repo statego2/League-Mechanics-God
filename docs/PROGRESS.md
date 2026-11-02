@@ -2,6 +2,12 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Mindgame Aim v1 and faster Malphite (2026-11-02)
+
+- Named the targeting experiment **Mindgame Aim v1**. For a moving player's straight-shot cast, the initial selection is 75% forward prediction, 10% reversal and 15% direct. The existing shared escape check can replace an unsafe prediction with direct aim or cancel the cast, so these are selection weights, not measured delivered-shot proportions. Stationary players are targeted directly.
+- Expert Malphite's visible pre-dash approach now lasts 0.8 seconds instead of 1.25; his dash speed, Flash safety forecast and 15-second first eligibility remain unchanged. Standard retains the 1.25-second approach.
+- Six focused tests pass, covering selection distribution, real predictive hit versus an alternate escape, safe fallback, Malphite setup and early scheduling. Local build: `mindgame-v1`.
+
 ## Predicting movement through projectile travel (2026-11-02)
 
 - Prior lead aim only projected Ahri's current route during the spell windup; a player walking continuously could often evade without making a new decision. Straight-shot visitors now estimate the player's position through both windup and projectile flight, iterating the travel estimate twice with a 1.2-second horizon. Direct, reversal and lateral-cut patterns remain mixed in; casts that do not pass the existing shared escape forecast fall back to a separately checked direct aim.
@@ -1175,3 +1181,11 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 - The player's Q now begins its return during the remaining portion of the simulation step in which the outgoing leg expires, instead of waiting for the next step. Return hits use target motion only during that active interval; true damage and the once-per-leg rules remain. The return direction still uses the existing fixed-step approximation to the player's position. Dodge skill-scored bests use `.skill_v3`, preserving prior stored records separately.
 - Added regressions for a return hit in the turn step and for a target entering only after the return ends. `node --test tests/*.test.cjs`: 353/353 pass; `node --check game.js`, generated Ahri data check and `git diff --check` pass. Browser playtesting was unavailable because the Mac was locked.
 - Next: browser/human Expert playtests of offensive skillshots, overlap pacing and rare encounters; continue the unfinished Gauntlet and CS work.
+
+
+## Expert Orianna and Lux readability (2 November 2026)
+
+- Keep Mindgame Aim v1 and the existing difficulty as the player-approved baseline. Expert Orianna Q now travels to the position captured at spawn, remains there instead of attaching to Ahri, and starts R 0.10 s after arrival. The R retains its 0.5 s visible charge and Flash escape check. Players can evade by moving during Q, so this is a reaction drill, not a guaranteed Flash requirement. Timing and spawn positioning are trainer approximations.
+- Lux R remains centered on Ahri's position when spawned and its aim stays fixed; its charge is shortened from 1.0 s to 0.9 s on request, plus the existing 0.4 s source tell. This is intentionally faster than the documented game cast.
+- Reference: https://wiki.leagueoflegends.com/en-us/Orianna describes Q remaining at its destination, buffered R, and a 0.5 s R cast; https://www.leagueoflegends.com/en-au/news/game-updates/patch-12-7-notes/ discusses Riot's Orianna VFX clarity improvements.
+- Targeted simulation: 21 Orianna, Lux, Malphite and prediction tests pass; local browser started Expert Dodge. The actual rare Orianna encounter still needs visual human playtesting and multi-minute fairness review.

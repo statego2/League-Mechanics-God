@@ -507,9 +507,9 @@ function spawnXerathW(witness=null){
 // 0.528 s timing are deliberate training approximations.
 const XERATH_Q={radius:SIMULATION.toCanvas(145/2),range:SIMULATION.toCanvas(1450),delay:.65,raw:70};
 // Final Spark is a separate encounter from Lux Q. The current League Wiki
-// data lists a one-second cast time. Preserve that readable lockout rather
-// than accelerating the beam for Expert.
-const LUX_R={radius:SIMULATION.toCanvas(190/2),range:SIMULATION.toCanvas(3340),precast:.4,cast:1,raw:300};
+// data lists a one-second cast time. The 0.9-second cast is a requested
+// training adjustment, with the separate source tell retained.
+const LUX_R={radius:SIMULATION.toCanvas(190/2),range:SIMULATION.toCanvas(3340),precast:.4,cast:.9,raw:300};
 function spawnLuxR(witness=null){
  if(foes.some(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit")||shots.some(s=>s.alive&&s.directed)||hazards.some(h=>h.directed))return false;
  const reaction=dodgeReactionDelay();if(!Number.isFinite(reaction))return false;
@@ -609,7 +609,8 @@ function spawnOriannaR(){
   if(ball.x<55||ball.x>W-55||ball.y<95||ball.y>H-40||!world.pointWalkable(ball,8)||(difficulty==="hard"?!oriannaFlashEscape(ball):!oriannaEscape(ball)))continue;
   if(source.x<60||source.x>W-60||source.y<145||source.y>H-30||!world.pointWalkable(source,20))continue;
   const q={directed:true,spellName:"ORIANNA Q",phaseResolved:false,threat:false};
-  hazards.push({x:source.x,y:source.y,r:ball.r,source,destination:{x:ball.x,y:ball.y},travelDuration:250/SIMULATION.toCanvas(1400),ttl:1.5,max:1.5,orianna:true,casting:false,directed:true,spellName:"ORIANNA R",threat:false,q});dodgeDirector.attempted++;dodgeDirector.oriannaQ++;return true;
+  const travelDuration=250/SIMULATION.toCanvas(1400),setup=difficulty==="hard"?travelDuration+.10:1.5;
+  hazards.push({x:source.x,y:source.y,r:ball.r,source,destination:{x:ball.x,y:ball.y},travelDuration,ttl:setup,max:setup,orianna:true,casting:false,directed:true,spellName:"ORIANNA R",threat:false,q});dodgeDirector.attempted++;dodgeDirector.oriannaQ++;return true;
  }
  return false;
 }
@@ -656,7 +657,8 @@ function spawnMalphiteR(){
   const a=angle+i*TAU/24,source={x:player.x+Math.cos(a)*420,y:player.y+Math.sin(a)*420};
   const approach={x:source.x-Math.cos(a)*45,y:source.y-Math.sin(a)*45};
   if(source.x<65||source.x>W-65||source.y<150||source.y>H-40||!world.pointWalkable(source,25)||!world.pointWalkable(approach,25)||!world.segmentClear(source,approach,25))continue;
-  hazards.push({...source,approach,startApproach:{...source},ttl:1.25,max:1.25,malphite:true,casting:false,directed:true,spellName:"MALPHITE R",r:MALPHITE_R.radius,threat:false});return true;
+  const setup=difficulty==="hard"?.8:1.25;
+  hazards.push({...source,approach,startApproach:{...source},ttl:setup,max:setup,malphite:true,casting:false,directed:true,spellName:"MALPHITE R",r:MALPHITE_R.radius,threat:false});return true;
  }
  return false;
 }
@@ -942,14 +944,11 @@ function dodgeAimPoint(spell,origin=player){
  const dx=future.x-player.x,dy=future.y-player.y,d=Math.hypot(dx,dy);
  if(d<2)return {point:player,pattern:"direct"};
  const ux=dx/d,uy=dy/d,roll=random();
- // Expert deliberately tests route reading more often than stationary
- // reaction: forward lead, reversal and lateral cut all remain forecasted
- // against a walkable response before a caster is allowed to lock aim.
- if(roll<.20)return {point:player,pattern:"direct"};
- if(roll<.60)return {point:future,pattern:"lead"};
- if(roll<.80)return {point:{x:player.x-ux*70,y:player.y-uy*70},pattern:"reversal"};
- const side=random()<.5?-1:1;
- return {point:{x:future.x-uy*side*58,y:future.y+ux*side*58},pattern:"cut"};
+ // Mindgame Aim v1: 75% projected position, 10% reversal read, 15% direct.
+ // These are selection weights; an unsafe lead can still fall back to direct.
+ if(roll<.15)return {point:player,pattern:"direct"};
+ if(roll<.90)return {point:future,pattern:"lead"};
+ return {point:{x:player.x-ux*70,y:player.y-uy*70},pattern:"reversal"};
 }
 function updateDodgeVisitor(e,dt){
  e.hit=Math.max(0,e.hit-dt);
@@ -1372,12 +1371,9 @@ for(const h of hazards){
     if(pathHit||arrivalHit){if(player.invuln>0){recordDodgeOutcome(h.q,"blocked");stats.blocked++;}else{recordDodgeOutcome(h.q,"hit");takeHit(physicalDamage(ORIANNA_Q.raw,30));}if(state!=="playing")return;}
     else if(f>=1){recordDodgeOutcome(h.q,h.q.threat?"avoided":"harmless");if(h.q.threat){dodged++;cue("dodge");}}
    }
-   // Expert's reaction drill attaches the arrived ball to Ahri during setup,
-   // so the eventual centred R is visible instead of teleporting at cast.
-   if(difficulty==="hard"&&f>=1){h.x=player.x;h.y=player.y;}
   }
   if(h.ttl<=0&&!h.casting){
-   if(difficulty==="hard"){h.x=player.x;h.y=player.y;if(!oriannaFlashEscape(h)){h.ttl=0;deferRareEvent(h);continue;}}
+   if(difficulty==="hard"){if(!oriannaFlashEscape(h)){h.ttl=0;deferRareEvent(h);continue;}}
    else if(!oriannaEscape(h)){h.ttl=0;deferRareEvent(h);continue;}
    h.casting=true;h.ttl=ORIANNA_R.cast;h.threat=dist(player,h)<=h.r+player.hitRadius;
    dodgeDirector.attempted++;dodgeDirector.orianna++;
