@@ -19,6 +19,13 @@ Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid depend
 - Three seeded twelve-minute simulations remain active with two maximum independent threats; the intentionally non-dodging harness measured 18–26 completed casts/minute because the new recovery hold is engaged after real hits. The pre-hit, clean-player scheduling cadence remains independently covered by the rhythm tests.
 - Verification: `node --check game.js`, `git diff --check`, focused recovery/sustain checks, a 12-minute three-seed cadence run, and paired-threat diversity all pass (5 selected tests).
 
+## Dodge movement-scope and collision initialization correction (2026-11-02)
+
+- Tier-1 boots are now scoped to the Dodge baseline only. Ahri’s shared data model, Kite and CS practice retain her 330 base movement speed, while Dodge starts at 355. This removes an accidental movement-speed leak into farming and attack-timing drills.
+- The compact Dodge hitbox is now assigned at reset as well as during the first update. Previously an immediate impact or a safety calculation made in the first simulation frame could use Ahri’s larger general gameplay-radius proxy before switching to the Dodge-only radius. This fixes first-frame collision consistency for beams, projectiles and area grazes.
+- Cassiopeia’s exact range boundary now tolerates floating-point rounding, so a cast positioned exactly at the documented trainer range does not silently defer.
+- Focused verification: `node --check game.js`, `git diff --check`, and 10 targeted movement, collision, Cassiopeia-boundary, sustain and impact-lifetime tests pass. A broad historical suite still contains stale assertions for retired high-overlap behavior and will be reconciled separately rather than being presented as green.
+
 ## CS wave body spacing (2026-11-02)
 
 - The two-sided CS simulation now applies a deterministic, same-team minion separation pass after each wave update. Minions that converge on the same chase/target point are pushed apart to roughly their combined gameplay radii while remaining clipped to walkable terrain. Opposing minions are intentionally not separated by this pass so melee contact remains possible. This is a compact training approximation of minion body blocking, not a claim of exact live NavMesh collision.

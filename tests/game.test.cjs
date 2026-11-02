@@ -557,10 +557,10 @@ test('Ahri CS allied melee and caster damage use minion ratios',()=>{
 
 test('Ahri is the selected default and visible menu has three focused drills',()=>{
  const html=fs.readFileSync(require.resolve('../index.html'),'utf8');assert.match(html,/value="ahri" selected/);assert.deepEqual([...html.matchAll(/data-mode="([^"]+)"/g)].map(m=>m[1]),['dodge','kite','lastHit']);
- const {g}=boot('ahri');for(const mode of ['dodge','kite','lastHit']){g.reset(mode);assert.equal(g.player.hp,590);assert.equal(g.player.speed,165);}
+ const {g}=boot('ahri');for(const mode of ['dodge','kite','lastHit']){g.reset(mode);assert.equal(g.player.hp,590);assert.equal(g.player.speed,mode==='dodge'?177.5:165);}
 });
 test('Ahri dodge integrates Lux and Ezreal casts in one drill',()=>{
- const {g}=boot('ahri');g.reset('dodge');g.disableSpawn();const e=foe(g,900);g.shootEnemy(e);assert.equal(e.pending.spell.name,'LUX Q');g.releaseEnemy(e);assert.equal(g.shots[0].r,35);g.shootEnemy(e);assert.equal(e.pending.spell.name,'EZREAL Q');g.releaseEnemy(e);assert.equal(g.shots[1].r,30);
+ const {g}=boot('ahri');g.reset('dodge');g.disableSpawn();const e=foe(g,900);g.shootEnemy(e);assert.equal(e.pending.spell.name,'LUX Q');g.releaseEnemy(e);assert.equal(g.shots[0].r,35*.87);g.shootEnemy(e);assert.equal(e.pending.spell.name,'EZREAL Q');g.releaseEnemy(e);assert.equal(g.shots[1].r,30*.87);
 });
 
 test('Ahri Charm casts for 0.25 seconds and hits the first unit with magic damage and crowd control',()=>{
@@ -586,10 +586,10 @@ test('Ahri Fox-Fire boosts movement and its three flames deal reduced repeat dam
 test('Ahri Fox-Fire movement observes the upper speed soft cap and decays',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.moveTo(1100,g.player.y);g.cast('w');
  const dt=1/120,start=g.player.x;g.update(dt);
- const raw=330*(1+.4*(2-dt)/2),expected=(raw*.8+83)*.5*dt;
+ const raw=355*(1+.4*(2-dt)/2),expected=(raw*.5+230)*.5*dt;
  assert.ok(Math.abs(g.player.x-start-expected)<1e-8);const first=g.player.x-start;
  advance(g,.8);const before=g.player.x;g.update(dt);const later=g.player.x-before;
- assert.ok(later<first);assert.ok(later>165*dt);
+ assert.ok(later<first);assert.ok(later>177.5*dt);
 });
 test('Ahri Fox-Fire does not cancel an auto windup and is locked in auto-only CS',()=>{
  const {g,node}=boot('ahri');g.reset('kite');g.disableSpawn();const e=foe(g,800);g.attackOrder(e);advance(g,.1);const windup=g.player.windup;g.cast('w');assert.equal(g.player.windup,windup);advance(g,.25);assert.equal(g.stats.released,1);g.reset('lastHit');g.cast('w');assert.equal(g.player.cd.w,0);assert.equal(node('cdW').textContent,'—');
@@ -605,8 +605,8 @@ test('Spirit Rush snapshots capped movement speed when the dash starts',()=>{
   const speed=g.player.dashing.speed,start=g.player.x;g.update(.1);return {g,speed,moved:g.player.x-start};
  }
  const base=dash(false),boosted=dash(true);
- assert.equal(base.speed,765);assert.ok(Math.abs(boosted.speed-826.3)<1e-9);
- assert.ok(Math.abs(base.moved-76.5)<1e-8);assert.ok(Math.abs(boosted.moved-82.63)<1e-8);
+ assert.equal(base.speed,777.5);assert.ok(Math.abs(boosted.speed-839.25)<1e-9);
+ assert.ok(Math.abs(base.moved-77.75)<1e-8);assert.ok(Math.abs(boosted.moved-83.925)<1e-8);
  const before=base.g.player.dashing.speed;base.g.cast('w');assert.equal(base.g.player.dashing.speed,before);
  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;node('arena').listeners.pointermove({clientX:1000,clientY:g.player.y,buttons:0});g.cast('w');advance(g,.8);g.cast('r');
  assert.ok(g.player.dashing.speed>base.speed&&g.player.dashing.speed<boosted.speed);
@@ -1292,10 +1292,10 @@ test('Xerath Q has a walkable sidestep after the training reaction delay and no 
  assert.equal(g.stats.hits,0);assert.equal(g.dodgeDirector.outcomes['XERATH Q'].avoided,1);
 });
 test('Xerath Q uses the projectile-width and champion hitbox at its beam boundary',()=>{
- for(const [offset,hit] of [[68.7,true],[68.8,false]]){
+ for(const [offset,hit] of [[61.2,true],[61.3,false]]){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnXerathQ());const h=g.hazards[0];
   const dx=h.endX-h.x,dy=h.endY-h.y,d=Math.hypot(dx,dy);g.player.x=h.x+dx/d*350+dy/d*offset;g.player.y=h.y+dy/d*350-dx/d*offset;
-  advance(g,.55);assert.equal(g.stats.hits,hit?1:0,`offset ${offset}`);
+  advance(g,.66);assert.equal(g.stats.hits,hit?1:0,`offset ${offset}`);
  }
 });
 
@@ -1766,7 +1766,7 @@ test('expired hostile projectiles cannot hit later movement in the same frame',(
 });
 test('a hostile projectile can still hit before expiring mid-frame',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.moveTo(800,g.player.y);
- g.fire(g.player.x+40,g.player.y,0,0,'enemy',10,8,.001);g.update(1/30);assert.equal(g.stats.hits,1);
+ g.fire(g.player.x+32,g.player.y,0,0,'enemy',10,8,.001);g.update(1/30);assert.equal(g.stats.hits,1);
 });
 
 test('minion missile expiry is compared against target motion only during its lifetime',()=>{
@@ -2693,7 +2693,7 @@ test('Cassiopeia cone and facing distinguish turn-away, face and escape',()=>{
 });
 test('Dodge uses Tier-1 boots and compact readable collision',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.update(0);
- assert.equal(g.AHRI.speed,177.5);assert.equal(g.player.hitRadius,25);
+ assert.equal(g.AHRI.speed,165);assert.equal(g.player.speed,177.5);assert.equal(g.player.hitRadius,25);
  assert.equal(g.DODGE_DIRECTOR.hard.interval,2.3);assert.equal(g.DODGE_DIRECTOR.hard.cap,2);
  const e=g.enemy(900,330),spell=g.REFERENCE_SPELLS.ezrealDodge;
  Object.assign(e,{dodgeVisitor:true,pending:{spell,angle:Math.PI,threat:true},charge:0});g.releaseEnemy(e);
@@ -2732,7 +2732,7 @@ test('Cassiopeia can commit at the range boundary and credit a subsequent escape
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
  const h={x:g.player.x-350,y:g.player.y,cassio:true,casting:false,ttl:.001,directed:true,spellName:'CASSIOPEIA R'};g.hazards.push(h);
  g.update(.01);assert.equal(h.casting,true);assert.equal(g.dodgeDirector.cassio,1);
- g.moveTo(g.player.x+100,g.player.y);advance(g,.51);assert.equal(g.dodgeDirector.cassEscapes,1);assert.equal(g.dodged,1);
+ g.moveTo(g.player.x+100,g.player.y);advance(g,.56);assert.equal(g.dodgeDirector.cassEscapes,1);assert.equal(g.dodged,1);
 });
 test('Cassiopeia outcome is preserved in the result after a lethal hit',()=>{
  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.hp=1;g.player.facing=Math.PI;
