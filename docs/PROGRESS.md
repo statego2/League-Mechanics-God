@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Major impact visibility across delayed frames (2 November 2026)
+
+- Extended the bounded unseen-impact retention to Lux R / Xerath Q beams, Malphite R and Cassiopeia R, in addition to Orianna R. A delayed frame can no longer discard those short visual effects before their first render; damage, collision and pre-cast cues are unchanged. Headless effects still expire after a bounded interval. Build `impact-frame`.
+- Five focused tests passed, including actual Lux, Malphite and Cassiopeia impacts after a 0.25 s delayed frame, visibility and cleanup, plus existing Orianna and beam geometry checks. Human visual playtesting remains open.
+
 ## Orianna impact across delayed frames (2 November 2026)
 
 - A slow frame can advance multiple fixed simulation steps before rendering; the 0.24 s R impact effect could expire before the browser showed it. A briefly unseen Shockwave is now retained for the next render and shown for at least 0.12 s; unseen effects still expire after a bounded interval when rendering is absent. Damage timing and the radius are unchanged. Build `orianna-frame`.

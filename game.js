@@ -1538,11 +1538,12 @@ if(state!=="playing")return;
 for(const unit of [...foes,...allies])if(unit.alive&&unit.deathGrace&&time>=unit.deathGrace.until){unit.hp=0;resolveDeath(unit,{...unit.deathGrace.impact,time});}
 foes=foes.filter(e=>e.alive);allies=allies.filter(e=>e.alive);if(mode==="lastHit"&&waves===(ahriCS()?20:5)&&foes.length===0){end(true);return;}shots=shots.filter(s=>s.alive);
 for(const f of fx){f.x+=f.vx*dt;f.y+=f.vy*dt;f.ttl-=dt;}
-// A delayed frame can advance the simulation past the whole Shockwave VFX.
-// Retain an unseen impact briefly so its damage is never visually silent.
-fx=fx.filter(f=>f.ttl>0||(f.shockwave&&!f.rendered&&f.ttl>-.3));
+// Retain a brief unseen impact across a delayed frame, without extending
+// collision or keeping effects indefinitely in a headless simulation.
+fx=fx.filter(f=>f.ttl>0||(impactEffect(f)&&!f.rendered&&f.ttl>-.3));
 if(toastTime>0){toastTime-=dt;if(toastTime<=0)ui.toast.classList.remove("show");}
 updateUI();}
+function impactEffect(f){return !!(f.shockwave||f.rockImpact||f.cassio||f.beam);}
 function circle(x,y,r,color,fill=true,width=1){ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx[fill?"fillStyle":"strokeStyle"]=color;if(!fill)ctx.lineWidth=width;ctx[fill?"fill":"stroke"]();}
 function polygon(x,y,r,n,rotation,fill,stroke){ctx.beginPath();for(let i=0;i<=n;i++){const a=rotation+i*TAU/n;const px=x+Math.cos(a)*r,py=y+Math.sin(a)*r;i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.closePath();ctx.fillStyle=fill;ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.fill();ctx.stroke();}
 // A pose, not an aim line: progressively wind up during the existing cast.
@@ -1751,7 +1752,7 @@ for(const s of shots){
 }
 }
 for(const f of fx){
- if(f.shockwave&&!f.rendered){f.rendered=true;if(f.ttl<=0)f.ttl=.12;}
+ if(impactEffect(f)&&!f.rendered){f.rendered=true;if(f.ttl<=0)f.ttl=.12;}
  ctx.globalAlpha=clamp(f.ttl/f.max,0,1);if(f.cassio){
  ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);const glow=ctx.createRadialGradient(0,0,0,0,0,f.r);
  glow.addColorStop(0,"#e8ffd9bb");glow.addColorStop(.35,"#9ff9a777");glow.addColorStop(1,"#45d99100");

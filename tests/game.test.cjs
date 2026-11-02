@@ -1725,6 +1725,20 @@ test('Orianna impact survives a delayed render after simulation catch-up',()=>{
  g.update(.25);assert.equal(g.stats.hits,1);assert.ok(g.fx.some(f=>f.shockwave));arcs.length=0;g.render();assert.ok(arcs.filter(a=>a.r===h.r).length>=4);
  advance(g,.15);assert.ok(!g.fx.some(f=>f.shockwave),'impact must still expire after being shown');
 });
+test('Lux, Malphite and Cassiopeia impacts survive delayed rendering',()=>{
+ for(const kind of ['lux','malphite','cassio']){
+  const {g,arcs,strokes}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const x=g.player.x,y=g.player.y;
+  let h;
+  if(kind==='lux')h={x:x-250,y,endX:x+250,endY:y,r:40,beam:true,luxR:true,ttl:.01,directed:true,spellName:'LUX R'};
+  else if(kind==='malphite'){const target={x,y},start={x:x-100,y};h={...start,target,start,remaining:.2,r:162.5,malphite:true,casting:true,ttl:.01,directed:true,spellName:'MALPHITE R'};}
+  else{g.player.facing=Math.PI;h={x:x-200,y,angle:0,cassio:true,casting:true,ttl:.01,directed:true,spellName:'CASSIOPEIA R'};}
+  g.hazards.push(h);g.update(.25);assert.equal(g.stats.hits,1,kind);
+  const effect=g.fx.find(f=>kind==='lux'?f.beam:kind==='malphite'?f.rockImpact:f.cassio);assert.ok(effect,kind);arcs.length=0;strokes.length=0;g.render();
+  assert.equal(effect.rendered,true,kind);assert.ok(effect.ttl>0,kind);
+  if(kind==='lux')assert.ok(strokes.includes('#ffe2a8'));else assert.ok(arcs.some(a=>a.r===effect.r),kind);
+  advance(g,.15);assert.ok(!g.fx.includes(effect),kind);
+ }
+});
 test('Orianna Q hits along its moving path once and records its own damage',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;assert.ok(g.spawnOriannaR());const h=g.hazards[0];
  g.player.x=h.source.x+(h.destination.x-h.source.x)*.4;g.player.y=h.source.y+(h.destination.y-h.source.y)*.4;
