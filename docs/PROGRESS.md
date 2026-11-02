@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Mindgame entry spacing (2 November 2026)
+
+- Entry-spacing prediction now uses each new visitor's sampled approach speed, rather than assuming 120 canvas units/s while the visitor actually uses 108–132. This keeps the intended visual separation consistent with the new timing variety; cast speed, probabilities and threat caps are unchanged. Build `timing-spacing`.
+- Added a crossing-path case where 108 and 132 give opposite spacing results, and updated the multi-caster spawn check to use the actual sampled speed. The full suite launched before this correction was still in progress; it cannot prove the final code until rerun against a fixed checkout.
+
 ## Mindgame Timing v1 (2 November 2026)
 
 - At the player's request Expert visitors vary their visible approach speed by ±10% and may wait independently for 0–0.16 seconds at their casting position before choosing aim and committing. This changes decision timing rather than the sourced spell windup or missile speed. The visitor remains in the entry phase while waiting, so existing threat-budget and path-separation checks still apply. Standard and Foundation are unchanged. Aim and escape forecasts are evaluated after the pause using the real spell cast time. This is a trainer approximation, not live champion AI. Build `mindgame-timing`.

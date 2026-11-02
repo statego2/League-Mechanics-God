@@ -866,9 +866,9 @@ function canEvadeVelkoz(origin,angle,splitDistance,spell,witness=null){
 }
 // Forecast simultaneous entry motion so caster silhouettes remain distinct.
 // This is a presentation spacing rule; it does not change combat hitboxes.
-function visitorPathsCrowded(start,finish,other){
+function visitorPathsCrowded(start,finish,other,speed=120){
  const otherEnd=other.phase==="enter"?(other.origin||other):other;
- const duration=dist(start,finish)/120,otherDuration=other.phase==="enter"?dist(other,otherEnd)/(other.speed||120):0;
+ const duration=dist(start,finish)/speed,otherDuration=other.phase==="enter"?dist(other,otherEnd)/(other.speed||120):0;
  const at=(a,b,d,t)=>{const f=d?Math.min(1,t/d):1;return {x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f};};
  const times=[0,Math.min(duration,otherDuration),Math.max(duration,otherDuration)];
  for(let i=1;i<times.length;i++){
@@ -909,6 +909,7 @@ function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
    else if(used.size<3)return false;
   }
  }
+ const entrySpeed=difficulty==="hard"?120*rand(.9,1.1):120;
  const joiningMultiPhase=shots.some(s=>s.alive&&s.directed&&(s.kind==="enemyOrb"||s.velkoz))||foes.some(e=>e.alive&&e.dodgeVisitor&&e.phase==="cast"&&e.pending?.spell.split);
  let origin=null,entry=null;
  for(let i=0;i<80;i++){
@@ -921,14 +922,14 @@ function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
   // Keep the entire caster silhouette on screen, including its raised sprite.
   const visible=q=>q.x>=60&&q.x<=W-60&&q.y>=145&&q.y<=H-30;
   // Preserve separation throughout entry, including different spell casters.
-  const crowded=foes.some(other=>other.alive&&other.dodgeVisitor&&(other.phase==="enter"||other.phase==="cast")&&visitorPathsCrowded(start,p,other));
+  const crowded=foes.some(other=>other.alive&&other.dodgeVisitor&&(other.phase==="enter"||other.phase==="cast")&&visitorPathsCrowded(start,p,other,entrySpeed));
   if(!crowded&&visible(p)&&visible(start)&&world.pointWalkable(p,20)&&world.pointWalkable(start,20)&&world.segmentClear(start,p,20)&&canEvadeDodgeCast(p,spell)){origin=p;entry=start;break;}
  }
  if(!origin)return false;
  const e=enemy(entry.x,entry.y);e.dodgeVisitor=true;e.followUp=!!forcedSpell;e.spell=spell;e.phase="enter";e.origin=origin;e.entry=entry;
  // Mindgame Timing v1 changes the approach and decision pause, not the
  // champion's sourced cast windup or missile speed. Aim is locked afterward.
- e.speed=difficulty==="hard"?120*rand(.9,1.1):120;
+ e.speed=entrySpeed;
  e.preCastWait=difficulty==="hard"?rand(0,.16):0;
  e.hp=e.maxHp=160;e.shoot=999;foes.push(e);
  // Two distinct visitors enter visibly together. The later aim lock rechecks

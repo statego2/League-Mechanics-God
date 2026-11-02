@@ -240,6 +240,12 @@ test('Mindgame Timing varies visible entry without changing the spell windup',()
  Object.assign(e,{dodgeVisitor:true,spell,phase:'enter',origin:{...origin},entry:{...origin},speed:120,preCastWait:.1});g.setFoes([e]);
  advance(g,.05);assert.equal(e.phase,'enter');assert.equal(g.shots.length,0);advance(g,.075);assert.equal(e.phase,'cast');assert.ok(e.charge<=spell.cast&&e.charge>spell.cast-.03);
 });
+test('visitor separation forecasts the sampled approach speed',()=>{
+ const {g}=boot('ahri'),start={x:200,y:200},end={x:400,y:200};
+ const other={x:210,y:50,origin:{x:210,y:250},phase:'enter',speed:120};
+ assert.equal(g.visitorPathsCrowded(start,end,other,108),true);
+ assert.equal(g.visitorPathsCrowded(start,end,other,132),false);
+});
 test('Mindgame Aim selects approximately 75% leads with direct and reversal reads',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.moveTo(1000,g.player.y-80);g.setRng(73129);
  const counts={direct:0,lead:0,reversal:0};
@@ -2881,7 +2887,7 @@ test('different entering Dodge casters keep separated trajectories',()=>{
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(50);g.dodgeDirector.next=999;g.setRng((seed*2654435761)>>>0);
   const first=g.enemy(160,260);Object.assign(first,{dodgeVisitor:true,spell:g.REFERENCE_SPELLS.luxDodge,phase:'enter',origin:{x:220,y:260},entry:{x:160,y:260},speed:120});g.setFoes([first]);
   if(!g.spawnDodgeVisitor(g.REFERENCE_SPELLS.ezrealDodge,65))continue;const second=g.foes[1];
-  assert.equal(g.visitorPathsCrowded(second.entry,second.origin,first),false);checked++;
+  assert.equal(g.visitorPathsCrowded(second.entry,second.origin,first,second.speed),false);checked++;
  }
  assert.ok(checked>0,'no mixed-caster entries sampled');
 });
