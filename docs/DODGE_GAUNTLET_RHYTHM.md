@@ -1,6 +1,11 @@
 # League Mechanics God — Dodge Gauntlet Encounter Rhythm
 ## Design specification: high practice density with believable LoL timings
 
+## Future requested encounter: Syndra Q
+
+After the current Expert Dodge is validated, add a visible Syndra encounter using Dark Sphere Q. Community references report an 800-unit target range, a 210-unit effect radius and a 0.6-second appearance delay ([range and radius](https://magicstark.cz/en/wiki/syndra-the-dark-sovereign/), [ability data](https://wiki.leagueoflegends.com/en-us/Template%3AData_Syndra/Dark_Sphere)). Confirm current patch damage, targeting and exact hitbox interaction before implementation; the project uses an approximate 0.5 canvas-unit scale. Respect the user's preference for readable LoL-like effects without extra debug indicators, the current Expert rhythm and a viable dodge given actual range, timing, movement and other threats. This is requested future work, not yet implemented.
+
+
 **Date:** 2026-10-30  
 **Status:** Product design proposal; figures below are **training-director defaults to playtest**, not LoL spell stats, not implemented code.  
 **Owner requirement:** Ezreal Q should arrive **much more often**; Malphite R should be a **rare, memorable interrupt**, not routine spam. Maintain the accepted roster: Ezreal Q, Malphite R, Blitzcrank Q, Lux Q, Vel'Koz Q, Orianna R, Xerath Q/W from the map with no visible Xerath, and Ahri Q outbound + return.

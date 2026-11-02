@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Future Syndra Q request and difficulty options (2 November 2026)
+
+- Player requested Syndra Q later, with correct cast range and a meaningful dodge. Added research and implementation constraints to `docs/DODGE_GAUNTLET_RHYTHM.md`; no encounter has been implemented yet. Community sources report 800 target range, 210 radius and 0.6 s delay; verify current patch damage and targeting before coding.
+- Foundation and Standard remain functional difficulty options used by the shared drills and automated regressions. Dodge uses 5 s / cap 1 and 3.2 s / cap 2 base director settings, respectively, versus Expert's 0.38 s / cap 4; encounter scheduling and timings also differ. Expert remains the design priority; no option was removed.
+
 ## Mindgame Timing with ground hazards (2 November 2026)
 
 - Added an executed Expert scenario where an entering visitor waits while Xerath W is active, then commits only after checking the ground threat; the sampled response is run against both actual effects and avoids damage. Three focused waiting/overlap/timing tests pass. This is sampled evidence, not a general fairness guarantee; no tuning changed.
