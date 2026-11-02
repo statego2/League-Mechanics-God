@@ -34,15 +34,15 @@ test('Expert Dodge has a bounded flow-spike-recovery rhythm',()=>{
  assert.equal(g.dodgeRhythmMultiplier(27),.9);
  assert.equal(g.dodgeRhythmMultiplier(33),1.38);
  assert.equal(g.dodgeRhythmMultiplier(38),1);
- assert.ok(g.DODGE_DIRECTOR.hard.interval*.9<.19,'spike must be denser than flow');
- assert.ok(g.DODGE_DIRECTOR.hard.interval*1.38>.19,'recovery must create more space');
+ assert.ok(g.DODGE_DIRECTOR.hard.interval*.9<g.DODGE_DIRECTOR.hard.interval,'spike must be denser than flow');
+ assert.ok(g.DODGE_DIRECTOR.hard.interval*1.38>g.DODGE_DIRECTOR.hard.interval,'recovery must create more space');
 });
-test('Expert Lux R preserves a full one-second visible charge',()=>{
+test('Expert Lux R shows a source tell before its full one-second visible charge',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.disableSpawn();g.dodgeDirector.next=999;g.setTime(26);
- g.update(1/120);const h=g.hazards.find(x=>x.luxR);assert.ok(h,'Lux R was not scheduled');assert.equal(h.max,1);assert.ok(h.ttl>.98&&h.ttl<=1);
+ g.update(1/120);const h=g.hazards.find(x=>x.luxR);assert.ok(h,'Lux R was not scheduled');assert.equal(h.precast,true);assert.equal(h.max,.25);assert.ok(h.ttl>.24&&h.ttl<=.25);
  const beamLength=Math.hypot(h.endX-h.x,h.endY-h.y),aimedDistance=Math.hypot(g.player.x-h.x,g.player.y-h.y);
  assert.ok(h.cueStart*beamLength>=aimedDistance+h.r+g.player.hitRadius+11.9,'the charge cue must already cover Ahri\'s full hit envelope');
- assert.equal(g.foes.length,0);assert.equal(g.shots.length,0);assert.equal(g.spawnDodgeVisitor(),false,'Lux R must not gain a follow-up during its charge');advance(g,.49);assert.ok(h.ttl>.49&&h.ttl<.52,'beam fired before its readable charge completed');
+ assert.equal(g.foes.length,0);assert.equal(g.shots.length,0);assert.equal(g.spawnDodgeVisitor(),false,'Lux R must not gain a follow-up during its charge');advance(g,.26);assert.equal(h.precast,false);assert.equal(h.max,1);assert.ok(h.ttl>.98&&h.ttl<=1);advance(g,.49);assert.ok(h.ttl>.49&&h.ttl<.52,'beam fired before its readable charge completed');
 });
 test('Lux R supplies and executes a normal walking sidestep',()=>{
  let checked=0;
@@ -80,9 +80,9 @@ test('Expert starts with sustained mixed pressure and early Cassiopeia and Malph
  assert.ok(g.dodgeDirector.orianna>0,'Orianna missing');
  t.diagnostic(`peak ${maxActive} simultaneous threats; ${g.dodgeDirector.attempted} casts; Cassiopeia ${g.dodgeDirector.cassio}, Malphite ${g.dodgeDirector.malphite}`);
 });
-test('Expert independently schedules four concurrent threats in seeded play',t=>{
+test('Expert independently schedules up to three concurrent threats in seeded play',t=>{
  let peak=0,spellMix=0,missilePeak=0;
- for(let seed=1;seed<=12&&peak<4;seed++){
+ for(let seed=1;seed<=12&&peak<3;seed++){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed*1234567);g.player.hp=g.player.maxHp=1000000;
   for(let i=0;i<120*120;i++){
    g.update(1/120);
@@ -91,7 +91,7 @@ test('Expert independently schedules four concurrent threats in seeded play',t=>
    if(live.length>peak){peak=live.length;spellMix=new Set(live).size;}
   }
  }
- t.diagnostic(`peak ${peak}, distinct spells ${spellMix}, simultaneous missiles ${missilePeak}`);assert.ok(peak>=4);assert.ok(spellMix>=2);
+ t.diagnostic(`peak ${peak}, distinct spells ${spellMix}, simultaneous missiles ${missilePeak}`);assert.ok(peak>=3);assert.ok(spellMix>=2);
 });
 test('Expert creates overlapping live missiles during sustained seeded play',t=>{
  let peak=0;
@@ -1048,26 +1048,26 @@ test('Xerath W rejects unsafe or unsupported overlaps and respects Foundation ca
  for(const scenario of ['imminent','foundation','orb','split','cap','unknownCast','charmedCast']){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:scenario==='foundation'?'easy':'hard'}});g.reset('dodge');g.dodgeDirector.next=999;
   const s=g.fire(scenario==='imminent'?g.player.x-70:10,g.player.y,1000,0,scenario==='orb'?'enemyOrb':'enemy',10,30,.6);Object.assign(s,{directed:true,spellName:scenario==='orb'?'AHRI Q':'EZREAL Q'});
-  if(scenario==='split')s.velkoz='main';if(scenario==='cap')for(let i=0;i<4;i++){const extra=g.fire(10,100+i*30,1000,0,'enemy',10,30,.6);extra.directed=true;extra.spellName='EZREAL Q';}
+  if(scenario==='split')s.velkoz='main';if(scenario==='cap')for(let i=0;i<3;i++){const extra=g.fire(10,100+i*30,1000,0,'enemy',10,30,.6);extra.directed=true;extra.spellName='EZREAL Q';}
   if(scenario==='unknownCast'){const e=g.enemy(200,200);Object.assign(e,{dodgeVisitor:true,phase:'cast'});g.setFoes([e]);}
   if(scenario==='charmedCast'){const e=g.enemy(200,200);Object.assign(e,{dodgeVisitor:true,phase:'cast',charm:1,charge:.25,pending:{spell:g.REFERENCE_SPELLS.ezrealDodge,angle:0}});g.setFoes([e]);}
   assert.equal(g.spawnXerathW(),false,scenario);assert.equal(g.hazards.length,0,scenario);
  }
 });
-test('Xerath W uses center based edge and outside hits use base damage',()=>{
- for(const [offset,expected] of [[62.5,50*1.667/1.3],[62.6,50/1.3],[137.5,50/1.3],[137.6,0]]){
+test('Xerath W uses its compact center based edge and outside hits use base damage',()=>{
+ for(const [offset,expected] of [[50,50*1.667/1.3],[50.1,50/1.3],[110,50/1.3],[110.1,0]]){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnXerathW());const h=g.hazards[0];
-  g.player.x=h.x+offset;g.player.y=h.y;advance(g,.8);assert.ok(Math.abs(g.stats.damage-expected)<1e-7,`offset ${offset}`);
+  g.player.x=h.x+offset;g.player.y=h.y;advance(g,.91);assert.ok(Math.abs(g.stats.damage-expected)<1e-7,`offset ${offset}`);
  }
 });
 
 
-test('Blitz Q visitor commits one hook, waits for its flight and does not stun or pull',()=>{
+test('Blitz Q visitor commits one hook, then pulls Ahri to the source-side landing',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
  const e=g.enemy(300,g.player.y);Object.assign(e,{dodgeVisitor:true,spell:g.REFERENCE_SPELLS.blitzDodge,phase:'cast',charge:.001,pending:{angle:0,spell:g.REFERENCE_SPELLS.blitzDodge},entry:{x:250,y:g.player.y},speed:120});g.setFoes([e]);
  g.update(1/120);assert.equal(e.phase,'hookFlight');assert.equal(g.dodgeDirector.blitz,1);assert.equal(g.shots[0].spellName,'BLITZ Q');
- const start={x:g.player.x,y:g.player.y};advance(g,.1);assert.equal(e.phase,'hookFlight');advance(g,.4);
- assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.stats.damage-(110/1.3))<1e-7);assert.equal(g.player.root,0);assert.equal(g.player.x,start.x);assert.equal(g.player.y,start.y);assert.equal(g.dodgeDirector.outcomes['BLITZ Q'].hit,1);
+ const start={x:g.player.x,y:g.player.y};advance(g,.1);assert.equal(e.phase,'hookFlight');advance(g,.8);
+ assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.stats.damage-(110/1.3))<1e-7);assert.equal(g.player.root,0);assert.ok(g.player.x<start.x-200);assert.equal(g.player.y,start.y);assert.equal(g.player.hooked,null);assert.equal(g.dodgeDirector.outcomes['BLITZ Q'].hit,1);
 });
 test('Blitz hook expires at its configured range and retains first collision swept detection',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
@@ -1711,18 +1711,19 @@ test('fresh later waves acquire matching melee rows instead of collapsing on one
 
 test('Ahri regenerates base health over time without exceeding max or while paused',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.hp=500;
- advance(g,10);assert.ok(Math.abs(g.player.hp-505)<1e-8);
- g.pause();advance(g,5);assert.ok(Math.abs(g.player.hp-505)<1e-8);g.pause();
+ advance(g,10);assert.ok(Math.abs(g.player.hp-523)<1e-8);
+ g.pause();advance(g,5);assert.ok(Math.abs(g.player.hp-523)<1e-8);g.pause();
  g.player.hp=589.9;advance(g,1);assert.equal(g.player.hp,590);
 });
 test('arcade presets do not receive Ahri health regeneration',()=>{
  const {g}=boot('standard');g.reset('kite');g.disableSpawn();g.player.hp=100;advance(g,3);assert.equal(g.player.hp,100);
 });
 
-test('regeneration restores health after damage without changing recorded damage',()=>{
+test('clean Dodge sustain restores health only after a full eight-second no-hit window',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
  g.applyImpact(g.player,{sourceTeam:'enemy',kind:'test',raw:100,damageType:'true'});
- advance(g,8);assert.ok(Math.abs(g.player.hp-494)<1e-8);assert.equal(g.stats.damage,100);assert.equal(g.stats.hits,1);
+ advance(g,7.9);assert.ok(Math.abs(g.player.hp-493.95)<1e-8);advance(g,.1);assert.ok(Math.abs(g.player.hp-512)<1e-8);assert.equal(g.stats.damage,100);assert.equal(g.stats.hits,1);
+ advance(g,8.1);assert.ok(Math.abs(g.player.hp-534.05)<1e-8);
  g.applyImpact(g.player,{sourceTeam:'enemy',kind:'test',raw:1000,damageType:'true'});advance(g,3);
  assert.equal(g.state,'ended');assert.equal(g.player.hp,0);
 });
@@ -2632,9 +2633,9 @@ test('Expert director may select Xerath Q alongside an existing straight shot',(
   assert.ok(seed<100000);g.setRng(seed);assert.equal(g.spawnDodgeVisitor(),true,name);assert.ok(g.hazards.some(h=>h.beam),name);
  }
 });
-test('Expert spawn respects its four-threat cap',()=>{
+test('Expert spawn respects its three-threat cap',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(50);
- for(let i=0;i<4;i++){const shot=g.fire(100,100+i*30,1,0,'enemy',10,1,5);Object.assign(shot,{directed:true,spellName:'EZREAL Q'});}
+ for(let i=0;i<3;i++){const shot=g.fire(100,100+i*30,1,0,'enemy',10,1,5);Object.assign(shot,{directed:true,spellName:'EZREAL Q'});}
  assert.equal(g.spawnDodgeVisitor(),false);assert.equal(g.foes.length,0);
 });
 test('visitor spacing detects intersecting entry paths, including a stationary caster',()=>{
@@ -2672,7 +2673,7 @@ test('visible Dodge casters wind up during their actual cast without drawing an 
 
 
 test('Cassiopeia cone and facing distinguish turn-away, face and escape',()=>{
- for(const [scenario,facing,dy,hit] of [['face',Math.PI,0,true],['turn',0,0,true],['outside',Math.PI,300,false]]){
+ for(const [scenario,facing,dy,hit] of [['face',Math.PI,0,true],['turn',0,0,false],['outside',Math.PI,300,false]]){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.facing=facing;
   const h={x:g.player.x-200,y:g.player.y+dy,angle:0,cassio:true,casting:true,ttl:.005,directed:true,spellName:'CASSIOPEIA R',threat:true};g.hazards.push(h);
   g.update(.01);assert.equal(g.stats.hits,Number(hit),scenario);assert.equal(g.player.root,0);
@@ -2683,7 +2684,7 @@ test('Cassiopeia cone and facing distinguish turn-away, face and escape',()=>{
 test('Dodge uses Tier-1 boots and compact readable collision',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.update(0);
  assert.equal(g.AHRI.speed,177.5);assert.equal(g.player.hitRadius,27);
- assert.equal(g.DODGE_DIRECTOR.hard.interval,.19);
+ assert.equal(g.DODGE_DIRECTOR.hard.interval,.32);assert.equal(g.DODGE_DIRECTOR.hard.cap,3);
  const e=g.enemy(900,330),spell=g.REFERENCE_SPELLS.ezrealDodge;
  Object.assign(e,{dodgeVisitor:true,pending:{spell,angle:Math.PI,threat:true},charge:0});g.releaseEnemy(e);
  assert.equal(g.shots[0].r,spell.radius*.9);
@@ -2700,11 +2701,11 @@ test('Cassiopeia spawn is isolated and appears before committing her cast',()=>{
 });
 
 
-test('moving away from Cassiopeia changes facing before impact without immobilization',()=>{
+test('moving away from Cassiopeia changes facing before impact into a full trainer evade',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.facing=Math.PI;
  const h={x:g.player.x-200,y:g.player.y,angle:0,cassio:true,casting:true,ttl:.5,directed:true,spellName:'CASSIOPEIA R',threat:true};g.hazards.push(h);
  advance(g,.1);g.moveTo(g.player.x+150,g.player.y);advance(g,.42);
- assert.equal(g.dodgeDirector.cassTurns,1);assert.equal(g.dodgeDirector.cassFails,0);assert.equal(g.stats.hits,1);assert.equal(g.player.root,0);
+ assert.equal(g.dodgeDirector.cassTurns,1);assert.equal(g.dodgeDirector.cassFails,0);assert.equal(g.stats.hits,0);assert.equal(g.dodged,1);assert.equal(g.player.root,0);
 });
 test('Cassiopeia defers an unreactable cast rather than immobilizing the player',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.root=.6;
@@ -2733,8 +2734,8 @@ test('Cassiopeia results explain the turn-away lesson only after a cast',()=>{
  g.end(false);assert.doesNotMatch(node('dodgeBreakdownText').textContent,/Turning away avoids/);
  g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.cassio=1;g.end(false);
  const text=node('dodgeBreakdownText').textContent;
- assert.match(text,/Turning away avoids the stun in League, but still takes damage inside the cone/);
- assert.match(text,/This drill applies neither stun nor slow/);
+ assert.match(text,/Trainer rule: turn away before Petrifying Gaze lands to avoid this pure-Dodge hit/);
+ assert.match(text,/League normally deals damage and applies a slow when you face away/);
 });
 
 test('Cassiopeia is scheduled in sustained Expert endless play',()=>{
@@ -2746,7 +2747,7 @@ test('Flash away changes the Cassiopeia facing outcome while still in the cone',
  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.facing=Math.PI;
  const h={x:g.player.x-200,y:g.player.y,angle:0,cassio:true,casting:true,ttl:.25,directed:true,spellName:'CASSIOPEIA R'};g.hazards.push(h);
  node('arena').listeners.pointermove({clientX:g.player.x+80,clientY:g.player.y,buttons:0});g.cast('f');advance(g,.26);
- assert.equal(g.dodgeDirector.cassTurns,1);assert.equal(g.stats.hits,1);assert.equal(g.player.root,0);
+ assert.equal(g.dodgeDirector.cassTurns,1);assert.equal(g.stats.hits,0);assert.equal(g.dodged,1);assert.equal(g.player.root,0);
 });
 test('Cassiopeia setup and cast freeze during pause and render without extra assets',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnCassioR());const h=g.hazards[0],ttl=h.ttl;
