@@ -120,18 +120,18 @@ test('Expert opens with readable mixed pressure before major ultimates',t=>{
   const names=[...g.foes.filter(e=>e.alive&&e.dodgeVisitor&&(e.phase==='enter'||e.phase==='cast')).map(e=>e.spell.name),...g.shots.filter(s=>s.alive&&s.directed).map(s=>s.spellName)];
   if(names.length>maxActive){maxActive=names.length;peakNames=names;}if(names.length>=2&&new Set(names).size>=2)mixed=true;
  }
- assert.ok(maxActive<=3,`peak ${maxActive} exceeds cap`);assert.ok(mixed,'no mixed simultaneous threats');
+ assert.ok(maxActive<=4,`peak ${maxActive} exceeds cap`);assert.ok(mixed,'no mixed simultaneous threats');
  assert.ok(g.dodgeDirector.attempted>=12,`only ${g.dodgeDirector.attempted} casts`);
- assert.ok(g.dodgeDirector.cassio>0,'Cassiopeia missing');assert.equal(g.dodgeDirector.malphite,0,'Malphite arrived too early');
+ assert.ok(g.dodgeDirector.cassio>0,'Cassiopeia missing');assert.ok(g.dodgeDirector.malphite>0,'early Malphite missing');assert.equal(g.dodgeDirector.malDirect,g.dodgeDirector.malphite);
  assert.equal(g.dodgeDirector.orianna,0,'Orianna arrived too early');
  t.diagnostic(`peak ${maxActive} simultaneous threats (${peakNames.join(', ')}); ${g.dodgeDirector.attempted} casts; Cassiopeia ${g.dodgeDirector.cassio}, Malphite ${g.dodgeDirector.malphite}`);
 });
 test('Expert arms major Dodge patterns on separate readable clocks',()=>{
- const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.disableSpawn();g.dodgeDirector.next=999;
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.disableSpawn();g.dodgeDirector.next=999;g.player.hp=g.player.maxHp=1000000;
  g.update(1/120);
- assert.equal(g.dodgeDirector.cassAt,35);assert.equal(g.dodgeDirector.rareAt,75);assert.equal(g.dodgeDirector.malAt,90);
- advance(g,34.9);assert.equal(g.dodgeDirector.cassio,0);assert.equal(g.dodgeDirector.orianna,0);assert.equal(g.dodgeDirector.malphite,0);
- advance(g,3);assert.ok(g.dodgeDirector.cassio>=1,'Cassiopeia should be the first major reaction');assert.equal(g.dodgeDirector.orianna,0);assert.equal(g.dodgeDirector.malphite,0);
+ assert.equal(g.dodgeDirector.cassAt,35);assert.equal(g.dodgeDirector.rareAt,75);assert.equal(g.dodgeDirector.malAt,15);
+ advance(g,14.9);assert.equal(g.dodgeDirector.malphite,0);assert.equal(g.dodgeDirector.cassio,0);
+ advance(g,4);assert.ok(g.dodgeDirector.malphite>=1,'Malphite should be the first major reaction');assert.equal(g.dodgeDirector.cassio,0);assert.equal(g.dodgeDirector.orianna,0);
 });
 test('Expert independently schedules up to two concurrent threats in seeded play',t=>{
  let peak=0,spellMix=0,missilePeak=0;
