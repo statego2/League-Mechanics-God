@@ -7,6 +7,7 @@ Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid depend
 - Ahri's Spirit Rush maximum dash in Dodge is 450 game units (225 canvas), down 10% from 500; other modes retain 500. This is a trainer tuning choice.
 - Dodge restores health in one-second ticks, combining the existing base regeneration and trainer sustain to restore one maximum health bar over 30 seconds without hits. Hits restart the one-second tick; healing is capped, pauses with the game, and does not revive. This is not live League regeneration.
 - Five targeted tests pass for the dash limit, 30-second recovery, hit reset, pause/base regen and recovery timing; `node --check game.js` and `git diff --check` pass. Local build label `sustain`.
+- Follow-up: the wall-crossing regression now expects the shorter 225-canvas Dodge dash rather than the old 250-canvas endpoint. Added coverage that healing freezes while paused and does not bank ticks while health is full.
 
 ## Intense Expert playtest (2026-11-02)
 

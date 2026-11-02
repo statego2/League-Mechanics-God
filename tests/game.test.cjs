@@ -637,7 +637,7 @@ test('Spirit Rush crosses a wall only when its destination is walkable',()=>{
  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.x=600;g.player.y=580;
  node('arena').listeners.pointermove({clientX:850,clientY:580,buttons:0});g.cast('r');assert.equal(g.player.dashing.throughTerrain,true);
  advance(g,.15);assert.ok(g.player.x>653&&g.player.x<792,'dash should traverse the wall over time');assert.ok(g.player.dashing);
- advance(g,.3);assert.ok(Math.abs(g.player.x-850)<.1);assert.equal(g.player.dashing,null);
+ advance(g,.3);assert.ok(Math.abs(g.player.x-825)<.1);assert.equal(g.player.dashing,null);
  g.reset('dodge');g.dodgeDirector.next=999;g.player.x=600;g.player.y=580;
  node('arena').listeners.pointermove({clientX:720,clientY:580,buttons:0});g.cast('r');assert.equal(g.player.dashing.throughTerrain,false);
  advance(g,.4);assert.ok(g.player.x<=653.01);assert.equal(g.player.dashing,null);
@@ -1758,6 +1758,14 @@ test('clean Dodge sustain restores one full health bar over thirty seconds and r
  g.applyImpact(g.player,{sourceTeam:'enemy',kind:'test',raw:100,damageType:'true'});advance(g,.9);assert.ok(g.player.hp<491);advance(g,.1);assert.ok(Math.abs(g.player.hp-(490+590/30))<1e-7);
  g.applyImpact(g.player,{sourceTeam:'enemy',kind:'test',raw:1000,damageType:'true'});advance(g,3);
  assert.equal(g.state,'ended');assert.equal(g.player.hp,0);
+});
+test('Dodge healing clock pauses and does not bank ticks at full health',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ g.dodgeDirector.cassAt=g.dodgeDirector.rareAt=g.dodgeDirector.malAt=g.dodgeDirector.luxRAt=Infinity;
+ advance(g,5);assert.equal(g.player.hp,g.player.maxHp);
+ g.applyImpact(g.player,{sourceTeam:'enemy',kind:'test',raw:100,damageType:'true'});advance(g,.5);
+ const hp=g.player.hp;g.pause();advance(g,5);assert.equal(g.player.hp,hp);g.pause();
+ advance(g,.49);assert.ok(g.player.hp<491);advance(g,.01);assert.ok(Math.abs(g.player.hp-(490+590/30))<1e-7);
 });
 test('a Dodge hit briefly holds new director encounters without cancelling live threats',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=0;g.dodgeDirector.luxRAt=g.dodgeDirector.cassAt=g.dodgeDirector.rareAt=g.dodgeDirector.malAt=Infinity;
