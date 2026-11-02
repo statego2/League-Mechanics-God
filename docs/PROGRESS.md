@@ -2,6 +2,19 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Expert Dodge readability, response patterns and Pages hosting (2026-11-02)
+
+- The default Ahri trainer baseline now uses Tier-1 boots: 355 game-unit movement speed (177.5 canvas units/s). Expert projectile collision is 10% narrower and Ahri's Dodge-only collision radius is 54 game units instead of the prior broad 65-unit gameplay proxy. Visual missile size follows the reduced collision radius, so the visible effect and what can hit are closer together. Standalone reference drills retain their prior collision values.
+- Expert’s initial cadence is 0.19 seconds rather than 0.16 seconds: roughly 16% fewer simultaneous spawn attempts, while retaining the five-threat ceiling and independent spell origins. Moving targets now receive a deterministic mix of direct, forward-lead, reversal and lateral-cut casts; every selected cast is still rejected unless the existing shared walking forecast finds an escape.
+- Cassiopeia R’s training cone is reduced to 750 game units (375 canvas), and now uses a 0.55-second presence/setup plus 0.5-second cast: 1.05 seconds total. After the release she visibly retreats for 0.32 seconds and carries no lingering collision. Dodge continues to omit stun/slow intentionally.
+- Added a GitHub Pages deployment workflow targeting `codex/controls-and-dodge`; it deploys the static game after the branch is pushed, subject to Pages being enabled for the repository. Local static hosting remains available for immediate play.
+- Added focused tests for Tier-1 boots, compact Expert collision and the Cassiopeia window/departure. `node --check game.js` and those focused tests pass. The complete suite remains to be rerun after the current Expert scheduler tuning; long seeded simulation coverage is the next verification task.
+
+## Expert Xerath Q with straight projectiles (2026-11-01)
+
+- Expert Xerath Q can now overlap committed or in-flight Ezreal, Lux and Blitz shots when one sampled walking route avoids the missiles and the beam at its impact time. Entering visitors may coexist, but their later aim lock must independently avoid the active beam; other directed areas and unsupported multi-phase projectiles still defer. Foundation and Standard retain isolated Q scheduling. Record namespace is director_v81.
+- Tests execute a shared escape from the beam plus two missiles, verify a new visitor's response to an existing beam, and observe a natural beam/projectile overlap in seeded play. Browser smoke verified Expert launch and right-click movement. This increases mixed pressure but does not establish five simultaneous eligible missiles or replace skilled human balancing.
+
 ## Expert Xerath W with multiple missiles (2026-11-01)
 
 - Expert Xerath W can overlap multiple committed Ezreal, Lux or Blitz shots when a shared walking route clears the shots and the area at impact. Entering visitors are allowed because they have not locked an aim; any subsequent cast must also forecast the active W or be cancelled. Existing area, split/return projectiles, unknown or charmed committed casters and cap violations still defer the W. Standard retains its one-Ezreal limit.

@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,visitorPathsCrowded,updateDodgeVisitor,spawnXerathW,spawnXerathQ,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,DODGE_TUNING,DODGE_DIRECTOR,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,visitorPathsCrowded,updateDodgeVisitor,dodgeAimPoint,spawnXerathW,spawnXerathQ,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,drawSizes,strokes,arcs,texts,lines,rotations,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -2044,7 +2044,7 @@ test('Dodge counts Charm hits against a visitor once per released E',()=>{
 });
 test('skill-scored Dodge records stay separate while retaining the survival record',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
- const oldScore='lmg.best.v1.dodge.normal.director_v80.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
+ const oldScore='lmg.best.v1.dodge.normal.director_v81.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
  g.reset('dodge');g.setTime(10);g.stats.dodgeQHits=1;g.stats.dodgeEHits=1;g.end(false);
  assert.match(node('menuDescription').textContent,/150 points/);assert.match(node('menuDescription').textContent,/Best survival: 120.0s/);
  assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v3'),'150');assert.equal(values.get(survival),'120');
@@ -2343,6 +2343,41 @@ test('Expert visitor witnesses avoid an already-active Xerath W at impact',()=>{
  }
  assert.ok(checked>0,'no combined W and projectile response found');
 });
+test('Expert Xerath Q and two missiles share an executable walking escape',()=>{
+ let checked=0;
+ for(let i=0;i<24;i++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.setRng((i*2654435761)>>>0);
+  const p=g.player;
+  for(const [x,y,vx,name] of [[p.x-300,p.y+120,500,'EZREAL Q'],[p.x+300,p.y-120,-500,'LUX Q']]){
+   const s=g.fire(x,y,vx,0,'enemy',20,20,2);Object.assign(s,{directed:true,spellName:name});
+  }
+  const witness={};if(!g.spawnXerathQ(witness))continue;
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.4);assert.equal(g.stats.hits,0,`seed ${i}`);checked++;
+ }
+ assert.ok(checked>=3,`only ${checked} shared escapes`);
+});
+test('Expert visitor witnesses avoid an already-active Xerath Q at impact',()=>{
+ let checked=0;
+ for(let i=0;i<24;i++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.setRng((i*2654435761)>>>0);
+  if(!g.spawnXerathQ())continue;
+  const p=g.player,a=i*Math.PI/12,origin={x:p.x+Math.cos(a)*470,y:p.y+Math.sin(a)*470},spell=g.REFERENCE_SPELLS.ezrealDodge,witness={};
+  if(!g.canEvadeDodgeCast(origin,spell,witness))continue;
+  const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'cast',charge:spell.cast,entry:{...origin},pending:{angle:Math.atan2(p.y-origin.y,p.x-origin.x),spell,threat:true}});g.setFoes([e]);
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.2);assert.equal(g.stats.hits,0,`seed ${i}`);checked++;
+ }
+ assert.ok(checked>0,'no combined Q and projectile response found');
+});
+test('Expert naturally combines Xerath Q with a live straight missile',()=>{
+ let found=false;
+ for(let seed=1;seed<=5&&!found;seed++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed*1234567);g.player.hp=g.player.maxHp=1e6;
+  for(let i=0;i<120*120&&!found;i++){
+   g.update(1/120);found=g.hazards.some(h=>h.beam&&h.ttl>0)&&g.shots.some(s=>s.alive&&s.directed&&['EZREAL Q','LUX Q','BLITZ Q'].includes(s.spellName));
+  }
+ }
+ assert.ok(found,'no natural Xerath Q plus missile overlap found');
+});
 test('Expert naturally combines Xerath W with multiple live straight missiles',()=>{
  let found=false;
  for(let seed=1;seed<=5&&!found;seed++){
@@ -2551,12 +2586,12 @@ test('Expert recovery still schedules an isolated encounter',()=>{
 });
 
 
-test('Expert falls back to a safe straight shot when Xerath Q cannot overlap',()=>{
+test('Expert director may select Xerath Q alongside an existing straight shot',()=>{
  for(const [lo,hi,name] of [[.94,1,'Xerath Q']]){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(50);g.dodgeDirector.next=999;
   const active=g.fire(100,100,1,0,'enemy',10,1,5);Object.assign(active,{directed:true,spellName:'EZREAL Q'});
   let seed=0;while(seed<100000){const roll=((Math.imul(1664525,seed)+1013904223)>>>0)/4294967296;if(roll>=lo&&roll<hi)break;seed++;}
-  assert.ok(seed<100000);g.setRng(seed);assert.equal(g.spawnDodgeVisitor(),true,name);assert.notEqual(g.foes[0].spell.name,'VELKOZ Q',name);
+  assert.ok(seed<100000);g.setRng(seed);assert.equal(g.spawnDodgeVisitor(),true,name);assert.ok(g.hazards.some(h=>h.beam),name);
  }
 });
 test('Expert spawn respects its five-threat cap',()=>{
@@ -2607,9 +2642,22 @@ test('Cassiopeia cone and facing distinguish turn-away, face and escape',()=>{
   if(hit)assert.ok(Math.abs(g.stats.damage-125/1.3)<1e-8);
  }
 });
+test('Dodge uses Tier-1 boots and compact readable collision',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.update(0);
+ assert.equal(g.AHRI.speed,177.5);assert.equal(g.player.hitRadius,27);
+ assert.equal(g.DODGE_DIRECTOR.hard.interval,.19);
+ const e=g.enemy(900,330),spell=g.REFERENCE_SPELLS.ezrealDodge;
+ Object.assign(e,{dodgeVisitor:true,pending:{spell,angle:Math.PI,threat:true},charge:0});g.releaseEnemy(e);
+ assert.equal(g.shots[0].r,spell.radius*.9);
+});
+test('Cassiopeia has a short 1.05-second reaction window and visibly departs',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnCassioR());
+ const h=g.hazards[0];assert.equal(h.ttl,.55);advance(g,.56);assert.equal(h.casting,true);assert.ok(h.ttl>.48&&h.ttl<=.5);
+ g.player.facing=0;advance(g,.51);assert.equal(h.departing,true);assert.equal(h.casting,false);assert.ok(h.ttl>0&&h.ttl<=.32);
+});
 test('Cassiopeia spawn is isolated and appears before committing her cast',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnCassioR());
- const h=g.hazards[0];assert.equal(h.casting,false);assert.equal(g.spawnDodgeVisitor(),false);advance(g,.95);
+ const h=g.hazards[0];assert.equal(h.casting,false);assert.equal(g.spawnDodgeVisitor(),false);advance(g,.56);
  assert.equal(h.casting,true);assert.equal(g.dodgeDirector.cassio,1);assert.ok(h.ttl>0);
 });
 
@@ -2633,7 +2681,7 @@ test('Cassiopeia defers if the player leaves range during setup, without a false
 });
 test('Cassiopeia can commit at the range boundary and credit a subsequent escape',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
- const h={x:g.player.x-425,y:g.player.y,cassio:true,casting:false,ttl:.001,directed:true,spellName:'CASSIOPEIA R'};g.hazards.push(h);
+ const h={x:g.player.x-375,y:g.player.y,cassio:true,casting:false,ttl:.001,directed:true,spellName:'CASSIOPEIA R'};g.hazards.push(h);
  g.update(.01);assert.equal(h.casting,true);assert.equal(g.dodgeDirector.cassio,1);
  g.moveTo(g.player.x+100,g.player.y);advance(g,.51);assert.equal(g.dodgeDirector.cassEscapes,1);assert.equal(g.dodged,1);
 });
@@ -2670,7 +2718,7 @@ test('Cassiopeia setup and cast freeze during pause and render without extra ass
 test('Cassiopeia training cone and facing boundaries use centre geometry',()=>{
  const {g}=boot('ahri'),h={x:0,y:0,angle:0};
  const at=(distance,degrees)=>({x:distance*Math.cos(degrees*Math.PI/180),y:distance*Math.sin(degrees*Math.PI/180)});
- assert.equal(g.cassioConeContains(h,at(425,0)),true);assert.equal(g.cassioConeContains(h,at(425.1,0)),false);
+ assert.equal(g.cassioConeContains(h,at(375,0)),true);assert.equal(g.cassioConeContains(h,at(375.1,0)),false);
  assert.equal(g.cassioConeContains(h,at(300,39.9)),true);assert.equal(g.cassioConeContains(h,at(300,40.1)),false);
  assert.equal(g.facingCassio(h,{x:200,y:0},Math.PI),true);assert.equal(g.facingCassio(h,{x:200,y:0},0),false);
 });
@@ -2687,7 +2735,7 @@ test('Cassiopeia uses a bounded sprite with a safe missing-image fallback',()=>{
 test('Cassiopeia release shows its effect only at impact, not as a targeting guide',()=>{
  const {g,arcs}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
  const h={x:g.player.x-200,y:g.player.y,angle:0,cassio:true,casting:true,ttl:.05,directed:true,spellName:'CASSIOPEIA R'};g.hazards.push(h);
- g.render();assert.ok(!arcs.some(a=>a.r===425));g.update(.06);arcs.length=0;g.render();assert.ok(arcs.some(a=>a.r===425));
+ g.render();assert.ok(!arcs.some(a=>a.r===375));g.update(.06);arcs.length=0;g.render();assert.ok(arcs.some(a=>a.r===375));
 });
 
 test('Cassiopeia cast cue grows during windup without revealing the cone',()=>{
