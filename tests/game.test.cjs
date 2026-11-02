@@ -997,7 +997,7 @@ test('ambient Xerath W has a readable delay, center damage and no caster entity'
  for(let seed=1;seed<=64&&!g;seed++){const run=boot('ahri').g;run.reset('dodge');run.dodgeDirector.next=999;run.setRng(seed);if(run.spawnXerathW())g=run;}
  assert.ok(g,'no safe ambient Xerath W placement');assert.equal(g.foes.length,0);assert.equal(g.dodgeDirector.xerath,1);
  const h=g.hazards[0];g.player.x=h.x;g.player.y=h.y;
- advance(g,.8);assert.equal(g.stats.hits,0);advance(g,.12);
+ advance(g,.9);assert.equal(g.stats.hits,0);advance(g,.07);
  assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.stats.damage-(50*1.667/1.3))<1e-7);
  assert.equal(g.dodgeDirector.outcomes['XERATH W'].hit,1);
 });
@@ -1009,7 +1009,7 @@ test('Xerath W can be escaped and rejects an unsupported directed encounter',()=
  assert.equal(g.spawnXerathW(),false);shot.alive=false;
  assert.equal(g.spawnXerathW(),true);assert.equal(g.spawnDodgeVisitor(),false);
  const h=g.hazards[0],dx=g.player.x-h.x,dy=g.player.y-h.y,d=Math.hypot(dx,dy);
- g.moveTo(g.player.x+dx/d*120,g.player.y+dy/d*120);advance(g,.95);
+ g.moveTo(g.player.x+dx/d*120,g.player.y+dy/d*120);advance(g,.97);
  assert.equal(g.stats.hits,0);assert.equal(g.dodgeDirector.outcomes['XERATH W'].avoided,1);
 });
 test('Xerath W and an in-flight Ezreal Q have a shared walkable escape',()=>{
@@ -1287,7 +1287,7 @@ test('ambient Xerath Q resolves after its cue with no on-screen caster',()=>{
  const {g,strokes}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
  assert.ok(g.spawnXerathQ());assert.equal(g.foes.length,0);assert.equal(g.dodgeDirector.xerathQ,1);
  const h=g.hazards[0];g.render();assert.ok(!strokes.includes('#b5e5ff'),'beam leaked its exact line before firing');
- advance(g,.5);assert.equal(g.stats.hits,0);advance(g,.05);
+ advance(g,.6);assert.equal(g.stats.hits,0);advance(g,.06);
  assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.stats.damage-(70/1.3))<1e-7);assert.equal(g.dodgeDirector.outcomes['XERATH Q'].hit,1);
  g.render();assert.ok(strokes.includes('#b5e5ff'),'impact beam was not rendered');
 });
@@ -1295,7 +1295,7 @@ test('Xerath Q has a walkable sidestep after the training reaction delay and no 
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnXerathQ());
  assert.equal(g.spawnDodgeVisitor(),false);assert.equal(g.spawnXerathW(),false);
  const h=g.hazards[0],dx=h.endX-h.x,dy=h.endY-h.y,len=Math.hypot(dx,dy);
- advance(g,.2);g.moveTo(g.player.x+dy/len*90,g.player.y-dx/len*90);advance(g,.4);
+ advance(g,.2);g.moveTo(g.player.x+dy/len*90,g.player.y-dx/len*90);advance(g,.46);
  assert.equal(g.stats.hits,0);assert.equal(g.dodgeDirector.outcomes['XERATH Q'].avoided,1);
 });
 test('Xerath Q uses the projectile-width and champion hitbox at its beam boundary',()=>{
@@ -1822,8 +1822,8 @@ test('Xerath beam witness survives actual impact while the initial movement cont
  for(const side of [-1,1]){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.moveTo(g.player.x,g.player.y+side*150);
   assert.ok(g.spawnXerathQ());const h=g.hazards[0],witness={};
-  assert.ok(g.sampleAreaEscape(.2,.528,p=>g.beamTouchesPlayer(h,p,g.player.hitRadius+8),witness));
-  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,.4);assert.equal(g.stats.hits,0,`side ${side}`);
+  assert.ok(g.sampleAreaEscape(.2,.65,p=>g.beamTouchesPlayer(h,p,g.player.hitRadius+8),witness));
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,.46);assert.equal(g.stats.hits,0,`side ${side}`);
  }
 });
 test('Malphite planned landing remains escapable from a moving player',()=>{
