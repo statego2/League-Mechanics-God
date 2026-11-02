@@ -2068,7 +2068,7 @@ test('Dodge counts Charm hits against a visitor once per released E',()=>{
 });
 test('skill-scored Dodge records stay separate while retaining the survival record',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
- const oldScore='lmg.best.v1.dodge.normal.director_v82.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
+ const oldScore='lmg.best.v1.dodge.normal.director_v83.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
  g.reset('dodge');g.setTime(10);g.stats.dodgeQHits=1;g.stats.dodgeEHits=1;g.end(false);
  assert.match(node('menuDescription').textContent,/150 points/);assert.match(node('menuDescription').textContent,/Best survival: 120.0s/);
  assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v3'),'150');assert.equal(values.get(survival),'120');
