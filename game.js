@@ -1692,7 +1692,15 @@ for(const h of hazards){if(h.cassio){drawChampion(h.x,h.y,h.casting?h.angle:Math
  circle(h.x,h.y,h.r,"#c887ed33",false,9);
  circle(h.x,h.y,h.r,"#ddb4f6dd",false,2.5+charge);
  ctx.save();ctx.strokeStyle="#f5dbffdd";ctx.lineWidth=3;ctx.lineCap="round";
- for(let i=0;i<3;i++){const a=charge*.8+i*TAU/3;ctx.beginPath();ctx.arc(h.x,h.y,h.r,a,a+.38);ctx.stroke();}ctx.restore();
+ for(let i=0;i<3;i++){const a=charge*.8+i*TAU/3;ctx.beginPath();ctx.arc(h.x,h.y,h.r,a,a+.38);ctx.stroke();}
+ // Curved streams contract toward the ball during the cast, while the outer
+ // edge stays fixed to the real area and remains legible throughout.
+ ctx.strokeStyle="#d8a7fa88";ctx.lineWidth=2+charge;const outer=h.r*(.82-.18*charge),inner=h.r*(.28-.10*charge);
+ for(let i=0;i<6;i++){const a=i*TAU/6+charge*1.4,b=a+.65;
+  ctx.beginPath();ctx.moveTo(h.x+Math.cos(a)*outer,h.y+Math.sin(a)*outer);
+  ctx.quadraticCurveTo(h.x+Math.cos(b)*outer*.64,h.y+Math.sin(b)*outer*.64,h.x+Math.cos(b+.4)*inner,h.y+Math.sin(b+.4)*inner);ctx.stroke();
+ }
+ ctx.restore();
  const glow=ctx.createRadialGradient(h.x,h.y,0,h.x,h.y,45);glow.addColorStop(0,"#fff0ffdd");glow.addColorStop(1,"#cb85ff00");circle(h.x,h.y,45,glow);circle(h.x,h.y,18+8*charge,"#efc4ffbb",false,3);}continue;}if(h.beam){
  // Xerath's source cue stays short; Final Spark intentionally reveals its
  // charging lane so the player receives the full 0.9-second reaction window.

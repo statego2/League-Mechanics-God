@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Orianna cast animation (2 November 2026)
+
+- Per player feedback, added curved energy streams that contract toward the ball through Shockwave's cast. The existing readable outer circle remains fixed; collision, cast time, ball position and damage are unchanged. Build `orianna-vortex`.
+- All 32 Orianna-focused tests pass, including a check of moving cast energy, fixed boundary and no early damage. Inspected the middle of the cast in a temporary isolated, frozen browser fixture; a real-time player assessment remains open.
+
 ## Orianna cast-ring visual polish (2 November 2026)
 
 - Added a soft glow and rotating bright accents to the existing Shockwave windup circle, keeping its center and radius fixed. The 0.6 s Expert cast, damage and collision are unchanged. Build `orianna-cue`.

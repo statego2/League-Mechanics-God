@@ -6,7 +6,7 @@ const fs=require('node:fs');
 function boot(preset="standard", options={}){
  const nodes=new Map(),draws=[],drawSizes=[],strokes=[],strokeWidths=[],arcs=[],texts=[],lines=[],rotations=[],renderEvents=[];
  function node(id){if(!nodes.has(id))nodes.set(id,{textContent:'',style:{},classList:{add(){},remove(){},toggle(){}},listeners:{},addEventListener(k,f){this.listeners[k]=f;},closest(){return this;},setAttribute(k,v){this[k]=v;},getBoundingClientRect(){return {left:0,top:0,width:1200,height:675};}});return nodes.get(id);}
- const ctx=new Proxy({drawImage(img,...args){draws.push(img);drawSizes.push([img,...args]);renderEvents.push({type:"image",img})},rotate(a){rotations.push(a)},arc(x,y,r){arcs.push({x,y,r});renderEvents.push({type:"arc",x,y,r})},fillText(t){texts.push(String(t))},stroke(){strokes.push(this.strokeStyle);strokeWidths.push(this.lineWidth)},lineTo(x,y){lines.push({x,y})},createRadialGradient(){return {addColorStop(){}};}},{get(o,k){return o[k]||(()=>{});}});
+ const ctx=new Proxy({drawImage(img,...args){draws.push(img);drawSizes.push([img,...args]);renderEvents.push({type:"image",img})},rotate(a){rotations.push(a)},arc(x,y,r){arcs.push({x,y,r});renderEvents.push({type:"arc",x,y,r})},fillText(t){texts.push(String(t))},stroke(){strokes.push(this.strokeStyle);strokeWidths.push(this.lineWidth)},lineTo(x,y){lines.push({x,y})},quadraticCurveTo(cx,cy,x,y){renderEvents.push({type:"curve",cx,cy,x,y})},createRadialGradient(){return {addColorStop(){}};}},{get(o,k){return o[k]||(()=>{});}});
  node('arena').getContext=()=>ctx;
  const window={devicePixelRatio:1,listeners:{},addEventListener(k,f){this.listeners[k]=f;}};
  const document={getElementById:id=>options.missingNodes?.includes(id)?null:node(id),querySelectorAll:()=>[],addEventListener(){}};
@@ -1798,6 +1798,13 @@ test('Orianna R shows its circle during windup before damage',()=>{
  assert.equal(g.stats.hits,1);assert.ok(g.fx.some(f=>f.shockwave));
 });
 
+test('Orianna cast energy contracts while the outer boundary stays fixed',()=>{
+ const {g,arcs,renderEvents}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const h={x:g.player.x,y:g.player.y,source:{x:200,y:200},r:207.5,orianna:true,casting:true,ttl:.55,max:.6,directed:true,spellName:'ORIANNA R'};g.hazards.push(h);
+ g.render();const early=renderEvents.filter(e=>e.type==='curve').slice(-6);assert.equal(early.length,6);assert.ok(arcs.some(a=>a.r===h.r));
+ arcs.length=0;renderEvents.length=0;h.ttl=.08;g.render();const late=renderEvents.filter(e=>e.type==='curve').slice(-6);assert.equal(late.length,6);assert.ok(arcs.some(a=>a.r===h.r));
+ assert.ok(Math.hypot(late[0].x-h.x,late[0].y-h.y)<Math.hypot(early[0].x-h.x,early[0].y-h.y));assert.equal(g.stats.hits,0);
+});
 test('Orianna R deals damage only as its full-radius shockwave appears',()=>{
  const {g,arcs}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
  const h={x:g.player.x,y:g.player.y,source:{x:200,y:200},r:207.5,orianna:true,casting:true,ttl:.5,directed:true,spellName:'ORIANNA R'};g.hazards.push(h);
