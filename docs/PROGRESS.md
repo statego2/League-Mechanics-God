@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Full regression and Syndra feasibility note (2 November 2026)
+
+- The complete `node --test --test-reporter=dot tests/*.test.cjs` run on the current gameplay and overlap tests finished with exit 0. This does not replace subjective human playtesting.
+- Added a preliminary calculation to the future Syndra Q note: with a 105-canvas-unit scaled radius, 0.6 s delay, 0.2 s reaction and ~177.5 canvas-unit/s movement, a player moving only after the reaction travels ~71 units. A centered cast therefore cannot automatically be assumed walk-dodgeable. Real collision rules and practical training placement still need validation before implementing Syndra.
+
 ## Future Syndra Q request and difficulty options (2 November 2026)
 
 - Player requested Syndra Q later, with correct cast range and a meaningful dodge. Added research and implementation constraints to `docs/DODGE_GAUNTLET_RHYTHM.md`; no encounter has been implemented yet. Community sources report 800 target range, 210 radius and 0.6 s delay; verify current patch damage and targeting before coding.
