@@ -2,6 +2,10 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Dodge record separation (2026-11-02)
+
+- The current higher-pressure Dodge, 30-second sustain and Flash-only ultimate rules now use `director_v86` records. Prior `director_v85` records remain stored but are not shown as comparable scores or survival times. Regression covers new records and preservation of old data.
+
 ## Expert Orianna and Malphite Flash reactions (2026-11-02)
 
 - Expert Orianna commits Shockwave centred on the current player position, with a visible 0.5-second ball charge. Her setup targets the player's position; re-centering at R commitment is a deliberate reaction-training approximation, not faithful Orianna ball control. A sampled terrain-aware Flash-plus-move witness must exist and Flash must be ready; Q travel can still hit independently.
