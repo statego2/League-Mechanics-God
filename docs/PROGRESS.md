@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Mindgame Timing v1 (2 November 2026)
+
+- At the player's request Expert visitors vary their visible approach speed by ±10% and may wait independently for 0–0.16 seconds at their casting position before choosing aim and committing. This changes decision timing rather than the sourced spell windup or missile speed. The visitor remains in the entry phase while waiting, so existing threat-budget and path-separation checks still apply. Standard and Foundation are unchanged. Aim and escape forecasts are evaluated after the pause using the real spell cast time. This is a trainer approximation, not live champion AI. Build `mindgame-timing`.
+- Five targeted tests pass for bounded timing variability, actual pause and unchanged windup, existing Mindgame Aim distributions, real lead/reversal behavior and Expert opening. A 60-second seeded simulation observed 35 casts and a peak of three simultaneous threats; this is not a human difficulty assessment. Full suite in progress.
+
 ## Major impact visibility across delayed frames (2 November 2026)
 
 - Extended the bounded unseen-impact retention to Lux R / Xerath Q beams, Malphite R and Cassiopeia R, in addition to Orianna R. A delayed frame can no longer discard those short visual effects before their first render; damage, collision and pre-cast cues are unchanged. Headless effects still expire after a bounded interval. Build `impact-frame`.

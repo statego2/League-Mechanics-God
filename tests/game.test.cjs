@@ -227,6 +227,19 @@ test('Dodge reaction forecast follows the retained movement route',()=>{
  assert.ok(Math.hypot(g.player.x-predicted.x,g.player.y-predicted.y)<.1,`actual ${g.player.x},${g.player.y}; forecast ${predicted.x},${predicted.y}`);
  assert.ok(predicted.y>330,'the forecast must follow the existing waypoint rather than a newly calculated direct route');
 });
+test('Mindgame Timing varies visible entry without changing the spell windup',()=>{
+ const approaches=[],pauses=[];
+ for(let seed=1;seed<=30;seed++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.setRng(seed*104729);
+  if(!g.spawnDodgeVisitor())continue;const e=g.foes.find(f=>f.dodgeVisitor);if(!e)continue;approaches.push(e.speed);pauses.push(e.preCastWait);
+  assert.ok(e.speed>=108&&e.speed<=132);assert.ok(e.preCastWait>=0&&e.preCastWait<=.16);
+ }
+ assert.ok(approaches.length>=10);assert.ok(Math.max(...approaches)-Math.min(...approaches)>10);assert.ok(Math.max(...pauses)-Math.min(...pauses)>.08);
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;
+ const spell=g.REFERENCE_SPELLS.ezrealDodge,origin={x:130,y:g.player.y},e=g.enemy(origin.x,origin.y);
+ Object.assign(e,{dodgeVisitor:true,spell,phase:'enter',origin:{...origin},entry:{...origin},speed:120,preCastWait:.1});g.setFoes([e]);
+ advance(g,.05);assert.equal(e.phase,'enter');assert.equal(g.shots.length,0);advance(g,.075);assert.equal(e.phase,'cast');assert.ok(e.charge<=spell.cast&&e.charge>spell.cast-.03);
+});
 test('Mindgame Aim selects approximately 75% leads with direct and reversal reads',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.moveTo(1000,g.player.y-80);g.setRng(73129);
  const counts={direct:0,lead:0,reversal:0};

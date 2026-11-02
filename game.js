@@ -925,7 +925,12 @@ function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
   if(!crowded&&visible(p)&&visible(start)&&world.pointWalkable(p,20)&&world.pointWalkable(start,20)&&world.segmentClear(start,p,20)&&canEvadeDodgeCast(p,spell)){origin=p;entry=start;break;}
  }
  if(!origin)return false;
- const e=enemy(entry.x,entry.y);e.dodgeVisitor=true;e.followUp=!!forcedSpell;e.spell=spell;e.phase="enter";e.origin=origin;e.entry=entry;e.speed=120;e.hp=e.maxHp=160;e.shoot=999;foes.push(e);
+ const e=enemy(entry.x,entry.y);e.dodgeVisitor=true;e.followUp=!!forcedSpell;e.spell=spell;e.phase="enter";e.origin=origin;e.entry=entry;
+ // Mindgame Timing v1 changes the approach and decision pause, not the
+ // champion's sourced cast windup or missile speed. Aim is locked afterward.
+ e.speed=difficulty==="hard"?120*rand(.9,1.1):120;
+ e.preCastWait=difficulty==="hard"?rand(0,.16):0;
+ e.hp=e.maxHp=160;e.shoot=999;foes.push(e);
  // Two distinct visitors enter visibly together. The later aim lock rechecks
  // one shared escape against the first caster before committing its shot.
  if(difficulty!=="hard"&&!forcedSpell&&spell===REFERENCE_SPELLS.ezrealDodge&&time>=45&&difficulty!=="easy"&&random()<.12)spawnDodgeVisitor(spell,65);
@@ -965,6 +970,9 @@ function updateDodgeVisitor(e,dt){
   const dx=goal.x-e.x,dy=goal.y-e.y,d=Math.hypot(dx,dy),step=Math.min(d,e.speed*dt);
   if(d>0){const next=world.clip(e,{x:e.x+dx/d*step,y:e.y+dy/d*step},e.r);e.x=next.x;e.y=next.y;}
   if(d<=step+.01){if(e.phase==="enter"){
+  // The visitor is already visible; it may hold briefly before committing.
+  // Waiting remains an entry phase for threat budgets and overlap checks.
+  if(e.preCastWait>0){e.preCastWait=Math.max(0,e.preCastWait-dt);return;}
   // Predict the current route through windup and projectile travel; future
   // input changes remain unknown and every commitment is safety-checked.
   const aim=dodgeAimPoint(e.spell,e);
