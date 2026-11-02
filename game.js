@@ -932,9 +932,14 @@ function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
 // A cast is not always centred on the current feet. Moving players get a
 // seeded mix of direct, forward-lead, reversal and lateral-cut aim points.
 // Every resulting cast still has to pass the same escape forecast below.
-function dodgeAimPoint(spell){
+function dodgeAimPoint(spell,origin=player){
  if(!player.target)return {point:player,pattern:"direct"};
- const future=dodgeReactionPath(spell.cast).end,dx=future.x-player.x,dy=future.y-player.y,d=Math.hypot(dx,dy);
+ // Estimate the player's position at arrival, not merely at release. Two
+ // iterations account for the extra distance to a moving target; cap the
+ // horizon to avoid implausible predictions through distant path changes.
+ let horizon=spell.cast+dist(origin,player)/spell.speed,future=player;
+ for(let i=0;i<2;i++){future=dodgeReactionPath(Math.min(horizon,1.2)).end;horizon=spell.cast+dist(origin,future)/spell.speed;}
+ const dx=future.x-player.x,dy=future.y-player.y,d=Math.hypot(dx,dy);
  if(d<2)return {point:player,pattern:"direct"};
  const ux=dx/d,uy=dy/d,roll=random();
  // Expert deliberately tests route reading more often than stationary
@@ -961,16 +966,16 @@ function updateDodgeVisitor(e,dt){
   const dx=goal.x-e.x,dy=goal.y-e.y,d=Math.hypot(dx,dy),step=Math.min(d,e.speed*dt);
   if(d>0){const next=world.clip(e,{x:e.x+dx/d*step,y:e.y+dy/d*step},e.r);e.x=next.x;e.y=next.y;}
   if(d<=step+.01){if(e.phase==="enter"){
-  // Some straight shots lead only the player's existing route through the
-  // windup. This is a seeded training policy, not hidden knowledge of inputs.
-  const aim=dodgeAimPoint(e.spell);
+  // Predict the current route through windup and projectile travel; future
+  // input changes remain unknown and every commitment is safety-checked.
+  const aim=dodgeAimPoint(e.spell,e);
   let aimPoint=!e.spell.split&&!e.spell.returning?aim.point:player;
   const offset=e.spell.split?(random()<.5?-.32:.32):0,splitDistance=e.spell.split?dist(e,player)*Math.cos(offset):undefined;
   let angle=Math.atan2(aimPoint.y-e.y,aimPoint.x-e.x)+offset;
   const isolated=!e.spell.split||difficulty==="hard"||(!shots.some(s=>s.alive&&s.directed)&&!hazards.some(h=>h.directed)&&!foes.some(other=>other!==e&&other.alive&&other.dodgeVisitor&&(other.phase==="enter"||other.phase==="cast")));
   let safe=isolated&&regularAllowed(e.spell.name)&&(e.spell.split?canEvadeVelkoz(e,angle,splitDistance,e.spell):canEvadeDodgeCast(e,e.spell,null,aimPoint));
   // A lead that fails the safety forecast need not discard a safe direct cast.
-  if(!safe&&aimPoint!==player&&isolated&&regularAllowed(e.spell.name)){aimPoint=player;angle=Math.atan2(player.y-e.y,player.x-e.x);safe=canEvadeDodgeCast(e,e.spell);}
+  if(!safe&&aimPoint!==player&&isolated&&regularAllowed(e.spell.name)){aimPoint=player;aim.pattern="direct";angle=Math.atan2(player.y-e.y,player.x-e.x);safe=canEvadeDodgeCast(e,e.spell);}
   if(!safe)e.phase="exit";else{
    e.pending={angle,fan:false,spell:e.spell,splitDistance,pattern:aim.pattern,threat:!e.spell.split};e.charge=e.spell.cast;e.phase="cast";recordRegular(e.spell.name);
    // One seeded opportunity per Ezreal cast. Each candidate must pass its

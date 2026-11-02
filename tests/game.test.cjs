@@ -2444,6 +2444,18 @@ test('seeded straight visitors sometimes lead existing movement and retain a wal
  }
  assert.ok(led>0,`no led shots; direct=${direct}`);assert.ok(direct>0,'no direct shots');
 });
+test('a predictive shot can punish continuing straight while a changed path dodges it',()=>{
+ let found=false;
+ for(let seed=1;seed<=100&&!found;seed++){
+  function setup(){const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setRng((seed*2654435761)>>>0);const spell=g.REFERENCE_SPELLS.ezrealDodge,origin={x:130,y:g.player.y};const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'enter',origin:{...origin},entry:{...origin},speed:120});g.setFoes([e]);g.moveTo(g.player.x,g.player.y+250);g.update(1/120);return {g,e,spell};}
+  const straight=setup();if(straight.e.phase!=='cast'||straight.e.pending.pattern!=='lead')continue;
+  advance(straight.g,1);if(straight.g.stats.hits===0)continue;
+  const changed=setup(),{g,e,spell}=changed,angle=e.pending.angle,witness={},aim={x:e.x+Math.cos(angle)*400,y:e.y+Math.sin(angle)*400};
+  if(!g.canEvadeDodgeCast(e,spell,witness,aim))continue;
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1);assert.equal(g.stats.hits,0,`seed ${seed}`);found=true;
+ }
+ assert.ok(found,'no executable lead punished a straight path');
+});
 
 
 test('unsafe lead falls back to a separately verified direct shot',()=>{
@@ -2452,7 +2464,7 @@ test('unsafe lead falls back to a separately verified direct shot',()=>{
  search: for(const shift of [-100,-50,0,50,100])for(const distance of [340,470,620])for(const x of [250,400,600,800,950])for(const y of [130,210,340,480,590])for(let move=0;move<8;move++)for(let shot=0;shot<8;shot++){
   g.player.x=x;g.player.y=y;g.moveTo(x+Math.cos(move*Math.PI/4)*180,y+Math.sin(move*Math.PI/4)*180);
   blocker.x=x+shift;blocker.y=y-220;
-  const origin={x:x+Math.cos(shot*Math.PI/4)*distance,y:y+Math.sin(shot*Math.PI/4)*distance},lead=g.dodgeReactionPath(spell.cast).end;
+  const origin={x:x+Math.cos(shot*Math.PI/4)*distance,y:y+Math.sin(shot*Math.PI/4)*distance};g.setRng(1);const lead=g.dodgeAimPoint(spell,origin).point;
   if(Math.hypot(lead.x-x,lead.y-y)<5)continue;
   if(!g.canEvadeDodgeCast(origin,spell,null,lead)&&g.canEvadeDodgeCast(origin,spell)){found={origin};break search;}
  }

@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Predicting movement through projectile travel (2026-11-02)
+
+- Prior lead aim only projected Ahri's current route during the spell windup; a player walking continuously could often evade without making a new decision. Straight-shot visitors now estimate the player's position through both windup and projectile flight, iterating the travel estimate twice with a 1.2-second horizon. Direct, reversal and lateral-cut patterns remain mixed in; casts that do not pass the existing shared escape forecast fall back to a separately checked direct aim.
+- Added an actual simulation demonstrating that the same predictive cast hits when the player continues straight and misses when the player changes to a verified route. Five focused lead/distribution/shared-escape/fallback tests pass. This is a sampled training policy, not a claim of live champion AI or a proof of universal fairness.
+
 ## Local browser build verification (2026-11-02)
 
 - The user's existing Chrome tab at `http://127.0.0.1:8081/` was still displaying the older `flash-practice` build despite the local server having newer files. It was already at the drill menu, so it was reloaded; the browser DOM now shows `Build: malphite-trail` and Expert selected. This confirms the menu loaded the current local build, not an interactive gameplay or visual-balance test.
