@@ -22,7 +22,7 @@ const AHRI_DATA=validAhriData(window.LMGAhriData)?window.LMGAhriData:AHRI_FALLBA
 // The default trainer baseline includes Tier-1 boots: 330 base + 25 flat
 // movement speed. Dodge collision is deliberately narrower than Ahri's broad
 // gameplay radius so the visible body, not transparent empty space, defines it.
-const DODGE_TUNING={tierOneBoots:25,championRadius:SIMULATION.toCanvas(50),spellRadiusScale:.87,areaRadiusScale:.86,expertInterval:2.3};
+const DODGE_TUNING={tierOneBoots:25,championRadius:SIMULATION.toCanvas(50),spellRadiusScale:.87,areaRadiusScale:.86,expertInterval:1.75};
 const AHRI={hp:AHRI_DATA.base.hp,speed:SIMULATION.toCanvas(AHRI_DATA.base.moveSpeed),range:SIMULATION.toCanvas(AHRI_DATA.base.attackRange),attackSpeed:AHRI_DATA.base.attackSpeed,damage:AHRI_DATA.base.attackDamage,missileSpeed:SIMULATION.toCanvas(AHRI_DATA.attack.missileSpeed),radius:SIMULATION.toCanvas(AHRI_DATA.gameplayRadius),q:{cast:AHRI_DATA.q.cast,range:SIMULATION.toCanvas(AHRI_DATA.q.range),speed:SIMULATION.toCanvas(AHRI_DATA.q.speed),radius:SIMULATION.toCanvas(AHRI_DATA.q.width/2)}};
 const DODGE_PLAYER_SPEED=SIMULATION.toCanvas(AHRI_DATA.base.moveSpeed+DODGE_TUNING.tierOneBoots);
 function dodgeSpellRadius(spell){return mode==="dodge"&&ahriBase()?spell.radius*DODGE_TUNING.spellRadiusScale:spell.radius;}

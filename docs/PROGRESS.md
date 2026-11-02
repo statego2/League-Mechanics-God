@@ -33,6 +33,12 @@ Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid depend
 - `index.html` now cache-versions the new runtime as `expert-predictive` for GitHub Pages.
 - Verification: `node --check game.js`, `git diff --check`, and 11 selected tests pass, including Lux R tell/locked lane/walk escape, predictive-pattern distribution, base-vs-T1 movement scope, Spirit Rush/Fox-Fire movement and recovery/Cassiopeia behavior.
 
+## Expert pressure follow-up (2026-11-02)
+
+- Restored a demanding Expert tempo after publishing the prior fairness build: the normal director beat is 1.75 seconds, down from 2.3 seconds. The hard limit remains two independently aimed threats, major ultimates remain isolated and each cast still needs a forecasted walking response, so this raises decision frequency rather than restoring the old unbounded projectile pile.
+- Combined with the predictive distribution, the intended player read is no longer simply “sidestep the current cursor”: 80% of moving-target casts are forward lead, reversal or lateral cut. The public runtime cache key is now `expert-pressure`.
+- Verification: `node --check game.js`, `git diff --check` and 29 targeted Expert rhythm, prediction, Lux, Cassiopeia, recovery, hitbox and 12-minute cadence tests pass. The three deterministic long runs retain a two-threat peak and record 21–29 resolved casts/minute in their intentionally non-dodging harness.
+
 ## CS wave body spacing (2026-11-02)
 
 - The two-sided CS simulation now applies a deterministic, same-team minion separation pass after each wave update. Minions that converge on the same chase/target point are pushed apart to roughly their combined gameplay radii while remaining clipped to walkable terrain. Opposing minions are intentionally not separated by this pass so melee contact remains possible. This is a compact training approximation of minion body blocking, not a claim of exact live NavMesh collision.

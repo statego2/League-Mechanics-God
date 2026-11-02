@@ -2578,7 +2578,7 @@ test('Velkoz split counts as one unresolved opportunity while both branches are 
 
 test('Expert pressure does not wait minutes to become difficult',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(1);g.update(1/120);
- assert.ok(g.dodgeDirector.next>1.9&&g.dodgeDirector.next<2.7);
+ assert.ok(g.dodgeDirector.next>1.5&&g.dodgeDirector.next<2.1);
 });
 test('endless Dodge keeps best survival separately from score',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
@@ -2701,7 +2701,7 @@ test('Cassiopeia cone and facing distinguish turn-away, face and escape',()=>{
 test('Dodge uses Tier-1 boots and compact readable collision',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.update(0);
  assert.equal(g.AHRI.speed,165);assert.equal(g.player.speed,177.5);assert.equal(g.player.hitRadius,25);
- assert.equal(g.DODGE_DIRECTOR.hard.interval,2.3);assert.equal(g.DODGE_DIRECTOR.hard.cap,2);
+ assert.equal(g.DODGE_DIRECTOR.hard.interval,1.75);assert.equal(g.DODGE_DIRECTOR.hard.cap,2);
  const e=g.enemy(900,330),spell=g.REFERENCE_SPELLS.ezrealDodge;
  Object.assign(e,{dodgeVisitor:true,pending:{spell,angle:Math.PI,threat:true},charge:0});g.releaseEnemy(e);
  assert.equal(g.shots[0].r,spell.radius*.87);
