@@ -2,6 +2,10 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Dodge collision regression geometry (2026-11-02)
+
+- Updated three subframe regression scenarios to use the current compact Dodge hit radius and Tier-1 movement speed. They continue checking actual collision and lock behavior, rather than asserting the old 65-unit hitbox and 330-unit speed. Five selected tests pass, including movement locks, missile expiry and Vel'Koz split activation. The full suite still has other unresolved failures.
+
 ## Ability cooldown display (2026-11-02)
 
 - Cooldown numbers now round upward, including the final tenth of a second. Previously the HUD could show 0 or 0.0 while Flash remained unavailable, making a valid cooldown look like an input failure. Added a regression for the final seconds and ready state.

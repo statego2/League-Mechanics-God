@@ -2271,7 +2271,7 @@ test('queued movement starts only after a cast or root expires within the step',
  for(const lock of ['cast','root']){
   const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
   const x=g.player.x;if(lock==='cast'){node('arena').listeners.pointermove({clientX:x+200,clientY:g.player.y,buttons:0});g.cast('q');g.player.casting.remaining=.09;}else g.player.root=.09;
-  g.moveTo(x+200,g.player.y);g.update(.1);assert.ok(Math.abs(g.player.x-x-1.65)<1e-7,`${lock}: moved ${g.player.x-x}`);
+  g.moveTo(x+200,g.player.y);g.update(.1);assert.ok(Math.abs(g.player.x-x-g.player.speed*.01)<1e-7,`${lock}: moved ${g.player.x-x}`);
  }
 });
 test('area impact samples the player before queued movement begins',()=>{
@@ -2297,7 +2297,7 @@ test('area and missile impacts account for reaching a nearby move destination ea
  for(const kind of ['area','missile']){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player;p.speed=1000;g.moveTo(p.x+5,p.y);
   if(kind==='area')g.hazards.push({x:p.x-134,y:p.y,r:137.5,xerath:true,ttl:.05,max:1,directed:true,spellName:'XERATH W'});
-  else g.fire(p.x+40,p.y,0,0,'enemy',10,5,.03);
+  else g.fire(p.x+p.hitRadius+9,p.y,0,0,'enemy',10,5,.03);
   g.update(.1);assert.equal(g.stats.hits,kind==='area'?0:1,kind);
  }
 });
@@ -2353,7 +2353,7 @@ test('Velkoz children ignore champion movement before split activation',()=>{
 
 test('Velkoz child can hit during the remainder of the split activation step',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
- const x=g.player.x,y=g.player.y-65,main=g.fire(x,y,0,0,'enemy',10,30,.24);
+ const x=g.player.x,y=g.player.y-60,main=g.fire(x,y,0,0,'enemy',10,30,.24);
  Object.assign(main,{directed:true,spellName:'VELKOZ Q',velkoz:'delay',splitAngle:0,phaseResolved:true});
  g.update(.25);assert.equal(g.stats.hits,1);
 });
