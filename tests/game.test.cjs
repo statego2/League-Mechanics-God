@@ -270,6 +270,19 @@ test('a delayed visitor can share a real escape with an already committed cast',
  }
  assert.ok(checked>=1,'no delayed overlapping cast with a verified escape');
 });
+test('a waiting caster checks its eventual shot against active Xerath W',()=>{
+ let checked=0;
+ for(let seed=1;seed<=80&&checked<4;seed++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.setRng(seed*104729);
+  const p=g.player,origin={x:p.x-420,y:p.y},e=g.enemy(origin.x,origin.y),spell=g.REFERENCE_SPELLS.ezrealDodge;
+  Object.assign(e,{dodgeVisitor:true,spell,phase:'enter',origin:{...origin},entry:{...origin},speed:120,preCastWait:.12});g.setFoes([e]);
+  if(!g.spawnXerathW())continue;advance(g,.14);if(e.phase!=='cast')continue;
+  const angle=e.pending.angle,aim={x:e.x+Math.cos(angle)*400,y:e.y+Math.sin(angle)*400},witness={};
+  e.phase='enter';const safe=g.canEvadeDodgeCast(e,spell,witness,aim);e.phase='cast';if(!safe)continue;
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.4);assert.equal(g.stats.hits,0,`seed ${seed}`);checked++;
+ }
+ assert.ok(checked>=1,'no waiting-caster and Xerath W shared escape');
+});
 test('visitor separation forecasts the sampled approach speed',()=>{
  const {g}=boot('ahri'),start={x:200,y:200},end={x:400,y:200};
  const other={x:210,y:50,origin:{x:210,y:250},phase:'enter',speed:120};

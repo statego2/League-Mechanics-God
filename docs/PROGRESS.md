@@ -2,6 +2,10 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Mindgame Timing with ground hazards (2 November 2026)
+
+- Added an executed Expert scenario where an entering visitor waits while Xerath W is active, then commits only after checking the ground threat; the sampled response is run against both actual effects and avoids damage. Three focused waiting/overlap/timing tests pass. This is sampled evidence, not a general fairness guarantee; no tuning changed.
+
 ## Delayed caster overlap verification (2 November 2026)
 
 - Added an executed Expert scenario with a visitor waiting under Mindgame Timing while another visitor has already committed a projectile. Once the delayed caster commits, an independently sampled walking response is executed against both real projectiles and avoids damage. This covers a small seeded sample and is not proof that every overlap or player path is fair. No gameplay values changed.
