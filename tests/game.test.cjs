@@ -775,6 +775,14 @@ test('initial formation staggers attack readiness rather than synchronizing all 
  let distinct=false;for(let i=0;i<360;i++){g.update(1/120);const hp=g.foes.filter(e=>e.minionType==='melee').map(e=>e.hp);if(hp.length===3&&new Set(hp).size>1)distinct=true;}assert.ok(distinct,'initial attacks never staggered');
 });
 
+test('same-team minions separate after converging on one lane point',()=>{
+ const {g}=boot('ahri');g.reset('lastHit');g.disableSpawn();g.addWave();
+ const pack=g.allies.slice(0,3),target=g.foes[0];
+ for(const unit of pack)Object.assign(unit,{x:600,y:300,tick:999,targetId:null,windupLeft:0});
+ Object.assign(target,{x:1000,y:300,tick:999,targetId:null});g.setAllies(pack);g.setFoes([target]);advance(g,.4);
+ for(let i=0;i<pack.length;i++)for(let j=i+1;j<pack.length;j++)assert.ok(Math.hypot(pack[i].x-pack[j].x,pack[i].y-pack[j].y)>=(pack[i].r+pack[j].r)*.9,`${i}/${j} overlap`);
+});
+
 test('S stops movement and chase, cancels windup but preserves launched autos',()=>{
  const {g,key}=boot();const e=foe(g);g.moveTo(400,300);advance(g,.1);key('s');const pos=[g.player.x,g.player.y];advance(g,.1);assert.deepEqual([g.player.x,g.player.y],pos);assert.equal(g.player.target,null);
  g.attackOrder(e);advance(g,.1);assert.ok(g.player.windup>0);key('s');assert.equal(g.player.order,null);assert.equal(g.player.windup,0);advance(g,.2);assert.equal(g.stats.released,0);

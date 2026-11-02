@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## CS wave body spacing (2026-11-02)
+
+- The two-sided CS simulation now applies a deterministic, same-team minion separation pass after each wave update. Minions that converge on the same chase/target point are pushed apart to roughly their combined gameplay radii while remaining clipped to walkable terrain. Opposing minions are intentionally not separated by this pass so melee contact remains possible. This is a compact training approximation of minion body blocking, not a claim of exact live NavMesh collision.
+- Added a crowded-convergence regression alongside the existing two-sided combat, retargeting, cannon, successive-wave, terrain-route and frame-rate tests. The focused CS/minion set passes 16/16, with `node --check game.js` and `git diff --check` clean.
+
 ## Expert Dodge playtest recalibration: density, counterplay and sustain (2026-11-02)
 
 - A long seeded simulation exposed a real mismatch with the intended rhythm: prior Expert runs recorded roughly 71–88 launched casts/minute despite the design target of 25–32 meaningful opportunities/minute. The current playtest pass reduces the regular director to a two-threat commitment budget, sets its nominal beat to two seconds, and makes a failed/budget-full attempt wait for most of that beat instead of retrying immediately. This keeps separate caster origins and predictive aim, but creates an actual reset window after a committed dodge; it does not speed up or slow down individual ordinary champion projectiles.

@@ -280,6 +280,22 @@ function minionLaneGoal(unit){
  const ingressDistance=MINION_TRAINING.ingressHold-direction*along;
  const distance=Math.max(0,Math.min(tx,ty,ingressDistance));return {x:unit.x+dx*distance,y:unit.y+dy*distance};
 }
+// Minions in the real game form a small body-blocking pack rather than
+// occupying the same point as they chase one target. This is a stable,
+// same-team separation pass for the compact training lane, not a NavMesh or
+// a claim of Riot's exact collision solver. Opposing minions can still make
+// contact to begin melee combat.
+function separateMinionTeam(units){
+ for(let pass=0;pass<2;pass++)for(let i=0;i<units.length;i++)for(let j=i+1;j<units.length;j++){
+  const a=units[i],b=units[j];if(!a.alive||!b.alive)continue;
+  let dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy),minimum=(a.r+b.r)*.92;
+  if(d>=minimum)continue;
+  if(d<1e-6){const sign=a.id<b.id?-1:1;dx=sign;dy=0;d=1;}
+  const push=(minimum-d)/2,ux=dx/d,uy=dy/d;
+  const na=world.clip(a,{x:a.x-ux*push,y:a.y-uy*push},a.r),nb=world.clip(b,{x:b.x+ux*push,y:b.y+uy*push},b.r);
+  a.x=na.x;a.y=na.y;b.x=nb.x;b.y=nb.y;
+ }
+}
 function updateCSWave(dt){
  const red=foes.filter(e=>e.alive&&e.minion),blue=allies.filter(e=>e.alive),meleeImpacts=[];
  for(const unit of [...blue,...red]){
@@ -331,6 +347,7 @@ function updateCSWave(dt){
  // Attacks completed in this step are committed before melee damage resolves.
  // The stable processing order for competing impacts is a training policy.
  for(const entry of meleeImpacts)applyImpact(entry.target,entry.impact);
+ separateMinionTeam(blue);separateMinionTeam(red);
 }
 function baitLabel(){
  if(bait.phase==="approach")return `ROUND ${bait.round} / 3 · ${bait.armed?"ENTER":"LEAVE, THEN ENTER"} THE ENEMY THREAT RING`;
