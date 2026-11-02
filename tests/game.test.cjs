@@ -44,6 +44,14 @@ test('Standard Orianna retains the sourced 0.5 second cast',()=>{
  assert.ok(g.spawnOriannaR());const h=g.hazards[0];while(!h.casting&&g.hazards.includes(h))g.update(1/120);
  assert.equal(h.casting,true);assert.ok(Math.abs(h.ttl-.5)<1e-8);assert.equal(h.max,.5);
 });
+test('Orianna R uses the smaller visible area and its true collision boundary',()=>{
+ for(const [offset,hit] of [[-.1,true],[.1,false]]){
+  const {g,node,arcs}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setFoes([]);g.dodgeDirector.next=999;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=g.dodgeDirector.luxRAt=Infinity;
+  assert.ok(g.spawnOriannaR());const h=g.hazards[0];assert.ok(Math.abs(h.r-207.5*.92)<1e-8);
+  h.casting=true;h.ttl=.01;h.max=.6;g.player.x=h.x+h.r+g.player.hitRadius+offset;g.player.y=h.y;
+  g.render();assert.ok(arcs.some(a=>Math.abs(a.r-h.r)<1e-8));g.update(.02);assert.equal(g.stats.hits,Number(hit),`offset ${offset}`);
+ }
+});
 test('Expert Orianna gives a visible 0.6 second Flash window',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setFoes([]);g.dodgeDirector.next=999;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=g.dodgeDirector.luxRAt=Infinity;
  assert.ok(g.spawnOriannaR());const h=g.hazards[0];while(!h.casting)g.update(1/120);assert.ok(Math.abs(h.ttl-.6)<1e-8);const hits=g.stats.hits;

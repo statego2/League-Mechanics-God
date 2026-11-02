@@ -563,7 +563,9 @@ function spawnXerathQ(witness=null){
 // Placement, setup time, avoidance margin and MR are training choices.
 const ORIANNA_Q={radius:SIMULATION.toCanvas(80),arrival:SIMULATION.toCanvas(175),raw:60};
 // Riot 26.12 changed rank-one Shockwave base damage to 225.
-const ORIANNA_R={radius:SIMULATION.toCanvas(415),cast:.5,raw:225};
+// Expert feedback: use 92% of the sourced 415-unit radius in this trainer.
+// The visible cue, escape forecasts and collision all use this same radius.
+const ORIANNA_R={radius:SIMULATION.toCanvas(415)*.92,cast:.5,raw:225};
 // Expert training grants 100 ms extra to make the visible Flash reaction
 // practicable. League's documented Shockwave cast is 0.5 seconds.
 function oriannaCastDuration(){return difficulty==="hard"?.6:ORIANNA_R.cast;}
