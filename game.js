@@ -416,6 +416,9 @@ function dodgeRhythmMultiplier(now){
 }
 // There are no artificial no-overlap recovery windows in Expert.
 function dodgeRecovery(now){return false;}
+// Xerath's off-screen warnings can form approved Expert combinations. A Lux R
+// is intentionally a standalone reaction check, even though both use beams.
+function composableAmbientHazard(h){return h.directed&&(h.xerath||(h.beam&&!h.luxR));}
 // Avoid three identical complex encounters in a row; repeated Ezreal Q is
 // intentional. Record a visitor at aim lock, and ambient casts at creation.
 function regularAllowed(name){return name==="EZREAL Q"||dodgeDirector.lastRegular!==name||dodgeDirector.regularStreak<2;}
@@ -709,7 +712,7 @@ function forecastExistingSplit(shot,incoming){
 }
 // Forecast existing missiles, committed casts and the new shot.
 function dodgeIncoming(origin,spell,aimPoint=player){
- if(hazards.some(h=>h.directed&&!(difficulty==="hard"&&(h.xerath||h.beam))))return null;
+ if(hazards.some(h=>h.directed&&!(difficulty==="hard"&&composableAmbientHazard(h))))return null;
  const incoming=[];
  for(const shot of shots){
   if(!shot.alive||!shot.directed)continue;
@@ -817,7 +820,7 @@ function visitorPathsCrowded(start,finish,other){
 }
 function spawnDodgeVisitor(forcedSpell=null,followEntry=110){
  const active=foes.filter(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit"&&e.phase!=="orbFlight"&&e.phase!=="hookFlight").length+shots.filter(s=>s.alive&&s.directed).length+hazards.filter(h=>h.directed).length;
- if(active>=DODGE_DIRECTOR[difficulty].cap||(active>0&&dodgeRecovery(time))||hazards.some(h=>h.directed&&!(difficulty==="hard"&&(h.xerath||h.beam)))||foes.some(e=>e.alive&&e.dodgeVisitor&&e.spell.split&&(e.phase==="enter"||(e.phase==="cast"&&difficulty!=="hard"))))return false;
+ if(active>=DODGE_DIRECTOR[difficulty].cap||(active>0&&dodgeRecovery(time))||hazards.some(h=>h.directed&&!(difficulty==="hard"&&composableAmbientHazard(h)))||foes.some(e=>e.alive&&e.dodgeVisitor&&e.spell.split&&(e.phase==="enter"||(e.phase==="cast"&&difficulty!=="hard"))))return false;
  let spell=forcedSpell;
  if(!spell){
   const fullRoster=difficulty==="hard"||time>=45,roll=random()*(fullRoster?100:71);

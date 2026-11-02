@@ -40,7 +40,7 @@ test('Expert Dodge has a bounded flow-spike-recovery rhythm',()=>{
 test('Expert Lux R preserves a full one-second visible charge',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.disableSpawn();g.dodgeDirector.next=999;g.setTime(26);
  g.update(1/120);const h=g.hazards.find(x=>x.luxR);assert.ok(h,'Lux R was not scheduled');assert.equal(h.max,1);assert.ok(h.ttl>.98&&h.ttl<=1);
- assert.equal(g.foes.length,0);assert.equal(g.shots.length,0);advance(g,.49);assert.ok(h.ttl>.49&&h.ttl<.52,'beam fired before its readable charge completed');
+ assert.equal(g.foes.length,0);assert.equal(g.shots.length,0);assert.equal(g.spawnDodgeVisitor(),false,'Lux R must not gain a follow-up during its charge');advance(g,.49);assert.ok(h.ttl>.49&&h.ttl<.52,'beam fired before its readable charge completed');
 });
 test('Lux R supplies and executes a normal walking sidestep',()=>{
  let checked=0;
