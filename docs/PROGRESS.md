@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Visual cast-ring and full regression verification (2 November 2026)
+
+- The complete `node --test --test-reporter=dot tests/*.test.cjs` run after the seeded roster test correction finished with exit 0.
+- Visually inspected the start of Expert Orianna R in a temporary isolated browser fixture: the fixture scheduled Orianna early and froze simulation immediately after R began. The full cast circle and ball above Ahri were visible before R impact. The separate Q hit was visible as 46 damage on ball arrival; this confirms why health can decrease before R, not that R dealt early damage. The fixture is not the normal playable build and does not verify human reaction or feel over time.
+
 ## Seeded roster test correction (2 November 2026)
 
 - Full suite on `orianna-cast-ring` had one failure: an old test demanded Ezreal outnumber Lux in one specific 55-second random run; that run produced 8 Ezreal and 11 Lux after the feint RNG change. The six explicitly seeded 55-second runs produced 74 Ezreal and 30 Lux in total. The regression now tests actual aggregate output across those runs, deterministic replay, cast accounting and minimum activity per run; it does not require every short sample to follow the average. No director tuning changed.
