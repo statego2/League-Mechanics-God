@@ -4,7 +4,7 @@ Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid depend
 
 ## Browser smoke after Orianna animation (2 November 2026)
 
-- Opened `orianna-vortex` locally in a fresh in-app browser, started Expert, issued a move and W, and observed the result screen after a Malphite R ended the unattended run at 17.2 s; browser console had no errors. This verifies basic start, input and death/result flow, not visual quality or human performance. The full suite was started on the same code and is still running.
+- Opened `orianna-vortex` locally in a fresh in-app browser, started Expert, issued a move and W, and observed the result screen after a Malphite R ended the unattended run at 17.2 s; browser console had no errors. This verifies basic start, input and death/result flow, not visual quality or human performance. The complete `node --test --test-reporter=dot tests/*.test.cjs` suite on the same code subsequently finished with exit 0; the separate 30/60/120 FPS Expert determinism check also passed.
 
 ## Future Syndra Q→E request (2 November 2026)
 
