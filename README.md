@@ -14,7 +14,7 @@ python3 -m http.server 8080
 
 Visit **http://localhost:8080**.
 
-For a public URL, enable **GitHub Pages** in the repository Settings → Pages → Deploy from a branch → main / (root). Your URL should then be **https://statego2.github.io/League-Mechanics-God/** after GitHub publishes it. Do not assume Pages is enabled until verified.
+The published project URL is [statego2.github.io/League-Mechanics-God](https://statego2.github.io/League-Mechanics-God/). It updates only after an approved push and GitHub Pages publish; use the local server for unpushed work.
 
 ## Product vision: four main modes (planned)
 
@@ -29,7 +29,7 @@ The finished **League Mechanics God** is intentionally focused on **exactly four
 
 ### What is actually playable today (alpha)
 
-- **Dodge Trial:** an unfinished Dodge Gauntlet foundation with Ezreal/Lux visits and selectable 1-, 3- or 12-minute sessions. The wider spell roster, fairness checks and adaptation are not yet implemented.
+- **Dodge Trial:** an endless Expert-first Dodge Gauntlet foundation. It has visible champion entries for Ezreal Q, Lux Q, Blitz Q, Ahri Q and Vel’Koz Q, hidden-source Xerath Q/W, and rare Lux R, Cassiopeia R, Orianna R and Malphite R encounters. The director uses sampled walkable escapes and a readable two-independent-threat budget; it is still an evolving training approximation, not a claim of exact live-client parity.
 - **Kite Arena:** movement, autos and abilities against enemies; this is **not yet** the approved solo-versus-many Combat Survival experience.
 - **CS Practice:** farm with Ahri across 20 waves over up to ten minutes (126 possible CS), with cannon on every third wave. Two-sided combat, wave placement and attack behavior remain approximations. Melee health grows every three early waves; other minion upgrades and turrets are not yet implemented. This is the unfinished foundation for CS Mastery.
 
@@ -61,7 +61,7 @@ The painted mid-lane arena is a visual approximation based on a user-provided ga
 
 ## Repeatable encounters
 
-Choose Foundation, Standard or Expert before entering a drill. Restart reuses the seed; the seed button changes the next run. In the Ahri profile, Dodge Trial uses a seeded Ezreal-heavy selection of single-cast enemy visits without drawing aim lines; watch the enemy cast and launched missiles. Individual missile values are approximate, and the complete planned roster and fair-combination scheduler are not yet implemented. Its separate synthetic sweep retains a visible safe-gap warning. Expert is selected by default. Results store local records in this browser; unavailable storage does not prevent play.
+Choose Foundation, Standard or Expert before entering a drill. Expert is the active tuning target and is selected by default. In the Ahri profile, Dodge Trial is endless: watch each enemy’s entry/cast tell and launched missile, use movement and Flash, and recover a little health after sustained clean play. The public menu deliberately hides deterministic seeds; restart repeats the current internal scenario. Individual values, arena scale and uncommon encounter timings are transparent training approximations documented in [Dodge Rhythm](docs/DODGE_GAUNTLET_RHYTHM.md). Results store local records in this browser; unavailable storage does not prevent play.
 
 ## Mechanics and checks
 
@@ -77,6 +77,6 @@ node --test tests/*.test.cjs
 
 ## Next improvements
 
-Additional lane scenarios; further enemy patterns; accessibility; cross-browser tuning.
+Human browser validation of long Expert sessions, visual/cue tuning from playtests, authentic CS wave/turret behavior, Mid Lane Mastery, accessibility and cross-browser tuning.
 
 Independent fan-made practice project, **not affiliated with or endorsed by Riot Games**.
