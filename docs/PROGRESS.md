@@ -2,6 +2,10 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Full regression audit (2026-11-02)
+
+- A complete `node --test --test-reporter=dot tests/*.test.cjs` run completed with six failures. Five have been reconciled with current behavior and pass individually: Flash-only Expert Malphite, W speed forecast capped at the move destination, W-assisted evade at current boots/hitbox, and Xerath W's four-threat cap. The remaining `multi-shot forecast can use and execute a longer walking response` still fails even after expanding its search grid; do not claim the full suite is green. Investigate whether the sampled geometry no longer needs a longer route or whether candidate generation needs improvement; retain the actual-escape assertion.
+
 ## Dodge record separation (2026-11-02)
 
 - The current higher-pressure Dodge, 30-second sustain and Flash-only ultimate rules now use `director_v86` records. Prior `director_v85` records remain stored but are not shown as comparable scores or survival times. Regression covers new records and preservation of old data.

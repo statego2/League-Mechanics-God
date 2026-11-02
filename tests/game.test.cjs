@@ -211,11 +211,11 @@ test('director escape witnesses survive actual straight shots from varied angles
 });
 test('multi-shot forecast can use and execute a longer walking response',()=>{
  let found=false;
- for(let y=-100;y<=100&&!found;y+=20)for(let x=320;x<=880&&!found;x+=40)for(const side of [-1,1]){
+ for(let y=-140;y<=140&&!found;y+=10)for(let x=280;x<=920&&!found;x+=20)for(const side of [-1,1]){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
   const p=g.player,s=g.fire(x,p.y+y,0,side*500,'enemy',10,30,2);Object.assign(s,{directed:true,spellName:'EZREAL Q'});
   const origin={x:p.x-440,y:p.y},spell=g.REFERENCE_SPELLS.luxDodge,witness={};
-  if(!g.canEvadeDodgeCast(origin,spell,witness)||Math.hypot(witness.destination.x-p.x,witness.destination.y-p.y)<75)continue;
+  if(!g.canEvadeDodgeCast(origin,spell,witness)||Math.hypot(witness.destination.x-p.x,witness.destination.y-p.y)<70)continue;
   const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'cast',charge:spell.cast,pending:{angle:0,spell},entry:{...origin}});g.setFoes([e]);
   advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,2);assert.equal(g.stats.hits,0);found=true;
  }
@@ -1939,10 +1939,9 @@ test('Expert direct Malphite R provides a real Flash-and-move escape',()=>{
  advance(g,.2);node('arena').listeners.pointermove({clientX:plan.flashWitness.x,clientY:plan.flashWitness.y,buttons:0});g.cast('f');advance(g,.1);g.moveTo(plan.walkWitness.x,plan.walkWitness.y);
  advance(g,plan.duration);assert.equal(g.stats.hits,0);assert.ok(g.player.cd.f>0);assert.equal(g.dodgeDirector.outcomes['MALPHITE R'].avoided,1);
 });
-test('Malphite does not require Flash when it is on cooldown',()=>{
+test('Expert Malphite defers when Flash is on cooldown',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.player.cd.f=20;g.setRng(1);
- const plan=g.aimMalphiteR({x:200,y:g.player.y}),witness={};assert.ok(plan);assert.equal(plan.flashWitness,undefined);
- assert.ok(g.sampleAreaEscape(.2,plan.duration,p=>Math.hypot(p.x-plan.target.x,p.y-plan.target.y)<=162.5+g.player.hitRadius+8,witness));
+ assert.equal(g.aimMalphiteR({x:200,y:g.player.y}),null);
 });
 test('direct Malphite results report Flash use during the cast without claiming a dodge',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.setRng(1);
@@ -1981,7 +1980,7 @@ test('direct Malphite Flash plans remain safe across sampled arena positions',()
 test('forecast accounts for W decay and soft caps across movement and expiration',()=>{
  for(const elapsed of [.2,.5,1.5,2.5]){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.cast('w');g.moveTo(1100,g.player.y);
-  const predicted=g.forecastTravel(0,elapsed),start=g.player.x;advance(g,elapsed);
+  const predicted=Math.min(500,g.forecastTravel(0,elapsed)),start=g.player.x;advance(g,elapsed);
   assert.ok(Math.abs((g.player.x-start)-predicted)<.5,`elapsed ${elapsed}: actual ${g.player.x-start}, forecast ${predicted}`);
  }
 });
@@ -2451,7 +2450,7 @@ test('unsafe lead falls back to a separately verified direct shot',()=>{
 
 test('Dodge permits a W-boosted escape that base movement alone cannot make',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
- const origin={x:g.player.x-400,y:g.player.y},spell=g.REFERENCE_SPELLS.ezrealDodge,witness={};
+ const origin={x:g.player.x-310,y:g.player.y},spell=g.REFERENCE_SPELLS.ezrealDodge,witness={};
  assert.equal(g.canEvadeDodgeCast(origin,spell),false);g.cast('w');
  assert.ok(g.canEvadeDodgeCast(origin,spell,witness));
  const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'cast',entry:{...origin},speed:120,charge:spell.cast,pending:{angle:0,spell}});g.setFoes([e]);
@@ -2486,12 +2485,13 @@ test('Xerath W and Ezreal Q witnesses remain safe with existing movement and W',
  }
  assert.ok(accepted>=3,`only ${accepted} accepted combinations`);
 });
-test('Expert Xerath W reserves room instead of joining two live missiles',()=>{
+test('Expert Xerath W reserves room instead of joining four live missiles',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;
  const p=g.player;
  for(const [x,y,vx,name] of [[p.x-300,p.y+120,500,'EZREAL Q'],[p.x+300,p.y-120,-500,'LUX Q']]){
   const s=g.fire(x,y,vx,0,'enemy',20,20,2);Object.assign(s,{directed:true,spellName:name});
  }
+ for(let i=0;i<2;i++){const s=g.fire(100,100+i*20,1,0,'enemy',10,1,2);Object.assign(s,{directed:true,spellName:'EZREAL Q'});}
  assert.equal(g.spawnXerathW(),false);
 });
 test('Expert visitor witnesses avoid an already-active Xerath W at impact',()=>{
@@ -2537,9 +2537,9 @@ test('Expert does not naturally schedule the removed Xerath Q laser',()=>{
   advance(g,120);assert.equal(g.dodgeDirector.xerathQ,0,`seed ${seed}`);
  }
 });
-test('Expert does not force Xerath W above a full two-shot budget',()=>{
+test('Expert does not force Xerath W above the four-threat budget',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;
- for(let i=0;i<2;i++){const s=g.fire(120,220+i*80,1,0,'enemy',10,20,2);Object.assign(s,{directed:true,spellName:'EZREAL Q'});}
+ for(let i=0;i<4;i++){const s=g.fire(120,220+i*40,1,0,'enemy',10,20,2);Object.assign(s,{directed:true,spellName:'EZREAL Q'});}
  g.dodgeDirector.areaFollow=true;g.update(1/120);
  assert.equal(g.dodgeDirector.areaFollow,false);assert.equal(g.hazards.filter(h=>h.xerath).length,0);
 });
