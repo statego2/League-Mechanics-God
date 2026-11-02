@@ -9,10 +9,10 @@ Open `index.html` from a local web server:
 ```bash
 git clone https://github.com/statego2/League-Mechanics-God.git
 cd League-Mechanics-God
-python3 -m http.server 8080
+python3 scripts/dev-server.py
 ```
 
-Visit **http://localhost:8080**.
+Visit **http://127.0.0.1:8082/**. This local development server disables browser caching, so a refresh loads the current checkout. Pass `--port 8083` to select another port.
 
 The published project URL is [statego2.github.io/League-Mechanics-God](https://statego2.github.io/League-Mechanics-God/). It updates only after an approved push and GitHub Pages publish; use the local server for unpushed work.
 

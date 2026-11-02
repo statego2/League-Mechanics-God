@@ -2,6 +2,12 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Cache-free local testing (2 November 2026)
+
+- Added `python3 scripts/dev-server.py`, a loopback-only static development server on port 8082 with `Cache-Control: no-store` for HTML and assets; use `--port` to select another port. It serves the checkout regardless of the launch directory. README documents the new local URL. The older server on 8081 was left running to avoid interrupting play.
+- Verified the response header and loaded `Build: orianna-lux-v3` in a fresh browser at http://127.0.0.1:8082/. This addresses local browser caching; GitHub Pages is separate and unchanged.
+- Complete `node --test --test-reporter=dot tests/*.test.cjs` run after the early-Flash correction finished with exit 0. The previous 21 targeted ultimate/prediction tests and seven early-Flash-focused tests also passed. Human long-form dodge balance and visual verification remain open.
+
 ## Orianna early-Flash combo (2 November 2026)
 
 - Fixed Expert Orianna cancelling a visible Q → R combo if Ahri used Flash during ball travel. The initial spawn still requires Flash to be ready; once committed, spending Flash early is a valid player decision and the R continues at the ball's fixed destination. If Flash remains available, the existing cast-time escape check still applies. Added a simulation that Flashes during Q and verifies the full R resolves. Seven targeted Orianna, Lux and aim tests pass. Local build: `orianna-lux-v3`.
