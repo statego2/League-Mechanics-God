@@ -1,0 +1,277 @@
+{
+  "melee": {
+    "health": {
+      "value": 465,
+      "unit": "health",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Melee_minion",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "base; grows with upgrades",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "gold": {
+      "value": 20,
+      "unit": "gold",
+      "source_url": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-1-notes/",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "base_xp": {
+      "value": 62,
+      "unit": "experience",
+      "source_url": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-1-notes/",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "on_hit_minion_current_health": {
+      "value": 2,
+      "unit": "percent",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Melee_minion",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    }
+  },
+  "caster": {
+    "health": {
+      "value": 284,
+      "unit": "health",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Caster_minion",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "base; grows with upgrades",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "base_xp": {
+      "value": 31,
+      "unit": "experience",
+      "source_url": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-1-notes/",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "gold": {
+      "value": 14,
+      "unit": "gold",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Caster_minion",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "base; verify any lane modifier",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "on_hit_minion_current_health": {
+      "value": 3.5,
+      "unit": "percent",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Caster_minion",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    }
+  },
+  "siege": {
+    "health": {
+      "value": 835,
+      "unit": "health",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Blue_Siege_Minion",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "base; grows with upgrades",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "gold": {
+      "value": "50 + 1 per upgrade",
+      "unit": "gold",
+      "source_url": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-1-notes/",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "base_xp": {
+      "value": 75,
+      "unit": "experience",
+      "source_url": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-1-notes/",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "attack_range": {
+      "value": 300,
+      "unit": "game_units",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Blue_Siege_Minion",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "attack_speed": {
+      "value": 1,
+      "unit": "attacks_per_second",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Blue_Siege_Minion",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "gameplay_radius": {
+      "value": 65,
+      "unit": "game_units",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Blue_Siege_Minion",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "on_hit_minion_current_health": {
+      "value": 5,
+      "unit": "percent",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Blue_Siege_Minion",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "attack_damage_conflict": {
+      "value": null,
+      "unit": "damage",
+      "source_url": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-1-notes/",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Riot 26.1 says 39; wiki lists 37.5–126. Resolve before use",
+      "confidence": "conflicting",
+      "status": "unknown"
+    }
+  },
+  "super": {
+    "health": {
+      "value": 1600,
+      "unit": "health",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Super_minion",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "base; grows with upgrades",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "gold": {
+      "value": "50 + 1 per upgrade",
+      "unit": "gold",
+      "source_url": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-1-notes/",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "base_xp": {
+      "value": 75,
+      "unit": "experience",
+      "source_url": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-1-notes/",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "attack_speed": {
+      "value": 0.85,
+      "unit": "attacks_per_second",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Super_minion",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "attack_range": {
+      "value": 170,
+      "unit": "game_units",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Super_minion",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "armor": {
+      "value": 100,
+      "unit": "armor",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Super_minion",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "magic_resist": {
+      "value": -30,
+      "unit": "magic_resistance",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Super_minion",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "gameplay_radius": {
+      "value": 65,
+      "unit": "game_units",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Super_minion",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "attack_damage_conflict": {
+      "value": null,
+      "unit": "damage",
+      "source_url": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-1-notes/",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Riot 26.1 says 180; wiki displays 185–480. Resolve before use",
+      "confidence": "conflicting",
+      "status": "unknown"
+    }
+  },
+  "xp_shares": {
+    "value": [
+      100,
+      65,
+      43.3,
+      32.5,
+      26,
+      21.7
+    ],
+    "unit": "percent_per_champion",
+    "source_url": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-1-notes/",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "1–6 eligible champions respectively; base XP per eligible champion, not total shared pool",
+    "confidence": "source_reported",
+    "status": "direct"
+  }
+}

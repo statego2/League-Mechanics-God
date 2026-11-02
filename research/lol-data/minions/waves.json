@@ -1,0 +1,105 @@
+{
+  "first_spawn": {
+    "value": 30,
+    "unit": "seconds",
+    "source_url": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-1-notes/",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "Summoner’s Rift; no modifiers",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "intervals": {
+    "value": [
+      {
+        "from_seconds": 30,
+        "interval_seconds": 30
+      },
+      {
+        "from_seconds": 840,
+        "interval_seconds": 25
+      },
+      {
+        "from_seconds": 1800,
+        "interval_seconds": 20
+      }
+    ],
+    "unit": "schedule",
+    "source_url": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-1-notes/",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "boundary wave at 840; subsequent 865; final transition 1790 then 1810",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "spawn_spacing": {
+    "value": 0.792,
+    "unit": "seconds",
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Minions",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "Summoner’s Rift; no modifiers",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "melee_per_wave": {
+    "value": 3,
+    "unit": "minions",
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Minions",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "subtract one on cannon waves at 14:00+",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "casters_per_wave": {
+    "value": 3,
+    "unit": "minions",
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Minions",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "subtract one from 30:00+",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "cannon_frequency": {
+    "value": "wave 3 first; every 3 waves before 14:00, every 2 after 14:00, every wave after 25:00",
+    "unit": "rule",
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Minions",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "transition examples: 12:00, 13:30, 14:25, 15:15; 24:25, 25:15, 25:40",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "super": {
+    "value": "one in lane with enemy inhibitor down; two per lane if all enemy inhibitors down; replaces siege",
+    "unit": "rule",
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Minions",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "Summoner’s Rift; no modifiers",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "upgrade_schedule": {
+    "value": "first at 00:30, then every 90 seconds",
+    "unit": "rule",
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Minions",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "Summoner’s Rift; no modifiers",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "base_move_speed": {
+    "value": 350,
+    "unit": "game_units_per_second",
+    "source_url": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-1-notes/",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "base before later upgrades and caps",
+    "confidence": "source_reported",
+    "status": "direct"
+  }
+}
