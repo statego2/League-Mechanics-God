@@ -1731,13 +1731,19 @@ test('arcade presets do not receive Ahri health regeneration',()=>{
  const {g}=boot('standard');g.reset('kite');g.disableSpawn();g.player.hp=100;advance(g,3);assert.equal(g.player.hp,100);
 });
 
-test('clean Dodge sustain restores health only after a full eight-second no-hit window',()=>{
+test('clean Dodge sustain restores health only after a full seven-second no-hit window',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
  g.applyImpact(g.player,{sourceTeam:'enemy',kind:'test',raw:100,damageType:'true'});
- advance(g,7.9);assert.ok(Math.abs(g.player.hp-493.95)<1e-8);advance(g,.1);assert.ok(Math.abs(g.player.hp-512)<1e-8);assert.equal(g.stats.damage,100);assert.equal(g.stats.hits,1);
- advance(g,8.1);assert.ok(Math.abs(g.player.hp-534.05)<1e-8);
+ advance(g,6.9);assert.ok(Math.abs(g.player.hp-493.45)<1e-8);advance(g,.1);assert.ok(Math.abs(g.player.hp-517.5)<1e-8);assert.equal(g.stats.damage,100);assert.equal(g.stats.hits,1);
+ advance(g,7.1);assert.ok(Math.abs(g.player.hp-545.05)<1e-8);
  g.applyImpact(g.player,{sourceTeam:'enemy',kind:'test',raw:1000,damageType:'true'});advance(g,3);
  assert.equal(g.state,'ended');assert.equal(g.player.hp,0);
+});
+test('a Dodge hit briefly holds new director encounters without cancelling live threats',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=0;g.dodgeDirector.luxRAt=g.dodgeDirector.cassAt=g.dodgeDirector.rareAt=g.dodgeDirector.malAt=Infinity;
+ g.applyImpact(g.player,{sourceTeam:'enemy',kind:'test',raw:1,damageType:'true'});assert.ok(g.dodgeDirector.hitRecoveryUntil>g.time);
+ advance(g,.79);assert.equal(g.foes.length,0);assert.equal(g.shots.length,0);
+ advance(g,.02);assert.ok(g.foes.some(e=>e.dodgeVisitor),'director did not resume after the recovery beat');
 });
 
 

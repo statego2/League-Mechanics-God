@@ -12,6 +12,13 @@ Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid depend
 - Xerath W’s training area is reduced from 220/100 to 200/90 game units and its readable delay is lengthened to 0.958 seconds. Its real W cast/impact relationship remains documented; radius and extra tell are presentation/training approximations, with no debug countdown circle.
 - Verification: `node --check game.js`, `git diff --check`, and 22 focused mechanics tests pass: Expert rhythm/cadence, a three-seed twelve-minute cadence run, Lux source tell and executable sidestep, compact Xerath edge damage, live-scale Blitz geometry/pull, Flash-facing behavior, compact collision and all Cassiopeia face-away outcomes. A manual browser test is still required before claiming subjective visual fairness because the browser automation surface is unavailable in this session.
 
+## Expert Dodge recovery loop (2026-11-02)
+
+- A hostile hit now creates a short 0.8-second director hold before any *new* scheduled encounter. Existing missiles, beams and pulls are deliberately not cancelled, so this is not invulnerability or a free reset; it prevents the scheduler from immediately adding a fresh unavoidable-looking layer while the player re-establishes movement.
+- The clean-dodge reward now starts after seven untouched seconds and restores 24 HP every seven seconds, in addition to Ahri’s sourced base regeneration. This is a transparent training sustain policy for endless Expert, not live-game health regeneration. Another hit resets the clean timer.
+- Three seeded twelve-minute simulations remain active with two maximum independent threats; the intentionally non-dodging harness measured 18–26 completed casts/minute because the new recovery hold is engaged after real hits. The pre-hit, clean-player scheduling cadence remains independently covered by the rhythm tests.
+- Verification: `node --check game.js`, `git diff --check`, focused recovery/sustain checks, a 12-minute three-seed cadence run, and paired-threat diversity all pass (5 selected tests).
+
 ## CS wave body spacing (2026-11-02)
 
 - The two-sided CS simulation now applies a deterministic, same-team minion separation pass after each wave update. Minions that converge on the same chase/target point are pushed apart to roughly their combined gameplay radii while remaining clipped to walkable terrain. Opposing minions are intentionally not separated by this pass so melee contact remains possible. This is a compact training approximation of minion body blocking, not a claim of exact live NavMesh collision.
