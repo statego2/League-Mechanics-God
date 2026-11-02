@@ -256,6 +256,20 @@ test('Mindgame Timing varies visible entry without changing the spell windup',()
  Object.assign(e,{dodgeVisitor:true,spell,phase:'enter',origin:{...origin},entry:{...origin},speed:120,preCastWait:.1});g.setFoes([e]);
  advance(g,.05);assert.equal(e.phase,'enter');assert.equal(g.shots.length,0);advance(g,.075);assert.equal(e.phase,'cast');assert.ok(e.charge<=spell.cast&&e.charge>spell.cast-.03);
 });
+test('a delayed visitor can share a real escape with an already committed cast',()=>{
+ let checked=0;
+ for(let seed=1;seed<=40&&checked<4;seed++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.setRng(seed*104729);
+  const p=g.player,first=g.enemy(p.x-420,p.y),second=g.enemy(p.x,p.y-250),firstSpell=g.REFERENCE_SPELLS.ezrealDodge,secondSpell=g.REFERENCE_SPELLS.luxDodge;
+  Object.assign(first,{dodgeVisitor:true,spell:firstSpell,phase:'cast',charge:.32,pending:{angle:0,spell:firstSpell},entry:{x:first.x,y:first.y},speed:120});
+  Object.assign(second,{dodgeVisitor:true,spell:secondSpell,phase:'enter',origin:{x:second.x,y:second.y},entry:{x:second.x,y:second.y},speed:120,preCastWait:.12});g.setFoes([first,second]);
+  advance(g,.14);if(second.phase!=='cast')continue;
+  const angle=second.pending.angle,aim={x:second.x+Math.cos(angle)*400,y:second.y+Math.sin(angle)*400},witness={};
+  second.phase='enter';const safe=g.canEvadeDodgeCast(second,secondSpell,witness,aim);second.phase='cast';if(!safe)continue;
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.4);assert.equal(g.stats.hits,0,`seed ${seed}`);checked++;
+ }
+ assert.ok(checked>=1,'no delayed overlapping cast with a verified escape');
+});
 test('visitor separation forecasts the sampled approach speed',()=>{
  const {g}=boot('ahri'),start={x:200,y:200},end={x:400,y:200};
  const other={x:210,y:50,origin:{x:210,y:250},phase:'enter',speed:120};

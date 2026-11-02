@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Delayed caster overlap verification (2 November 2026)
+
+- Added an executed Expert scenario with a visitor waiting under Mindgame Timing while another visitor has already committed a projectile. Once the delayed caster commits, an independently sampled walking response is executed against both real projectiles and avoids damage. This covers a small seeded sample and is not proof that every overlap or player path is fair. No gameplay values changed.
+- Both focused timing and overlap tests pass; a multi-minute human playtest remains necessary for subjective rhythm and readability.
+
 ## Local Orianna build smoke test (2 November 2026)
 
 - In a fresh browser on `orianna-ball`, started Expert Dodge, issued a right-click movement order and pressed F; the ability bar showed the 30-second Flash cooldown and the browser reported no console errors. This was a brief input/load smoke test, not a human balance assessment or an observed Orianna encounter.
