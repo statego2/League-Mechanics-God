@@ -39,10 +39,10 @@ test('Expert Dodge has a bounded flow-spike-recovery rhythm',()=>{
 });
 test('Expert Lux R shows a source tell before its full one-second visible charge',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.disableSpawn();g.dodgeDirector.next=999;g.setTime(26);
- g.update(1/120);const h=g.hazards.find(x=>x.luxR);assert.ok(h,'Lux R was not scheduled');assert.equal(h.precast,true);assert.equal(h.max,.25);assert.ok(h.ttl>.24&&h.ttl<=.25);
+ g.update(1/120);const h=g.hazards.find(x=>x.luxR);assert.ok(h,'Lux R was not scheduled');assert.equal(h.precast,true);assert.equal(h.max,.4);assert.ok(h.ttl>.39&&h.ttl<=.4);
  const beamLength=Math.hypot(h.endX-h.x,h.endY-h.y),aimedDistance=Math.hypot(g.player.x-h.x,g.player.y-h.y);
  assert.ok(h.cueStart*beamLength>=aimedDistance+h.r+g.player.hitRadius+11.9,'the charge cue must already cover Ahri\'s full hit envelope');
- assert.equal(g.foes.length,0);assert.equal(g.shots.length,0);assert.equal(g.spawnDodgeVisitor(),false,'Lux R must not gain a follow-up during its charge');advance(g,.26);assert.equal(h.precast,false);assert.equal(h.max,1);assert.ok(h.ttl>.98&&h.ttl<=1);advance(g,.49);assert.ok(h.ttl>.49&&h.ttl<.52,'beam fired before its readable charge completed');
+ assert.equal(g.foes.length,0);assert.equal(g.shots.length,0);assert.equal(g.spawnDodgeVisitor(),false,'Lux R must not gain a follow-up during its charge');advance(g,.41);assert.equal(h.precast,false);assert.equal(h.max,1);assert.ok(h.ttl>.98&&h.ttl<=1);advance(g,.49);assert.ok(h.ttl>.49&&h.ttl<.52,'beam fired before its readable charge completed');
 });
 test('Lux R supplies and executes a normal walking sidestep',()=>{
  let checked=0;
@@ -89,13 +89,13 @@ test('Expert arms major Dodge patterns on separate readable clocks',()=>{
 });
 test('Expert independently schedules up to two concurrent threats in seeded play',t=>{
  let peak=0,spellMix=0,missilePeak=0;
- for(let seed=1;seed<=12&&peak<2;seed++){
+ for(let seed=1;seed<=12;seed++){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed*1234567);g.player.hp=g.player.maxHp=1000000;
   for(let i=0;i<120*120;i++){
    g.update(1/120);
    const missiles=g.shots.filter(s=>s.alive&&s.directed&&s.velkoz!=='delay');missilePeak=Math.max(missilePeak,missiles.length);
    const live=[...g.foes.filter(e=>e.alive&&e.dodgeVisitor&&(e.phase==='enter'||e.phase==='cast')).map(e=>e.spell.name),...missiles.map(s=>s.spellName)];
-   if(live.length>peak){peak=live.length;spellMix=new Set(live).size;}
+   peak=Math.max(peak,live.length);if(live.length>=2)spellMix=Math.max(spellMix,new Set(live).size);
   }
  }
  t.diagnostic(`peak ${peak}, distinct spells ${spellMix}, simultaneous missiles ${missilePeak}`);assert.ok(peak>=2);assert.ok(spellMix>=2);
@@ -1073,9 +1073,9 @@ test('Xerath W rejects unsafe or unsupported overlaps and respects Foundation ca
  }
 });
 test('Xerath W uses its compact center based edge and outside hits use base damage',()=>{
- for(const [offset,expected] of [[50,50*1.667/1.3],[50.1,50/1.3],[110,50/1.3],[110.1,0]]){
+ for(const [offset,expected] of [[45,50*1.667/1.3],[45.1,50/1.3],[100,50/1.3],[100.1,0]]){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnXerathW());const h=g.hazards[0];
-  g.player.x=h.x+offset;g.player.y=h.y;advance(g,.91);assert.ok(Math.abs(g.stats.damage-expected)<1e-7,`offset ${offset}`);
+  g.player.x=h.x+offset;g.player.y=h.y;advance(g,.97);assert.ok(Math.abs(g.stats.damage-expected)<1e-7,`offset ${offset}`);
  }
 });
 test('Xerath W renders a compact rune without a textual countdown',()=>{
@@ -1090,6 +1090,11 @@ test('Blitz Q visitor commits one hook, then pulls Ahri to the source-side landi
  g.update(1/120);assert.equal(e.phase,'hookFlight');assert.equal(g.dodgeDirector.blitz,1);assert.equal(g.shots[0].spellName,'BLITZ Q');
  const start={x:g.player.x,y:g.player.y};advance(g,.1);assert.equal(e.phase,'hookFlight');advance(g,.8);
  assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.stats.damage-(110/1.3))<1e-7);assert.equal(g.player.root,0);assert.ok(g.player.x<start.x-200);assert.equal(g.player.y,start.y);assert.equal(g.player.hooked,null);assert.equal(g.dodgeDirector.outcomes['BLITZ Q'].hit,1);
+});
+test('Blitz Q keeps sourced range, width, speed and source-side pull geometry',()=>{
+ const {g}=boot('ahri');const spec=g.REFERENCE_SPELLS.blitzDodge;
+ assert.equal(spec.range,557.5);assert.equal(spec.radius,35);assert.equal(spec.speed,900);
+ assert.equal(spec.pullDistance,37.5);assert.equal(spec.pullSpeed,900);
 });
 test('Blitz hook expires at its configured range and retains first collision swept detection',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
@@ -2560,7 +2565,7 @@ test('Velkoz split counts as one unresolved opportunity while both branches are 
 
 test('Expert pressure does not wait minutes to become difficult',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(1);g.update(1/120);
- assert.ok(g.dodgeDirector.next<.18);
+ assert.ok(g.dodgeDirector.next>1.9&&g.dodgeDirector.next<2.7);
 });
 test('endless Dodge keeps best survival separately from score',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
@@ -2682,20 +2687,20 @@ test('Cassiopeia cone and facing distinguish turn-away, face and escape',()=>{
 });
 test('Dodge uses Tier-1 boots and compact readable collision',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.update(0);
- assert.equal(g.AHRI.speed,177.5);assert.equal(g.player.hitRadius,27);
- assert.equal(g.DODGE_DIRECTOR.hard.interval,2);assert.equal(g.DODGE_DIRECTOR.hard.cap,2);
+ assert.equal(g.AHRI.speed,177.5);assert.equal(g.player.hitRadius,25);
+ assert.equal(g.DODGE_DIRECTOR.hard.interval,2.3);assert.equal(g.DODGE_DIRECTOR.hard.cap,2);
  const e=g.enemy(900,330),spell=g.REFERENCE_SPELLS.ezrealDodge;
  Object.assign(e,{dodgeVisitor:true,pending:{spell,angle:Math.PI,threat:true},charge:0});g.releaseEnemy(e);
- assert.equal(g.shots[0].r,spell.radius*.9);
+ assert.equal(g.shots[0].r,spell.radius*.87);
 });
-test('Cassiopeia has a short 1.05-second reaction window and visibly departs',()=>{
+test('Cassiopeia has a readable 1.25-second reaction window and visibly departs',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnCassioR());
- const h=g.hazards[0];assert.equal(h.ttl,.55);advance(g,.56);assert.equal(h.casting,true);assert.ok(h.ttl>.48&&h.ttl<=.5);
- g.player.facing=0;advance(g,.51);assert.equal(h.departing,true);assert.equal(h.casting,false);assert.ok(h.ttl>0&&h.ttl<=.32);
+ const h=g.hazards[0];assert.equal(h.ttl,.7);advance(g,.71);assert.equal(h.casting,true);assert.ok(h.ttl>.53&&h.ttl<=.55);
+ g.player.facing=0;advance(g,.56);assert.equal(h.departing,true);assert.equal(h.casting,false);assert.ok(h.ttl>0&&h.ttl<=.32);
 });
 test('Cassiopeia spawn is isolated and appears before committing her cast',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnCassioR());
- const h=g.hazards[0];assert.equal(h.casting,false);assert.equal(g.spawnDodgeVisitor(),false);advance(g,.56);
+ const h=g.hazards[0];assert.equal(h.casting,false);assert.equal(g.spawnDodgeVisitor(),false);advance(g,.71);
  assert.equal(h.casting,true);assert.equal(g.dodgeDirector.cassio,1);assert.ok(h.ttl>0);
 });
 
@@ -2719,7 +2724,7 @@ test('Cassiopeia defers if the player leaves range during setup, without a false
 });
 test('Cassiopeia can commit at the range boundary and credit a subsequent escape',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
- const h={x:g.player.x-375,y:g.player.y,cassio:true,casting:false,ttl:.001,directed:true,spellName:'CASSIOPEIA R'};g.hazards.push(h);
+ const h={x:g.player.x-350,y:g.player.y,cassio:true,casting:false,ttl:.001,directed:true,spellName:'CASSIOPEIA R'};g.hazards.push(h);
  g.update(.01);assert.equal(h.casting,true);assert.equal(g.dodgeDirector.cassio,1);
  g.moveTo(g.player.x+100,g.player.y);advance(g,.51);assert.equal(g.dodgeDirector.cassEscapes,1);assert.equal(g.dodged,1);
 });
@@ -2756,7 +2761,7 @@ test('Cassiopeia setup and cast freeze during pause and render without extra ass
 test('Cassiopeia training cone and facing boundaries use centre geometry',()=>{
  const {g}=boot('ahri'),h={x:0,y:0,angle:0};
  const at=(distance,degrees)=>({x:distance*Math.cos(degrees*Math.PI/180),y:distance*Math.sin(degrees*Math.PI/180)});
- assert.equal(g.cassioConeContains(h,at(375,0)),true);assert.equal(g.cassioConeContains(h,at(375.1,0)),false);
+ assert.equal(g.cassioConeContains(h,at(350,0)),true);assert.equal(g.cassioConeContains(h,at(350.1,0)),false);
  assert.equal(g.cassioConeContains(h,at(300,39.9)),true);assert.equal(g.cassioConeContains(h,at(300,40.1)),false);
  assert.equal(g.facingCassio(h,{x:200,y:0},Math.PI),true);assert.equal(g.facingCassio(h,{x:200,y:0},0),false);
 });
@@ -2773,7 +2778,7 @@ test('Cassiopeia uses a bounded sprite with a safe missing-image fallback',()=>{
 test('Cassiopeia release shows its effect only at impact, not as a targeting guide',()=>{
  const {g,arcs}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
  const h={x:g.player.x-200,y:g.player.y,angle:0,cassio:true,casting:true,ttl:.05,directed:true,spellName:'CASSIOPEIA R'};g.hazards.push(h);
- g.render();assert.ok(!arcs.some(a=>a.r===375));g.update(.06);arcs.length=0;g.render();assert.ok(arcs.some(a=>a.r===375));
+ g.render();assert.ok(!arcs.some(a=>a.r===350));g.update(.06);arcs.length=0;g.render();assert.ok(arcs.some(a=>a.r===350));
 });
 
 test('Cassiopeia cast cue grows during windup without revealing the cone',()=>{

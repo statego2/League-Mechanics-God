@@ -22,7 +22,7 @@ const AHRI_DATA=validAhriData(window.LMGAhriData)?window.LMGAhriData:AHRI_FALLBA
 // The default trainer baseline includes Tier-1 boots: 330 base + 25 flat
 // movement speed. Dodge collision is deliberately narrower than Ahri's broad
 // gameplay radius so the visible body, not transparent empty space, defines it.
-const DODGE_TUNING={tierOneBoots:25,championRadius:SIMULATION.toCanvas(54),spellRadiusScale:.9,areaRadiusScale:.9,expertInterval:2};
+const DODGE_TUNING={tierOneBoots:25,championRadius:SIMULATION.toCanvas(50),spellRadiusScale:.87,areaRadiusScale:.86,expertInterval:2.3};
 const AHRI={hp:AHRI_DATA.base.hp,speed:SIMULATION.toCanvas(AHRI_DATA.base.moveSpeed+DODGE_TUNING.tierOneBoots),range:SIMULATION.toCanvas(AHRI_DATA.base.attackRange),attackSpeed:AHRI_DATA.base.attackSpeed,damage:AHRI_DATA.base.attackDamage,missileSpeed:SIMULATION.toCanvas(AHRI_DATA.attack.missileSpeed),radius:SIMULATION.toCanvas(AHRI_DATA.gameplayRadius),q:{cast:AHRI_DATA.q.cast,range:SIMULATION.toCanvas(AHRI_DATA.q.range),speed:SIMULATION.toCanvas(AHRI_DATA.q.speed),radius:SIMULATION.toCanvas(AHRI_DATA.q.width/2)}};
 function dodgeSpellRadius(spell){return mode==="dodge"&&ahriBase()?spell.radius*DODGE_TUNING.spellRadiusScale:spell.radius;}
 function dodgeAreaRadius(radius){return mode==="dodge"&&ahriBase()?radius*DODGE_TUNING.areaRadiusScale:radius;}
@@ -38,14 +38,14 @@ const ATTACK={range:AHRI.range,windup:.18,period:.72};
 const ATTACK_PRESETS={ahri:{period:1/AHRI.attackSpeed,windup:AHRI_DATA.attack.windupFraction/AHRI.attackSpeed,label:"0.668"},slow:{period:1.25,windup:.3125,label:"0.80"},standard:{period:.72,windup:.18,label:"1.39"},fast:{period:.5,windup:.125,label:"2.00"}};
 let attackPreset="ahri";
 // Reference snapshot; positions and collision use an approximate 0.5 canvas-unit scale.
-const REFERENCE_SPELLS={luxDodge:{name:"LUX Q",speed:600,range:650,radius:35,cast:.25,raw:80,resist:30,root:2},ezrealDodge:{name:"EZREAL Q",speed:1000,range:600,radius:30,cast:.25,raw:98,resist:21,root:0},velkozDodge:{name:"VELKOZ Q",speed:650,range:550,radius:30,cast:.25,raw:80,resist:30,root:0,split:true},blitzDodge:{name:"BLITZ Q",speed:900,range:510,radius:35,cast:.25,raw:110,resist:30,root:0,hook:true,pullDistance:SIMULATION.toCanvas(75),pullSpeed:SIMULATION.toCanvas(1800)},ahriDodge:{name:"AHRI Q",speed:AHRI.q.speed,range:AHRI.q.range,radius:AHRI.q.radius,cast:AHRI.q.cast,raw:35,resist:30,root:0,returning:true}};
+const REFERENCE_SPELLS={luxDodge:{name:"LUX Q",speed:600,range:650,radius:35,cast:.25,raw:80,resist:30,root:2},ezrealDodge:{name:"EZREAL Q",speed:1000,range:600,radius:30,cast:.25,raw:98,resist:21,root:0},velkozDodge:{name:"VELKOZ Q",speed:650,range:550,radius:30,cast:.25,raw:80,resist:30,root:0,split:true},blitzDodge:{name:"BLITZ Q",speed:900,range:SIMULATION.toCanvas(1115),radius:SIMULATION.toCanvas(70),cast:.25,raw:110,resist:30,root:0,hook:true,pullDistance:SIMULATION.toCanvas(75),pullSpeed:SIMULATION.toCanvas(1800)},ahriDodge:{name:"AHRI Q",speed:AHRI.q.speed,range:AHRI.q.range,radius:AHRI.q.radius,cast:AHRI.q.cast,raw:35,resist:30,root:0,returning:true}};
 const referenceSpell=()=>REFERENCE_SPELLS[mode];
 const ahriCS=()=>mode==="lastHit"&&attackPreset==="ahri";
 const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v84":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v85":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -457,8 +457,8 @@ function dodgeReactionDelay(){return player.dashing||player.hooked?Infinity:Math
 // Placement and visible warning timing are training policies; slow is omitted.
 // The real spell has a 0.25 s cast followed by a 0.528 s impact delay. The
 // trainer retains its sourced damage relationship but uses a smaller visual
-// footprint and a 0.12 s readability allowance for pure-Dodge practice.
-const XERATH_W={radius:SIMULATION.toCanvas(220),center:SIMULATION.toCanvas(100),delay:.25+.528+.12,raw:50};
+// footprint and a 0.18 s readability allowance for pure-Dodge practice.
+const XERATH_W={radius:SIMULATION.toCanvas(200),center:SIMULATION.toCanvas(90),delay:.25+.528+.18,raw:50};
 function spawnXerathW(witness=null){
  // Expert can combine W with multiple committed straight shots when one
  // walking response clears every missile and the area at impact.
@@ -506,7 +506,7 @@ const XERATH_Q={radius:SIMULATION.toCanvas(145/2),range:SIMULATION.toCanvas(1450
 // Final Spark is a separate encounter from Lux Q. The current League Wiki
 // data lists a one-second cast time. Preserve that readable lockout rather
 // than accelerating the beam for Expert.
-const LUX_R={radius:SIMULATION.toCanvas(190/2),range:SIMULATION.toCanvas(3340),precast:.25,cast:1,raw:300};
+const LUX_R={radius:SIMULATION.toCanvas(190/2),range:SIMULATION.toCanvas(3340),precast:.4,cast:1,raw:300};
 function spawnLuxR(witness=null){
  if(foes.some(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit")||shots.some(s=>s.alive&&s.directed)||hazards.some(h=>h.directed))return false;
  const reaction=dodgeReactionDelay();if(!Number.isFinite(reaction))return false;
@@ -517,17 +517,15 @@ function spawnLuxR(witness=null){
   if(x<60||x>W-60||y<145||y>H-30||!world.pointWalkable({x,y},20))continue;
   const beam={x,y,endX,endY,r:dodgeAreaRadius(LUX_R.radius)};
   if(!sampleAreaEscape(reaction,LUX_R.cast,p=>beamTouchesPlayer(beam,p,player.hitRadius+8),witness))continue;
-  // The old progressive cue began short of Ahri's body when Lux appeared
-  // behind her. That silently removed roughly a quarter of Final Spark's
-  // visible one-second reaction window. Start the charge cue past the full
-  // hit envelope around the aim-locked player, then grow it toward the beam
-  // end. This changes no collision, range or cast timing.
+  // The trainer gives the player a clear source tell before Lux's sourced
+  // one-second cast begins. The charge then starts beyond Ahri's full impact
+  // envelope, so its visible lane is already useful on the first frame rather
+  // than only becoming readable just before the hit.
   const beamLength=Math.hypot(endX-x,endY-y)||1;
   const aimedDistance=Math.hypot(player.x-x,player.y-y);
-  beam.cueStart=clamp((aimedDistance+beam.r+player.hitRadius+12)/beamLength,.22,.94);
-  // The short source-only tell is a trainer readability allowance. It is
-  // deliberately separate from Final Spark's sourced one-second cast, so the
-  // player first notices Lux before the lane itself charges and fires.
+  beam.cueStart=clamp((aimedDistance+beam.r+player.hitRadius+22)/beamLength,.28,.96);
+  // This 0.4-second source tell is a documented trainer readability allowance
+  // separate from Final Spark's sourced one-second cast time.
   hazards.push({...beam,ttl:LUX_R.precast,max:LUX_R.precast,precast:true,threat:true,directed:true,spellName:"LUX R",beam:true,luxR:true});
   dodgeDirector.attempted++;dodgeDirector.luxR=(dodgeDirector.luxR||0)+1;recordRegular("LUX R");return true;
  }
@@ -601,10 +599,11 @@ function spawnOriannaR(){
 // Community reference: rank-one 125 magic, 850-unit range, 80° cone,
 // 0.5 s cast. Centre-based cone, facing rule and setup are approximations.
 // Dodge intentionally omits both stun and slow; results distinguish facing.
-// The warning + cast totals 1.05 s: enough for a deliberate turn-away, but
-// no long idle window after Cassiopeia has entered R range. The cone is 12%
-// tighter than the previous training approximation to match its readable art.
-const CASSIO_R={range:SIMULATION.toCanvas(750),halfAngle:40*Math.PI/180,cast:.5,setup:.55,raw:125};
+// The warning + cast totals 1.25 s. Live Petrifying Gaze is a facing check,
+// not a surprise damage tax: this trainer policy gives a moving player enough
+// time to turn away while keeping the prompted reaction crisp. The narrower
+// 700-unit cone/range is explicitly a practice approximation.
+const CASSIO_R={range:SIMULATION.toCanvas(700),halfAngle:40*Math.PI/180,cast:.55,setup:.7,raw:125};
 function cassioConeContains(h,p){
  const dx=p.x-h.x,dy=p.y-h.y,d=Math.hypot(dx,dy);if(d>CASSIO_R.range)return false;
  return d<1e-8||Math.cos(Math.atan2(dy,dx)-h.angle)>=Math.cos(CASSIO_R.halfAngle);
