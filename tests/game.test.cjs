@@ -2523,10 +2523,11 @@ test('enemy Ahri return does not hit movement completed before the turn',()=>{
 });
 
 
-test('Expert encounter interval is fast and consistent from the start',()=>{
+test('Expert encounter interval follows the readable rhythm from the start',()=>{
  for(const time of [0,50,78,86,500]){
-  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setTime(time);g.setRng(1);g.dodgeDirector.next=0;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=Infinity;
-  g.update(1/120);assert.ok(g.dodgeDirector.next>=.16*.88&&g.dodgeDirector.next<=.16*1.12);
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setTime(time);g.setRng(1);g.dodgeDirector.next=0;g.dodgeDirector.luxRAt=g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=Infinity;
+  g.update(1/120);const beat=g.DODGE_DIRECTOR.hard.interval*g.dodgeRhythmMultiplier(time);
+  assert.ok(g.dodgeDirector.next>=beat*.88&&g.dodgeDirector.next<=beat*1.12,`time ${time}: ${g.dodgeDirector.next}`);
  }
 });
 test('Velkoz split awards one dodge only after both threatened branches miss',()=>{
@@ -2674,7 +2675,7 @@ test('Cassiopeia cone and facing distinguish turn-away, face and escape',()=>{
 test('Dodge uses Tier-1 boots and compact readable collision',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.update(0);
  assert.equal(g.AHRI.speed,177.5);assert.equal(g.player.hitRadius,27);
- assert.equal(g.DODGE_DIRECTOR.hard.interval,.32);assert.equal(g.DODGE_DIRECTOR.hard.cap,3);
+ assert.equal(g.DODGE_DIRECTOR.hard.interval,2);assert.equal(g.DODGE_DIRECTOR.hard.cap,2);
  const e=g.enemy(900,330),spell=g.REFERENCE_SPELLS.ezrealDodge;
  Object.assign(e,{dodgeVisitor:true,pending:{spell,angle:Math.PI,threat:true},charge:0});g.releaseEnemy(e);
  assert.equal(g.shots[0].r,spell.radius*.9);
