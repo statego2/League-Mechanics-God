@@ -1697,6 +1697,12 @@ test('Flash works with the physical F key on a Greek keyboard layout',()=>{
  window.listeners.keydown({key:'φ',code:'KeyF',repeat:false,preventDefault(){prevented=true;}});
  assert.ok(prevented);assert.equal(g.player.x,x+200);assert.equal(g.player.cd.f,30);
 });
+test('menu keys and browser shortcuts are not intercepted by gameplay controls',()=>{
+ const {g,node,window}=boot('ahri');let prevented=false;
+ node('menuBtn').listeners.click();window.listeners.keydown({key:'e',code:'KeyE',repeat:false,preventDefault(){prevented=true;}});assert.equal(prevented,false);
+ g.reset('dodge');const x=g.player.x;window.listeners.keydown({key:'f',code:'KeyF',metaKey:true,repeat:false,preventDefault(){prevented=true;}});
+ assert.equal(prevented,false);assert.equal(g.player.x,x);assert.equal(g.player.cd.f,0);
+});
 test('Flash aimed at Ahri herself does not waste its cooldown',()=>{
  const {g,node,window}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
  node('arena').listeners.pointermove({clientX:g.player.x,clientY:g.player.y,buttons:0});

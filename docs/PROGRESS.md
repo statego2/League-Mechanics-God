@@ -6,6 +6,7 @@ Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid depend
 
 - The key handler previously relied on the typed character (`event.key`), so F could produce `φ` on a Greek keyboard and never trigger Flash. Game letter controls now use physical `event.code` when available, with the old key fallback. Added a regression that sends `key: φ`, `code: KeyF` through the actual keydown handler and verifies Flash moves toward the cursor.
 - Flash aimed directly at the champion now gives a cursor instruction without spending cooldown. A landing that resolves to the current position also refunds cooldown and reports the failed landing; these checks avoid a silent consumed Flash.
+- Gameplay keyboard shortcuts no longer intercept keys on the drill menu or browser shortcuts using Ctrl, Command or Alt. Greek physical-key support remains active in gameplay.
 
 ## Dodge Flash practice availability (2026-11-02)
 

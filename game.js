@@ -1741,7 +1741,7 @@ else if(e.button===0){if(attackMove){cancelAttack();player.order={type:"attackMo
 // Physical letter keys keep the advertised game controls usable on Greek and
 // other keyboard layouts, where e.key may be φ instead of f. Fall back to key
 // for Escape and environments that do not report a physical code.
-window.addEventListener("keydown",e=>{const k=/^Key[A-Z]$/.test(e.code||"")?e.code.slice(3).toLowerCase():e.key.toLowerCase();if(e.repeat)return;if(["q","w","e","r","f","a","s","p","t","escape"].includes(k))e.preventDefault();if(k==="t"&&player&&state!=="menu"){reset(mode);return;}if(k==="p"||k==="escape"){if(state==="playing"||state==="paused")pause();return;}if(state!=="playing"||e.repeat)return;if(k==="s"){stopPlayer();return;}if(k==="a"&&mode==="skillshot"){notify("SKILLSHOT LAB — AIM WITH Q");return;}if(k==="a"){attackMove=true;notify("ATTACK MOVE — LEFT CLICK");return;}if(CD[k])cast(k);});
+window.addEventListener("keydown",e=>{if(e.repeat||e.ctrlKey||e.metaKey||e.altKey||state==="menu")return;const k=/^Key[A-Z]$/.test(e.code||"")?e.code.slice(3).toLowerCase():e.key.toLowerCase();if(["q","w","e","r","f","a","s","p","t","escape"].includes(k))e.preventDefault();if(k==="t"&&player){reset(mode);return;}if(k==="p"||k==="escape"){if(state==="playing"||state==="paused")pause();return;}if(state!=="playing")return;if(k==="s"){stopPlayer();return;}if(k==="a"&&mode==="skillshot"){notify("SKILLSHOT LAB — AIM WITH Q");return;}if(k==="a"){attackMove=true;notify("ATTACK MOVE — LEFT CLICK");return;}if(CD[k])cast(k);});
 window.addEventListener("blur",()=>{if(state==="playing")pause();});
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&state==="playing")pause();});
 $("soundBtn").addEventListener("click",toggleSound);
