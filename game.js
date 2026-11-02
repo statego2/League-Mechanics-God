@@ -586,13 +586,27 @@ function oriannaEscape(ball,witness=null){
  const reaction=dodgeReactionDelay();if(!Number.isFinite(reaction))return false;
  return sampleAreaEscape(reaction,ORIANNA_R.cast,p=>dist(p,ball)<=ball.r+player.hitRadius+8,witness);
 }
+// A centred Shockwave needs Flash plus a short continuation: Flash's 400-unit
+// range alone is smaller than Shockwave radius plus the champion hitbox.
+function oriannaFlashEscape(ball,witness=null){
+ const reaction=dodgeReactionDelay();if(player.cd.f>0||!Number.isFinite(reaction)||reaction>=ORIANNA_R.cast)return false;
+ const start=dodgeReactionPath(reaction).end;
+ for(let i=0;i<32;i++){
+  const a=i*TAU/32,landing={x:clamp(start.x+Math.cos(a)*200,25,W-25),y:clamp(start.y+Math.sin(a)*200,65,H-38)};
+  if(!world.pointWalkable(landing,player.r))continue;
+  const travel=forecastTravel(reaction,ORIANNA_R.cast),end=world.clip(landing,{x:landing.x+Math.cos(a)*travel,y:landing.y+Math.sin(a)*travel},player.r);
+  if(world.pointWalkable(end,player.r)&&world.segmentClear(landing,end,player.r)&&dist(end,ball)>ball.r+player.hitRadius+8){if(witness){witness.flash=landing;witness.destination=end;}return true;}
+ }
+ return false;
+}
 function spawnOriannaR(){
  if(foes.some(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit"&&e.phase!=="orbFlight"&&e.phase!=="hookFlight")||shots.some(s=>s.alive&&s.directed)||hazards.some(h=>h.directed))return false;
- const angle=rand(0,TAU),offset=210;
+ if(difficulty==="hard"&&player.cd.f>0)return false;
+ const angle=rand(0,TAU),offset=difficulty==="hard"?0:210;
  for(let i=0;i<24;i++){
   const a=angle+i*TAU/24,ball={x:player.x+Math.cos(a)*offset,y:player.y+Math.sin(a)*offset,r:ORIANNA_R.radius};
   const source={x:ball.x+Math.cos(a)*250,y:ball.y+Math.sin(a)*250};
-  if(ball.x<55||ball.x>W-55||ball.y<95||ball.y>H-40||!world.pointWalkable(ball,8)||!oriannaEscape(ball))continue;
+  if(ball.x<55||ball.x>W-55||ball.y<95||ball.y>H-40||!world.pointWalkable(ball,8)||(difficulty==="hard"?!oriannaFlashEscape(ball):!oriannaEscape(ball)))continue;
   if(source.x<60||source.x>W-60||source.y<145||source.y>H-30||!world.pointWalkable(source,20))continue;
   const q={directed:true,spellName:"ORIANNA Q",phaseResolved:false,threat:false};
   hazards.push({x:source.x,y:source.y,r:ball.r,source,destination:{x:ball.x,y:ball.y},travelDuration:250/SIMULATION.toCanvas(1400),ttl:1.5,max:1.5,orianna:true,casting:false,directed:true,spellName:"ORIANNA R",threat:false,q});dodgeDirector.attempted++;dodgeDirector.oriannaQ++;return true;
@@ -635,6 +649,7 @@ function spawnCassioR(){
 // Rank-one damage, range and area are sourced; arena scale and movement are approximate.
 const MALPHITE_R={radius:SIMULATION.toCanvas(325),range:SIMULATION.toCanvas(1000),speed:SIMULATION.toCanvas(1500+335),raw:200};
 function spawnMalphiteR(){
+ if(difficulty==="hard"&&player.cd.f>0)return false;
  if(foes.some(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit"&&e.phase!=="orbFlight"&&e.phase!=="hookFlight")||shots.some(s=>s.alive&&s.directed)||hazards.some(h=>h.directed))return false;
  const angle=rand(0,TAU);
  for(let i=0;i<24;i++){
@@ -652,7 +667,7 @@ function aimMalphiteR(source){
  // walkable landing exists after the reaction allowance. No other directed
  // threats are active for this encounter. The witness replaces any retained
  // movement order after flashing; this is a sampled training policy.
- if(difficulty==="hard"&&player.cd.f<=0&&random()<.3&&d<=MALPHITE_R.range){
+ if(difficulty==="hard"&&player.cd.f<=0&&d<=MALPHITE_R.range){
   const target={x:player.x,y:player.y},duration=d/MALPHITE_R.speed,start=dodgeReactionPath(reaction).end;
   if(reaction<duration&&world.pointWalkable(target,25))for(let i=0;i<32;i++){
    const a=i*TAU/32,landing={x:clamp(start.x+Math.cos(a)*SIMULATION.toCanvas(400),25,W-25),y:clamp(start.y+Math.sin(a)*SIMULATION.toCanvas(400),65,H-38)};
@@ -664,6 +679,7 @@ function aimMalphiteR(source){
    if(world.pointWalkable(walk,player.r)&&world.segmentClear(landing,walk,player.r)&&dist(walk,target)>MALPHITE_R.radius+player.hitRadius+25)return {target,duration,flashWitness:landing,walkWitness:walk};
   }
  }
+ if(difficulty==="hard")return null;
  for(const side of [-1,1]){
   const target={x:player.x-side*dy/d*170,y:player.y+side*dx/d*170},distance=dist(source,target);
   if(distance>MALPHITE_R.range||!world.pointWalkable(target,25))continue;
@@ -985,10 +1001,16 @@ function updateDodgeDirector(dt){
  // reading space instead of all arriving during the opening scramble.
  if(difficulty==="hard"&&!dodgeDirector.rhythmConfigured){
   dodgeDirector.rhythmConfigured=true;
-  dodgeDirector.cassAt=35;dodgeDirector.rareAt=75;dodgeDirector.malAt=90;
+  dodgeDirector.cassAt=35;dodgeDirector.rareAt=75;dodgeDirector.malAt=15;
  }
  if(difficulty==="hard"&&dodgeDirector.luxRAt===undefined)dodgeDirector.luxRAt=26;
  if(time<dodgeDirector.hitRecoveryUntil)return;
+ // Flash-only reaction checks wait until the player has Flash again without
+ // suppressing ordinary skillshots during the cooldown.
+ if(difficulty==="hard"&&player.cd.f>0){
+  if(time>=dodgeDirector.malAt)dodgeDirector.malAt=time+player.cd.f+.25;
+  if(time>=dodgeDirector.rareAt)dodgeDirector.rareAt=time+player.cd.f+.25;
+ }
  if(dodgeDirector.areaFollow){
   dodgeDirector.areaFollow=false;
   if(shots.filter(s=>s.alive&&s.directed&&s.kind==="enemy"&&!s.velkoz).length>=2)spawnXerathW();
@@ -1345,7 +1367,8 @@ for(const h of hazards){
    }
   }
   if(h.ttl<=0&&!h.casting){
-   if(!oriannaEscape(h)){h.ttl=0;deferRareEvent(h);continue;}
+   if(difficulty==="hard"){h.x=player.x;h.y=player.y;if(!oriannaFlashEscape(h)){h.ttl=0;deferRareEvent(h);continue;}}
+   else if(!oriannaEscape(h)){h.ttl=0;deferRareEvent(h);continue;}
    h.casting=true;h.ttl=ORIANNA_R.cast;h.threat=dist(player,h)<=h.r+player.hitRadius;
    dodgeDirector.attempted++;dodgeDirector.orianna++;
   }else if(h.ttl<=0){
@@ -1632,7 +1655,7 @@ for(const wall of sweeps){
  ctx.beginPath();ctx.moveTo(0,top);ctx.lineTo(W,top);ctx.moveTo(0,bottom);ctx.lineTo(W,bottom);ctx.stroke();ctx.restore();
  ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="left";ctx.fillStyle="#ffe1b5";ctx.fillText("SAFE GAP",46,wall.gap+4);
 }
-for(const h of hazards){if(h.cassio){drawChampion(h.x,h.y,h.casting?h.angle:Math.atan2(player.y-h.y,player.x-h.x),false,false,h.casting?clamp(1-h.ttl/CASSIO_R.cast,0,1):0,time*7,"cassio");continue;}if(h.malphite){ctx.save();ctx.translate(h.x,h.y);const art=$("stoneArt");if(art?.complete&&art.naturalWidth){ctx.drawImage(art,-42,-90,84,90);ctx.restore();continue;}ctx.fillStyle="#665f59";ctx.strokeStyle="#c1aa93";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-25,-16);ctx.lineTo(-22,-52);ctx.lineTo(0,-72);ctx.lineTo(23,-52);ctx.lineTo(27,-15);ctx.lineTo(10,0);ctx.lineTo(-12,0);ctx.closePath();ctx.fill();ctx.stroke();circle(-7,-45,3,"#aad4ee");circle(7,-45,3,"#aad4ee");ctx.restore();continue;}if(h.orianna){drawChampion(h.source.x,h.source.y,Math.atan2(h.y-h.source.y,h.x-h.source.x),false,false,h.casting?1:0,time*7,"clockwork");circle(h.x,h.y,12,h.casting?"#f4d5ff":"#a989d8");circle(h.x,h.y,5,"#f4e6ff");continue;}if(h.beam){
+for(const h of hazards){if(h.cassio){drawChampion(h.x,h.y,h.casting?h.angle:Math.atan2(player.y-h.y,player.x-h.x),false,false,h.casting?clamp(1-h.ttl/CASSIO_R.cast,0,1):0,time*7,"cassio");continue;}if(h.malphite){ctx.save();ctx.translate(h.x,h.y);const art=$("stoneArt");if(art?.complete&&art.naturalWidth){ctx.drawImage(art,-42,-90,84,90);ctx.restore();continue;}ctx.fillStyle="#665f59";ctx.strokeStyle="#c1aa93";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-25,-16);ctx.lineTo(-22,-52);ctx.lineTo(0,-72);ctx.lineTo(23,-52);ctx.lineTo(27,-15);ctx.lineTo(10,0);ctx.lineTo(-12,0);ctx.closePath();ctx.fill();ctx.stroke();circle(-7,-45,3,"#aad4ee");circle(7,-45,3,"#aad4ee");ctx.restore();continue;}if(h.orianna){drawChampion(h.source.x,h.source.y,Math.atan2(h.y-h.source.y,h.x-h.source.x),false,false,h.casting?1:0,time*7,"clockwork");if(h.casting){const glow=ctx.createRadialGradient(h.x,h.y,0,h.x,h.y,45);glow.addColorStop(0,"#fff0ffdd");glow.addColorStop(1,"#cb85ff00");circle(h.x,h.y,45,glow);circle(h.x,h.y,18+8*(1-h.ttl/ORIANNA_R.cast),"#efc4ffbb",false,3);}circle(h.x,h.y,12,h.casting?"#f4d5ff":"#a989d8");circle(h.x,h.y,5,"#f4e6ff");continue;}if(h.beam){
  // Xerath's source cue stays short; Final Spark intentionally reveals its
  // charging lane so the player receives the full one-second reaction window.
  const dx=h.endX-h.x,dy=h.endY-h.y,len=Math.hypot(dx,dy)||1;

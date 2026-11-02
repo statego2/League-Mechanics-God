@@ -2,6 +2,12 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Expert Orianna and Malphite Flash reactions (2026-11-02)
+
+- Expert Orianna commits Shockwave centred on the current player position, with a visible 0.5-second ball charge. Her setup targets the player's position; re-centering at R commitment is a deliberate reaction-training approximation, not faithful Orianna ball control. A sampled terrain-aware Flash-plus-move witness must exist and Flash must be ready; Q travel can still hit independently.
+- Expert Malphite first becomes eligible at 15 seconds (previously 90), and always aims his R directly at the player. Direct casts require a sampled Flash-plus-move escape and available Flash. Both Flash-only encounters defer when Flash is on cooldown without halting ordinary casts. Standard retains prior walkable patterns.
+- Five focused tests pass for Orianna's centred cast and actual Flash escape, Malphite direct target/early clock/cooldown gating and actual Flash escape, plus physical F key. Visual and human reaction-time playtesting remain necessary. Sources: https://wiki.leagueoflegends.com/en-us/Orianna and https://wiki.leagueoflegends.com/en-us/Malphite (community data); trainer centering/placement are explicit approximations.
+
 ## Dodge collision regression geometry (2026-11-02)
 
 - Updated three subframe regression scenarios to use the current compact Dodge hit radius and Tier-1 movement speed. They continue checking actual collision and lock behavior, rather than asserting the old 65-unit hitbox and 330-unit speed. Five selected tests pass, including movement locks, missile expiry and Vel'Koz split activation. The full suite still has other unresolved failures.
