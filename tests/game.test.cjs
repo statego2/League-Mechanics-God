@@ -211,9 +211,9 @@ test('director escape witnesses survive actual straight shots from varied angles
 });
 test('multi-shot forecast can use and execute a longer walking response',()=>{
  let found=false;
- for(let y=-140;y<=140&&!found;y+=10)for(let x=280;x<=920&&!found;x+=20)for(const side of [-1,1]){
+ for(const speed of [250,500,900])for(let y=-200;y<=200&&!found;y+=20)for(let x=300;x<=900&&!found;x+=30)for(const side of [-1,1]){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
-  const p=g.player,s=g.fire(x,p.y+y,0,side*500,'enemy',10,30,2);Object.assign(s,{directed:true,spellName:'EZREAL Q'});
+  const p=g.player,s=g.fire(x,p.y+y,0,side*speed,'enemy',10,30,2);Object.assign(s,{directed:true,spellName:'EZREAL Q'});
   const origin={x:p.x-440,y:p.y},spell=g.REFERENCE_SPELLS.luxDodge,witness={};
   if(!g.canEvadeDodgeCast(origin,spell,witness)||Math.hypot(witness.destination.x-p.x,witness.destination.y-p.y)<70)continue;
   const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'cast',charge:spell.cast,pending:{angle:0,spell},entry:{...origin}});g.setFoes([e]);
