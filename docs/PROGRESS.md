@@ -2,6 +2,10 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Future Syndra Q→E request (2 November 2026)
+
+- Player clarified that Syndra's Q should remain her main Dodge threat, with an additional Q→E pushed-sphere stun-dodge pattern. Added this to the existing future encounter note, leaving frequency and encounter design open. Preserve the player's existing no-stun preference in pure Dodge unless explicitly changed. No Syndra code has been implemented yet.
+
 ## Orianna cast animation (2 November 2026)
 
 - Per player feedback, added curved energy streams that contract toward the ball through Shockwave's cast. The existing readable outer circle remains fixed; collision, cast time, ball position and damage are unchanged. Build `orianna-vortex`.
