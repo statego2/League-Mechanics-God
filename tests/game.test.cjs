@@ -1293,6 +1293,17 @@ test('Blitz Q visitor commits one hook, then pulls Ahri to the source-side landi
  const start={x:g.player.x,y:g.player.y};advance(g,.1);assert.equal(e.phase,'hookFlight');advance(g,.8);
  assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.stats.damage-(110/1.3))<1e-7);assert.equal(g.player.root,0);assert.ok(g.player.x<start.x-200);assert.equal(g.player.y,start.y);assert.equal(g.player.hooked,null);assert.equal(g.dodgeDirector.outcomes['BLITZ Q'].hit,1);
 });
+test('Blitz hook interrupts Ahri dash instead of resuming it after the pull',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player;
+ p.dashing={x:p.x+250,y:p.y,speed:300,throughTerrain:true};
+ const s=g.fire(p.x-5,p.y,1,0,'enemy',10,5,1);Object.assign(s,{directed:true,spellName:'BLITZ Q',hook:true,anchor:{x:300,y:p.y},pullSpeed:900,pullDistance:37.5});
+ g.update(1/120);assert.ok(p.hooked);assert.equal(p.dashing,null);advance(g,.6);assert.equal(p.hooked,null);assert.ok(p.x<350,`dash resumed after hook: ${p.x}`);
+});
+test('a long Blitz hook completes its pull instead of expiring midair',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player;p.x=800;p.y=337.5;
+ const s=g.fire(p.x-5,p.y,1,0,'enemy',10,5,1);Object.assign(s,{directed:true,spellName:'BLITZ Q',hook:true,anchor:{x:250,y:p.y},pullSpeed:900,pullDistance:37.5});
+ g.update(1/120);assert.ok(p.hooked);advance(g,.7);assert.equal(p.hooked,null);assert.ok(Math.abs(p.x-287.5)<1,`pull stopped early at ${p.x}`);
+});
 test('Blitz Q keeps sourced range, width, speed and source-side pull geometry',()=>{
  const {g}=boot('ahri');const spec=g.REFERENCE_SPELLS.blitzDodge;
  assert.equal(spec.range,557.5);assert.equal(spec.radius,35);assert.equal(spec.speed,900);

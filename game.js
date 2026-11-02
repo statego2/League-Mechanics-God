@@ -1159,8 +1159,15 @@ function startHookPull(shot){
  if(!shot.anchor||state!=="playing")return;
  const d=Math.hypot(shot.vx,shot.vy)||1,ux=shot.vx/d,uy=shot.vy/d,reach=shot.pullDistance??SIMULATION.toCanvas(75);
  const desired={x:shot.anchor.x+ux*reach,y:shot.anchor.y+uy*reach},landing=world.nearestWalkable(desired);
+ // A hook interrupts an active dash. If a terrain-crossing dash is caught
+ // inside our approximate wall, place Ahri on walkable ground before pulling.
+ if(player.dashing&&!world.pointWalkable(player,player.r)){const safe=world.nearestWalkable(player,player.r);player.x=safe.x;player.y=safe.y;}
+ player.dashing=null;
  cancelAttack();player.order=null;player.target=null;player.focus=null;player.route=[];player.routeGoal=null;
- player.hooked={x:landing.x,y:landing.y,speed:shot.pullSpeed??SIMULATION.toCanvas(1800),ttl:.5,source:{...shot.anchor}};
+ const speed=shot.pullSpeed??SIMULATION.toCanvas(1800);
+ // Permit a full-range grab to reach its landing instead of expiring at a
+ // fixed half-second. Terrain blocking can still end the pull earlier.
+ player.hooked={x:landing.x,y:landing.y,speed,ttl:Math.max(.5,dist(player,landing)/Math.max(speed,1)+.05),source:{...shot.anchor}};
  player.facing=Math.atan2(landing.y-player.y,landing.x-player.x);cue("hit");
 }
 // Orders persist until superseded. Movement cancels only the uncommitted windup.

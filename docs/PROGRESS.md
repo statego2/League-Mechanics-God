@@ -2,6 +2,12 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Blitz hook interrupts dash and completes long pulls (2 November 2026)
+
+- Fixed Rocket Grab leaving Ahri's active Spirit Rush dash stored during the pull: it could resume after the hook ended. A successful hook now interrupts the active dash and, if caught inside approximate terrain during a wall-crossing dash, first returns Ahri to walkable ground. Other casts and available R charges are not changed. [Community dash reference](https://wiki.leagueoflegends.com/en-us/Dash) describes airborne displacement overriding a dash; exact live-client wall snapping remains an approximation.
+- Fixed full-range pulls ending after a hardcoded 0.5 seconds before reaching Blitz. Pull lifetime now covers the actual landing distance and speed; terrain can still stop it. Build `hook-dash`.
+- Both new tests failed on the previous implementation and now pass. Nine targeted Blitz/hook and overlap tests pass; full suite pending. Human testing at wall edges is still needed.
+
 ## Cassiopeia feint retreat (2 November 2026)
 
 - Fixed an uncommitted Cassiopeia feint disappearing abruptly and scheduling an unsafe-cast retry if the player was locked or moved outside range during setup. A feint now visibly retreats regardless of these cast-only checks; an actual R still requires a valid target and reaction. No extra cast, hit or dodge is recorded. Build `cassio-retreat`.
