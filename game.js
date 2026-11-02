@@ -195,7 +195,7 @@ function end(win){
   const cassioLesson=d.cassio?"\nTurning away avoids the stun in League, but still takes damage inside the cone. This drill applies neither stun nor slow.":"";
   const malphiteLesson=d.malDirect?`\nMalphite direct casts: ${d.malDirect} / Flash used during ${d.malDirectFlash}`:"";
   const openQ=shots.filter(s=>s.alive&&s.trainingSkill==="q"&&!s.trainingHit).length,openE=shots.filter(s=>s.alive&&s.trainingSkill==="e"&&!s.trainingHit).length;
-  $("dodgeBreakdownText").textContent=`Casts: ${d.ezreal} Ezreal, ${d.lux} Lux, ${d.ahri} Ahri, ${d.blitz} Blitz, ${d.velkoz} Vel’Koz, ${d.xerath} Xerath W, ${d.xerathQ} Xerath Q, ${d.oriannaQ} Orianna Q, ${d.orianna} Orianna R, ${d.malphite} Malphite R, ${d.cassio} Cassiopeia R${malphiteLesson}\nCassiopeia: ${d.cassTurns} turned away / ${d.cassFails} facing her / ${d.cassEscapes} outside cone${cassioLesson}\nAhri skillshots: Q ${stats.dodgeQHits}/${stats.dodgeQShots} casts hit (${openQ} in flight) / E ${stats.dodgeEHits}/${stats.dodgeEShots} casts hit (${openE} in flight) · ${skillPoints} skill points (+20 Q / +30 E)\n\n${dodgeOutcomeSummary()}`;
+  $("dodgeBreakdownText").textContent=`Casts: ${d.ezreal} Ezreal, ${d.lux} Lux Q, ${d.luxR||0} Lux R, ${d.ahri} Ahri, ${d.blitz} Blitz, ${d.velkoz} Vel’Koz, ${d.xerath} Xerath W, ${d.xerathQ} Xerath Q, ${d.oriannaQ} Orianna Q, ${d.orianna} Orianna R, ${d.malphite} Malphite R, ${d.cassio} Cassiopeia R${malphiteLesson}\nCassiopeia: ${d.cassTurns} turned away / ${d.cassFails} facing her / ${d.cassEscapes} outside cone${cassioLesson}\nAhri skillshots: Q ${stats.dodgeQHits}/${stats.dodgeQShots} casts hit (${openQ} in flight) / E ${stats.dodgeEHits}/${stats.dodgeEShots} casts hit (${openE} in flight) · ${skillPoints} skill points (+20 Q / +30 E)\n\n${dodgeOutcomeSummary()}`;
   $("dodgeBreakdown").hidden=false;
  }
 }
@@ -471,6 +471,25 @@ function spawnXerathW(witness=null){
 // magic damage and ~0.5 s recast delay. Its source cue, line placement and
 // 0.528 s timing are deliberate training approximations.
 const XERATH_Q={radius:SIMULATION.toCanvas(145/2),range:SIMULATION.toCanvas(1450),delay:.528,raw:70};
+// Final Spark is a separate encounter from Lux Q. Community ability data and
+// live play both place its visible charge at roughly one second; we preserve
+// that readable lockout rather than accelerating the beam for Expert.
+const LUX_R={radius:SIMULATION.toCanvas(190/2),range:SIMULATION.toCanvas(3340),cast:1,raw:300};
+function spawnLuxR(witness=null){
+ if(foes.some(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit")||shots.some(s=>s.alive&&s.directed)||hazards.some(h=>h.directed))return false;
+ const reaction=dodgeReactionDelay();if(!Number.isFinite(reaction))return false;
+ const start=dodgeReactionPath(reaction).end,angle=rand(0,TAU);
+ for(let i=0;i<24;i++){
+  const a=angle+i*TAU/24,x=player.x-Math.cos(a)*430,y=player.y-Math.sin(a)*430;
+  const endX=x+Math.cos(a)*LUX_R.range,endY=y+Math.sin(a)*LUX_R.range;
+  if(x<60||x>W-60||y<145||y>H-30||!world.pointWalkable({x,y},20))continue;
+  const beam={x,y,endX,endY,r:dodgeAreaRadius(LUX_R.radius)};
+  if(!sampleAreaEscape(reaction,LUX_R.cast,p=>beamTouchesPlayer(beam,p,player.hitRadius+8),witness))continue;
+  hazards.push({...beam,ttl:LUX_R.cast,max:LUX_R.cast,threat:true,directed:true,spellName:"LUX R",beam:true,luxR:true});
+  dodgeDirector.attempted++;dodgeDirector.luxR=(dodgeDirector.luxR||0)+1;recordRegular("LUX R");return true;
+ }
+ return false;
+}
 function spawnXerathQ(witness=null){
  if(!regularAllowed("XERATH Q"))return false;
  if(hazards.some(h=>h.directed))return false;
@@ -911,6 +930,7 @@ function updateDodgeVisitor(e,dt){
  }
 }
 function updateDodgeDirector(dt){
+ if(difficulty==="hard"&&dodgeDirector.luxRAt===undefined)dodgeDirector.luxRAt=26;
  if(dodgeDirector.areaFollow){
   dodgeDirector.areaFollow=false;
   if(shots.filter(s=>s.alive&&s.directed&&s.kind==="enemy"&&!s.velkoz).length>=2)spawnXerathW();
@@ -922,6 +942,10 @@ function updateDodgeDirector(dt){
   // A hit in the release step makes the split harmless to this player. Do
   // not turn a vanished or already-resolved combination into a fresh cast.
   if(shots.some(s=>s.alive&&s.directed&&s.velkoz&&!s.ignorePlayer&&!(s.group&&s.group.hit)))spawnDodgeVisitor(followUp===true?REFERENCE_SPELLS.ezrealDodge:followUp,20);
+ }
+ if(difficulty==="hard"&&time>=dodgeDirector.luxRAt&&time>=dodgeDirector.rareGuardUntil){
+  if(spawnLuxR()){dodgeDirector.luxRAt=time+rand(50,72);dodgeDirector.rareGuardUntil=time+8;return;}
+  dodgeDirector.luxRAt=time+1;dodgeDirector.next=Math.max(dodgeDirector.next,1.1);return;
  }
  if(difficulty==="hard"&&time>=dodgeDirector.cassAt&&time>=dodgeDirector.rareGuardUntil){
   if(spawnCassioR()){hazards[hazards.length-1].directorScheduled=true;dodgeDirector.cassAt=time+(difficulty==="hard"?rand(32,45):rand(150,240));dodgeDirector.rareGuardUntil=time+(difficulty==="hard"?8:35);return;}
@@ -944,7 +968,7 @@ function updateDodgeDirector(dt){
 function deferRareEvent(h){
  if(!h.directorScheduled||!dodgeDirector)return;
  const retry=time+5;
- if(h.malphite)dodgeDirector.malAt=retry;else if(h.orianna)dodgeDirector.rareAt=retry;else if(h.cassio)dodgeDirector.cassAt=retry;
+ if(h.luxR)dodgeDirector.luxRAt=retry;else if(h.malphite)dodgeDirector.malAt=retry;else if(h.orianna)dodgeDirector.rareAt=retry;else if(h.cassio)dodgeDirector.cassAt=retry;
  dodgeDirector.rareGuardUntil=retry;
 }
 function fire(x,y,vx,vy,kind,damage,r=8,life=4){shots.push({x,y,px:x,py:y,vx,vy,kind,damage,r,ttl:life,alive:true,hit:false,threat:false});return shots[shots.length-1];}
@@ -1247,8 +1271,8 @@ for(const h of hazards){
   const collision=beamTouchesPlayer(h,effectPlayer,player.hitRadius);
   if(collision)h.threat=true;
   h.ttl-=dt;if(h.ttl<=0){
-   fx.push({x:h.x,y:h.y,endX:h.endX,endY:h.endY,vx:0,vy:0,ttl:.2,max:.2,color:"#b5e5ff",beam:true});
-   if(collision){if(player.invuln>0){recordDodgeOutcome(h,"blocked");stats.blocked++;}else{recordDodgeOutcome(h,"hit");takeHit(physicalDamage(XERATH_Q.raw,30));}}
+   fx.push({x:h.x,y:h.y,endX:h.endX,endY:h.endY,vx:0,vy:0,ttl:.2,max:.2,color:h.luxR?"#ffe2a8":"#b5e5ff",beam:true});
+   if(collision){if(player.invuln>0){recordDodgeOutcome(h,"blocked");stats.blocked++;}else{recordDodgeOutcome(h,"hit");takeHit(physicalDamage(h.luxR?LUX_R.raw:XERATH_Q.raw,30));}}
    else{recordDodgeOutcome(h,h.threat?"avoided":"harmless");if(h.threat){dodged++;cue("dodge");}}
    if(state!=="playing")return;
   }
@@ -1502,11 +1526,13 @@ for(const wall of sweeps){
  ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="left";ctx.fillStyle="#ffe1b5";ctx.fillText("SAFE GAP",46,wall.gap+4);
 }
 for(const h of hazards){if(h.cassio){drawChampion(h.x,h.y,h.casting?h.angle:Math.atan2(player.y-h.y,player.x-h.x),false,false,h.casting?clamp(1-h.ttl/CASSIO_R.cast,0,1):0,time*7,"cassio");continue;}if(h.malphite){ctx.save();ctx.translate(h.x,h.y);const art=$("stoneArt");if(art?.complete&&art.naturalWidth){ctx.drawImage(art,-42,-90,84,90);ctx.restore();continue;}ctx.fillStyle="#665f59";ctx.strokeStyle="#c1aa93";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-25,-16);ctx.lineTo(-22,-52);ctx.lineTo(0,-72);ctx.lineTo(23,-52);ctx.lineTo(27,-15);ctx.lineTo(10,0);ctx.lineTo(-12,0);ctx.closePath();ctx.fill();ctx.stroke();circle(-7,-45,3,"#aad4ee");circle(7,-45,3,"#aad4ee");ctx.restore();continue;}if(h.orianna){drawChampion(h.source.x,h.source.y,Math.atan2(h.y-h.source.y,h.x-h.source.x),false,false,h.casting?1:0,time*7,"clockwork");circle(h.x,h.y,12,h.casting?"#f4d5ff":"#a989d8");circle(h.x,h.y,5,"#f4e6ff");continue;}if(h.beam){
- // A short charged beam points from the source without revealing the full
- // projected line. Geometry remains the simulation's private information.
+ // Xerath's source cue stays short; Final Spark intentionally reveals its
+ // charging lane so the player receives the full one-second reaction window.
  const dx=h.endX-h.x,dy=h.endY-h.y,len=Math.hypot(dx,dy)||1;
- ctx.save();ctx.lineCap="round";ctx.beginPath();ctx.moveTo(h.x,h.y);ctx.lineTo(h.x+dx/len*45,h.y+dy/len*45);ctx.strokeStyle="#9edcffaa";ctx.lineWidth=7;ctx.stroke();ctx.restore();
- circle(h.x,h.y,16,"#8bcfff44");circle(h.x,h.y,7,"#d0edff");continue;
+ const progress=clamp(1-h.ttl/h.max,0,1),cueLength=h.luxR?len*(.22+.72*progress):45;
+ if(h.luxR)drawChampion(h.x,h.y,Math.atan2(dy,dx),false,false,progress,time*7,"mage");
+ ctx.save();ctx.lineCap="round";ctx.beginPath();ctx.moveTo(h.x,h.y);ctx.lineTo(h.x+dx/len*cueLength,h.y+dy/len*cueLength);ctx.strokeStyle=h.luxR?"#ffe5a8aa":"#9edcffaa";ctx.lineWidth=h.luxR?5:7;ctx.stroke();ctx.restore();
+ circle(h.x,h.y,h.luxR?20:16,h.luxR?"#ffe09a44":"#8bcfff44");circle(h.x,h.y,h.luxR?8:7,h.luxR?"#fff2c9":"#d0edff");continue;
  }if(h.xerath){circle(h.x,h.y,h.r,"#88bbec33");circle(h.x,h.y,h.r,"#96d4ff",false,2);circle(h.x,h.y,XERATH_W.center,"#c1e4ff66",false,1);continue;}circle(h.x,h.y,h.r,"#e58c6422");circle(h.x,h.y,h.r,"#ffbc80",false,2);circle(h.x,h.y,h.r*(1-h.ttl/h.max),"#ffc08d99",false,3);ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#ffd5aa";ctx.fillText("IMPACT",h.x,h.y+4);}
 if(mode==="bait"&&bait.phase==="approach"){const caster=foes.find(e=>e.baitCaster);if(caster){ctx.save();ctx.setLineDash([6,7]);circle(caster.x,caster.y,260,"#ffbb8890",false,2);ctx.restore();}}
 for(const e of foes)if(e.pending){

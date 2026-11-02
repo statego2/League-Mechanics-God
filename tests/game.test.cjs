@@ -37,6 +37,11 @@ test('Expert Dodge has a bounded flow-spike-recovery rhythm',()=>{
  assert.ok(g.DODGE_DIRECTOR.hard.interval*.9<.19,'spike must be denser than flow');
  assert.ok(g.DODGE_DIRECTOR.hard.interval*1.38>.19,'recovery must create more space');
 });
+test('Expert Lux R preserves a full one-second visible charge',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.disableSpawn();g.dodgeDirector.next=999;g.setTime(26);
+ g.update(1/120);const h=g.hazards.find(x=>x.luxR);assert.ok(h,'Lux R was not scheduled');assert.equal(h.max,1);assert.ok(h.ttl>.98&&h.ttl<=1);
+ assert.equal(g.foes.length,0);assert.equal(g.shots.length,0);advance(g,.49);assert.ok(h.ttl>.49&&h.ttl<.52,'beam fired before its readable charge completed');
+});
 test('Expert starts with sustained mixed pressure and early Cassiopeia and Malphite',t=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
  let maxActive=0,mixed=false;
