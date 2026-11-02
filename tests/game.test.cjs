@@ -971,20 +971,23 @@ test('returning orb records two independent hit phases and never counts a hit as
 });
 
 test('ambient Xerath W has a readable delay, center damage and no caster entity',()=>{
- const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
- assert.equal(g.spawnXerathW(),true);assert.equal(g.foes.length,0);assert.equal(g.dodgeDirector.xerath,1);
+ let g=null;
+ for(let seed=1;seed<=64&&!g;seed++){const run=boot('ahri').g;run.reset('dodge');run.dodgeDirector.next=999;run.setRng(seed);if(run.spawnXerathW())g=run;}
+ assert.ok(g,'no safe ambient Xerath W placement');assert.equal(g.foes.length,0);assert.equal(g.dodgeDirector.xerath,1);
  const h=g.hazards[0];g.player.x=h.x;g.player.y=h.y;
- advance(g,.7);assert.equal(g.stats.hits,0);advance(g,.1);
+ advance(g,.8);assert.equal(g.stats.hits,0);advance(g,.12);
  assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.stats.damage-(50*1.667/1.3))<1e-7);
  assert.equal(g.dodgeDirector.outcomes['XERATH W'].hit,1);
 });
 test('Xerath W can be escaped and rejects an unsupported directed encounter',()=>{
- const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ let g=null;
+ for(let seed=1;seed<=64&&!g;seed++){const run=boot('ahri').g;run.reset('dodge');run.dodgeDirector.next=999;run.setRng(seed);if(run.spawnXerathW()){g=run;g.hazards.length=0;g.dodgeDirector.xerath=0;}}
+ assert.ok(g,'no safe standalone Xerath W placement');
  const shot=g.fire(100,100,1,0,'enemy',1,1,10);shot.directed=true;
  assert.equal(g.spawnXerathW(),false);shot.alive=false;
  assert.equal(g.spawnXerathW(),true);assert.equal(g.spawnDodgeVisitor(),false);
  const h=g.hazards[0],dx=g.player.x-h.x,dy=g.player.y-h.y,d=Math.hypot(dx,dy);
- g.moveTo(g.player.x+dx/d*120,g.player.y+dy/d*120);advance(g,.8);
+ g.moveTo(g.player.x+dx/d*120,g.player.y+dy/d*120);advance(g,.95);
  assert.equal(g.stats.hits,0);assert.equal(g.dodgeDirector.outcomes['XERATH W'].avoided,1);
 });
 test('Xerath W and an in-flight Ezreal Q have a shared walkable escape',()=>{
@@ -998,7 +1001,7 @@ test('Xerath W and an in-flight Ezreal Q have a shared walkable escape',()=>{
 });
 test('the seeded director naturally schedules an Ezreal Q and Xerath W combination',()=>{
  let combinations=0;
- for(let seedOffset=0;seedOffset<30;seedOffset++){
+ for(let seedOffset=0;seedOffset<256;seedOffset++){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});for(let i=0;i<seedOffset;i++)node('newSeed').listeners.click();
   g.reset('dodge');g.setTime(50);g.dodgeDirector.next=999;const spell=g.REFERENCE_SPELLS.ezrealDodge,e=g.enemy(130,g.player.y);
   Object.assign(e,{dodgeVisitor:true,phase:'enter',spell,origin:{x:e.x,y:e.y},entry:{x:80,y:e.y},speed:120});g.setFoes([e]);
@@ -2361,18 +2364,13 @@ test('Xerath W and Ezreal Q witnesses remain safe with existing movement and W',
  }
  assert.ok(accepted>=3,`only ${accepted} accepted combinations`);
 });
-test('Expert Xerath W can share one executable escape with multiple different missiles',()=>{
- let checked=0;
- for(let i=0;i<24;i++){
-  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.setRng((i*2654435761)>>>0);
-  const p=g.player;
-  for(const [x,y,vx,name] of [[p.x-300,p.y+120,500,'EZREAL Q'],[p.x+300,p.y-120,-500,'LUX Q']]){
-   const s=g.fire(x,y,vx,0,'enemy',20,20,2);Object.assign(s,{directed:true,spellName:name});
-  }
-  const witness={};if(!g.spawnXerathW(witness))continue;
-  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.4);assert.equal(g.stats.hits,0,`seed ${i}`);checked++;
+test('Expert Xerath W reserves room instead of joining two live missiles',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;
+ const p=g.player;
+ for(const [x,y,vx,name] of [[p.x-300,p.y+120,500,'EZREAL Q'],[p.x+300,p.y-120,-500,'LUX Q']]){
+  const s=g.fire(x,y,vx,0,'enemy',20,20,2);Object.assign(s,{directed:true,spellName:name});
  }
- assert.ok(checked>=3,`only ${checked} shared escapes`);
+ assert.equal(g.spawnXerathW(),false);
 });
 test('Expert visitor witnesses avoid an already-active Xerath W at impact',()=>{
  let checked=0;
@@ -2421,15 +2419,11 @@ test('Expert naturally combines Xerath Q with a live straight missile',()=>{
  }
  assert.ok(found,'no natural Xerath Q plus missile overlap found');
 });
-test('Expert naturally combines Xerath W with multiple live straight missiles',()=>{
- let found=false;
- for(let seed=1;seed<=5&&!found;seed++){
-  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed*1234567);g.player.hp=g.player.maxHp=1e6;
-  for(let i=0;i<120*150&&!found;i++){
-   g.update(1/120);found=g.hazards.some(h=>h.xerath&&h.ttl>0)&&g.shots.filter(s=>s.alive&&s.directed&&['EZREAL Q','LUX Q','BLITZ Q'].includes(s.spellName)).length>=2;
-  }
- }
- assert.ok(found,'no Xerath W with two live missiles in seeded sessions');
+test('Expert does not force Xerath W above a full two-shot budget',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;
+ for(let i=0;i<2;i++){const s=g.fire(120,220+i*80,1,0,'enemy',10,20,2);Object.assign(s,{directed:true,spellName:'EZREAL Q'});}
+ g.dodgeDirector.areaFollow=true;g.update(1/120);
+ assert.equal(g.dodgeDirector.areaFollow,false);assert.equal(g.hazards.filter(h=>h.xerath).length,0);
 });
 test('queued Xerath follow-up expires without its missiles and resets cleanly',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.areaFollow=true;

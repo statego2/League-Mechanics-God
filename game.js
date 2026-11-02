@@ -933,7 +933,11 @@ function updateDodgeVisitor(e,dt){
    // One seeded opportunity per Ezreal cast. Each candidate must pass its
    // own shared-path forecast and the normal active-threat limit.
    if(e.spell===REFERENCE_SPELLS.ezrealDodge&&!e.followUp&&time>=(difficulty==="hard"?0:45)&&difficulty!=="easy"){
-    const roll=random(),wChance=difficulty==="hard"?.25:.12,followChance=difficulty==="hard"?.30:.12;
+    // An ambient ground strike should disrupt a line dodge occasionally, not
+    // turn every Ezreal exchange into a second full-screen demand. Expert
+    // still gets the combination, but reserves two-shot spikes for their own
+    // readable beat.
+    const roll=random(),wChance=difficulty==="hard"?.07:.12,followChance=difficulty==="hard"?.14:.12;
     if(roll<wChance)spawnXerathW();
     else if(roll<wChance+followChance&&!shots.some(s=>s.alive&&s.directed)&&!foes.some(other=>other!==e&&other.alive&&other.dodgeVisitor&&(other.phase==="enter"||other.phase==="cast")))spawnDodgeVisitor(REFERENCE_SPELLS.luxDodge);
    }
@@ -942,7 +946,8 @@ function updateDodgeVisitor(e,dt){
  }else if(e.phase==="cast"){
   e.charge-=dt;if(e.charge<=0){
    releaseEnemy(e,Math.max(0,dt+e.charge));e.phase=e.spell.returning?"orbFlight":e.spell.hook?"hookFlight":"exit";
-   if(difficulty==="hard"&&!e.spell.split&&!e.spell.returning&&shots.filter(s=>s.alive&&s.directed&&s.kind==="enemy"&&!s.velkoz).length>=2&&random()<.4)dodgeDirector.areaFollow=true;
+   // Do not automatically add Xerath W above a full two-shot budget. The
+   // area spell remains eligible through its own safely-validated encounter.
    // Give Expert a visible, early follow-up opportunity while the split
    // missile is still travelling. Spawn and aim lock both verify a shared
    // walking escape; failure simply leaves the original shot isolated.
