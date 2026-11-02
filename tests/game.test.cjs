@@ -610,6 +610,13 @@ test('Ahri Fox-Fire does not cancel an auto windup and is locked in auto-only CS
 test('Ahri Spirit Rush has three timed charges and fires magic bolts',()=>{
  const {g,node}=boot('ahri');g.reset('kite');g.disableSpawn();const e=foe(g,800);e.mr=100;const x=g.player.x;g.cast('r');assert.equal(g.player.rushCharges,2);assert.equal(g.player.cd.r,140);g.cast('r');assert.equal(g.player.rushCharges,2);advance(g,.7);assert.ok(g.player.x>x);assert.ok(Math.abs(e.hp-9962.5)<1e-8);advance(g,.4);assert.match(node('cdR').textContent,/×2/);g.cast('r');assert.equal(g.player.rushCharges,1);advance(g,1.1);g.cast('r');assert.equal(g.player.rushCharges,0);advance(g,1.1);g.cast('r');assert.equal(g.player.rushCharges,0);assert.ok(g.player.cd.r>130);
 });
+test('Dodge Spirit Rush has a shorter maximum dash than the base drill',()=>{
+ for(const [mode,expected] of [['dodge',225],['kite',250]]){
+  const {g,node}=boot('ahri');g.reset(mode);g.disableSpawn();if(g.dodgeDirector)g.dodgeDirector.next=999;
+  node('arena').listeners.pointermove({clientX:1100,clientY:g.player.y,buttons:0});const start=g.player.x;g.cast('r');
+  assert.ok(g.player.dashing);assert.ok(Math.abs(g.player.dashing.x-start-expected)<1e-8,mode);
+ }
+});
 test('Spirit Rush snapshots capped movement speed when the dash starts',()=>{
  function dash(boosted){
   const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
@@ -1734,20 +1741,21 @@ test('fresh later waves acquire matching melee rows instead of collapsing on one
 
 
 test('Ahri regenerates base health over time without exceeding max or while paused',()=>{
- const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.hp=500;
- advance(g,10);assert.ok(Math.abs(g.player.hp-529)<1e-8);
- g.pause();advance(g,5);assert.ok(Math.abs(g.player.hp-529)<1e-8);g.pause();
+ const {g}=boot('ahri');g.reset('kite');g.disableSpawn();g.player.hp=500;
+ advance(g,10);assert.ok(Math.abs(g.player.hp-505)<1e-8);
+ g.pause();advance(g,5);assert.ok(Math.abs(g.player.hp-505)<1e-8);g.pause();
  g.player.hp=589.9;advance(g,1);assert.equal(g.player.hp,590);
 });
 test('arcade presets do not receive Ahri health regeneration',()=>{
  const {g}=boot('standard');g.reset('kite');g.disableSpawn();g.player.hp=100;advance(g,3);assert.equal(g.player.hp,100);
 });
 
-test('clean Dodge sustain restores health only after a full seven-second no-hit window',()=>{
+test('clean Dodge sustain restores one full health bar over thirty seconds and resets on hit',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
- g.applyImpact(g.player,{sourceTeam:'enemy',kind:'test',raw:100,damageType:'true'});
- advance(g,6.9);assert.ok(Math.abs(g.player.hp-493.45)<1e-8);advance(g,.1);assert.ok(Math.abs(g.player.hp-517.5)<1e-8);assert.equal(g.stats.damage,100);assert.equal(g.stats.hits,1);
- advance(g,7.1);assert.ok(Math.abs(g.player.hp-545.05)<1e-8);
+ g.dodgeDirector.cassAt=g.dodgeDirector.rareAt=g.dodgeDirector.malAt=g.dodgeDirector.luxRAt=Infinity;
+ g.applyImpact(g.player,{sourceTeam:'enemy',kind:'test',raw:589,damageType:'true'});
+ advance(g,29);assert.ok(g.player.hp<g.player.maxHp);advance(g,1);assert.equal(g.player.hp,g.player.maxHp);
+ g.applyImpact(g.player,{sourceTeam:'enemy',kind:'test',raw:100,damageType:'true'});advance(g,.9);assert.ok(g.player.hp<491);advance(g,.1);assert.ok(Math.abs(g.player.hp-(490+590/30))<1e-7);
  g.applyImpact(g.player,{sourceTeam:'enemy',kind:'test',raw:1000,damageType:'true'});advance(g,3);
  assert.equal(g.state,'ended');assert.equal(g.player.hp,0);
 });

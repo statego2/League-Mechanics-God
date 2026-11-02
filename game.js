@@ -30,11 +30,9 @@ function dodgeAreaRadius(radius){return mode==="dodge"&&ahriBase()?radius*DODGE_
 // Ahri level-one base health regeneration, 2.5 health per five seconds.
 // Applied continuously as a fixed-step approximation; no items or level growth.
 const AHRI_HEALTH_REGEN_PER_SECOND=2.5/5;
-// Pure Dodge is endless rather than a one-life arcade round. Base regen stays
-// authentic; a separate transparent trainer reward restores a small amount
-// only after a sustained clean stretch, so repeated correct dodges can keep a
-// focused run alive without erasing recent mistakes.
-const DODGE_CLEAN_SUSTAIN={after:7,every:7,heal:24};
+// Endless Dodge trainer sustain: with base regen included, thirty clean
+// seconds restore one full health bar. This is a training rule, not LoL data.
+const DODGE_CLEAN_SUSTAIN={after:1,every:1};
 // A hit is feedback, not a license for the director to immediately stack a
 // fresh cast over the player's recovery input. Existing projectiles continue
 // normally; this only holds new scheduled encounters for a short reset beat.
@@ -1148,7 +1146,7 @@ function cast(key){if(state!=="playing"||(player.casting&&!(key==="f"&&(ahriBase
  if(player.rushCharges<=0)return;cancelAttack();player.rushCharges--;player.rushLock=1;player.target=null;player.order=null;player.focus=null;player.route=[];player.routeGoal=null;
  // Spirit Rush: 1200 game units/s plus movement speed. Capturing speed at
  // cast time is a training approximation until live-client timing is verified.
- const length=Math.min(250,dist(player,aim)),landing={x:clamp(player.x+d.x*length,22,W-22),y:clamp(player.y+d.y*length,59,H-36)};
+ const length=Math.min(dodgeDirector?225:250,dist(player,aim)),landing={x:clamp(player.x+d.x*length,22,W-22),y:clamp(player.y+d.y*length,59,H-36)};
  // Allow travel through terrain only when the requested endpoint is walkable.
  // Live-client wall snapping is more forgiving and remains unverified here.
  player.dashing={...landing,speed:SIMULATION.toCanvas(1200)+playerMoveSpeed(),throughTerrain:world.pointWalkable(landing,player.r)};player.facing=a;updateUI();return;
@@ -1188,9 +1186,9 @@ function update(dt){if(state!=="playing")return;
 if((ahriBase()||referenceSpell())&&player.hp>0)player.hp=Math.min(player.maxHp,player.hp+AHRI_HEALTH_REGEN_PER_SECOND*dt);
 if(dodgeDirector&&player.hp>0){
  player.cleanTime+=dt;
- if(player.cleanTime>=player.nextCleanHeal&&player.hp<player.maxHp){
-  player.hp=Math.min(player.maxHp,player.hp+DODGE_CLEAN_SUSTAIN.heal);
-  player.nextCleanHeal+=DODGE_CLEAN_SUSTAIN.every;notify("CLEAN DODGE +"+DODGE_CLEAN_SUSTAIN.heal+" HP");
+ if(player.cleanTime+1e-9>=player.nextCleanHeal){
+  player.hp=Math.min(player.maxHp,player.hp+Math.max(0,player.maxHp/30-AHRI_HEALTH_REGEN_PER_SECOND));
+  player.nextCleanHeal+=DODGE_CLEAN_SUSTAIN.every;
  }
 }
 if(referenceSpell()&&!foes.length){const caster=enemy(970,337.5);caster.referenceCaster=true;caster.shoot=1.5;foes.push(caster);}
