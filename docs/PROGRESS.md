@@ -10,6 +10,7 @@ Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid depend
 ## Randomized Dodge runs (2026-11-02)
 
 - Each Dodge restart advances the encounter seed using fresh randomness; the scheduler still uses its seeded generator within a run. This prevents identical opening encounters without exposing seed controls.
+- Randomization is scoped to the Ahri Dodge director; legacy presets preserve their deterministic replay behavior. Fixed regression accounting to include Lux R and confirm the removed Xerath Q is absent. Four focused deterministic and twelve-minute checks pass. The broader suite still has remaining failures around legacy thresholds, collision scenarios and overlapping threats and is not green.
 
 ## Denser Expert playtest (2026-11-02)
 
