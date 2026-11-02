@@ -10,6 +10,12 @@ Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid depend
 - GitHub Pages is configured to publish the root of `codex/controls-and-dodge`, so each push makes the static game available at `https://statego2.github.io/League-Mechanics-God/`. The published page was opened and verified with the current Expert menu and T1 Boots HUD. Local static hosting remains available for immediate play.
 - Added focused tests for Tier-1 boots, compact Expert collision and the Cassiopeia window/departure. `node --check game.js` and those focused tests pass. The complete suite remains to be rerun after the current Expert scheduler tuning; long seeded simulation coverage is the next verification task.
 
+## Expert Gauntlet rhythm waves (2026-11-02)
+
+- Expert now repeats a deterministic 41-second rhythm: 27 seconds of stable flow, a 6-second spike at 0.171-second nominal opportunity spacing, a 5-second recovery-in-motion at 0.262 seconds, then three seconds back at flow before the next cycle. The steady baseline remains 0.19 seconds, so even the spike is below the old 0.16-second uncontrolled cadence; the recovery lowers simultaneous-pressure opportunities without pausing the drill.
+- This changes encounter timing only: individual spell speed, windup, collision, source placement and the existing shared-escape forecasts are unchanged. It is intentionally not adaptive hidden difficulty and is seed-reproducible. Dodge record namespace is `director_v82` because the runtime cadence changed.
+- Tests: `node --check game.js`, `git diff --check`, focused flow/spike/recovery test, 60-second mixed-pressure simulation, compact-hitbox test and Cassiopeia timing/departure test all pass (4/4 selected). Browser smoke: current localhost Expert Dodge starts, reaches 00:01 with 590/590 HP and displays T1 Boots. The broad full suite was previously interrupted while its long seeded simulation file remained pending; do not claim a full green regression run until that runner is profiled or completed.
+
 ## Expert Xerath Q with straight projectiles (2026-11-01)
 
 - Expert Xerath Q can now overlap committed or in-flight Ezreal, Lux and Blitz shots when one sampled walking route avoids the missiles and the beam at its impact time. Entering visitors may coexist, but their later aim lock must independently avoid the active beam; other directed areas and unsupported multi-phase projectiles still defer. Foundation and Standard retain isolated Q scheduling. Record namespace is director_v81.

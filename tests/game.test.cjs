@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,DODGE_TUNING,DODGE_DIRECTOR,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,visitorPathsCrowded,updateDodgeVisitor,dodgeAimPoint,spawnXerathW,spawnXerathQ,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,DODGE_TUNING,DODGE_DIRECTOR,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,visitorPathsCrowded,updateDodgeVisitor,dodgeAimPoint,dodgeRhythmMultiplier,spawnXerathW,spawnXerathQ,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,drawSizes,strokes,arcs,texts,lines,rotations,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -27,6 +27,15 @@ test('Orianna shockwave draws animated impact arcs',()=>{
  const {g,strokes}=boot('ahri');g.reset('dodge');
  g.fx.push({x:600,y:330,r:207.5,ttl:.1,max:.2,shockwave:true});g.render();
  assert.ok(strokes.includes('#eed6ffff'));assert.ok(strokes.includes('#bf8dffff'));
+});
+test('Expert Dodge has a bounded flow-spike-recovery rhythm',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');
+ assert.equal(g.dodgeRhythmMultiplier(0),1);
+ assert.equal(g.dodgeRhythmMultiplier(27),.9);
+ assert.equal(g.dodgeRhythmMultiplier(33),1.38);
+ assert.equal(g.dodgeRhythmMultiplier(38),1);
+ assert.ok(g.DODGE_DIRECTOR.hard.interval*.9<.19,'spike must be denser than flow');
+ assert.ok(g.DODGE_DIRECTOR.hard.interval*1.38>.19,'recovery must create more space');
 });
 test('Expert starts with sustained mixed pressure and early Cassiopeia and Malphite',t=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
@@ -2044,7 +2053,7 @@ test('Dodge counts Charm hits against a visitor once per released E',()=>{
 });
 test('skill-scored Dodge records stay separate while retaining the survival record',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
- const oldScore='lmg.best.v1.dodge.normal.director_v81.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
+ const oldScore='lmg.best.v1.dodge.normal.director_v82.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
  g.reset('dodge');g.setTime(10);g.stats.dodgeQHits=1;g.stats.dodgeEHits=1;g.end(false);
  assert.match(node('menuDescription').textContent,/150 points/);assert.match(node('menuDescription').textContent,/Best survival: 120.0s/);
  assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v3'),'150');assert.equal(values.get(survival),'120');

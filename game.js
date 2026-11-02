@@ -40,7 +40,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v81":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v82":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -402,9 +402,14 @@ function addEnemy(){
 // Each visitor casts once, so no individual champion cooldown is faked.
 // Spawn interval and concurrency are training policies, not game spell stats.
 const DODGE_DIRECTOR={easy:{interval:5,cap:1},normal:{interval:3.2,cap:2},hard:{interval:DODGE_TUNING.expertInterval,cap:5}};
-// Expert starts at full cadence. Standard retains its slower rhythm.
+// Expert's challenge comes in repeatable short waves, not unbroken random
+// spam: stable flow, a brief denser spike, then a recovery-in-motion which
+// keeps ordinary threats alive while restoring a readable next decision.
 function dodgeRhythmMultiplier(now){
- if(difficulty==="hard")return 1;
+ if(difficulty==="hard"){
+  const phase=now%41;
+  return phase<27?1:phase<33?.9:phase<38?1.38:1;
+ }
  if(difficulty==="easy"||now<45)return 1;
  const phase=(now-45)%43,cycle=phase<30?1:phase<38?.8:1.3;
  return cycle;
