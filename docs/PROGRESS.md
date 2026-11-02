@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Published build identification (2026-11-02)
+
+- Verified the public GitHub Pages HTML serves `game.js?v=20261102-expert-pressure`. Added a visible build label to the menu so the player can identify this playtest version without inspecting browser internals. Update the label and runtime cache key together when publishing another gameplay build.
+- Kite is deferred at the owner's request; Dodge Gauntlet remains the first priority. Full regression suite has unresolved failures and must not be reported as green.
+
 ## Expert Dodge fairness calibration: Lux, Cassiopeia, Blitz and Xerath (2026-11-02)
 
 - Recalibrated the playable Expert pressure after a user report that the two-threat cadence was still too crowded. The normal beat is now 2.3 seconds (a 15% reduction in regular launch pressure from the preceding 2.0-second tuning), while the two-independent-threat cap, separate origins, deterministic rhythm and escape validation remain intact. This is an explicit training cadence, not a claim about live-game spawn rates.
