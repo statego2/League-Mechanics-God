@@ -4,9 +4,9 @@ const assert=require('node:assert/strict');
 const vm=require('node:vm');
 const fs=require('node:fs');
 function boot(preset="standard", options={}){
- const nodes=new Map(),draws=[],drawSizes=[],strokes=[],strokeWidths=[],arcs=[],texts=[],lines=[],rotations=[];
+ const nodes=new Map(),draws=[],drawSizes=[],strokes=[],strokeWidths=[],arcs=[],texts=[],lines=[],rotations=[],renderEvents=[];
  function node(id){if(!nodes.has(id))nodes.set(id,{textContent:'',style:{},classList:{add(){},remove(){},toggle(){}},listeners:{},addEventListener(k,f){this.listeners[k]=f;},closest(){return this;},setAttribute(k,v){this[k]=v;},getBoundingClientRect(){return {left:0,top:0,width:1200,height:675};}});return nodes.get(id);}
- const ctx=new Proxy({drawImage(img,...args){draws.push(img);drawSizes.push([img,...args])},rotate(a){rotations.push(a)},arc(x,y,r){arcs.push({x,y,r})},fillText(t){texts.push(String(t))},stroke(){strokes.push(this.strokeStyle);strokeWidths.push(this.lineWidth)},lineTo(x,y){lines.push({x,y})},createRadialGradient(){return {addColorStop(){}};}},{get(o,k){return o[k]||(()=>{});}});
+ const ctx=new Proxy({drawImage(img,...args){draws.push(img);drawSizes.push([img,...args]);renderEvents.push({type:"image",img})},rotate(a){rotations.push(a)},arc(x,y,r){arcs.push({x,y,r});renderEvents.push({type:"arc",x,y,r})},fillText(t){texts.push(String(t))},stroke(){strokes.push(this.strokeStyle);strokeWidths.push(this.lineWidth)},lineTo(x,y){lines.push({x,y})},createRadialGradient(){return {addColorStop(){}};}},{get(o,k){return o[k]||(()=>{});}});
  node('arena').getContext=()=>ctx;
  const window={devicePixelRatio:1,listeners:{},addEventListener(k,f){this.listeners[k]=f;}};
  const document={getElementById:id=>options.missingNodes?.includes(id)?null:node(id),querySelectorAll:()=>[],addEventListener(){}};
@@ -19,7 +19,7 @@ function boot(preset="standard", options={}){
  const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,DODGE_TUNING,DODGE_DIRECTOR,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,visitorPathsCrowded,updateDodgeVisitor,dodgeAimPoint,dodgeRhythmMultiplier,spawnXerathW,spawnXerathQ,spawnLuxR,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,oriannaFlashEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
- return {g,node,window,draws,drawSizes,strokes,strokeWidths,arcs,texts,lines,rotations,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
+ return {g,node,window,draws,drawSizes,strokes,strokeWidths,arcs,texts,lines,rotations,renderEvents,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
 }
 function foe(g,x=800,y=337.5){const e=g.enemy(x,y);e.speed=0;e.shoot=999;e.hp=e.maxHp=10000;g.setFoes([e]);return e;}
 function advance(g,seconds){for(let i=0;i<Math.round(seconds*120);i++)g.update(1/120);}
@@ -1736,6 +1736,13 @@ test('Orianna ball travels visibly from caster to its destination before Shockwa
 test('Orianna encounter renders a caster and ball during setup',()=>{
  const {g,node,draws}=boot('ahri');node('clockworkArt').complete=true;node('clockworkArt').naturalWidth=100;
  g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;assert.ok(g.spawnOriannaR());g.render();assert.ok(draws.includes(node('clockworkArt')));
+});
+test('Orianna ball draws over Ahri when their positions coincide',()=>{
+ const {g,node,renderEvents}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const art=node('ahriArt');art.complete=true;art.naturalWidth=100;
+ const h={x:g.player.x,y:g.player.y,source:{x:200,y:200},r:207.5,orianna:true,casting:true,ttl:.3,max:.6,directed:true,spellName:'ORIANNA R'};g.hazards.push(h);g.render();
+ const playerIndex=renderEvents.findIndex(e=>e.type==='image'&&e.img===art),ballIndex=renderEvents.findIndex(e=>e.type==='arc'&&e.x===h.x&&e.y===h.y&&e.r===12);
+ assert.ok(playerIndex>=0);assert.ok(ballIndex>playerIndex,'ball must remain visible over the player sprite');
 });
 test('Orianna shockwave appears on impact without a pre-cast area guide',()=>{
  const {g,arcs}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;

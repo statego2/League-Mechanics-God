@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Orianna ball foreground visibility (2 November 2026)
+
+- The ball was drawn before the player sprite, so Ahri could cover it when Q targeted her position. The existing ball is now drawn above champion sprites; the ground glow, ball coordinates, cast duration and collision remain unchanged. This changes render ordering only and adds no hitbox indicator. Build `orianna-ball`.
+- Added a render-order regression with the actual Ahri sprite and coincident ball. All 29 Orianna-focused tests pass. The complete suite on the preceding `orianna-reaction` gameplay build finished with exit 0, and the 30/60/120 FPS determinism check passed separately. Human review of the ball in a live encounter remains open.
+
 ## Expert Orianna reaction allowance (2 November 2026)
 
 - The player requested a little more time to Flash after the R cue. Community reference https://wiki.leagueoflegends.com/en-us/Orianna lists Shockwave cast time as 0.5 seconds; Expert training intentionally extends it to 0.6 seconds. Standard stays at 0.5. The visible charge and Flash escape forecast use the same Expert duration; Q ball movement, damage and collision remain unchanged. Build `orianna-reaction`.
