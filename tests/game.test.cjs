@@ -74,6 +74,11 @@ test('Expert Malphite aims at the player and flash-only ultimates wait for Flash
  assert.equal(g.dodgeDirector.malAt,15);g.setRng(1);const plan=g.aimMalphiteR({x:200,y:g.player.y});assert.ok(plan?.flashWitness);assert.equal(plan.target.x,g.player.x);assert.equal(plan.target.y,g.player.y);
  g.player.cd.f=10;assert.equal(g.aimMalphiteR({x:200,y:g.player.y}),null);assert.equal(g.spawnMalphiteR(),false);assert.equal(g.spawnOriannaR(),false);
 });
+test('Malphite dash leaves dust only behind its current position',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const h={x:200,y:200,start:{x:200,y:200},target:{x:500,y:200},remaining:.5,ttl:.5,max:.5,r:162.5,malphite:true,casting:true,directed:true,spellName:'MALPHITE R'};g.hazards.push(h);
+ g.update(.1);const dust=g.fx.find(f=>f.color==='#aa927477');assert.ok(dust);assert.ok(dust.x>=200&&dust.x<=h.x);assert.ok(dust.x<500);assert.equal(g.stats.hits,0);
+});
 test('Expert naturally introduces direct Malphite early across seeded runs',()=>{
  for(const seed of [1,1234567,2468135]){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed);g.player.hp=g.player.maxHp=1e6;

@@ -1336,6 +1336,8 @@ for(const h of hazards){
   }else if(h.casting){
    if(Number.isFinite(playerContact(h.target.x,h.target.y,h.target.x,h.target.y,0,impactFraction,h.r+player.hitRadius)))h.threat=true;
    const f=clamp(1-h.ttl/h.remaining,0,1);h.x=h.start.x+(h.target.x-h.start.x)*f;h.y=h.start.y+(h.target.y-h.start.y)*f;
+   // Dust marks the travelled dash, never the future destination or hitbox.
+   h.dustTimer=(h.dustTimer||0)-dt;if(h.dustTimer<=0){h.dustTimer=.06;fx.push({x:h.x,y:h.y,vx:0,vy:0,r:10,ttl:.24,max:.24,color:"#aa927477"});}
    if(h.ttl<=0){
     // Dust appears on landing only; no prospective landing circle is drawn.
     fx.push({x:h.target.x,y:h.target.y,vx:0,vy:0,r:h.r,ttl:.22,max:.22,rockImpact:true});
