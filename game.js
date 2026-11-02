@@ -1001,7 +1001,7 @@ function updateDodgeDirector(dt){
  // reading space instead of all arriving during the opening scramble.
  if(difficulty==="hard"&&!dodgeDirector.rhythmConfigured){
   dodgeDirector.rhythmConfigured=true;
-  dodgeDirector.cassAt=35;dodgeDirector.rareAt=75;dodgeDirector.malAt=15;
+  dodgeDirector.cassAt=35;dodgeDirector.rareAt=50;dodgeDirector.malAt=15;
  }
  if(difficulty==="hard"&&dodgeDirector.luxRAt===undefined)dodgeDirector.luxRAt=26;
  if(time<dodgeDirector.hitRecoveryUntil)return;
