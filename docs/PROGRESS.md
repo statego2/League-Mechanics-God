@@ -2,6 +2,10 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Local browser build verification (2026-11-02)
+
+- The user's existing Chrome tab at `http://127.0.0.1:8081/` was still displaying the older `flash-practice` build despite the local server having newer files. It was already at the drill menu, so it was reloaded; the browser DOM now shows `Build: malphite-trail` and Expert selected. This confirms the menu loaded the current local build, not an interactive gameplay or visual-balance test.
+
 ## Full regression audit (2026-11-02)
 
 - The initial complete `node --test --test-reporter=dot tests/*.test.cjs` run completed with six failures. Five were reconciled with current behavior: Flash-only Expert Malphite, W speed forecast capped at the move destination, W-assisted evade at current boots/hitbox, and Xerath W's four-threat cap. The remaining long-route test now samples different second-projectile speeds and finds a genuine long-route response, then executes it against actual collisions. The complete suite subsequently finished successfully (exit 0). Human visual and reaction-time testing remains necessary.
