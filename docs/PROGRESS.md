@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Lux R aim verification (2 November 2026)
+
+- Added deterministic multi-angle coverage proving the centerline passes through Ahri's position at Lux R spawn, plus a full impact check that a stationary player there takes damage. Existing tests cover fixed aim during the visible charge, a real sidestep and impact width. All six targeted Lux R tests pass; no gameplay values changed. Aim is locked at spawn, so moving during the source tell can put the player away from the center by the time the beam charges.
+- The full suite launched after the Orianna commitment change is still running; check its result before reporting it as passing.
+
 ## Committed Expert Orianna combo (2 November 2026)
 
 - Expert Orianna still requires an available Flash and a sampled escape before launching Q. Once the ball is visibly travelling, R now commits instead of silently disappearing when a later movement, cast lock or terrain position makes the sampled Flash response invalid. This makes the telegraphed sequence reliable, but the initial snapshot is not a guarantee of safety after the player changes their position or actions. Standard retains its existing cast-time walking check. Build `orianna-commit`.

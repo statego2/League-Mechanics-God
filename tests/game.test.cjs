@@ -131,6 +131,20 @@ test('Lux R impact draws the same width as its collision beam',()=>{
  assert.ok(g.spawnLuxR());const h=g.hazards[0],width=h.r*2;advance(g,1.31);
  assert.ok(g.fx.some(f=>f.beam&&f.r===h.r));g.render();const index=strokes.lastIndexOf('#ffe2a8');assert.ok(index>=0);assert.equal(strokeWidths[index],width);
 });
+test('Lux R aims its center through Ahri at spawn across approach angles',()=>{
+ let spawned=0;
+ for(let seed=1;seed<=24;seed++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.disableSpawn();g.dodgeDirector.next=999;g.setRng(seed*104729);
+  const player={x:g.player.x,y:g.player.y};if(!g.spawnLuxR())continue;const h=g.hazards[0];
+  const dx=h.endX-h.x,dy=h.endY-h.y,length=Math.hypot(dx,dy),across=Math.abs((player.x-h.x)*dy-(player.y-h.y)*dx)/length;
+  assert.ok(across<1e-8,`seed ${seed}: center misses by ${across}`);spawned++;
+ }
+ assert.ok(spawned>=12,`only ${spawned} valid source placements`);
+});
+test('a stationary player at Lux R center takes damage at impact',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.disableSpawn();g.dodgeDirector.next=999;
+ assert.ok(g.spawnLuxR());advance(g,1.31);assert.equal(g.stats.hits,1);assert.equal(g.dodgeDirector.outcomes['LUX R'].hit,1);
+});
 test('Lux R supplies and executes a normal walking sidestep',()=>{
  let checked=0;
  for(let seed=1;seed<=16;seed++){
