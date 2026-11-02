@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Orianna early-Flash combo (2 November 2026)
+
+- Fixed Expert Orianna cancelling a visible Q → R combo if Ahri used Flash during ball travel. The initial spawn still requires Flash to be ready; once committed, spending Flash early is a valid player decision and the R continues at the ball's fixed destination. If Flash remains available, the existing cast-time escape check still applies. Added a simulation that Flashes during Q and verifies the full R resolves. Seven targeted Orianna, Lux and aim tests pass. Local build: `orianna-lux-v3`.
+- The previous game test run finished with exit 0 after the first Orianna/Lux change. Human multi-minute tests of visibility and overlapping pressure remain open. A fresh browser tab at the plain localhost URL showed a cached `mindgame-v1` HTML page; `http://127.0.0.1:8081/?build=orianna-lux-v3` loaded the correct v3 label and started Expert Dodge. Use a versioned page URL for playtests and verify the label; script query versioning alone does not prevent stale HTML.
+
 ## Mindgame Aim v1 and faster Malphite (2026-11-02)
 
 - Named the targeting experiment **Mindgame Aim v1**. For a moving player's straight-shot cast, the initial selection is 75% forward prediction, 10% reversal and 15% direct. The existing shared escape check can replace an unsafe prediction with direct aim or cancel the cast, so these are selection weights, not measured delivered-shot proportions. Stationary players are targeted directly.

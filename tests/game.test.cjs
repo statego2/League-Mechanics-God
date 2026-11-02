@@ -44,6 +44,13 @@ test('Expert Orianna ball arrives at a fixed destination and never follows Ahri'
  assert.ok(g.spawnOriannaR());const h=g.hazards[0],target={...h.destination};advance(g,.37);assert.equal(h.casting,false);assert.ok(Math.hypot(h.x-target.x,h.y-target.y)<.01);
  g.moveTo(g.player.x+100,g.player.y);advance(g,.12);assert.equal(h.casting,true);assert.equal(h.x,target.x);assert.equal(h.y,target.y);assert.ok(Math.hypot(h.x-g.player.x,h.y-g.player.y)>1);
 });
+test('Expert Orianna completes the ball combo if Ahri Flashes during Q travel',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setFoes([]);g.dodgeDirector.next=999;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=g.dodgeDirector.luxRAt=Infinity;
+ assert.ok(g.spawnOriannaR());const h=g.hazards[0],destination={...h.destination};
+ node('arena').listeners.pointermove({clientX:g.player.x+200,clientY:g.player.y,buttons:0});g.cast('f');assert.ok(g.player.cd.f>0);
+ advance(g,.47);assert.equal(h.casting,true);assert.equal(h.x,destination.x);assert.equal(h.y,destination.y);assert.equal(g.dodgeDirector.orianna,1);
+ advance(g,.51);assert.equal(g.hazards.includes(h),false);
+});
 test('centred Orianna Flash witnesses survive actual impact while Ahri is moving',()=>{
  let accepted=0;
  for(const [dx,dy] of [[100,0],[-100,0],[0,100],[0,-100]])for(const boosted of [false,true]){

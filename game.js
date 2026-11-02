@@ -1373,7 +1373,11 @@ for(const h of hazards){
    }
   }
   if(h.ttl<=0&&!h.casting){
-   if(difficulty==="hard"){if(!oriannaFlashEscape(h)){h.ttl=0;deferRareEvent(h);continue;}}
+   if(difficulty==="hard"){
+    // Once Q is travelling, an early Flash is the player's committed response,
+    // not a reason for Orianna to cancel the already-telegraphed combo.
+    if(player.cd.f<=0&&!oriannaFlashEscape(h)){h.ttl=0;deferRareEvent(h);continue;}
+   }
    else if(!oriannaEscape(h)){h.ttl=0;deferRareEvent(h);continue;}
    h.casting=true;h.ttl=ORIANNA_R.cast;h.threat=dist(player,h)<=h.r+player.hitRadius;
    dodgeDirector.attempted++;dodgeDirector.orianna++;
