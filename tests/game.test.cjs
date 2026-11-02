@@ -39,10 +39,28 @@ test('Expert Orianna centres her shockwave and a Flash response escapes the real
  const hits=g.stats.hits,witness={};assert.ok(g.oriannaFlashEscape(h,witness));advance(g,.2);node('arena').listeners.pointermove({clientX:witness.flash.x,clientY:witness.flash.y,buttons:0});g.cast('f');g.moveTo(witness.destination.x,witness.destination.y);advance(g,.31);
  assert.equal(g.dodgeDirector.outcomes['ORIANNA R'].avoided,1);assert.equal(g.stats.hits,hits);
 });
+test('Expert Orianna ball visibly follows the player after arriving and locks at cast',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setFoes([]);g.dodgeDirector.next=999;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=g.dodgeDirector.luxRAt=Infinity;
+ assert.ok(g.spawnOriannaR());const h=g.hazards[0];advance(g,.6);assert.equal(h.casting,false);
+ g.moveTo(g.player.x+100,g.player.y);advance(g,.2);assert.ok(Math.hypot(h.x-g.player.x,h.y-g.player.y)<1);
+ advance(g,.71);assert.equal(h.casting,true);const center={x:h.x,y:h.y};advance(g,.1);assert.equal(h.x,center.x);assert.equal(h.y,center.y);
+});
 test('Expert Malphite aims at the player and flash-only ultimates wait for Flash',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);
  assert.equal(g.dodgeDirector.malAt,15);g.setRng(1);const plan=g.aimMalphiteR({x:200,y:g.player.y});assert.ok(plan?.flashWitness);assert.equal(plan.target.x,g.player.x);assert.equal(plan.target.y,g.player.y);
  g.player.cd.f=10;assert.equal(g.aimMalphiteR({x:200,y:g.player.y}),null);assert.equal(g.spawnMalphiteR(),false);assert.equal(g.spawnOriannaR(),false);
+});
+test('Expert naturally introduces direct Malphite early across seeded runs',()=>{
+ for(const seed of [1,1234567,2468135]){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed);g.player.hp=g.player.maxHp=1e6;
+  let direct=false;while(g.time<45&&!direct){g.update(1/120);direct=g.hazards.some(h=>h.malphite&&h.casting&&h.direct);}
+  assert.ok(direct,`seed ${seed}: no direct Malphite before 45 seconds`);
+ }
+});
+test('Flash cooldown postpones direct ultimates without stopping regular threats',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setFoes([]);
+ g.setTime(100);g.player.cd.f=10;g.dodgeDirector.malAt=g.dodgeDirector.rareAt=99;g.dodgeDirector.cassAt=g.dodgeDirector.luxRAt=Infinity;g.dodgeDirector.next=0;
+ advance(g,2);assert.ok(g.dodgeDirector.malAt>g.time&&g.dodgeDirector.rareAt>g.time);assert.ok(g.foes.some(e=>e.dodgeVisitor)||g.dodgeDirector.attempted>0,'ordinary pressure stopped');
 });
 test('Expert Dodge has a bounded flow-spike-recovery rhythm',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');

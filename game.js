@@ -1365,6 +1365,9 @@ for(const h of hazards){
     if(pathHit||arrivalHit){if(player.invuln>0){recordDodgeOutcome(h.q,"blocked");stats.blocked++;}else{recordDodgeOutcome(h.q,"hit");takeHit(physicalDamage(ORIANNA_Q.raw,30));}if(state!=="playing")return;}
     else if(f>=1){recordDodgeOutcome(h.q,h.q.threat?"avoided":"harmless");if(h.q.threat){dodged++;cue("dodge");}}
    }
+   // Expert's reaction drill attaches the arrived ball to Ahri during setup,
+   // so the eventual centred R is visible instead of teleporting at cast.
+   if(difficulty==="hard"&&f>=1){h.x=player.x;h.y=player.y;}
   }
   if(h.ttl<=0&&!h.casting){
    if(difficulty==="hard"){h.x=player.x;h.y=player.y;if(!oriannaFlashEscape(h)){h.ttl=0;deferRareEvent(h);continue;}}
