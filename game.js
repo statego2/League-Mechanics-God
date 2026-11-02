@@ -564,6 +564,9 @@ function spawnXerathQ(witness=null){
 const ORIANNA_Q={radius:SIMULATION.toCanvas(80),arrival:SIMULATION.toCanvas(175),raw:60};
 // Riot 26.12 changed rank-one Shockwave base damage to 225.
 const ORIANNA_R={radius:SIMULATION.toCanvas(415),cast:.5,raw:225};
+// Expert training grants 100 ms extra to make the visible Flash reaction
+// practicable. League's documented Shockwave cast is 0.5 seconds.
+function oriannaCastDuration(){return difficulty==="hard"?.6:ORIANNA_R.cast;}
 // Sample ordinary movement from the position reached after the reaction delay.
 // These witnesses do not model Flash, future inputs or a complete navmesh.
 function sampleAreaEscape(reaction,impact,unsafe,witness=null){
@@ -589,12 +592,12 @@ function oriannaEscape(ball,witness=null){
 // A centred Shockwave needs Flash plus a short continuation: Flash's 400-unit
 // range alone is smaller than Shockwave radius plus the champion hitbox.
 function oriannaFlashEscape(ball,witness=null){
- const reaction=dodgeReactionDelay();if(player.cd.f>0||!Number.isFinite(reaction)||reaction>=ORIANNA_R.cast)return false;
+ const reaction=dodgeReactionDelay(),cast=oriannaCastDuration();if(player.cd.f>0||!Number.isFinite(reaction)||reaction>=cast)return false;
  const start=dodgeReactionPath(reaction).end;
  for(let i=0;i<32;i++){
   const a=i*TAU/32,landing={x:clamp(start.x+Math.cos(a)*200,25,W-25),y:clamp(start.y+Math.sin(a)*200,65,H-38)};
   if(!world.pointWalkable(landing,player.r))continue;
-  const travel=forecastTravel(reaction,ORIANNA_R.cast),end=world.clip(landing,{x:landing.x+Math.cos(a)*travel,y:landing.y+Math.sin(a)*travel},player.r);
+  const travel=forecastTravel(reaction,cast),end=world.clip(landing,{x:landing.x+Math.cos(a)*travel,y:landing.y+Math.sin(a)*travel},player.r);
   if(world.pointWalkable(end,player.r)&&world.segmentClear(landing,end,player.r)&&dist(end,ball)>ball.r+player.hitRadius+8){if(witness){witness.flash=landing;witness.destination=end;}return true;}
  }
  return false;
@@ -1386,7 +1389,7 @@ for(const h of hazards){
    // visible Q is committed, player movement or ability locks must not make R
    // disappear: they are decisions made in response to an existing threat.
    if(difficulty!=="hard"&&!oriannaEscape(h)){h.ttl=0;deferRareEvent(h);continue;}
-   h.casting=true;h.ttl=ORIANNA_R.cast;h.threat=dist(player,h)<=h.r+player.hitRadius;
+   h.casting=true;h.ttl=h.max=oriannaCastDuration();h.threat=dist(player,h)<=h.r+player.hitRadius;
    dodgeDirector.attempted++;dodgeDirector.orianna++;
   }else if(h.ttl<=0){
    // Released shockwave art, never a pre-cast indicator or collision guide.
@@ -1676,7 +1679,7 @@ for(const wall of sweeps){
  ctx.beginPath();ctx.moveTo(0,top);ctx.lineTo(W,top);ctx.moveTo(0,bottom);ctx.lineTo(W,bottom);ctx.stroke();ctx.restore();
  ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="left";ctx.fillStyle="#ffe1b5";ctx.fillText("SAFE GAP",46,wall.gap+4);
 }
-for(const h of hazards){if(h.cassio){drawChampion(h.x,h.y,h.casting?h.angle:Math.atan2(player.y-h.y,player.x-h.x),false,false,h.casting?clamp(1-h.ttl/CASSIO_R.cast,0,1):0,time*7,"cassio");continue;}if(h.malphite){ctx.save();ctx.translate(h.x,h.y);const art=$("stoneArt");if(art?.complete&&art.naturalWidth){ctx.drawImage(art,-42,-90,84,90);ctx.restore();continue;}ctx.fillStyle="#665f59";ctx.strokeStyle="#c1aa93";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-25,-16);ctx.lineTo(-22,-52);ctx.lineTo(0,-72);ctx.lineTo(23,-52);ctx.lineTo(27,-15);ctx.lineTo(10,0);ctx.lineTo(-12,0);ctx.closePath();ctx.fill();ctx.stroke();circle(-7,-45,3,"#aad4ee");circle(7,-45,3,"#aad4ee");ctx.restore();continue;}if(h.orianna){drawChampion(h.source.x,h.source.y,Math.atan2(h.y-h.source.y,h.x-h.source.x),false,false,h.casting?1:0,time*7,"clockwork");if(h.casting){const glow=ctx.createRadialGradient(h.x,h.y,0,h.x,h.y,45);glow.addColorStop(0,"#fff0ffdd");glow.addColorStop(1,"#cb85ff00");circle(h.x,h.y,45,glow);circle(h.x,h.y,18+8*(1-h.ttl/ORIANNA_R.cast),"#efc4ffbb",false,3);}circle(h.x,h.y,12,h.casting?"#f4d5ff":"#a989d8");circle(h.x,h.y,5,"#f4e6ff");continue;}if(h.beam){
+for(const h of hazards){if(h.cassio){drawChampion(h.x,h.y,h.casting?h.angle:Math.atan2(player.y-h.y,player.x-h.x),false,false,h.casting?clamp(1-h.ttl/CASSIO_R.cast,0,1):0,time*7,"cassio");continue;}if(h.malphite){ctx.save();ctx.translate(h.x,h.y);const art=$("stoneArt");if(art?.complete&&art.naturalWidth){ctx.drawImage(art,-42,-90,84,90);ctx.restore();continue;}ctx.fillStyle="#665f59";ctx.strokeStyle="#c1aa93";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-25,-16);ctx.lineTo(-22,-52);ctx.lineTo(0,-72);ctx.lineTo(23,-52);ctx.lineTo(27,-15);ctx.lineTo(10,0);ctx.lineTo(-12,0);ctx.closePath();ctx.fill();ctx.stroke();circle(-7,-45,3,"#aad4ee");circle(7,-45,3,"#aad4ee");ctx.restore();continue;}if(h.orianna){drawChampion(h.source.x,h.source.y,Math.atan2(h.y-h.source.y,h.x-h.source.x),false,false,h.casting?1:0,time*7,"clockwork");if(h.casting){const glow=ctx.createRadialGradient(h.x,h.y,0,h.x,h.y,45);glow.addColorStop(0,"#fff0ffdd");glow.addColorStop(1,"#cb85ff00");circle(h.x,h.y,45,glow);circle(h.x,h.y,18+8*(1-h.ttl/(h.max||ORIANNA_R.cast)),"#efc4ffbb",false,3);}circle(h.x,h.y,12,h.casting?"#f4d5ff":"#a989d8");circle(h.x,h.y,5,"#f4e6ff");continue;}if(h.beam){
  // Xerath's source cue stays short; Final Spark intentionally reveals its
  // charging lane so the player receives the full 0.9-second reaction window.
  const dx=h.endX-h.x,dy=h.endY-h.y,len=Math.hypot(dx,dy)||1;

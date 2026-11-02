@@ -36,8 +36,19 @@ test('Orianna shockwave draws animated impact arcs',()=>{
 test('Expert Orianna centres her shockwave and a Flash response escapes the real impact',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setFoes([]);g.dodgeDirector.next=999;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=g.dodgeDirector.luxRAt=Infinity;
  assert.ok(g.spawnOriannaR());const h=g.hazards[0];advance(g,.47);assert.equal(h.casting,true);assert.ok(Math.hypot(h.x-g.player.x,h.y-g.player.y)<1);
- const hits=g.stats.hits,witness={};assert.ok(g.oriannaFlashEscape(h,witness));advance(g,.2);node('arena').listeners.pointermove({clientX:witness.flash.x,clientY:witness.flash.y,buttons:0});g.cast('f');g.moveTo(witness.destination.x,witness.destination.y);advance(g,.31);
+ const hits=g.stats.hits,witness={};assert.ok(g.oriannaFlashEscape(h,witness));advance(g,.2);node('arena').listeners.pointermove({clientX:witness.flash.x,clientY:witness.flash.y,buttons:0});g.cast('f');g.moveTo(witness.destination.x,witness.destination.y);advance(g,.41);
  assert.equal(g.dodgeDirector.outcomes['ORIANNA R'].avoided,1);assert.equal(g.stats.hits,hits);
+});
+test('Expert Orianna gives a visible 0.6 second Flash window',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setFoes([]);g.dodgeDirector.next=999;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=g.dodgeDirector.luxRAt=Infinity;
+ assert.ok(g.spawnOriannaR());const h=g.hazards[0];while(!h.casting)g.update(1/120);assert.ok(Math.abs(h.ttl-.6)<1e-8);const hits=g.stats.hits;
+ advance(g,.55);assert.equal(g.stats.hits,hits);assert.ok(!g.fx.some(f=>f.shockwave));advance(g,.06);assert.equal(g.stats.hits,hits+1);assert.ok(g.fx.some(f=>f.shockwave));
+});
+test('Expert Orianna can be flashed after a 300ms reaction to R',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setFoes([]);g.dodgeDirector.next=999;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=g.dodgeDirector.luxRAt=Infinity;
+ assert.ok(g.spawnOriannaR());const h=g.hazards[0];while(!h.casting)g.update(1/120);const hits=g.stats.hits,witness={};assert.ok(g.oriannaFlashEscape(h,witness));
+ advance(g,.3);node('arena').listeners.pointermove({clientX:witness.flash.x,clientY:witness.flash.y,buttons:0});g.cast('f');g.moveTo(witness.destination.x,witness.destination.y);advance(g,.31);
+ assert.equal(g.stats.hits,hits);assert.equal(g.dodgeDirector.outcomes['ORIANNA R'].avoided,1);
 });
 test('Expert Orianna ball arrives at a fixed destination and never follows Ahri',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setFoes([]);g.dodgeDirector.next=999;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=g.dodgeDirector.luxRAt=Infinity;
@@ -49,7 +60,7 @@ test('Expert Orianna completes the ball combo if Ahri Flashes during Q travel',(
  assert.ok(g.spawnOriannaR());const h=g.hazards[0],destination={...h.destination};
  node('arena').listeners.pointermove({clientX:g.player.x+200,clientY:g.player.y,buttons:0});g.cast('f');assert.ok(g.player.cd.f>0);
  advance(g,.47);assert.equal(h.casting,true);assert.equal(h.x,destination.x);assert.equal(h.y,destination.y);assert.equal(g.dodgeDirector.orianna,1);
- advance(g,.51);assert.equal(g.hazards.includes(h),false);
+ advance(g,.61);assert.equal(g.hazards.includes(h),false);
 });
 test('Expert Orianna commits R after Q even if Ahri becomes unable to Flash',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setFoes([]);g.dodgeDirector.next=999;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=g.dodgeDirector.luxRAt=Infinity;
@@ -61,9 +72,9 @@ test('centred Orianna Flash witnesses survive actual impact while Ahri is moving
  for(const [dx,dy] of [[100,0],[-100,0],[0,100],[0,-100]])for(const boosted of [false,true]){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setFoes([]);g.dodgeDirector.next=999;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=g.dodgeDirector.luxRAt=Infinity;
   g.moveTo(g.player.x+dx,g.player.y+dy);if(boosted)g.cast('w');
-  const h={x:g.player.x,y:g.player.y,r:207.5,source:{x:200,y:200},orianna:true,casting:true,ttl:.5,max:.5,directed:true,spellName:'ORIANNA R',threat:true},witness={};
+  const h={x:g.player.x,y:g.player.y,r:207.5,source:{x:200,y:200},orianna:true,casting:true,ttl:.6,max:.6,directed:true,spellName:'ORIANNA R',threat:true},witness={};
   if(!g.oriannaFlashEscape(h,witness))continue;g.hazards.push(h);advance(g,.2);
-  node('arena').listeners.pointermove({clientX:witness.flash.x,clientY:witness.flash.y,buttons:0});g.cast('f');g.moveTo(witness.destination.x,witness.destination.y);advance(g,.31);
+  node('arena').listeners.pointermove({clientX:witness.flash.x,clientY:witness.flash.y,buttons:0});g.cast('f');g.moveTo(witness.destination.x,witness.destination.y);advance(g,.41);
   assert.equal(g.stats.hits,0,`${dx},${dy}, boosted=${boosted}`);accepted++;
  }
  assert.ok(accepted>=4,`only ${accepted} valid witnesses`);
@@ -73,9 +84,9 @@ test('centred Orianna Flash witnesses remain executable near sampled arena edges
  for(const x of [200,350,600,850,1000])for(const y of [180,260,400,500]){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setFoes([]);g.dodgeDirector.next=999;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=g.dodgeDirector.luxRAt=Infinity;
   if(!world.pointWalkable({x,y},g.player.r))continue;g.player.x=x;g.player.y=y;
-  const h={x,y,r:207.5,source:{x:200,y:200},orianna:true,casting:true,ttl:.5,max:.5,directed:true,spellName:'ORIANNA R',threat:true},witness={};
+  const h={x,y,r:207.5,source:{x:200,y:200},orianna:true,casting:true,ttl:.6,max:.6,directed:true,spellName:'ORIANNA R',threat:true},witness={};
   if(!g.oriannaFlashEscape(h,witness))continue;g.hazards.push(h);advance(g,.2);
-  node('arena').listeners.pointermove({clientX:witness.flash.x,clientY:witness.flash.y,buttons:0});g.cast('f');g.moveTo(witness.destination.x,witness.destination.y);advance(g,.31);
+  node('arena').listeners.pointermove({clientX:witness.flash.x,clientY:witness.flash.y,buttons:0});g.cast('f');g.moveTo(witness.destination.x,witness.destination.y);advance(g,.41);
   assert.equal(g.stats.hits,0,`position ${x},${y}`);accepted++;
  }
  assert.ok(accepted>=8,`only ${accepted} walkable witnesses`);

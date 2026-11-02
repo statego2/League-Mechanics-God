@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Expert Orianna reaction allowance (2 November 2026)
+
+- The player requested a little more time to Flash after the R cue. Community reference https://wiki.leagueoflegends.com/en-us/Orianna lists Shockwave cast time as 0.5 seconds; Expert training intentionally extends it to 0.6 seconds. Standard stays at 0.5. The visible charge and Flash escape forecast use the same Expert duration; Q ball movement, damage and collision remain unchanged. Build `orianna-reaction`.
+- Tests verify 0.6 s from actual R start to impact and execute a 300 ms reaction, Flash and follow-up movement against the real explosion. Eight focused Expert Orianna/Flash tests pass; human review is still needed. The preceding full suite returned exit 0, but this code changed near its end, so rerun for an unambiguous final result.
+
 ## Timing regression follow-up (2 November 2026)
 
 - A full suite started before the spacing correction failed early-Malphite and cross-FPS determinism checks after the game file changed during that run; its mixed-code result cannot characterize the final checkout. Both cases passed when rerun individually against the committed spacing correction, including the full 180-second 30/60/120 FPS simulation. A fresh complete run against the fixed checkout is still in progress; record its result separately.
