@@ -1691,6 +1691,12 @@ test('pause freezes a pending Velkoz split and restart clears it and its outcome
 });
 
 
+test('Flash works with the physical F key on a Greek keyboard layout',()=>{
+ const {g,node,window}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ node('arena').listeners.pointermove({clientX:1000,clientY:g.player.y,buttons:0});const x=g.player.x;let prevented=false;
+ window.listeners.keydown({key:'φ',code:'KeyF',repeat:false,preventDefault(){prevented=true;}});
+ assert.ok(prevented);assert.equal(g.player.x,x+200);assert.equal(g.player.cd.f,30);
+});
 test('Dodge Flash respects cursor distance, maximum range and training cooldown',()=>{
  for(const [targetX,expected] of [[650,50],[1000,200]]){
   const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;

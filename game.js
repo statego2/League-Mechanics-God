@@ -1737,7 +1737,10 @@ cv.addEventListener("pointerdown",e=>{if(state!=="playing")return;e.preventDefau
 if(e.button===2){stopHeldRight=false;attackMove=false;if(mode==="skillshot"){moveTo(mouse.x,mouse.y);return;}const t=nearestEnemy(mouse.x,mouse.y,30);if(t)attackOrder(t);else moveTo(mouse.x,mouse.y);}
 else if(e.button===0){if(attackMove){cancelAttack();player.order={type:"attackMove",...world.nearestWalkable(mouse)};player.route=[];player.routeGoal=null;player.target=null;player.focus=null;attackMove=false;notify("ATTACK MOVE");}else{const t=nearestEnemy(mouse.x,mouse.y,24);if(t)attackOrder(t);}}
 });
-window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(e.repeat)return;if(["q","w","e","r","f","a","s","p","t","escape"].includes(k))e.preventDefault();if(k==="t"&&player&&state!=="menu"){reset(mode);return;}if(k==="p"||k==="escape"){if(state==="playing"||state==="paused")pause();return;}if(state!=="playing"||e.repeat)return;if(k==="s"){stopPlayer();return;}if(k==="a"&&mode==="skillshot"){notify("SKILLSHOT LAB — AIM WITH Q");return;}if(k==="a"){attackMove=true;notify("ATTACK MOVE — LEFT CLICK");return;}if(CD[k])cast(k);});
+// Physical letter keys keep the advertised game controls usable on Greek and
+// other keyboard layouts, where e.key may be φ instead of f. Fall back to key
+// for Escape and environments that do not report a physical code.
+window.addEventListener("keydown",e=>{const k=/^Key[A-Z]$/.test(e.code||"")?e.code.slice(3).toLowerCase():e.key.toLowerCase();if(e.repeat)return;if(["q","w","e","r","f","a","s","p","t","escape"].includes(k))e.preventDefault();if(k==="t"&&player&&state!=="menu"){reset(mode);return;}if(k==="p"||k==="escape"){if(state==="playing"||state==="paused")pause();return;}if(state!=="playing"||e.repeat)return;if(k==="s"){stopPlayer();return;}if(k==="a"&&mode==="skillshot"){notify("SKILLSHOT LAB — AIM WITH Q");return;}if(k==="a"){attackMove=true;notify("ATTACK MOVE — LEFT CLICK");return;}if(CD[k])cast(k);});
 window.addEventListener("blur",()=>{if(state==="playing")pause();});
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&state==="playing")pause();});
 $("soundBtn").addEventListener("click",toggleSound);

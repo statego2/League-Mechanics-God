@@ -2,6 +2,10 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Keyboard-layout Flash fix (2026-11-02)
+
+- The key handler previously relied on the typed character (`event.key`), so F could produce `φ` on a Greek keyboard and never trigger Flash. Game letter controls now use physical `event.code` when available, with the old key fallback. Added a regression that sends `key: φ`, `code: KeyF` through the actual keydown handler and verifies Flash moves toward the cursor.
+
 ## Dodge Flash practice availability (2026-11-02)
 
 - Investigation found Flash was bound to F and had a 300-second cooldown, making repeated practice impractical. Dodge now uses an explicit 30-second training cooldown; other Ahri/reference drills retain 300 seconds. Trying F on cooldown shows the remaining time, and a displacement lock now gives feedback instead of silently ignoring the key.
