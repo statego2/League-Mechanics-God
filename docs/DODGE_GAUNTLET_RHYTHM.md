@@ -18,7 +18,7 @@ Imagine an endless continuous drill, with Expert as the main balancing target:
 - **Ezreal Q is the baseline rhythm**: many attempts from changing angles, with moving casters and periodic two-shot pressure. The player becomes excellent at reading and sidestepping ordinary, fast, single-projectile threats.
 - Lux and Blitz make a straight shot more consequential: roots/hooks reward intelligent body position and movement.
 - Ahri Q makes the player think beyond the first successful sidestep because **the orb returns**.
-- Vel'Koz Q changes trajectory logic via the split.
+- Vel'Koz Q changes trajectory logic via the split. Its main bolt and two child bolts are one demanding, self-contained encounter—not background clutter to stack beneath another fresh regular spell.
 - Xerath Q and W surprise the player **from the map**; there is no requirement for a visible Xerath champion, but there must still be reliable, fair sensory information before impact.
 - Orianna R is occasional and requires tracking the **ball**.
 - **Malphite R is infrequent**: a meaningful reaction/prediction or Flash decision, especially during otherwise ordinary dodge sequences. It is not on a visible repeating timer.
@@ -142,7 +142,7 @@ These are initial production design ranges, to be adjusted from actual player ou
 - Ezreal Q + Lux Q: ordinary threat plus punishable root.
 - Ezreal Q + Ahri Q return: avoid near and far future trajectories.
 - Ezreal Q + Xerath W: line dodge while exiting delayed AoE.
-- Ezreal Q + Vel'Koz split: choose a safe corridor amid a branching path.
+- Vel'Koz split by itself: choose a safe corridor amid a branching path, then reset before another regular encounter arrives.
 
 **Major events** are usually **replacements** for a spike:
 - Malphite R may be paired with **one** straightforward Ezreal Q at expert level *if* at least one viable defense remains and the player has adequate cues. Do not automatically combine Malphite R with Orianna R.
@@ -190,7 +190,7 @@ Practical first implementation can use **a few authored safe encounter templates
 
 - Foundation: **1** significant active threat, with low overlap.
 - Standard: **2** significant simultaneous threats.
-- Expert: **3** simultaneous significant threats, more only when combinations are manually approved and measurable.
+- Expert: **2** independently committed significant threats in the current shipped trainer pass. A multi-phase spell such as Vel'Koz Q still contains several projectiles, but is scheduled in isolation so its branches are read as one encounter. A future third independent threat requires a separately measured, manually approved combination rather than an incidental scheduler overlap.
 
 An Ahri return Q is **one encounter with multiple phases**; Vel'Koz Q split can yield several projectiles but is not three new independent champion encounter decisions. Count actual dangerous geometry, not raw sprite count.
 
