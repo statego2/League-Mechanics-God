@@ -4,9 +4,9 @@ const assert=require('node:assert/strict');
 const vm=require('node:vm');
 const fs=require('node:fs');
 function boot(preset="standard", options={}){
- const nodes=new Map(),draws=[],drawSizes=[],strokes=[],arcs=[],texts=[],lines=[],rotations=[];
+ const nodes=new Map(),draws=[],drawSizes=[],strokes=[],strokeWidths=[],arcs=[],texts=[],lines=[],rotations=[];
  function node(id){if(!nodes.has(id))nodes.set(id,{textContent:'',style:{},classList:{add(){},remove(){},toggle(){}},listeners:{},addEventListener(k,f){this.listeners[k]=f;},closest(){return this;},setAttribute(k,v){this[k]=v;},getBoundingClientRect(){return {left:0,top:0,width:1200,height:675};}});return nodes.get(id);}
- const ctx=new Proxy({drawImage(img,...args){draws.push(img);drawSizes.push([img,...args])},rotate(a){rotations.push(a)},arc(x,y,r){arcs.push({x,y,r})},fillText(t){texts.push(String(t))},stroke(){strokes.push(this.strokeStyle)},lineTo(x,y){lines.push({x,y})},createRadialGradient(){return {addColorStop(){}};}},{get(o,k){return o[k]||(()=>{});}});
+ const ctx=new Proxy({drawImage(img,...args){draws.push(img);drawSizes.push([img,...args])},rotate(a){rotations.push(a)},arc(x,y,r){arcs.push({x,y,r})},fillText(t){texts.push(String(t))},stroke(){strokes.push(this.strokeStyle);strokeWidths.push(this.lineWidth)},lineTo(x,y){lines.push({x,y})},createRadialGradient(){return {addColorStop(){}};}},{get(o,k){return o[k]||(()=>{});}});
  node('arena').getContext=()=>ctx;
  const window={devicePixelRatio:1,listeners:{},addEventListener(k,f){this.listeners[k]=f;}};
  const document={getElementById:id=>options.missingNodes?.includes(id)?null:node(id),querySelectorAll:()=>[],addEventListener(){}};
@@ -19,7 +19,7 @@ function boot(preset="standard", options={}){
  const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,DODGE_TUNING,DODGE_DIRECTOR,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,visitorPathsCrowded,updateDodgeVisitor,dodgeAimPoint,dodgeRhythmMultiplier,spawnXerathW,spawnXerathQ,spawnLuxR,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,oriannaFlashEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
- return {g,node,window,draws,drawSizes,strokes,arcs,texts,lines,rotations,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
+ return {g,node,window,draws,drawSizes,strokes,strokeWidths,arcs,texts,lines,rotations,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
 }
 function foe(g,x=800,y=337.5){const e=g.enemy(x,y);e.speed=0;e.shoot=999;e.hp=e.maxHp=10000;g.setFoes([e]);return e;}
 function advance(g,seconds){for(let i=0;i<Math.round(seconds*120);i++)g.update(1/120);}
@@ -120,6 +120,11 @@ test('Expert Lux R shows a source tell before its 0.9 second visible charge',()=
  const beamLength=Math.hypot(h.endX-h.x,h.endY-h.y),aimedDistance=Math.hypot(g.player.x-h.x,g.player.y-h.y);
  assert.ok(h.cueStart*beamLength>=aimedDistance+h.r+g.player.hitRadius+11.9,'the charge cue must already cover Ahri\'s full hit envelope');
  assert.equal(g.foes.length,0);assert.equal(g.shots.length,0);assert.equal(g.spawnDodgeVisitor(),false,'Lux R must not gain a follow-up during its charge');advance(g,.41);assert.equal(h.precast,false);assert.equal(h.max,.9);assert.ok(h.ttl>.88&&h.ttl<=.9);advance(g,.39);assert.ok(h.ttl>.49&&h.ttl<.52,'beam fired before its readable charge completed');
+});
+test('Lux R impact draws the same width as its collision beam',()=>{
+ const {g,node,strokeWidths,strokes}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.disableSpawn();g.dodgeDirector.next=999;
+ assert.ok(g.spawnLuxR());const h=g.hazards[0],width=h.r*2;advance(g,1.31);
+ assert.ok(g.fx.some(f=>f.beam&&f.r===h.r));g.render();const index=strokes.lastIndexOf('#ffe2a8');assert.ok(index>=0);assert.equal(strokeWidths[index],width);
 });
 test('Lux R supplies and executes a normal walking sidestep',()=>{
  let checked=0;

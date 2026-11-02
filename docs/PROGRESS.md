@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Beam impact width (2 November 2026)
+
+- Lux R and Xerath Q impact VFX previously used Xerath's fixed beam width regardless of their own collision radius, making Lux's visible hit disagree with its actual beam. Each impact now renders at its hazard diameter; collision, timings, aim and difficulty are unchanged. The thin charge cue remains a visual cue, not a hitbox overlay. Build `beam-width`.
+- Added a regression which executes Lux R, captures its actual impact and verifies the rendered stroke width matches its collision beam. All 36 selected Lux, Xerath and Orianna tests pass; human visual review is still needed.
+
 ## Dodge records for Mindgame Aim (2 November 2026)
 
 - Dodge records now use `director_v87` rather than v86. Predictive aim, faster Malphite and the fixed Orianna/Lux sequence materially changed the encounters, so mixing the two versions would make personal bests misleading. Old v86 records remain in local storage, but are no longer displayed as comparable results. No gameplay or difficulty settings changed. Local build `dodge-v87`.

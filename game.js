@@ -1400,7 +1400,7 @@ for(const h of hazards){
   const collision=beamTouchesPlayer(h,effectPlayer,player.hitRadius);
   if(collision)h.threat=true;
   h.ttl-=dt;if(h.ttl<=0){
-   fx.push({x:h.x,y:h.y,endX:h.endX,endY:h.endY,vx:0,vy:0,ttl:.2,max:.2,color:h.luxR?"#ffe2a8":"#b5e5ff",beam:true});
+   fx.push({x:h.x,y:h.y,endX:h.endX,endY:h.endY,r:h.r,vx:0,vy:0,ttl:.2,max:.2,color:h.luxR?"#ffe2a8":"#b5e5ff",beam:true});
    if(collision){if(player.invuln>0){recordDodgeOutcome(h,"blocked");stats.blocked++;}else{recordDodgeOutcome(h,"hit");takeHit(physicalDamage(h.luxR?LUX_R.raw:XERATH_Q.raw,30));}}
    else{recordDodgeOutcome(h,h.threat?"avoided":"harmless");if(h.threat){dodged++;cue("dodge");}}
    if(state!=="playing")return;
@@ -1667,7 +1667,7 @@ for(const wall of sweeps){
 }
 for(const h of hazards){if(h.cassio){drawChampion(h.x,h.y,h.casting?h.angle:Math.atan2(player.y-h.y,player.x-h.x),false,false,h.casting?clamp(1-h.ttl/CASSIO_R.cast,0,1):0,time*7,"cassio");continue;}if(h.malphite){ctx.save();ctx.translate(h.x,h.y);const art=$("stoneArt");if(art?.complete&&art.naturalWidth){ctx.drawImage(art,-42,-90,84,90);ctx.restore();continue;}ctx.fillStyle="#665f59";ctx.strokeStyle="#c1aa93";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-25,-16);ctx.lineTo(-22,-52);ctx.lineTo(0,-72);ctx.lineTo(23,-52);ctx.lineTo(27,-15);ctx.lineTo(10,0);ctx.lineTo(-12,0);ctx.closePath();ctx.fill();ctx.stroke();circle(-7,-45,3,"#aad4ee");circle(7,-45,3,"#aad4ee");ctx.restore();continue;}if(h.orianna){drawChampion(h.source.x,h.source.y,Math.atan2(h.y-h.source.y,h.x-h.source.x),false,false,h.casting?1:0,time*7,"clockwork");if(h.casting){const glow=ctx.createRadialGradient(h.x,h.y,0,h.x,h.y,45);glow.addColorStop(0,"#fff0ffdd");glow.addColorStop(1,"#cb85ff00");circle(h.x,h.y,45,glow);circle(h.x,h.y,18+8*(1-h.ttl/ORIANNA_R.cast),"#efc4ffbb",false,3);}circle(h.x,h.y,12,h.casting?"#f4d5ff":"#a989d8");circle(h.x,h.y,5,"#f4e6ff");continue;}if(h.beam){
  // Xerath's source cue stays short; Final Spark intentionally reveals its
- // charging lane so the player receives the full one-second reaction window.
+ // charging lane so the player receives the full 0.9-second reaction window.
  const dx=h.endX-h.x,dy=h.endY-h.y,len=Math.hypot(dx,dy)||1;
  const precast=h.luxR&&h.precast,progress=clamp(1-h.ttl/h.max,0,1),cueLength=h.luxR?len*(h.cueStart+(1-h.cueStart)*.94*progress):45;
  if(h.luxR)drawChampion(h.x,h.y,Math.atan2(dy,dx),false,false,precast?.15:progress,time*7,"lux");
@@ -1760,7 +1760,7 @@ for(const f of fx){ctx.globalAlpha=clamp(f.ttl/f.max,0,1);if(f.cassio){
   for(let i=0;i<4;i++){ctx.beginPath();ctx.arc(0,0,radius,i*TAU/4,i*TAU/4+1.05);ctx.strokeStyle=i%2?"#eed6ffff":"#bf8dffff";ctx.lineWidth=5+5*(1-progress);ctx.stroke();}
   circle(0,0,Math.max(6,36*(1-progress)),"#fff1ffcc");ctx.restore();
  }
-}else if(f.beam){ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(f.endX,f.endY);ctx.strokeStyle=f.color;ctx.lineWidth=XERATH_Q.radius*2;ctx.lineCap="butt";ctx.stroke();}else if(f.text){ctx.font="bold 15px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y);}else circle(f.x,f.y,f.r,f.color);}ctx.globalAlpha=1;
+}else if(f.beam){ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.lineTo(f.endX,f.endY);ctx.strokeStyle=f.color;ctx.lineWidth=f.r*2;ctx.lineCap="butt";ctx.stroke();}else if(f.text){ctx.font="bold 15px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y);}else circle(f.x,f.y,f.r,f.color);}ctx.globalAlpha=1;
 if(state==="playing"&&(referenceSpell()||mode==="dodge"||mode==="lastHit"||mode==="lane"||mode==="skillshot"||mode==="bait")){ctx.font="700 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#b7d9d9aa";ctx.fillText(referenceSpell()?`${referenceSpell().name} · MOVE OR FLASH · ${Math.max(0,60-Math.floor(time))}s`:mode==="lane"?"FARM, EVADE AND TRADE · "+Math.max(0,60-Math.floor(time))+"s":mode==="bait"?baitLabel():mode==="skillshot"?"AIM WITH THE CURSOR · Q TO FIRE · "+Math.max(0,45-Math.floor(time))+"s":mode==="lastHit"?`${autoDamage()} AUTO DAMAGE · WAVE `+waves+(ahriCS()?` / 20 · GOLD ${stats.gold} · GOLD MISSED ${stats.missedGold}`:" / 5"):"SURVIVE",W/2,90);}
 }
 function loop(ts){const dt=last?Math.min((ts-last)/1000,.25):0;last=ts;if(state==="playing"){accumulator+=dt;while(accumulator>=STEP&&state==="playing"){update(STEP);accumulator-=STEP;}}else accumulator=0;render();requestAnimationFrame(loop);}
