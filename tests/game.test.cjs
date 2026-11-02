@@ -52,6 +52,12 @@ test('Lux R supplies and executes a normal walking sidestep',()=>{
  }
  assert.ok(checked>=8,`only ${checked} executable Lux R escapes`);
 });
+test('Lux R locks its beam direction throughout the charge',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.disableSpawn();g.dodgeDirector.next=999;g.setRng(104729);
+ assert.ok(g.spawnLuxR());const h=g.hazards[0],end={x:h.endX,y:h.endY};
+ g.moveTo(g.player.x+160,g.player.y-120);advance(g,.45);
+ assert.deepEqual({x:h.endX,y:h.endY},end);assert.ok(h.ttl>.5,'charge unexpectedly resolved');
+});
 test('Expert starts with sustained mixed pressure and early Cassiopeia and Malphite',t=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
  let maxActive=0,mixed=false;
