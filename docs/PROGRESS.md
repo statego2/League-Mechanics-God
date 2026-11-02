@@ -2,6 +2,11 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Orianna R circle at cast start (2 November 2026)
+
+- Player clarified that the Shockwave circle must be visible during R's windup, giving time to Flash, instead of first appearing at impact. The full-radius purple cast ring now appears as soon as R starts; damage still resolves at the end of the existing 0.6-second Expert / 0.5-second Standard cast. Ball Q can still deal its separate earlier damage. This supersedes older notes saying there is no pre-cast area cue. Build `orianna-cast-ring`.
+- Regression covers a visible ring with no damage before expiry and a real Expert Flash-and-move response after 0.3 s; 31 Orianna-focused tests pass. Human visual verification in a live encounter remains open. Full suite started before this code change cannot establish the final state.
+
 ## Mindgame visitor feints (2 November 2026)
 
 - Added a small 6% selection chance for ordinary Expert visitors to pause visibly and leave before starting a cast. This implements the player's cast-or-not request while leaving most pressure intact. Forced follow-ups, major ultimates and other difficulties are unchanged. A feint releases no projectile, consumes no spell cast and awards no dodge; it does not cancel a committed windup. Build `mindgame-feint`.

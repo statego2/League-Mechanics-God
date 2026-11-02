@@ -55,6 +55,12 @@ test('Expert Orianna can be flashed after a 300ms reaction to R',()=>{
  advance(g,.3);node('arena').listeners.pointermove({clientX:witness.flash.x,clientY:witness.flash.y,buttons:0});g.cast('f');g.moveTo(witness.destination.x,witness.destination.y);advance(g,.31);
  assert.equal(g.stats.hits,hits);assert.equal(g.dodgeDirector.outcomes['ORIANNA R'].avoided,1);
 });
+test('the visible Orianna R circle gives time to Flash and move clear',()=>{
+ const {g,node,arcs}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setFoes([]);g.dodgeDirector.next=999;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=g.dodgeDirector.luxRAt=Infinity;
+ assert.ok(g.spawnOriannaR());const h=g.hazards[0];while(!h.casting)g.update(1/120);const hits=g.stats.hits,witness={};g.render();assert.ok(arcs.some(a=>a.r===h.r&&a.x===h.x&&a.y===h.y));assert.ok(g.oriannaFlashEscape(h,witness));
+ advance(g,.3);assert.equal(g.stats.hits,hits);node('arena').listeners.pointermove({clientX:witness.flash.x,clientY:witness.flash.y,buttons:0});g.cast('f');g.moveTo(witness.destination.x,witness.destination.y);advance(g,.31);
+ assert.equal(g.stats.hits,hits);assert.equal(g.dodgeDirector.outcomes['ORIANNA R'].avoided,1);
+});
 test('Expert Orianna ball arrives at a fixed destination and never follows Ahri',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setFoes([]);g.dodgeDirector.next=999;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=g.dodgeDirector.luxRAt=Infinity;
  assert.ok(g.spawnOriannaR());const h=g.hazards[0],target={...h.destination};advance(g,.37);assert.equal(h.casting,false);assert.ok(Math.hypot(h.x-target.x,h.y-target.y)<.01);
@@ -1782,10 +1788,12 @@ test('Orianna ball draws over Ahri when their positions coincide',()=>{
  const playerIndex=renderEvents.findIndex(e=>e.type==='image'&&e.img===art),ballIndex=renderEvents.findIndex(e=>e.type==='arc'&&e.x===h.x&&e.y===h.y&&e.r===12);
  assert.ok(playerIndex>=0);assert.ok(ballIndex>playerIndex,'ball must remain visible over the player sprite');
 });
-test('Orianna shockwave appears on impact without a pre-cast area guide',()=>{
+test('Orianna R shows its circle during windup before damage',()=>{
  const {g,arcs}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
- const h={x:g.player.x-350,y:g.player.y,source:{x:g.player.x-400,y:g.player.y},r:207.5,orianna:true,casting:true,ttl:.05,directed:true,spellName:'ORIANNA R'};g.hazards.push(h);
- g.render();assert.ok(!arcs.some(a=>a.r===h.r));g.update(.06);arcs.length=0;g.render();assert.ok(arcs.some(a=>a.r===h.r));
+ const h={x:g.player.x,y:g.player.y,source:{x:200,y:200},r:207.5,orianna:true,casting:true,ttl:.5,max:.5,directed:true,spellName:'ORIANNA R'};g.hazards.push(h);
+ g.render();assert.ok(arcs.some(a=>a.r===h.r&&a.x===h.x&&a.y===h.y));assert.equal(g.stats.hits,0);
+ advance(g,.2);assert.equal(g.stats.hits,0);assert.ok(!g.fx.some(f=>f.shockwave));advance(g,.31);
+ assert.equal(g.stats.hits,1);assert.ok(g.fx.some(f=>f.shockwave));
 });
 
 test('Orianna R deals damage only as its full-radius shockwave appears',()=>{
