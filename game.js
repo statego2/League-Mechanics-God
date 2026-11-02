@@ -1593,7 +1593,15 @@ for(const h of hazards){if(h.cassio){drawChampion(h.x,h.y,h.casting?h.angle:Math
  if(precast){circle(h.x,h.y,28,"#ffe09a33",false,2);circle(h.x,h.y,10,"#fff2c9");continue;}
  ctx.save();ctx.lineCap="round";ctx.beginPath();ctx.moveTo(h.x,h.y);ctx.lineTo(h.x+dx/len*cueLength,h.y+dy/len*cueLength);ctx.strokeStyle=h.luxR?"#ffe5a8aa":"#9edcffaa";ctx.lineWidth=h.luxR?5:7;ctx.stroke();ctx.restore();
  circle(h.x,h.y,h.luxR?20:16,h.luxR?"#ffe09a44":"#8bcfff44");circle(h.x,h.y,h.luxR?8:7,h.luxR?"#fff2c9":"#d0edff");continue;
- }if(h.xerath){circle(h.x,h.y,h.r,"#88bbec33");circle(h.x,h.y,h.r,"#96d4ff",false,2);circle(h.x,h.y,XERATH_W.center,"#c1e4ff66",false,1);continue;}circle(h.x,h.y,h.r,"#e58c6422");circle(h.x,h.y,h.r,"#ffbc80",false,2);circle(h.x,h.y,h.r*(1-h.ttl/h.max),"#ffc08d99",false,3);ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#ffd5aa";ctx.fillText("IMPACT",h.x,h.y+4);}
+ }if(h.xerath){
+  // Eye of Destruction stays an honest circular ground threat, but uses an
+  // original arcane rune and inward energy instead of debug-like radius rings.
+  const charge=clamp(1-h.ttl/h.max,0,1),glow=ctx.createRadialGradient(h.x,h.y,0,h.x,h.y,h.r);
+  glow.addColorStop(0,"#d9f5ff55");glow.addColorStop(.38,"#75bff733");glow.addColorStop(1,"#4b82c900");circle(h.x,h.y,h.r,glow);
+  ctx.save();ctx.translate(h.x,h.y);ctx.rotate(time*.8);
+  for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(0,0,h.r*(.52+i*.14),i*TAU/3+.18,i*TAU/3+1.48);ctx.strokeStyle=i===1?"#c7efffbb":"#6db9ee88";ctx.lineWidth=2+charge*1.5;ctx.stroke();}
+  ctx.rotate(-time*.8*2.4);ctx.beginPath();ctx.moveTo(-XERATH_W.center*.42,0);ctx.lineTo(0,-XERATH_W.center*.42);ctx.lineTo(XERATH_W.center*.42,0);ctx.lineTo(0,XERATH_W.center*.42);ctx.closePath();ctx.fillStyle="#d7f5ff55";ctx.fill();ctx.strokeStyle="#d4f4ffcc";ctx.lineWidth=1.5;ctx.stroke();ctx.restore();continue;
+ }circle(h.x,h.y,h.r,"#e58c6422");circle(h.x,h.y,h.r,"#ffbc80",false,2);circle(h.x,h.y,h.r*(1-h.ttl/h.max),"#ffc08d99",false,3);ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#ffd5aa";ctx.fillText("IMPACT",h.x,h.y+4);}
 if(mode==="bait"&&bait.phase==="approach"){const caster=foes.find(e=>e.baitCaster);if(caster){ctx.save();ctx.setLineDash([6,7]);circle(caster.x,caster.y,260,"#ffbb8890",false,2);ctx.restore();}}
 for(const e of foes)if(e.pending){
  ctx.save();if(mode!=="dodge")for(const offset of e.pending.fan?[-.23,0,.23]:[0]){

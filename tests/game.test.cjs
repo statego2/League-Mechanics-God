@@ -1060,6 +1060,10 @@ test('Xerath W uses its compact center based edge and outside hits use base dama
   g.player.x=h.x+offset;g.player.y=h.y;advance(g,.91);assert.ok(Math.abs(g.stats.damage-expected)<1e-7,`offset ${offset}`);
  }
 });
+test('Xerath W renders a compact rune without a textual countdown',()=>{
+ const {g,arcs,texts}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnXerathW());const h=g.hazards[0];g.render();
+ assert.ok(arcs.some(a=>a.x===0&&a.y===0&&a.r<h.r),'missing local rune arcs');assert.ok(!texts.includes('IMPACT'));
+});
 
 
 test('Blitz Q visitor commits one hook, then pulls Ahri to the source-side landing',()=>{
