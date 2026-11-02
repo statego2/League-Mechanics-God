@@ -1709,6 +1709,13 @@ test('Flash aimed at Ahri herself does not waste its cooldown',()=>{
  window.listeners.keydown({key:'φ',code:'KeyF',repeat:false,preventDefault(){}});
  assert.equal(g.player.cd.f,0);assert.match(node('toast').textContent,/MOVE CURSOR AWAY/);
 });
+test('Flash cooldown display never shows zero while Flash is unavailable',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ node('arena').listeners.pointermove({clientX:1000,clientY:g.player.y,buttons:0});g.cast('f');
+ g.player.cd.f=1.01;g.update(0);assert.equal(node('cdF').textContent,'2');
+ g.player.cd.f=.01;g.update(0);assert.equal(node('cdF').textContent,'0.1');
+ g.player.cd.f=0;g.update(0);assert.equal(node('cdF').textContent,'');
+});
 test('Dodge Flash respects cursor distance, maximum range and training cooldown',()=>{
  for(const [targetX,expected] of [[650,50],[1000,200]]){
   const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;

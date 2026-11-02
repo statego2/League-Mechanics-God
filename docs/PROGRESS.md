@@ -2,6 +2,10 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Ability cooldown display (2026-11-02)
+
+- Cooldown numbers now round upward, including the final tenth of a second. Previously the HUD could show 0 or 0.0 while Flash remained unavailable, making a valid cooldown look like an input failure. Added a regression for the final seconds and ready state.
+
 ## Keyboard-layout Flash fix (2026-11-02)
 
 - The key handler previously relied on the typed character (`event.key`), so F could produce `φ` on a Greek keyboard and never trigger Flash. Game letter controls now use physical `event.code` when available, with the old key fallback. Added a regression that sends `key: φ`, `code: KeyF` through the actual keydown handler and verifies Flash moves toward the cursor.
