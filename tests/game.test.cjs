@@ -57,6 +57,18 @@ test('centred Orianna Flash witnesses survive actual impact while Ahri is moving
  }
  assert.ok(accepted>=4,`only ${accepted} valid witnesses`);
 });
+test('centred Orianna Flash witnesses remain executable near sampled arena edges',()=>{
+ const world=require('../world.js');let accepted=0;
+ for(const x of [200,350,600,850,1000])for(const y of [180,260,400,500]){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);g.setFoes([]);g.dodgeDirector.next=999;g.dodgeDirector.cassAt=g.dodgeDirector.malAt=g.dodgeDirector.rareAt=g.dodgeDirector.luxRAt=Infinity;
+  if(!world.pointWalkable({x,y},g.player.r))continue;g.player.x=x;g.player.y=y;
+  const h={x,y,r:207.5,source:{x:200,y:200},orianna:true,casting:true,ttl:.5,max:.5,directed:true,spellName:'ORIANNA R',threat:true},witness={};
+  if(!g.oriannaFlashEscape(h,witness))continue;g.hazards.push(h);advance(g,.2);
+  node('arena').listeners.pointermove({clientX:witness.flash.x,clientY:witness.flash.y,buttons:0});g.cast('f');g.moveTo(witness.destination.x,witness.destination.y);advance(g,.31);
+  assert.equal(g.stats.hits,0,`position ${x},${y}`);accepted++;
+ }
+ assert.ok(accepted>=8,`only ${accepted} walkable witnesses`);
+});
 test('Expert Malphite aims at the player and flash-only ultimates wait for Flash',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.update(0);
  assert.equal(g.dodgeDirector.malAt,15);g.setRng(1);const plan=g.aimMalphiteR({x:200,y:g.player.y});assert.ok(plan?.flashWitness);assert.equal(plan.target.x,g.player.x);assert.equal(plan.target.y,g.player.y);
