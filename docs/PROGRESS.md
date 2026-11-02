@@ -2,6 +2,10 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Mindgame reversal verification (2 November 2026)
+
+- Added an executed seeded visitor scenario proving a reversal-read projectile can hit when the moving player reverses, and that a separately forecast response avoids the same cast. This complements the forward-lead hit/evade and weighted-selection tests. All four targeted prediction and fallback tests pass. This is sampled evidence, not a measurement that every reversal or every delivered shot is equally threatening; no tuning changed.
+
 ## Full regression and current Dodge documentation (2 November 2026)
 
 - Full `node --test --test-reporter=dot tests/*.test.cjs` run started after Expert Orianna's committed-combo change completed with exit 0. The later two Lux-center tests also passed in their targeted run. The suite does not establish human reaction fairness or visual quality.

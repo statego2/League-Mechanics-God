@@ -2491,6 +2491,20 @@ test('a predictive shot can punish continuing straight while a changed path dodg
 });
 
 
+test('a reversal read can punish reversing movement and has an escape',()=>{
+ let found=false;
+ for(let seed=1;seed<=120&&!found;seed++)for(const delay of [0,.1,.2,.3]){
+  function setup(){const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setRng((seed*2654435761)>>>0);const spell=g.REFERENCE_SPELLS.ezrealDodge,origin={x:130,y:g.player.y};const e=g.enemy(origin.x,origin.y);Object.assign(e,{dodgeVisitor:true,spell,phase:'enter',origin:{...origin},entry:{...origin},speed:120});g.setFoes([e]);g.moveTo(g.player.x,g.player.y+250);g.update(1/120);return {g,e,spell};}
+  const reversed=setup();if(reversed.e.phase!=='cast'||reversed.e.pending.pattern!=='reversal')break;
+  advance(reversed.g,delay);reversed.g.moveTo(reversed.g.player.x,reversed.g.player.y-250);advance(reversed.g,1);
+  if(reversed.g.stats.hits===0)continue;
+  const {g,e,spell}=setup(),angle=e.pending.angle,witness={},aim={x:e.x+Math.cos(angle)*400,y:e.y+Math.sin(angle)*400};
+  if(!g.canEvadeDodgeCast(e,spell,witness,aim))continue;
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1);assert.equal(g.stats.hits,0);found=true;break;
+ }
+ assert.ok(found,'no reversal read punished a reversal while retaining a verified escape');
+});
+
 test('unsafe lead falls back to a separately verified direct shot',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const spell=g.REFERENCE_SPELLS.ezrealDodge;
  let found=null;const blocker=g.fire(0,0,0,500,'enemy',10,20,2);Object.assign(blocker,{directed:true,spellName:'LUX Q'});
