@@ -885,10 +885,15 @@ test('Spirit Rush crosses a wall only when its destination is walkable',()=>{
  node('arena').listeners.pointermove({clientX:720,clientY:580,buttons:0});g.cast('r');assert.equal(g.player.dashing.throughTerrain,false);
  advance(g,.4);assert.ok(g.player.x<=653.01);assert.equal(g.player.dashing,null);
 });
-test('Spirit Rush remains vulnerable while crossing terrain and roots cannot strand it',()=>{
+test('Spirit Rush remains vulnerable while crossing terrain and completes through a plain root',()=>{
  const world=require('../world.js'),{g,node}=boot('ahri');g.reset('kite');g.disableSpawn();g.player.x=600;g.player.y=580;
- node('arena').listeners.pointermove({clientX:850,clientY:580,buttons:0});const shot=g.fire(710,580,0,0,'enemy',10,5,1);shot.root=1;g.cast('r');advance(g,.25);
- assert.equal(g.stats.hits,1);assert.ok(g.player.root>0);assert.equal(g.player.dashing,null);assert.ok(world.pointWalkable(g.player,g.player.r));
+ node('arena').listeners.pointermove({clientX:850,clientY:580,buttons:0});const shot=g.fire(710,580,0,0,'enemy',10,5,1);shot.root=1;g.cast('r');advance(g,.35);
+ assert.equal(g.stats.hits,1);assert.ok(g.player.root>0);assert.equal(g.player.dashing,null);assert.ok(g.player.x>780);assert.ok(world.pointWalkable(g.player,g.player.r));
+});
+test('plain root does not cancel an active dash but prevents Flash after landing',()=>{
+ const {g}=boot('ahri');g.reset('kite');g.disableSpawn();const p=g.player,start=p.x;p.dashing={x:start+60,y:p.y,speed:200};
+ const shot=g.fire(start+20,p.y,0,0,'enemy',10,5,1);shot.root=1;g.update(.05);assert.ok(p.root>0);assert.ok(p.dashing);assert.ok(p.x>start);
+ advance(g,.3);assert.equal(p.dashing,null);assert.ok(Math.abs(p.x-(start+60))<1e-6);const x=p.x;g.cast('f');assert.equal(p.x,x);assert.equal(p.cd.f,0);
 });
 
 test('Spirit Rush recast window freezes during pause and expires without refreshing cooldown',()=>{

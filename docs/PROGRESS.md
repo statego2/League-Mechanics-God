@@ -1412,3 +1412,9 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 
 - Replaced the tiny full-body explorer sprite in the jungler sighting with a 16×16 clipped face crop from the existing original stone-caster art. This is a generic trainer portrait, not a Riot champion icon. The existing marker position, red border, ping tolerance, reward and 3-second visibility are unchanged; unloaded art retains a simple fallback.
 - Eight targeted awareness/minimap tests passed, including bounded source cropping and unloaded-art fallback; syntax and diff checks passed. Browser visual confirmation remains outstanding, including the player-reported top tier 3 issue. The previous attempt to inspect the player file URL was blocked by browser policy; it was not bypassed.
+
+## Plain root versus an active dash (3 November 2026)
+
+- Removed the blanket cancellation of Ahri’s active dash when a plain root projectile hits in non-Dodge modes. An already active Spirit Rush completes, including across traversable walls; the root still prevents new movement spells such as Flash after landing. Blitz displacement remains a separate dash interrupt. Pure Dodge still omits root entirely by player request.
+- This is a training approximation based on the general root/knockdown distinction, not a verified statement about every champion or spell: exceptions and exact server timing require live-client confirmation. Root application remains fixed-step quantized. Targeted tests cover an active dash, post-landing Flash, terrain crossing, and the existing no-root Dodge policy.
+- Validation: 458/458 tests pass using serial full-suite execution; syntax and diff checks pass. The initial terrain test was corrected to wait until the dash had actually completed. Browser/live-client testing of this interaction remains outstanding.
