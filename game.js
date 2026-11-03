@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="850b4648a187";
+const BUILD_ID="0312ff76836a";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -591,11 +591,16 @@ const SYNDRA_BASE={hp:583,armor:25,mr:30,speed:SIMULATION.toCanvas(330)};
 // these are selection weights; an unsafe lead or reversal falls back to a
 // separately verified direct cast, as for the visitor skillshots.
 const SYNDRA_EQ={sphereLead:200,sourceDistance:400,direct:.15,lead:.75};
+// Expert Syndra lanes for a while instead of casting once and vanishing: she
+// walks at her own speed, keeps a Q band (or backs off before Q E) and casts
+// again castEvery seconds after each Q lands, whenever the board is clear.
+// Times are seconds, bands are canvas units from Ahri.
+const SYNDRA_STAY={first:6,duration:[15,20],gap:[5,8],castEvery:[.6,1],qBand:250,comboBand:420,clearAhead:0,hold:2,exit:1.2};
 function syndraConeContains(source,angle,point){
  const dx=point.x-source.x,dy=point.y-source.y,d=Math.hypot(dx,dy);
  return d<=SYNDRA.eDirectRange&&(d<1e-8||Math.cos(Math.atan2(dy,dx)-angle)>=Math.cos(SYNDRA.eHalfAngle));
 }
-function spawnSyndra(combo=false,witness=null){
+function spawnSyndra(combo=false,witness=null,fixedCaster=null){
  if(!dodgeDirector||foes.some(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit")||shots.some(s=>s.alive&&s.directed)||hazards.some(h=>h.directed))return false;
  const reaction=dodgeReactionDelay();if(!Number.isFinite(reaction)||reaction>=SYNDRA.qDelay)return false;
  const first=rand(0,TAU),approach=dodgeReactionPath(reaction),start=approach.end;
@@ -612,10 +617,14 @@ function spawnSyndra(combo=false,witness=null){
    if(roll>=SYNDRA_EQ.direct&&roll<SYNDRA_EQ.direct+SYNDRA_EQ.lead){qAim=future;aimPattern='lead';}
    else if(roll>=SYNDRA_EQ.direct+SYNDRA_EQ.lead){qAim={x:player.x-dx/d*70,y:player.y-dy/d*70};aimPattern='reversal';}}
  }
+ const qOffset=SYNDRA.qRadius*4/7;
  const place=aim=>{
- for(let i=0;i<24;i++){
-  const a=first+i*TAU/24,dx=Math.cos(a),dy=Math.sin(a),sourceDistance=combo?SYNDRA_EQ.sourceDistance:300,anchor=combo?aim:player,source={x:anchor.x-dx*sourceDistance,y:anchor.y-dy*sourceDistance};
-  const q=combo?{x:source.x+dx*(sourceDistance-SYNDRA_EQ.sphereLead),y:source.y+dy*(sourceDistance-SYNDRA_EQ.sphereLead)}:{x:aim.x+dx*60,y:aim.y+dy*60};
+ // A staying Syndra casts from where she stands: one angle, real distance.
+ const angles=fixedCaster?[Math.atan2((combo?aim:player).y-fixedCaster.y,(combo?aim:player).x-fixedCaster.x)]:Array.from({length:24},(_,i)=>first+i*TAU/24);
+ for(const a of angles){
+  const dx=Math.cos(a),dy=Math.sin(a),anchor=combo?aim:player,sourceDistance=fixedCaster?dist(fixedCaster,anchor):combo?SYNDRA_EQ.sourceDistance:300,source=fixedCaster?{x:fixedCaster.x,y:fixedCaster.y}:{x:anchor.x-dx*sourceDistance,y:anchor.y-dy*sourceDistance};
+  if(fixedCaster&&(combo?sourceDistance>=SYNDRA.eEnd-20||sourceDistance-SYNDRA_EQ.sphereLead<60:sourceDistance<120))continue;
+  const q=combo?{x:source.x+dx*(sourceDistance-SYNDRA_EQ.sphereLead),y:source.y+dy*(sourceDistance-SYNDRA_EQ.sphereLead)}:fixedCaster?{x:aim.x+Math.cos(Math.atan2(aim.y-source.y,aim.x-source.x))*qOffset,y:aim.y+Math.sin(Math.atan2(aim.y-source.y,aim.x-source.x))*qOffset}:{x:aim.x+dx*qOffset,y:aim.y+dy*qOffset};
   if(source.x<60||source.x>W-60||source.y<145||source.y>H-40||!world.pointWalkable(source,20)||dist(source,q)>SYNDRA.qRange||q.x<30||q.x>W-30||q.y<70||q.y>H-30)continue;
   // A predicted push must still begin outside the direct E cone's reach.
   if(combo&&dist(source,player)<=SYNDRA.eDirectRange+10)continue;
@@ -630,9 +639,9 @@ function spawnSyndra(combo=false,witness=null){
    if(!forecastDodgePath(incoming,destination,reaction,0,approach,areas))continue;
    // Use a real targetable actor without drawing from the gameplay RNG: Q is
    // already committed, but a dead/charmed caster cannot start the later E.
-   const caster={id:++enemySeq,x:source.x,y:source.y,r:20,hp:SYNDRA_BASE.hp,maxHp:SYNDRA_BASE.hp,armor:SYNDRA_BASE.armor,mr:SYNDRA_BASE.mr,speed:SYNDRA_BASE.speed,shoot:999,hit:0,charge:0,pending:null,alive:true,syndraCaster:true,syndraAngle:a};
-   foes.push(caster);
-   hazards.push({x:q.x,y:q.y,source,angle:a,casterId:caster.id,ttl:SYNDRA.qDelay,max:SYNDRA.qDelay,r:SYNDRA.qRadius,syndra:true,phase:'q',combo,aimPattern,aimPoint:{x:aim.x,y:aim.y},eThreat,threat:dist(player,q)<=SYNDRA.qRadius||dist(projected,q)<=SYNDRA.qRadius,directed:true,spellName:'SYNDRA Q'});
+   const caster=fixedCaster||{id:++enemySeq,x:source.x,y:source.y,r:20,hp:SYNDRA_BASE.hp,maxHp:SYNDRA_BASE.hp,armor:SYNDRA_BASE.armor,mr:SYNDRA_BASE.mr,speed:SYNDRA_BASE.speed,shoot:999,hit:0,charge:0,pending:null,alive:true,syndraCaster:true,syndraAngle:a};
+   if(fixedCaster)caster.syndraAngle=Math.atan2(q.y-source.y,q.x-source.x);else foes.push(caster);
+   hazards.push({x:q.x,y:q.y,source,angle:a,casterId:caster.id,ttl:SYNDRA.qDelay,max:SYNDRA.qDelay,r:SYNDRA.qRadius,syndra:true,phase:'q',combo,aimPattern,aimPoint:{x:aim.x,y:aim.y},escape:{x:destination.x,y:destination.y},eThreat,threat:dist(player,q)<=SYNDRA.qRadius||dist(projected,q)<=SYNDRA.qRadius,directed:true,spellName:'SYNDRA Q'});
    dodgeDirector.attempted++;dodgeDirector.syndra=(dodgeDirector.syndra||0)+1;if(combo)dodgeDirector.syndraCombo=(dodgeDirector.syndraCombo||0)+1;
    if(witness)witness.destination=destination;return true;
   }
@@ -1170,6 +1179,83 @@ function updateDodgeVisitor(e,dt){
   if(!e.orbShot||!e.orbShot.alive)e.phase="exit";
  }
 }
+// Q E stays rarer than Q: a combo after three straight Qs, sometimes after two.
+function chooseSyndraCombo(){const streak=dodgeDirector.syndraQStreak||0;return streak>=3||streak>=2&&random()<.3;}
+function syndraBoardClear(){return !foes.some(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit")&&!shots.some(s=>s.alive&&s.directed)&&!hazards.some(h=>h.directed);}
+function syndraCastDone(combo){
+ const d=dodgeDirector;d.syndraQStreak=combo?0:(d.syndraQStreak||0)+1;
+ d.syndraCastAt=time+(combo?SYNDRA.qDelay+SYNDRA.eDelay:SYNDRA.qDelay)+rand(SYNDRA_STAY.castEvery[0],SYNDRA_STAY.castEvery[1]);
+ d.syndraNextCombo=chooseSyndraCombo();d.next=Math.max(d.next,.7);
+}
+// Returns true when Syndra used (or is holding) this director step. Every
+// cast still goes through spawnSyndra's clear-board and escape checks.
+function updateSyndraStay(){
+ const d=dodgeDirector,caster=d.syndraCasterId?foes.find(e=>e.id===d.syndraCasterId&&e.alive):null;
+ // While an Ahri orb is out she cannot cast anyway; leave that window to the
+ // straight-shot visitors that are allowed to join the orb.
+ const orbOut=shots.some(s=>s.alive&&s.directed&&s.kind==="enemyOrb");
+ if(d.syndraCasterId&&!caster){d.syndraCasterId=null;d.syndraAt=time+rand(SYNDRA_STAY.gap[0],SYNDRA_STAY.gap[1]);return false;}
+ if(!caster){
+  // Syndra is regular laning pressure now, so only a clear board (not the
+  // rare-ultimate guard) gates her arrival.
+  if(time<d.syndraAt)return false;
+  if(d.syndraNextCombo==null)d.syndraNextCombo=chooseSyndraCombo();
+  if(syndraBoardClear()){
+   const combo=d.syndraNextCombo;
+   if(spawnSyndra(combo)){
+    const c=foes[foes.length-1];c.syndraStay={until:time+rand(SYNDRA_STAY.duration[0],SYNDRA_STAY.duration[1])};d.syndraCasterId=c.id;d.syndraStays=(d.syndraStays||0)+1;
+    syndraCastDone(combo);return true;
+   }
+  }
+  // Hold ordinary visitors briefly so her arrival can find a clear board.
+  if(orbOut)return false;
+  if(time-d.syndraAt<SYNDRA_STAY.hold)return true;
+  d.syndraAt=time+.5;return false;
+ }
+ const stay=caster.syndraStay;if(!stay||stay.leaving)return false;
+ const busy=hazards.some(h=>h.syndra&&h.casterId===caster.id);
+ if(time>=stay.until){if(!busy)stay.leaving=time;return false;}
+ if(caster.charm>0)return false;
+ // Stop adding visitors shortly before her next cast so the board can clear.
+ if(orbOut)return false;
+ if(time<d.syndraCastAt)return time>=d.syndraCastAt-SYNDRA_STAY.clearAhead&&!busy;
+ if(syndraBoardClear()&&time>=(d.syndraRetry||0)){
+  const combo=!!d.syndraNextCombo;
+  if(spawnSyndra(combo,null,caster)){d.syndraRetry=0;syndraCastDone(combo);return true;}
+  // A Q E she cannot line up (Ahri hugging a wall or edge) becomes a plain
+  // Q once the hold runs out; the streak keeps the next cast a Q E.
+  if(combo&&time-d.syndraCastAt>=SYNDRA_STAY.hold&&spawnSyndra(false,null,caster)){d.syndraRetry=0;syndraCastDone(false);return true;}
+  d.syndraRetry=time+.2;
+ }
+ if(time-d.syndraCastAt<SYNDRA_STAY.hold)return true;
+ d.syndraCastAt=time+.6;return false;
+}
+// Walk like a laning champion: hold the band for the next planned cast,
+// strafe sideways, stand still while casting, then walk out after the stay.
+function updateSyndraCaster(e,dt){
+ const stay=e.syndraStay,bounds={left:80,right:W-80,top:160,bottom:H-60};
+ if(stay.leaving!==undefined){
+  const dx=e.x-player.x,dy=e.y-player.y,d=Math.hypot(dx,dy)||1,step=e.speed*dt;
+  e.x+=dx/d*step;e.y+=dy/d*step;e.syndraAngle=Math.atan2(dy,dx);e.walking=true;
+  if(time-stay.leaving>=SYNDRA_STAY.exit||e.x<-40||e.x>W+40||e.y<-40||e.y>H+40)e.alive=false;return;
+ }
+ const own=hazards.find(h=>h.syndra&&h.casterId===e.id);
+ if(own&&(own.phase==='e'||own.phase==='q'&&own.max-own.ttl<.25)){e.walking=false;return;}
+ const band=dodgeDirector.syndraNextCombo?SYNDRA_STAY.comboBand:SYNDRA_STAY.qBand;
+ const bearing=Math.atan2(e.y-player.y,e.x-player.x)+Math.sin(time*.8+e.id)*.6*dt;
+ // Prefer the nearest spot on the band she can walk to in a straight line,
+ // so walls send her around the lane instead of pinning her in place.
+ let target=null;
+ for(const turn of [0,.45,-.45,.9,-.9,1.5,-1.5,2.2,-2.2,Math.PI]){
+  const b=bearing+turn,spot={x:clamp(player.x+Math.cos(b)*band,bounds.left,bounds.right),y:clamp(player.y+Math.sin(b)*band,bounds.top,bounds.bottom)};
+  if(world.pointWalkable(spot,e.r)&&world.segmentClear(e,spot,e.r)){target=spot;break;}
+ }
+ if(!target){e.route=e.route?.length?e.route:world.path(e,player,e.r)||[];while(e.route.length&&dist(e,e.route[0])<3)e.route.shift();target=e.route[0]||{x:e.x,y:e.y};}else e.route=null;
+ const dx=target.x-e.x,dy=target.y-e.y,d=Math.hypot(dx,dy);
+ if(d<4){e.walking=false;e.syndraAngle=Math.atan2(player.y-e.y,player.x-e.x);return;}
+ const step=Math.min(d,e.speed*dt),next=world.clip(e,{x:e.x+dx/d*step,y:e.y+dy/d*step},e.r);
+ e.x=clamp(next.x,bounds.left,bounds.right);e.y=clamp(next.y,bounds.top,bounds.bottom);e.walking=true;e.syndraAngle=Math.atan2(dy,dx);
+}
 function updateDodgeDirector(dt){
  // Expert opens with ordinary pressure first. Major patterns earn distinct
  // reading space instead of all arriving during the opening scramble.
@@ -1178,7 +1264,7 @@ function updateDodgeDirector(dt){
   dodgeDirector.cassAt=35;dodgeDirector.rareAt=50;dodgeDirector.malAt=15;
  }
  if(difficulty==="hard"&&dodgeDirector.luxRAt===undefined)dodgeDirector.luxRAt=26;
- if(difficulty==="hard"&&dodgeDirector.syndraAt===undefined)dodgeDirector.syndraAt=time+9;
+ if(difficulty==="hard"&&dodgeDirector.syndraAt===undefined)dodgeDirector.syndraAt=time+SYNDRA_STAY.first;
  if(time<dodgeDirector.hitRecoveryUntil)return;
  // Flash-only reaction checks wait until the player has Flash again without
  // suppressing ordinary skillshots during the cooldown.
@@ -1214,12 +1300,7 @@ function updateDodgeDirector(dt){
   if(spawnOriannaR()){hazards[hazards.length-1].directorScheduled=true;dodgeDirector.rareAt=time+(difficulty==="hard"?rand(90,150):rand(90,150));dodgeDirector.rareGuardUntil=time+(difficulty==="hard"?8:35);return;}
   dodgeDirector.rareAt=time+1;if(difficulty==="hard"){dodgeDirector.next=Math.max(dodgeDirector.next,1.1);return;}
  }
- if(difficulty==="hard"&&time>=dodgeDirector.syndraAt&&time>=dodgeDirector.rareGuardUntil){
-  const clear=!foes.some(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit")&&!shots.some(s=>s.alive&&s.directed)&&!hazards.some(h=>h.directed);
-  if(clear){const combo=(dodgeDirector.syndraQStreak||0)>=3||random()<.2;
-   if(spawnSyndra(combo)){dodgeDirector.syndraQStreak=combo?0:(dodgeDirector.syndraQStreak||0)+1;dodgeDirector.syndraAt=time+rand(18,25);dodgeDirector.next=Math.max(dodgeDirector.next,.7);return;}}
-  dodgeDirector.syndraAt=time+.5;
- }
+ if(difficulty==="hard"&&updateSyndraStay())return;
  dodgeDirector.next-=dt;if(dodgeDirector.next>0)return;
  if(spawnDodgeVisitor())dodgeDirector.next=DODGE_DIRECTOR[difficulty].interval*dodgeRhythmMultiplier(time)*rand(.88,1.12);
  // A full threat budget is not an invitation to retry every frame. Waiting
@@ -1472,7 +1553,7 @@ function playerContact(sx,sy,ex,ey,startF,endF,r){
  return Infinity;
 }
 const previousFoes=new Map(foes.map(e=>[e.id,{x:e.x,y:e.y}])),previousAllies=new Map(allies.map(e=>[e.id,{x:e.x,y:e.y}]));
-for(const e of foes){if(!e.alive)continue;if(e.syndraCaster&&!hazards.some(h=>h.syndra&&h.casterId===e.id)){e.alive=false;continue;}if(e.dodgeVisitor){updateDodgeVisitor(e,dt);continue;}if(e.referenceCaster){if(e.pending){e.charge-=dt;if(e.charge<=0)releaseEnemy(e);}else{e.shoot-=dt;if(e.shoot<=0)shootEnemy(e);}continue;}if(e.baitCaster)continue;if(e.charm>0){e.charm=Math.max(0,e.charm-dt);const dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1,step=Math.min(d,e.speed*.35*dt);const next=world.clip(e,{x:e.x+dx/d*step,y:e.y+dy/d*step},e.r);e.x=next.x;e.y=next.y;continue;}if(e.syndraCaster){e.hit=Math.max(0,e.hit-dt);continue;}if(e.minion){if(mode!=="bait"||bait.phase==="window")updateMinion(e,dt);continue;}if(e.targetDummy){updateTarget(e,dt);continue;}e.hit=Math.max(0,e.hit-dt);e.spin+=dt*e.strafe;const dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;let vx=0,vy=0;if(d>230){vx=dx/d;vy=dy/d;}else if(d<155){vx=-dx/d;vy=-dy/d;}vx+=(-dy/d)*Math.sin(e.spin)*.5;vy+=(dx/d)*Math.sin(e.spin)*.5;const mag=Math.hypot(vx,vy)||1;if(!e.pending){
+for(const e of foes){if(!e.alive)continue;if(e.syndraCaster&&!e.syndraStay&&!hazards.some(h=>h.syndra&&h.casterId===e.id)){e.alive=false;continue;}if(e.dodgeVisitor){updateDodgeVisitor(e,dt);continue;}if(e.referenceCaster){if(e.pending){e.charge-=dt;if(e.charge<=0)releaseEnemy(e);}else{e.shoot-=dt;if(e.shoot<=0)shootEnemy(e);}continue;}if(e.baitCaster)continue;if(e.charm>0){e.charm=Math.max(0,e.charm-dt);const dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1,step=Math.min(d,e.speed*.35*dt);const next=world.clip(e,{x:e.x+dx/d*step,y:e.y+dy/d*step},e.r);e.x=next.x;e.y=next.y;continue;}if(e.syndraCaster){e.hit=Math.max(0,e.hit-dt);if(e.syndraStay)updateSyndraCaster(e,dt);continue;}if(e.minion){if(mode!=="bait"||bait.phase==="window")updateMinion(e,dt);continue;}if(e.targetDummy){updateTarget(e,dt);continue;}e.hit=Math.max(0,e.hit-dt);e.spin+=dt*e.strafe;const dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;let vx=0,vy=0;if(d>230){vx=dx/d;vy=dy/d;}else if(d<155){vx=-dx/d;vy=-dy/d;}vx+=(-dy/d)*Math.sin(e.spin)*.5;vy+=(dx/d)*Math.sin(e.spin)*.5;const mag=Math.hypot(vx,vy)||1;if(!e.pending){
  // Chase around walls when direct pursuit is blocked; refresh as the player moves.
  if(d>230&&!world.segmentClear(e,player,e.r)){
   e.routeAge=(e.routeAge||0)-dt;
@@ -2031,7 +2112,9 @@ ctx.fillStyle="#102d27";ctx.fillRect(player.x-22,player.y-86,44,4);ctx.fillStyle
  ctx.fillStyle="#13252b";ctx.fillRect(e.x-19,e.y-55,38,5);ctx.fillStyle="#d9827d";ctx.fillRect(e.x-19,e.y-55,38*Math.max(0,e.hp/e.maxHp),5);continue;
 }if(e.syndraCaster){
  const encounter=hazards.find(h=>h.syndra&&h.casterId===e.id);
- drawChampion(e.x,e.y,e.syndraAngle,false,e.hit>0,encounter?.phase==='e'?1:.2,time*7,'syndra');
+ // Q cast and E push read as wind-ups; a quicker bob reads as walking.
+ const pose=encounter?.phase==='e'?1:encounter&&encounter.max-encounter.ttl<.25?.7:.2;
+ drawChampion(e.x,e.y,e.syndraAngle,false,e.hit>0,pose,e.walking?time*16:time*7,'syndra');
  for(let i=0;i<3;i++){const a=time*2+i*TAU/3;drawDarkSphere(e.x+Math.cos(a)*26,e.y-38+Math.sin(a)*10,5.5,Math.sin(a)<0?.75:1);}
 }else drawChampion(e.x,e.y,e.pending?e.pending.angle:Math.atan2(player.y-e.y,player.x-e.x),false,e.hit>0,visitorCastPose(e),time*7,e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.ezrealDodge?"ezreal":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.luxDodge?"lux":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.ahriDodge?"ahriEnemy":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.blitzDodge?"blitz":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.velkozDodge?"void":null);
 if(e.charm>0){ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#ffb2df";ctx.fillText("♥ CHARMED",e.x,e.y-96);}

@@ -3640,3 +3640,88 @@ test('Syndra Q telegraph and hit area are both 180 game units, matching League S
  const out=boot('ahri').g;out.reset('dodge');out.dodgeDirector.next=999;assert.ok(out.spawnSyndra(false));const o=out.hazards[0];advance(out,.59);out.player.x=o.x+o.r+out.player.hitRadius+2;out.player.y=o.y;advance(out,.02);assert.equal(out.stats.hits,0,'outside the drawn circle is safe');
 });
 function g0(){const b=boot('ahri');return b.g;}
+// Round 2: Syndra stays on screen, walks like a laning champion and casts
+// several Mindgame Aim Qs (and rarer Q E) during each stay.
+function syndraStayBoot(seed=1){
+ const {g,node,arcs}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed*7919);g.player.hp=g.player.maxHp=1e7;
+ // Only Syndra: ordinary visitors and rare ultimates are parked.
+ Object.assign(g.dodgeDirector,{next:999,syndraAt:0,cassAt:Infinity,rareAt:Infinity,malAt:Infinity,luxRAt:Infinity});
+ return {g,node,arcs};
+}
+function syndraStayRun(g,seconds,{follow=false,wander=true,onFrame}={}){
+ const seen=new Map();let move=0,k=0;
+ for(let i=0;i<Math.round(seconds*120);i++){
+  if(wander&&g.time>=move){k++;move=g.time+1.1;g.moveTo(300+((k*373)%600),230+((k*211)%330));}
+  g.update(1/120);
+  for(const h of g.hazards)if(h.syndra&&!seen.has(h)){const c=g.foes.find(e=>e.id===h.casterId);seen.set(h,{at:g.time,frame:i,caster:c&&{x:c.x,y:c.y,id:c.id},player:{x:g.player.x,y:g.player.y}});if(follow)move=Math.max(move,g.time+.3);}
+  // The cast happens inside an update, so 23 more frames is exactly the
+  // 0.2 s reaction the witness was planned with.
+  if(follow)for(const [h,info] of seen)if(!info.followed&&i-info.frame>=23){info.followed=true;g.moveTo(h.escape.x,h.escape.y);move=g.time+1.5;}
+  onFrame?.(g);
+ }
+ return seen;
+}
+test('Expert Syndra stays on screen, walks and casts several Qs from where she stands',()=>{
+ for(const seed of [1,2,3]){
+  const {g}=syndraStayBoot(seed);let ids=new Set(),walked=0,last=null,maxRange=0;
+  const seen=syndraStayRun(g,12,{onFrame:g=>{const c=g.foes.find(e=>e.alive&&e.syndraCaster);if(!c)return;ids.add(c.id);if(last&&last.id===c.id)walked+=Math.hypot(c.x-last.x,c.y-last.y);last={id:c.id,x:c.x,y:c.y};
+   assert.ok(c.x>=60&&c.x<=1140&&c.y>=145&&c.y<=635,`Syndra left the lane at ${c.x},${c.y}`);if(!c.syndraStay.leaving)maxRange=Math.max(maxRange,Math.hypot(c.x-g.player.x,c.y-g.player.y));}});
+  assert.equal(ids.size,1,`seed ${seed}: one Syndra stays for the whole window`);
+  assert.ok(seen.size>=3,`seed ${seed}: only ${seen.size} casts in 12 s`);assert.ok(walked>250,`seed ${seed}: walked only ${walked.toFixed(0)}`);
+  assert.ok(maxRange<=g.SYNDRA.eEnd,`seed ${seed}: drifted ${maxRange.toFixed(0)} from Ahri`);
+  const casts=[...seen].slice(1);assert.ok(casts.length>=2);
+  for(const [h,info] of casts){
+   assert.equal(h.casterId,info.caster.id);assert.ok(Math.hypot(h.source.x-info.caster.x,h.source.y-info.caster.y)<1e-6,'cast from her own position');
+   assert.ok(Math.hypot(h.x-h.source.x,h.y-h.source.y)<=g.SYNDRA.qRange+1e-9,'Q within cast range');assert.ok(h.escape&&Number.isFinite(h.escape.x));
+   if(h.combo)assert.ok(Math.hypot(info.player.x-h.source.x,info.player.y-h.source.y)>g.SYNDRA.eDirectRange,'Q E from outside the direct E cone');
+  }
+ }
+});
+test('Staying Syndra keeps Mindgame Aim: lead, direct and reversal Qs plus led Q E',()=>{
+ const patterns=new Set(),combo=new Set();let q=0,qe=0;
+ for(const seed of [1,2,3,4,5,6]){const {g}=syndraStayBoot(seed);const seen=syndraStayRun(g,20);for(const [h] of [...seen].slice(1)){if(h.combo){qe++;combo.add(h.aimPattern);}else{q++;patterns.add(h.aimPattern);}}}
+ assert.deepEqual([...patterns].sort(),['direct','lead','reversal']);assert.ok(combo.has('lead'),'mid-stay Q E still leads Ahri');
+ assert.ok(q>qe&&qe>0,`Q ${q}, Q E ${qe}`);
+});
+test('every mid-stay Syndra Q and Q E has an executable escape',()=>{
+ let casts=0,combos=0;
+ for(const seed of [1,2,3,4,5,6,7,8]){
+  const {g}=syndraStayBoot(seed);const seen=syndraStayRun(g,16,{follow:true});casts+=seen.size;combos+=[...seen.keys()].filter(h=>h.combo).length;
+  const syndraHits=Object.entries(g.dodgeDirector.outcomes||{}).filter(([k])=>k.startsWith('SYNDRA')).reduce((a,[,v])=>a+(v.hit||0),0);
+  assert.equal(syndraHits,0,`seed ${seed}: following the witness was hit`);
+ }
+ assert.ok(casts>=40&&combos>=8,`${casts} casts, ${combos} Q E`);
+});
+test('Syndra walks out at the end of a stay and a defeat ends it early',()=>{
+ const {g}=syndraStayBoot(4);syndraStayRun(g,3);const c=g.foes.find(e=>e.alive&&e.syndraCaster);assert.ok(c&&c.syndraStay);
+ c.syndraStay.until=g.time;let gone=false,leftFor=0;
+ for(let i=0;i<120*3&&!gone;i++){const before={x:c.x,y:c.y};g.update(1/120);if(!c.alive)gone=true;else if(c.syndraStay.leaving!==undefined){leftFor+=1/120;assert.ok(c.walking&&Math.hypot(c.x-before.x,c.y-before.y)>0,'she walks out');}}
+ assert.ok(leftFor<=1.25,'leaves within her exit walk');
+ assert.ok(gone,'she leaves');const d=g.dodgeDirector;g.update(1/120);assert.equal(d.syndraCasterId,null);assert.ok(d.syndraAt-g.time>=4.9&&d.syndraAt-g.time<=8,'next arrival after a gap');
+ const casts=d.syndra;advance(g,4.5);assert.equal(d.syndra,casts,'no casts during the gap');
+ const b=syndraStayBoot(5).g;syndraStayRun(b,3);const s=b.foes.find(e=>e.alive&&e.syndraCaster);b.damageEnemy(s,1e5);assert.equal(s.alive,false);const n=b.dodgeDirector.syndra;advance(b,3);assert.equal(b.dodgeDirector.syndra,n,'defeated Syndra stops casting');assert.ok(!b.foes.some(e=>e.alive&&e.syndraCaster));
+});
+test('a charmed staying Syndra holds her next cast until the charm ends',()=>{
+ const {g}=syndraStayBoot(6);syndraStayRun(g,2.5,{wander:false});const c=g.foes.find(e=>e.alive&&e.syndraCaster);assert.ok(c);
+ advance(g,1.2);c.charm=1.5;const n=g.dodgeDirector.syndra;for(let i=0;i<120*1.4;i++){g.update(1/120);assert.equal(g.dodgeDirector.syndra,n);}
+ advance(g,3);assert.ok(g.dodgeDirector.syndra>n,'she resumes after the charm');
+});
+test('Expert 60 s sessions: Syndra is present most of the time, Q every few seconds and Q E every 8-12 s',t=>{
+ const summary=[];
+ for(const seed of [3,8,13,21]){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed*7919);g.player.hp=g.player.maxHp=1e7;
+  let present=0,first=null,streak=0,maxStreak=0;const seen=new Set();let move=0,k=0;
+  for(let i=0;i<60*120;i++){
+   if(g.time>=move){k++;move=g.time+.9;g.moveTo(200+((k*373+seed*97)%800),210+((k*211+seed*53)%380));}
+   g.update(1/120);
+   if(g.foes.some(e=>e.alive&&e.syndraCaster)){present+=1/120;first??=g.time;}
+   for(const h of g.hazards)if(h.syndra&&!seen.has(h)){seen.add(h);assert.ok(h.escape,'every cast has an escape witness');streak=h.combo?0:streak+1;maxStreak=Math.max(maxStreak,streak);}
+  }
+  const d=g.dodgeDirector,qe=d.syndraCombo||0,q=d.syndra-qe,others=d.attempted-d.syndra;
+  summary.push(`seed ${seed}: first ${first.toFixed(1)} s, present ${(present/.6).toFixed(0)}%, Q ${q}, Q E ${qe}, others ${others}`);
+  assert.ok(first<=10,`seed ${seed}: first Syndra at ${first}`);assert.ok(present>=25,`seed ${seed}: present ${present.toFixed(1)} s`);
+  assert.ok(q>=7&&qe>=2&&q>qe,`seed ${seed}: Q ${q}, Q E ${qe}`);assert.ok(maxStreak<=3,'Q E after at most three Qs');
+  assert.ok(others>=10,`seed ${seed}: other champions squeezed out (${others})`);
+ }
+ t.diagnostic(summary.join('; '));
+});
