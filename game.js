@@ -90,6 +90,17 @@ function beamTouchesPlayer(beam,point,radius){
  const outsideAlong=Math.max(0,-along,along-length),outsideAcross=Math.max(0,across-beam.r);
  return outsideAlong*outsideAlong+outsideAcross*outsideAcross<=radius*radius;
 }
+// Sweep a champion circle against the same flat-ended beam rectangle.
+// In beam coordinates its expanded shape is two rectangles plus four
+// rounded corners. This is used for threat accounting, not impact damage.
+function beamTouchesPath(beam,a,b,radius){
+ const vx=beam.endX-beam.x,vy=beam.endY-beam.y,length=Math.hypot(vx,vy);if(!length)return false;
+ const local=p=>({x:((p.x-beam.x)*vx+(p.y-beam.y)*vy)/length,y:((p.x-beam.x)*vy-(p.y-beam.y)*vx)/length}),p=local(a),q=local(b);
+ function rect(x0,y0,x1,y1){let lo=0,hi=1;for(const [v,d,min,max] of [[p.x,q.x-p.x,x0,x1],[p.y,q.y-p.y,y0,y1]]){if(Math.abs(d)<1e-12){if(v<min||v>max)return false;continue;}let t0=(min-v)/d,t1=(max-v)/d;if(t0>t1)[t0,t1]=[t1,t0];lo=Math.max(lo,t0);hi=Math.min(hi,t1);if(lo>hi)return false;}return true;}
+ if(rect(0,-beam.r-radius,length,beam.r+radius)||rect(-radius,-beam.r,length+radius,beam.r))return true;
+ for(const x of [0,length])for(const y of [-beam.r,beam.r])if(Number.isFinite(segmentHitTime(p.x-x,p.y-y,q.x-x,q.y-y,radius)))return true;
+ return false;
+}
 // Closest approach of two moving circles, also used for fast missiles.
 function segmentDistance(ax,ay,bx,by){const dx=bx-ax,dy=by-ay;const t=clamp(-(ax*dx+ay*dy)/(dx*dx+dy*dy||1),0,1);return Math.hypot(ax+dx*t,ay+dy*t);}
 // Earliest swept-circle contact, in [0,1], or Infinity when paths miss.
@@ -161,7 +172,7 @@ function pause(){attackMove=false;pingArmed=false;pingDrag=null;if(state==="play
 // Records are local and partitioned by drill and difficulty; storage can be unavailable.
 function saveRecord(value){
  try{
-  const key="lmg.best.v1."+mode+"."+difficulty+recordSuffix()+(mode==="dodge"&&dodgeDirector?".skill_v4":"")+(awareness?".awareness_v1":"");
+  const key="lmg.best.v1."+mode+"."+difficulty+recordSuffix()+(mode==="dodge"&&dodgeDirector?".skill_v5":"")+(awareness?".awareness_v1":"");
   const previous=Number(window.localStorage.getItem(key));
   const best=Math.max(Number.isFinite(previous)?previous:0,value);
   window.localStorage.setItem(key,String(best));return best;
@@ -1472,7 +1483,7 @@ for(const h of hazards){
    continue;
   }
   const collision=beamTouchesPlayer(h,effectPlayer,player.hitRadius);
-  if(collision)h.threat=true;
+  if(beamTouchesPath(h,positionAt(0),effectPlayer,player.hitRadius))h.threat=true;
   h.ttl-=dt;if(h.ttl<=0){
    fx.push({x:h.x,y:h.y,endX:h.endX,endY:h.endY,r:h.r,vx:0,vy:0,ttl:.2,max:.2,color:h.luxR?"#ffe2a8":"#b5e5ff",beam:true});
    if(collision){if(player.invuln>0){recordDodgeOutcome(h,"blocked");stats.blocked++;}else{recordDodgeOutcome(h,"hit");takeHit(physicalDamage(h.luxR?LUX_R.raw:XERATH_Q.raw,30));}}
