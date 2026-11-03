@@ -1448,3 +1448,8 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 
 - Replaced hand-placed symmetric tower dots with projected historical Summoner Rift match-timeline positions for all 18 lane towers and four nexus towers, and adjusted the stylized lane paths to pass through them. In particular blue top tier 3 is near 8.6% across and 70.8% down, not the old 82% down near the nexus. Source: https://hextechdocs.dev/map-data/ (2021 map bounds/building table); the user-provided minimap screenshot is the visual reference. These historical coordinates and the schematic background are an approximation, not a verified current-client map.
 - Twelve targeted awareness/minimap and ping tests pass, including both top tier 3 positions and a count of 22 tower icons; syntax and diff checks pass. Human visual review in the current build is still required. No deployment.
+
+## GitHub Pages publication preparation (3 November 2026)
+
+- User requested the current updates on the hosted page. Fetched and merged the two newer remote documentation commits (Nightmare Lane design) without losing either line of work. GitHub Pages is configured for the root of `codex/controls-and-dodge`.
+- Validation before publishing: 467/467 tests passed using `node --test --test-concurrency=1 tests/*.test.cjs`; `node --check game.js` passed. The expected player-facing build label is `tower-positions`. Verify the Pages deployment and served build after push.
