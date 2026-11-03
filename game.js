@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="c2b0258c7eae";
+const BUILD_ID="c20867a4432d";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -234,7 +234,7 @@ function recordDodgeOutcome(shot,outcome){
 // Count a released Q/E cast at most once, even when Ahri's orb pierces
 // several visitors or hits again on its return. Unresolved casts stay open.
 function recordDodgeSkillHit(shot,target){
- if(!dodgeDirector||!shot.trainingSkill||shot.trainingHit||!target.dodgeVisitor)return;
+ if(!dodgeDirector||!shot.trainingSkill||shot.trainingHit||!(target.dodgeVisitor||target.syndraCaster))return;
  shot.trainingHit=true;stats[shot.trainingSkill==="q"?"dodgeQHits":"dodgeEHits"]++;
 }
 function dodgeOutcomeSummary(){
@@ -607,7 +607,11 @@ function spawnSyndra(combo=false,witness=null){
    if(!world.pointWalkable(destination,player.r)||!world.segmentClear(start,destination,player.r))continue;
    const areas=[{x:q.x,y:q.y,r:SYNDRA.qRadius-10,ttl:SYNDRA.qDelay}];if(combo)areas.push({cone:true,source,angle:a,ttl:launch});
    if(!forecastDodgePath(incoming,destination,reaction,0,approach,areas))continue;
-   hazards.push({x:q.x,y:q.y,source,angle:a,ttl:SYNDRA.qDelay,max:SYNDRA.qDelay,r:SYNDRA.qRadius,syndra:true,phase:'q',combo,aimPattern,eThreat,threat:dist(player,q)<=SYNDRA.qRadius||dist(projected,q)<=SYNDRA.qRadius,directed:true,spellName:'SYNDRA Q'});
+   // Use a real targetable actor without drawing from the gameplay RNG: Q is
+   // already committed, but a dead/charmed caster cannot start the later E.
+   const caster={id:++enemySeq,x:source.x,y:source.y,r:20,hp:58,maxHp:58,speed:100,shoot:999,hit:0,charge:0,pending:null,alive:true,syndraCaster:true,syndraAngle:a};
+   foes.push(caster);
+   hazards.push({x:q.x,y:q.y,source,angle:a,casterId:caster.id,ttl:SYNDRA.qDelay,max:SYNDRA.qDelay,r:SYNDRA.qRadius,syndra:true,phase:'q',combo,aimPattern,eThreat,threat:dist(player,q)<=SYNDRA.qRadius||dist(projected,q)<=SYNDRA.qRadius,directed:true,spellName:'SYNDRA Q'});
    dodgeDirector.attempted++;dodgeDirector.syndra=(dodgeDirector.syndra||0)+1;if(combo)dodgeDirector.syndraCombo=(dodgeDirector.syndraCombo||0)+1;
    if(witness)witness.destination=destination;return true;
   }
@@ -1442,7 +1446,7 @@ function playerContact(sx,sy,ex,ey,startF,endF,r){
  return Infinity;
 }
 const previousFoes=new Map(foes.map(e=>[e.id,{x:e.x,y:e.y}])),previousAllies=new Map(allies.map(e=>[e.id,{x:e.x,y:e.y}]));
-for(const e of foes){if(!e.alive)continue;if(e.dodgeVisitor){updateDodgeVisitor(e,dt);continue;}if(e.referenceCaster){if(e.pending){e.charge-=dt;if(e.charge<=0)releaseEnemy(e);}else{e.shoot-=dt;if(e.shoot<=0)shootEnemy(e);}continue;}if(e.baitCaster)continue;if(e.charm>0){e.charm=Math.max(0,e.charm-dt);const dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1,step=Math.min(d,e.speed*.35*dt);const next=world.clip(e,{x:e.x+dx/d*step,y:e.y+dy/d*step},e.r);e.x=next.x;e.y=next.y;continue;}if(e.minion){if(mode!=="bait"||bait.phase==="window")updateMinion(e,dt);continue;}if(e.targetDummy){updateTarget(e,dt);continue;}e.hit=Math.max(0,e.hit-dt);e.spin+=dt*e.strafe;const dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;let vx=0,vy=0;if(d>230){vx=dx/d;vy=dy/d;}else if(d<155){vx=-dx/d;vy=-dy/d;}vx+=(-dy/d)*Math.sin(e.spin)*.5;vy+=(dx/d)*Math.sin(e.spin)*.5;const mag=Math.hypot(vx,vy)||1;if(!e.pending){
+for(const e of foes){if(!e.alive)continue;if(e.syndraCaster&&!hazards.some(h=>h.syndra&&h.casterId===e.id)){e.alive=false;continue;}if(e.dodgeVisitor){updateDodgeVisitor(e,dt);continue;}if(e.referenceCaster){if(e.pending){e.charge-=dt;if(e.charge<=0)releaseEnemy(e);}else{e.shoot-=dt;if(e.shoot<=0)shootEnemy(e);}continue;}if(e.baitCaster)continue;if(e.charm>0){e.charm=Math.max(0,e.charm-dt);const dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1,step=Math.min(d,e.speed*.35*dt);const next=world.clip(e,{x:e.x+dx/d*step,y:e.y+dy/d*step},e.r);e.x=next.x;e.y=next.y;continue;}if(e.syndraCaster){e.hit=Math.max(0,e.hit-dt);continue;}if(e.minion){if(mode!=="bait"||bait.phase==="window")updateMinion(e,dt);continue;}if(e.targetDummy){updateTarget(e,dt);continue;}e.hit=Math.max(0,e.hit-dt);e.spin+=dt*e.strafe;const dx=player.x-e.x,dy=player.y-e.y,d=Math.hypot(dx,dy)||1;let vx=0,vy=0;if(d>230){vx=dx/d;vy=dy/d;}else if(d<155){vx=-dx/d;vy=-dy/d;}vx+=(-dy/d)*Math.sin(e.spin)*.5;vy+=(dx/d)*Math.sin(e.spin)*.5;const mag=Math.hypot(vx,vy)||1;if(!e.pending){
  // Chase around walls when direct pursuit is blocked; refresh as the player moves.
  if(d>230&&!world.segmentClear(e,player,e.r)){
   e.routeAge=(e.routeAge||0)-dt;
@@ -1460,6 +1464,10 @@ for(const h of hazards){
  const impactFraction=dt>0?clamp(h.ttl/dt,0,1):0;
  const effectPlayer=positionAt(impactFraction);
  if(h.syndra){
+  const caster=foes.find(e=>e.id===h.casterId&&e.alive);
+  if(h.combo&&(!caster||caster.charm>0)){
+   h.combo=false;if(h.phase==='e'){h.phase='exit';h.ttl=h.max=.3;}
+  }
   if(h.phase==='q'&&Number.isFinite(playerContact(h.x,h.y,h.x,h.y,0,impactFraction,h.r)))h.threat=true;
   h.ttl-=dt;
   if(h.ttl<=0&&h.phase==='q'){
@@ -1875,8 +1883,6 @@ for(const wall of sweeps){
  ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="left";ctx.fillStyle="#ffe1b5";ctx.fillText("SAFE GAP",46,wall.gap+4);
 }
 for(const h of hazards){if(h.syndra){
- drawChampion(h.source.x,h.source.y,h.angle,false,false,h.phase==='e'?1:.2,time*7,'syndra');
- for(let i=0;i<3;i++){const a=time*2+i*TAU/3;circle(h.source.x+Math.cos(a)*22,h.source.y-35+Math.sin(a)*10,5,'#c479f4');}
  if(h.phase==='q'){const progress=clamp(1-h.ttl/h.max,0,1),glow=ctx.createRadialGradient(h.x,h.y,0,h.x,h.y,h.r);glow.addColorStop(0,'#cd79f777');glow.addColorStop(.55,'#a54ac944');glow.addColorStop(1,'#692a9900');circle(h.x,h.y,h.r,glow);circle(h.x,h.y,5+progress*15,'#dc9bffcc');}
  else if(h.phase==='e'){
   // Scatter the Weak pushes outward from the caster; show its expanding
@@ -1960,7 +1966,11 @@ ctx.fillStyle="#102d27";ctx.fillRect(player.x-22,player.y-86,44,4);ctx.fillStyle
  ctx.save();ctx.translate(e.x,e.y-(e.moving?Math.abs(Math.sin(time*12+e.id))*2:0));ctx.save();ctx.scale(1,.45);circle(0,3,17,"#0007");ctx.restore();
  if(e.minionType==="siege")drawCannon(e);else if(minionArt.complete&&minionArt.naturalWidth){ctx.drawImage(minionArt,-24,-48,48,49);if(e.hit>0){ctx.globalAlpha=.4;circle(0,-26,16,"#fff0dc");}}else polygon(0,-10,14,5,Math.PI/2,e.hit?"#fff0dc":"#ac6a57","#dfb68c");drawCasterStaff(e);ctx.restore();
  ctx.fillStyle="#13252b";ctx.fillRect(e.x-19,e.y-55,38,5);ctx.fillStyle="#d9827d";ctx.fillRect(e.x-19,e.y-55,38*Math.max(0,e.hp/e.maxHp),5);continue;
-}drawChampion(e.x,e.y,e.pending?e.pending.angle:Math.atan2(player.y-e.y,player.x-e.x),false,e.hit>0,visitorCastPose(e),time*7,e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.ezrealDodge?"ezreal":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.luxDodge?"lux":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.ahriDodge?"ahriEnemy":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.blitzDodge?"blitz":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.velkozDodge?"void":null);
+}if(e.syndraCaster){
+ const encounter=hazards.find(h=>h.syndra&&h.casterId===e.id);
+ drawChampion(e.x,e.y,e.syndraAngle,false,e.hit>0,encounter?.phase==='e'?1:.2,time*7,'syndra');
+ for(let i=0;i<3;i++){const a=time*2+i*TAU/3;circle(e.x+Math.cos(a)*22,e.y-35+Math.sin(a)*10,5,'#c479f4');}
+}else drawChampion(e.x,e.y,e.pending?e.pending.angle:Math.atan2(player.y-e.y,player.x-e.x),false,e.hit>0,visitorCastPose(e),time*7,e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.ezrealDodge?"ezreal":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.luxDodge?"lux":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.ahriDodge?"ahriEnemy":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.blitzDodge?"blitz":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.velkozDodge?"void":null);
 if(e.charm>0){ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#ffb2df";ctx.fillText("♥ CHARMED",e.x,e.y-96);}
 ctx.fillStyle="#101e23";ctx.fillRect(e.x-25,e.y-86,50,5);ctx.fillStyle="#ff9290";ctx.fillRect(e.x-25,e.y-86,50*clamp(e.hp/e.maxHp,0,1),5);}
 // Draw the ball over champions so it remains visible when centred on Ahri.

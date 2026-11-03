@@ -1564,3 +1564,9 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 
 - Added a game-loop regression running Q damage, direct E damage, pushed-sphere E damage and a real Q→E escape at 30, 60 and 120 rendered frames per second. Each scenario checks its expected hit or dodge and compares the full damage and phase outcomes across rates. All three rates agreed; all 19 targeted Syndra/build-ID tests and `git diff --check` passed.
 - No gameplay or scheduling changes. This verifies deterministic fixed-step simulation, not browser rendering, dropped-frame performance, live-client timings or the user's visual/difficulty judgment. The preceding complete suite remains 496/496; the new test was run separately.
+
+## Targetable Syndra in Dodge (3 November 2026)
+
+- Syndra is now a real targetable encounter actor rather than an untouchable visual. Ahri's Q/E hit accounting includes her, and attacks, health, Charm and champion-takedown healing use the existing combat pipeline. Her committed Q still resolves if she is defeated or charmed, but a pending E is cancelled if she is defeated or charmed before its launch; a sphere already launched continues. Her 58 HP and simple stationary/Charm movement use the existing visitor-style training approximation, not real Syndra stats or a full champion AI.
+- These interactions add counterplay and takedown healing, so they may affect the feel of the newly added encounter and need the player's review; the underlying director cadence is unchanged. Targeted tests reproduce the former untargetable state and verify a real Ahri Charm cast, interrupted vs already-launched E, surviving Q and skill credit. Browser validation remains outstanding. Local build ID: `c20867a4432d`; no deployment.
+- Validation: the serial full suite passed 501/501; syntax and diff checks passed.

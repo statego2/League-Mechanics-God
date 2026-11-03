@@ -157,6 +157,32 @@ test('Syndra Q stays in cast range, visibly resolves at 0.6 seconds, and a witne
  const impact=g.fx.find(f=>f.syndraImpact);assert.ok(impact);assert.ok(Number.isFinite(impact.x)&&Number.isFinite(impact.y));arcs.length=0;g.render();assert.ok(arcs.some(a=>a.x===h.x&&a.y===h.y&&a.r===h.r));
  const other=boot('ahri').g;other.reset('dodge');other.dodgeDirector.next=999;const safe={};assert.ok(other.spawnSyndra(false,safe));advance(other,.2);other.moveTo(safe.destination.x,safe.destination.y);advance(other,.45);assert.equal(other.stats.hits,0);
 });
+test('Syndra is targetable and her committed Q survives her defeat',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(false));const h=g.hazards[0],caster=g.foes.find(e=>e.syndraCaster);
+ assert.ok(caster,'Syndra must be an attackable actor');const hp=caster.hp;g.damageEnemy(caster,10);assert.ok(caster.hp<hp);
+ g.damageEnemy(caster,10000);assert.equal(caster.alive,false);g.player.x=h.x;g.player.y=h.y;advance(g,.61);assert.equal(g.dodgeDirector.outcomes['SYNDRA Q'].hit,1);
+});
+test('defeating or charming Syndra before E stops the follow-up but not her committed Q',()=>{
+ for(const interruption of ['defeat','charm']){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0],caster=g.foes.find(e=>e.syndraCaster);assert.ok(caster);
+  if(interruption==='defeat')g.damageEnemy(caster,10000);else{const s=g.fire(caster.x-25,caster.y,500,0,'charm',80,10,1);g.update(.01);assert.equal(s.alive,false);assert.ok(caster.charm>0);}
+  advance(g,1.2);assert.ok(g.dodgeDirector.outcomes['SYNDRA Q']);assert.equal(g.dodgeDirector.syndraE||0,0,interruption);assert.ok(!g.shots.some(s=>s.syndraSphere));
+ }
+});
+test('Charm cancels Syndra E during windup but not a sphere already launched',()=>{
+ for(const launched of [false,true]){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const caster=g.foes.find(e=>e.syndraCaster);
+  advance(g,launched?.86:.61);const sphere=g.shots.find(s=>s.syndraSphere);assert.equal(!!sphere,launched);
+  const charm=g.fire(caster.x-25,caster.y,500,0,'charm',1,10,1);g.update(.01);assert.equal(charm.alive,false);assert.ok(caster.charm>0);
+  advance(g,.1);assert.equal(g.dodgeDirector.syndraE||0,Number(launched));if(launched)assert.ok(sphere.alive);
+  else{advance(g,.3);assert.ok(!g.shots.some(s=>s.syndraSphere));}
+ }
+});
+test('Ahri can Charm the visible Syndra to interrupt Q E and earn skill credit',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const caster=g.foes.find(e=>e.syndraCaster);caster.hp=caster.maxHp=1000;
+ node('arena').listeners.pointermove({clientX:caster.x,clientY:caster.y,buttons:0});g.cast('e');advance(g,1.2);
+ assert.equal(g.stats.dodgeEShots,1);assert.equal(g.stats.dodgeEHits,1);assert.equal(g.dodgeDirector.syndraE||0,0);assert.ok(g.dodgeDirector.outcomes['SYNDRA Q']);
+});
 test('Syndra Q E creates a pushed sphere after Q and its separate damage does not immobilize',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0];advance(g,.61);assert.equal(h.phase,'e');
  g.player.x=h.x+Math.cos(h.angle)*180;g.player.y=h.y+Math.sin(h.angle)*180;const hits=g.stats.hits;advance(g,.4);
