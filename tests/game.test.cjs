@@ -109,6 +109,15 @@ test('minimap input cannot command or aim at the hidden arena beneath it',()=>{
  const target=g.player.target;key('g');click(700,300,2);assert.equal(g.player.target,target);click(x,y,0);assert.equal(g.awareness.pinged,0);
  canvas.listeners.pointermove({clientX:800,clientY:g.player.y,buttons:0});canvas.listeners.pointermove({clientX:x,clientY:y,buttons:0});g.cast('q');assert.ok(Math.abs(g.player.casting.angle)<1e-8);
 });
+test('a gameplay command cancels an armed map ping before the next click',()=>{
+ for(const command of ['a','s','q']){
+  const {g,node,key,click}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');g.dodgeDirector.next=999;
+  const enemy=foe(g,800,337.5);key('g');key(command);click(enemy.x,enemy.y,0);
+  if(command==='a')assert.equal(g.player.order?.type,'attackMove',command);
+  else assert.equal(g.player.focus,enemy.id,command);
+  assert.equal(g.awareness.pingFx,0,command);
+ }
+});
 test('Dodge restart varies the opening encounter',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});const openings=[];
  for(let i=0;i<5;i++){g.reset('dodge');g.update(1/120);const e=g.foes.find(x=>x.dodgeVisitor);openings.push(e?`${e.spell.name}:${e.x.toFixed(1)}:${e.y.toFixed(1)}`:'deferred');}

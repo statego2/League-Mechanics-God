@@ -1482,3 +1482,8 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 - A Flash rejected because the nearest valid landing is the current location no longer cancels an uncommitted attack windup or increments the cancelled-attack statistic. A valid Flash still cancels the windup as before. Flash range, cooldown, terrain snapping, movement retention and the approved Expert cadence are unchanged.
 - The regression reproduced the previous bug before the fix; both failed-landing and valid-Flash cases pass. Full suite and browser verification are recorded below.
 - Validation: serial full suite 468/468 passed; an additional valid-Flash windup regression added during the run passed separately. `node --check game.js` and `git diff --check` pass. Browser verification of this particular failed-landing interaction is outstanding.
+
+## Armed map ping and gameplay commands (3 November 2026)
+
+- Pressing A, S, or a champion ability after arming a G ping now cancels the pending ping, so the next left click is handled normally. Previously G followed by A could silently consume an attack-move click. Ping gestures already in progress, Alt-click pings, rewards and the player-approved Expert balance are unchanged.
+- The new regression reproduced the attack-move failure before the fix; targeted ping and command tests pass. The build cache key is `ping-command`. Browser verification of this specific sequence remains outstanding.
