@@ -23,6 +23,15 @@ function boot(preset="standard", options={}){
 }
 function foe(g,x=800,y=337.5){const e=g.enemy(x,y);e.speed=0;e.shoot=999;e.hp=e.maxHp=10000;g.setFoes([e]);return e;}
 function advance(g,seconds){for(let i=0;i<Math.round(seconds*120);i++)g.update(1/120);}
+test('visible build identifies the executed script and matches its cache key',()=>{
+ const html=fs.readFileSync(require.resolve('../index.html'),'utf8'),source=fs.readFileSync(require.resolve('../game.js'),'utf8');
+ const cache=html.match(/game\.js\?v=([^"']+)/)?.[1],build=source.match(/const BUILD_ID="([^"]+)"/)?.[1];
+ const normalized=source.replace(/const BUILD_ID="[^"]+"/,'const BUILD_ID="<content-hash>"');
+ const digest=require('node:crypto').createHash('sha256').update(normalized).digest('hex').slice(0,12);
+ assert.ok(cache);assert.equal(build,cache);assert.equal(build,digest,'update the build ID and cache key when game.js changes');
+ assert.equal(boot('ahri').node('buildLabel').textContent,'Build: '+build);
+ assert.doesNotThrow(()=>boot('ahri',{missingNodes:['buildLabel']}));
+});
 test('map awareness is optional, Dodge only, and pings reward once',()=>{
  const {g,node,click,key}=boot('ahri');g.reset('dodge');assert.equal(g.awareness,null);
  node('mapAwareness').checked=true;g.reset('kite');assert.equal(g.awareness,null);g.reset('dodge');

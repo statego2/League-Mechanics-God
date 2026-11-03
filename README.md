@@ -65,9 +65,11 @@ Choose Foundation, Standard or Expert before entering a drill. Expert is the act
 
 ## Mechanics and checks
 
-Right-click orders chase a moving target until it enters the 275-unit attack range. A + click keeps an attack-move order active while travelling, selecting an in-range enemy nearest the clicked point. Moving before the gold windup ring completes cancels the attack; after release you can move during recovery. Auto projectiles track their selected target. The ring shows when the next attack is ready.
+Right-click orders chase a moving target until it enters attack range. A + click keeps an attack-move order active while travelling, selecting an in-range enemy nearest the clicked point. Moving during the attack windup cancels the attack; after release you can move during recovery. Auto projectiles track their selected target.
 
-Dodges count only resolved enemy missiles whose trajectory threatened your hurtbox within 0.8 seconds. Pulse blocks and invulnerability contacts are counted separately in results. Simulation uses a fixed 120 Hz step and swept collision. Losing window focus automatically pauses.
+Dodges are based on resolved threats: the trainer checks projectile paths and the existing movement route, with separate handling for area effects and multi-phase spells. This is an approximation, not a measurement of player intent. Blocks are counted separately in results. Simulation uses a fixed 120 Hz step and swept collision. Losing window focus automatically pauses.
+
+After editing `game.js`, run `node scripts/update-build.cjs` before committing. It updates the content-derived build ID and the HTML cache key together. The menu displays the ID of the JavaScript actually loaded; `Build: unavailable` means it did not report a version. This identifies the loaded script but does not itself publish a build or guarantee that other assets are current.
 
 Run the dependency-free gameplay regression checks with Node 22+:
 
