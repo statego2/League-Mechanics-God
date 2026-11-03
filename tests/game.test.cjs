@@ -43,7 +43,15 @@ test('awareness rewards cap at max health and never consume combat RNG',()=>{
 });
 test('a successful awareness ping is included in the Dodge result',()=>{
  const {g,node,key,click}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');g.awareness.next=0;g.updateAwareness(.01);const m=g.awareness.marker;
- key('g');click(m.x,m.y,0);g.end(false);assert.match(node('menuDescription').textContent,/25 points/);assert.match(node('menuDescription').textContent,/Map pings 1 hit \/ 0 missed/);
+ key('g');click(m.x,m.y,0);g.end(false);assert.match(node('menuDescription').textContent,/25 points/);assert.equal(node('awarenessResult').hidden,false);assert.match(node('awarenessResult').textContent,/1 \/ 1 PINGED · 0 MISSED · 100%/);
+});
+test('awareness results show missed sightings and do not count unfinished ones as missed',()=>{
+ const {g,node,key,click}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');
+ g.awareness.next=0;g.updateAwareness(.01);let m=g.awareness.marker;key('g');click(m.x,m.y,0);g.updateAwareness(3);
+ g.awareness.next=0;g.updateAwareness(.01);g.updateAwareness(3);g.awareness.next=0;g.updateAwareness(.01);g.end(false);
+ assert.match(node('awarenessResult').textContent,/1 \/ 2 PINGED · 1 MISSED · 50% · 1 IN PROGRESS/);
+ g.reset('dodge');g.end(false);assert.match(node('awarenessResult').textContent,/NO COMPLETED SIGHTINGS/);
+ node('menuBtn').listeners.click();assert.equal(node('awarenessResult').hidden,true);
 });
 test('Alt click and drag upward pings the original jungler position on release',()=>{
  const {g,node}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');g.awareness.next=0;g.updateAwareness(.01);const m=g.awareness.marker,canvas=node('arena');g.player.hp=100;

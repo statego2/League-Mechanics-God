@@ -7,10 +7,10 @@
   <meta name="description" content="League Mechanics God — a free, original browser arena for dodging, kiting and skillshot practice.">
   <title>League Mechanics God · Arena</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="style.css?v=2">
+  <link rel="stylesheet" href="style.css?v=3">
   <script defer src="world.js"></script>
   <script defer src="ahri-data.js"></script>
-  <script defer src="game.js?v=20261103-hook-contact"></script>
+  <script defer src="game.js?v=20261103-awareness-result"></script>
 </head>
 <body>
   <main class="app">
@@ -48,6 +48,7 @@
           <div class="menu-kicker">THE PRACTICE GROUNDS</div>
           <h2 id="menuTitle">READ. REACT.<br><span>OUTPLAY.</span></h2>
           <p id="menuDescription">A fast, original browser combat arena built for League-style movement, skillshots and kiting. Choose a mode and jump straight in.</p>
+          <p class="awareness-result" id="awarenessResult" hidden></p>
           <details id="dodgeBreakdown" class="dodge-breakdown" hidden><summary>Spell breakdown</summary><pre id="dodgeBreakdownText"></pre></details>
           <div class="settings" id="settings">
             <label for="difficulty">DIFFICULTY <select id="difficulty"><option value="easy">Foundation</option><option value="normal">Standard</option><option value="hard" selected>Expert</option></select></label>
@@ -61,7 +62,7 @@
             <button class="mode-card" data-mode="lastHit" type="button"><span class="mode-icon">♜</span><span class="mode-info"><b>CS PRACTICE</b><small>Farm with Ahri against minion waves</small></span><span class="mode-arrow">→</span></button>
           </div>
           <p class="tiny-note" id="menuFooter">No installation · No login · Desktop mouse and keyboard</p>
-          <p class="tiny-note">Build: hook-contact</p>
+          <p class="tiny-note">Build: awareness-result</p>
           <button id="resumeBtn" type="button" class="primary-button" hidden>RESUME</button>
         </div>
       </div>
