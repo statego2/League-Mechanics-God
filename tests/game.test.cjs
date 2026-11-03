@@ -159,7 +159,7 @@ test('Syndra Q stays in cast range, visibly resolves at 0.6 seconds, and a witne
 });
 test('Syndra Q E creates a pushed sphere after Q and its separate damage does not immobilize',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0];advance(g,.61);assert.equal(h.phase,'e');
- g.player.x=h.x+Math.cos(h.angle)*80;g.player.y=h.y+Math.sin(h.angle)*80;const hits=g.stats.hits;advance(g,.35);
+ g.player.x=h.x+Math.cos(h.angle)*180;g.player.y=h.y+Math.sin(h.angle)*180;const hits=g.stats.hits;advance(g,.4);
  assert.equal(g.stats.hits,hits+1);assert.equal(g.dodgeDirector.outcomes['SYNDRA E'].hit,1);assert.equal(g.player.root,0);assert.equal(g.player.hooked,null);
 });
 test('Syndra E shows a growing cast wave before the pushed sphere launches',()=>{
@@ -184,6 +184,31 @@ test('Syndra Q E starts beyond the approximated direct E cone with the sphere in
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0],directRange=350;
  assert.ok(Math.hypot(h.source.x-g.player.x,h.source.y-g.player.y)>directRange);
  assert.ok(Math.hypot(h.source.x-h.x,h.source.y-h.y)<directRange);
+});
+test('Syndra E cone hits at release once even if its pushed sphere also crosses Ahri',()=>{
+ const {g,arcs}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0];advance(g,.61);
+ g.player.x=h.source.x+Math.cos(h.angle)*300;g.player.y=h.source.y+Math.sin(h.angle)*300;const hits=g.stats.hits;
+ advance(g,.2);assert.equal(g.stats.hits,hits);advance(g,.06);assert.equal(g.stats.hits,hits+1);assert.equal(g.player.root,0);assert.equal(g.player.hooked,null);
+ arcs.length=0;g.render();assert.ok(arcs.some(a=>a.x===h.source.x&&a.y===h.source.y&&a.r===350));
+ advance(g,.5);assert.equal(g.stats.hits,hits+1);assert.equal(g.dodgeDirector.outcomes['SYNDRA E'].hit,1);
+});
+test('Syndra E direct cone excludes players outside its angular boundary',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0];advance(g,.61);
+ g.player.x=h.source.x+Math.cos(h.angle+.6)*300;g.player.y=h.source.y+Math.sin(h.angle+.6)*300;advance(g,.8);
+ assert.equal(g.stats.hits,0);
+});
+test('Syndra E direct cone uses the documented training radius and angle',()=>{
+ for(const [distance,offset,hit] of [[349,0,true],[351,0,false],[300,.48,true],[300,.5,false]]){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0];advance(g,.61);
+  g.player.x=h.source.x+Math.cos(h.angle+offset)*distance;g.player.y=h.source.y+Math.sin(h.angle+offset)*distance;advance(g,.26);
+  assert.equal(g.stats.hits,Number(hit),`${distance},${offset}`);
+ }
+});
+test('lethal direct Syndra E resolves once and leaves its impact visible',()=>{
+ const {g,node,arcs}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0];advance(g,.61);
+ g.player.x=h.source.x+Math.cos(h.angle)*300;g.player.y=h.source.y+Math.sin(h.angle)*300;g.player.hp=1;advance(g,.26);
+ assert.equal(g.state,'ended');assert.match(node('dodgeBreakdownText').textContent,/SYNDRA E: 0 avoided \/ 1 hit/);assert.match(node('dodgeBreakdownText').textContent,/0 unresolved phases/);
+ arcs.length=0;g.render();assert.ok(arcs.some(a=>a.x===h.source.x&&a.y===h.source.y&&a.r===350));
 });
 test('Syndra E windup is counted as unresolved if a run ends before launch',()=>{
  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));advance(g,.61);
