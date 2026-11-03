@@ -162,6 +162,12 @@ test('Syndra is targetable and her committed Q survives her defeat',()=>{
  assert.ok(caster,'Syndra must be an attackable actor');const hp=caster.hp;g.damageEnemy(caster,10);assert.ok(caster.hp<hp);
  g.damageEnemy(caster,10000);assert.equal(caster.alive,false);g.player.x=h.x;g.player.y=h.y;advance(g,.61);assert.equal(g.dodgeDirector.outcomes['SYNDRA Q'].hit,1);
 });
+test('Syndra uses Riot snapshot base defenses and an Ahri E cannot one-shot her',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const caster=g.foes.find(e=>e.syndraCaster);
+ assert.equal(caster.hp,583);assert.equal(caster.maxHp,583);assert.equal(caster.armor,25);assert.equal(caster.mr,30);assert.equal(caster.speed,165);
+ g.player.hp=300;node('arena').listeners.pointermove({clientX:caster.x,clientY:caster.y,buttons:0});g.cast('e');advance(g,.8);
+ assert.ok(caster.alive);assert.ok(Math.abs(caster.hp-(583-80/1.3))<1e-7);assert.ok(g.player.hp<350,'no champion-takedown heal');assert.equal(g.dodgeDirector.syndraE||0,0);
+});
 test('defeating or charming Syndra before E stops the follow-up but not her committed Q',()=>{
  for(const interruption of ['defeat','charm']){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0],caster=g.foes.find(e=>e.syndraCaster);assert.ok(caster);
@@ -282,8 +288,8 @@ test('Syndra events pause, reset and preserve prior Expert records',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
  node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0],ttl=h.ttl;
  g.pause();advance(g,1);assert.equal(h.ttl,ttl);g.pause();g.reset('dodge');assert.equal(g.hazards.length,0);
- const old='lmg.best.v1.dodge.hard.director_v87.endless.survival';values.set(old,'100');g.setTime(10);g.end(false);
- assert.equal(values.get(old),'100');assert.equal(values.get('lmg.best.v1.dodge.hard.director_v88.endless.survival'),'10');
+ const old='lmg.best.v1.dodge.hard.director_v87.endless.survival',prior='lmg.best.v1.dodge.hard.director_v88.endless.survival';values.set(old,'100');values.set(prior,'80');g.setTime(10);g.end(false);
+ assert.equal(values.get(old),'100');assert.equal(values.get(prior),'80');assert.equal(values.get('lmg.best.v1.dodge.hard.director_v89.endless.survival'),'10');
 });
 test('Syndra Q and both E hit paths agree at 30, 60 and 120 FPS',()=>{
  for(const scenario of ['q','cone','sphere','dodge']){
