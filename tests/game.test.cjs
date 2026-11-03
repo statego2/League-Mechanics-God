@@ -305,8 +305,9 @@ test('Syndra events pause, reset and preserve prior Expert records',()=>{
  node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0],ttl=h.ttl;
  g.pause();advance(g,1);assert.equal(h.ttl,ttl);g.pause();g.reset('dodge');assert.equal(g.hazards.length,0);
  const old='lmg.best.v1.dodge.hard.director_v87.endless.survival',prior='lmg.best.v1.dodge.hard.director_v88.endless.survival';values.set(old,'100');values.set(prior,'80');
- const syndraV1='lmg.best.v1.dodge.hard.director_v89.endless.survival';values.set(syndraV1,'90');g.setTime(10);g.end(false);
- assert.equal(values.get(old),'100');assert.equal(values.get(prior),'80');assert.equal(values.get(syndraV1),'90');assert.equal(values.get('lmg.best.v1.dodge.hard.director_v90.endless.survival'),'10');
+ const syndraV1='lmg.best.v1.dodge.hard.director_v89.endless.survival';values.set(syndraV1,'90');
+ const syndraV2='lmg.best.v1.dodge.hard.director_v90.endless.survival';values.set(syndraV2,'95');g.setTime(10);g.end(false);
+ assert.equal(values.get(old),'100');assert.equal(values.get(prior),'80');assert.equal(values.get(syndraV1),'90');assert.equal(values.get(syndraV2),'95');assert.equal(values.get('lmg.best.v1.dodge.hard.director_v91.endless.survival'),'10');
 });
 test('Syndra Q and both E hit paths agree at 30, 60 and 120 FPS',()=>{
  for(const scenario of ['q','cone','sphere','dodge']){
