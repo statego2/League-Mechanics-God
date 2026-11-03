@@ -1185,7 +1185,7 @@ function startHookPull(shot){
  const desired={x:shot.anchor.x+ux*reach,y:shot.anchor.y+uy*reach},landing=world.nearestWalkable(desired);
  // A hook interrupts an active dash. If a terrain-crossing dash is caught
  // inside our approximate wall, place Ahri on walkable ground before pulling.
- if(player.dashing&&!world.pointWalkable(player,player.r)){const safe=world.nearestWalkable(player,player.r);player.x=safe.x;player.y=safe.y;}
+ if(!world.pointWalkable(player,player.r)){const safe=world.nearestWalkable(player,player.r);player.x=safe.x;player.y=safe.y;}
  player.dashing=null;
  cancelAttack();player.order=null;player.target=null;player.focus=null;player.route=[];player.routeGoal=null;
  const speed=shot.pullSpeed??SIMULATION.toCanvas(1800);
@@ -1319,10 +1319,11 @@ if(player.target&&player.windup<=0&&player.root<=0&&!player.casting&&!player.das
 }
 
 player.x=clamp(player.x,22,W-22);player.y=clamp(player.y,59,H-36);
-const positionAt=f=>{const span=moveEnd-moveLock,t=span>0?clamp((f*dt-moveLock)/span,0,1):0;return {x:oldX+(player.x-oldX)*t,y:oldY+(player.y-oldY)*t};};
+const plannedEndX=player.x,plannedEndY=player.y;let interruptedAt=Infinity,interruptedPosition=null;
+const positionAt=f=>{if(f>=interruptedAt)return interruptedPosition;const span=moveEnd-moveLock,t=span>0?clamp((f*dt-moveLock)/span,0,1):0;return {x:oldX+(plannedEndX-oldX)*t,y:oldY+(plannedEndY-oldY)*t};};
 // Split swept collision where movement begins or ends within the step.
 function playerContact(sx,sy,ex,ey,startF,endF,r){
- const parts=[0,1];if(dt>0&&endF>startF)for(const boundary of [moveLock,moveEnd]){const split=(boundary/dt-startF)/(endF-startF);if(split>0&&split<1)parts.push(split);}parts.sort((a,b)=>a-b);
+ const parts=[0,1];if(dt>0&&endF>startF)for(const boundary of [moveLock,moveEnd,interruptedAt*dt]){const split=(boundary/dt-startF)/(endF-startF);if(split>0&&split<1)parts.push(split);}parts.sort((a,b)=>a-b);
  for(let i=1;i<parts.length;i++){
   const a=parts[i-1],b=parts[i],pa=positionAt(startF+(endF-startF)*a),pb=positionAt(startF+(endF-startF)*b);
   const t=segmentHitTime(sx+(ex-sx)*a-pa.x,sy+(ey-sy)*a-pa.y,sx+(ex-sx)*b-pb.x,sy+(ey-sy)*b-pb.y,r);
@@ -1552,7 +1553,7 @@ for(const s of shots){if(!s.alive)continue;
   // Vel’Koz splits at the first contact, not where the bolt would have
   // ended its step if the champion had not stopped it.
   if(collision&&s.velkoz==="main"){s.x=s.px+(s.x-s.px)*contact;s.y=s.py+(s.y-s.py)*contact;}
-  if(collision){s.alive=false;if(s.group)s.group.hit=true;if(player.invuln>0){recordDodgeOutcome(s,"blocked");stats.blocked++;}else {recordDodgeOutcome(s,"hit");takeHit(s.damage);if(state==="playing"&&s.hook)startHookPull(s);if(state==="playing"&&s.root&&mode!=="dodge"){
+  if(collision){s.alive=false;if(s.group)s.group.hit=true;if(player.invuln>0){recordDodgeOutcome(s,"blocked");stats.blocked++;}else {recordDodgeOutcome(s,"hit");const impactFraction=startFraction+(travelFraction-startFraction)*contact;if(s.hook){const impact=positionAt(impactFraction);player.x=impact.x;player.y=impact.y;}takeHit(s.damage);if(state==="playing"&&s.hook){startHookPull(s);interruptedAt=impactFraction;interruptedPosition={x:player.x,y:player.y};}if(state==="playing"&&s.root&&mode!=="dodge"){
    player.root=s.root;
    // A dash interrupted inside a wall must leave the player on walkable ground.
    if(player.dashing&&!world.pointWalkable(player,player.r)){const safe=world.nearestWalkable(player,player.r);player.x=safe.x;player.y=safe.y;}

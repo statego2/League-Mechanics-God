@@ -1337,6 +1337,19 @@ test('Blitz Q visitor commits one hook, then pulls Ahri to the source-side landi
  const start={x:g.player.x,y:g.player.y};advance(g,.1);assert.equal(e.phase,'hookFlight');advance(g,.8);
  assert.equal(g.stats.hits,1);assert.ok(Math.abs(g.stats.damage-(110/1.3))<1e-7);assert.equal(g.player.root,0);assert.ok(g.player.x<start.x-200);assert.equal(g.player.y,start.y);assert.equal(g.player.hooked,null);assert.equal(g.dodgeDirector.outcomes['BLITZ Q'].hit,1);
 });
+test('Blitz hook interrupts movement at the swept contact instead of the end of the step',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setFoes([]);
+ const start={x:g.player.x,y:g.player.y},speed=g.player.speed,radius=g.player.hitRadius+5;g.moveTo(start.x+200,start.y);
+ const hook=g.fire(start.x-50,start.y,1000,0,'enemy',10,5,1);Object.assign(hook,{hook:true,anchor:{x:start.x-250,y:start.y},pullSpeed:900});
+ g.update(.1);const expected=start.x+speed*(50-radius)/(1000-speed);
+ assert.ok(g.player.hooked);assert.ok(Math.abs(g.player.x-expected)<1e-6,`${g.player.x} vs ${expected}`);assert.equal(g.player.target,null);
+});
+test('a later projectile does not hit the portion of movement cancelled by a Blitz hook',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setFoes([]);const p=g.player,start={x:p.x,y:p.y};g.moveTo(start.x+200,start.y);
+ const hook=g.fire(start.x-50,start.y,1000,0,'enemy',10,5,1);Object.assign(hook,{hook:true,anchor:{x:start.x-250,y:start.y},pullSpeed:900});
+ g.fire(start.x+p.speed*.1+p.hitRadius+1,start.y,0,0,'enemy',10,2,1);g.update(.1);
+ assert.ok(p.hooked);assert.equal(g.stats.hits,1);
+});
 test('Blitz hook interrupts Ahri dash instead of resuming it after the pull',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player;
  p.dashing={x:p.x+250,y:p.y,speed:300,throughTerrain:true};
