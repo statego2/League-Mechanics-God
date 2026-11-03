@@ -190,7 +190,7 @@ function pause(){attackMove=false;pingArmed=false;pingDrag=null;if(state==="play
 // Records are local and partitioned by drill and difficulty; storage can be unavailable.
 function saveRecord(value){
  try{
-  const key="lmg.best.v1."+mode+"."+difficulty+recordSuffix()+(mode==="dodge"&&dodgeDirector?".skill_v6":"")+(awareness?".awareness_v1":"");
+  const key="lmg.best.v1."+mode+"."+difficulty+recordSuffix()+(mode==="dodge"&&dodgeDirector?".skill_v7":"")+(awareness?".awareness_v1":"");
   const previous=Number(window.localStorage.getItem(key));
   const best=Math.max(Number.isFinite(previous)?previous:0,value);
   window.localStorage.setItem(key,String(best));return best;
@@ -1065,10 +1065,14 @@ function updateDodgeVisitor(e,dt){
   // A lead that fails the safety forecast need not discard a safe direct cast.
   if(!safe&&aimPoint!==player&&isolated&&regularAllowed(e.spell.name)){aimPoint=player;aim.pattern="direct";angle=Math.atan2(player.y-e.y,player.x-e.x);safe=canEvadeDodgeCast(e,e.spell);}
   if(!safe)e.phase="exit";else{
-   // Credit an early dodge only if the committed, finite projectile path
-   // actually intersects the player's current hitbox. Later movement into a
-   // shot's path is still tracked during flight by threatening().
-   const range=e.spell.range,threat=!e.spell.split&&Number.isFinite(segmentHitTime(e.x-player.x,e.y-player.y,e.x+Math.cos(angle)*range-player.x,e.y+Math.sin(angle)*range-player.y,dodgeSpellRadius(e.spell)+player.hitRadius));
+   // Credit early responses to shots aimed at the current hitbox or at the
+   // existing movement route. Both are geometric approximations; the latter
+   // uses the same route/speed forecast as the director, not future inputs.
+   const range=e.spell.range,radius=dodgeSpellRadius(e.spell),vx=Math.cos(angle)*e.spell.speed,vy=Math.sin(angle)*e.spell.speed;
+   const currentHit=Number.isFinite(segmentHitTime(e.x-player.x,e.y-player.y,e.x+Math.cos(angle)*range-player.x,e.y+Math.sin(angle)*range-player.y,radius+player.hitRadius));
+   const horizon=e.spell.cast+range/e.spell.speed,approach=!e.spell.split&&!currentHit?dodgeReactionPath(horizon):null;
+   const routeHit=approach&&!forecastDodgePath([{x:e.x,y:e.y,vx,vy,r:radius,start:e.spell.cast,end:horizon}],approach.end,horizon,0,approach);
+   const threat=!e.spell.split&&(currentHit||!!routeHit);
    e.pending={angle,fan:false,spell:e.spell,splitDistance,pattern:aim.pattern,threat};e.charge=e.spell.cast;e.phase="cast";recordRegular(e.spell.name);
    // One seeded opportunity per Ezreal cast. Each candidate must pass its
    // own shared-path forecast and the normal active-threat limit.
