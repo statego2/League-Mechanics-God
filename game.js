@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="7a9c8f93d5e9";
+const BUILD_ID="d5ebd53e77d7";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -585,6 +585,12 @@ const XERATH_Q={radius:SIMULATION.toCanvas(145/2),range:SIMULATION.toCanvas(1450
 const SYNDRA={qRange:SIMULATION.toCanvas(800),qRadius:SIMULATION.toCanvas(210),qDelay:.6,qDamage:90,eDelay:.25,eSpeed:SIMULATION.toCanvas(2000),eRadius:SIMULATION.toCanvas(100),eEnd:SIMULATION.toCanvas(1200),eDamage:60,eDirectRange:SIMULATION.toCanvas(700),eHalfAngle:28*Math.PI/180};
 // Riot Data Dragon 16.21.1 base defenses and movement; no items or growth.
 const SYNDRA_BASE={hp:583,armor:25,mr:30,speed:SIMULATION.toCanvas(330)};
+// Q E places the sphere 200 canvas units short of its aim point and pushes it
+// through that point, so the sphere centre always arrives qDelay + eDelay +
+// 200 / eSpeed after the cast. Mindgame Aim style weights for the push:
+// these are selection weights; an unsafe lead or reversal falls back to a
+// separately verified direct cast, as for the visitor skillshots.
+const SYNDRA_EQ={sphereLead:200,sourceDistance:400,direct:.15,lead:.75};
 function syndraConeContains(source,angle,point){
  const dx=point.x-source.x,dy=point.y-source.y,d=Math.hypot(dx,dy);
  return d<=SYNDRA.eDirectRange&&(d<1e-8||Math.cos(Math.atan2(dy,dx)-angle)>=Math.cos(SYNDRA.eHalfAngle));
@@ -596,10 +602,23 @@ function spawnSyndra(combo=false,witness=null){
  const projected=dodgeReactionPath(SYNDRA.qDelay).end,moveX=projected.x-player.x,moveY=projected.y-player.y,moveLength=Math.hypot(moveX,moveY);
  let qAim={x:player.x,y:player.y},aimPattern='direct';
  if(!combo&&moveLength>2){const roll=random();if(roll>=.15&&roll<.9){qAim=projected;aimPattern='lead';}else if(roll>=.9){qAim={x:player.x-moveX/moveLength*70,y:player.y-moveY/moveLength*70};aimPattern='reversal';}}
+ if(combo){
+  // Predict the existing route to the moment the pushed sphere's centre
+  // reaches its aim point (capped like dodgeAimPoint). Geometry fixes that
+  // arrival time, so no distance iteration is needed.
+  const arrival=SYNDRA.qDelay+SYNDRA.eDelay+SYNDRA_EQ.sphereLead/SYNDRA.eSpeed,future=dodgeReactionPath(Math.min(arrival,1.2)).end;
+  const dx=future.x-player.x,dy=future.y-player.y,d=Math.hypot(dx,dy);
+  if(d>2){const roll=random();
+   if(roll>=SYNDRA_EQ.direct&&roll<SYNDRA_EQ.direct+SYNDRA_EQ.lead){qAim=future;aimPattern='lead';}
+   else if(roll>=SYNDRA_EQ.direct+SYNDRA_EQ.lead){qAim={x:player.x-dx/d*70,y:player.y-dy/d*70};aimPattern='reversal';}}
+ }
+ const place=aim=>{
  for(let i=0;i<24;i++){
-  const a=first+i*TAU/24,dx=Math.cos(a),dy=Math.sin(a),sourceDistance=combo?400:300,source={x:player.x-dx*sourceDistance,y:player.y-dy*sourceDistance};
-  const q=combo?{x:source.x+dx*200,y:source.y+dy*200}:{x:qAim.x+dx*60,y:qAim.y+dy*60};
+  const a=first+i*TAU/24,dx=Math.cos(a),dy=Math.sin(a),sourceDistance=combo?SYNDRA_EQ.sourceDistance:300,anchor=combo?aim:player,source={x:anchor.x-dx*sourceDistance,y:anchor.y-dy*sourceDistance};
+  const q=combo?{x:source.x+dx*(sourceDistance-SYNDRA_EQ.sphereLead),y:source.y+dy*(sourceDistance-SYNDRA_EQ.sphereLead)}:{x:aim.x+dx*60,y:aim.y+dy*60};
   if(source.x<60||source.x>W-60||source.y<145||source.y>H-40||!world.pointWalkable(source,20)||dist(source,q)>SYNDRA.qRange||q.x<30||q.x>W-30||q.y<70||q.y>H-30)continue;
+  // A predicted push must still begin outside the direct E cone's reach.
+  if(combo&&dist(source,player)<=SYNDRA.eDirectRange+10)continue;
   const launch=SYNDRA.qDelay+SYNDRA.eDelay,travel=(SYNDRA.eEnd-dist(source,q))/SYNDRA.eSpeed;
   const incoming=combo?[{x:q.x,y:q.y,vx:dx*SYNDRA.eSpeed,vy:dy*SYNDRA.eSpeed,r:SYNDRA.eRadius,start:launch,end:launch+travel}]:[];
   const horizon=combo?launch+travel:SYNDRA.qDelay,distance=forecastTravel(reaction,horizon);
@@ -613,11 +632,16 @@ function spawnSyndra(combo=false,witness=null){
    // already committed, but a dead/charmed caster cannot start the later E.
    const caster={id:++enemySeq,x:source.x,y:source.y,r:20,hp:SYNDRA_BASE.hp,maxHp:SYNDRA_BASE.hp,armor:SYNDRA_BASE.armor,mr:SYNDRA_BASE.mr,speed:SYNDRA_BASE.speed,shoot:999,hit:0,charge:0,pending:null,alive:true,syndraCaster:true,syndraAngle:a};
    foes.push(caster);
-   hazards.push({x:q.x,y:q.y,source,angle:a,casterId:caster.id,ttl:SYNDRA.qDelay,max:SYNDRA.qDelay,r:SYNDRA.qRadius,syndra:true,phase:'q',combo,aimPattern,eThreat,threat:dist(player,q)<=SYNDRA.qRadius||dist(projected,q)<=SYNDRA.qRadius,directed:true,spellName:'SYNDRA Q'});
+   hazards.push({x:q.x,y:q.y,source,angle:a,casterId:caster.id,ttl:SYNDRA.qDelay,max:SYNDRA.qDelay,r:SYNDRA.qRadius,syndra:true,phase:'q',combo,aimPattern,aimPoint:{x:aim.x,y:aim.y},eThreat,threat:dist(player,q)<=SYNDRA.qRadius||dist(projected,q)<=SYNDRA.qRadius,directed:true,spellName:'SYNDRA Q'});
    dodgeDirector.attempted++;dodgeDirector.syndra=(dodgeDirector.syndra||0)+1;if(combo)dodgeDirector.syndraCombo=(dodgeDirector.syndraCombo||0)+1;
    if(witness)witness.destination=destination;return true;
   }
  }
+ return false;
+ };
+ if(place(qAim))return true;
+ // As with visitor skillshots, an unsafe Q E read falls back to direct aim.
+ if(combo&&aimPattern!=='direct'){aimPattern='direct';return place({x:player.x,y:player.y});}
  return false;
 }
 // Final Spark is a separate encounter from Lux Q. The current League Wiki
@@ -1480,7 +1504,7 @@ for(const h of hazards){
    h.phase=h.combo?'e':'exit';h.ttl=h.combo?SYNDRA.eDelay:.3;h.max=h.ttl;
   }else if(h.ttl<=0&&h.phase==='e'){
    const range=SYNDRA.eEnd-dist(h.source,h),s=fire(h.x,h.y,Math.cos(h.angle)*SYNDRA.eSpeed,Math.sin(h.angle)*SYNDRA.eSpeed,'enemy',physicalDamage(SYNDRA.eDamage,30),SYNDRA.eRadius,range/SYNDRA.eSpeed);
-   Object.assign(s,{directed:true,spellName:'SYNDRA E',syndraSphere:true,threat:h.eThreat,spawnOffset:clamp(dt+h.ttl,0,dt)});
+   Object.assign(s,{directed:true,spellName:'SYNDRA E',syndraSphere:true,aimPattern:h.aimPattern,threat:h.eThreat,spawnOffset:clamp(dt+h.ttl,0,dt)});
    dodgeDirector.attempted++;dodgeDirector.syndraE=(dodgeDirector.syndraE||0)+1;h.phase='exit';h.ttl=h.max=.35;
    fx.push({x:h.source.x,y:h.source.y,vx:0,vy:0,r:SYNDRA.eDirectRange,angle:h.angle,ttl:.2,max:.2,syndraWave:true});
    // The cone and pushed sphere are one E: an immediate cone hit suppresses

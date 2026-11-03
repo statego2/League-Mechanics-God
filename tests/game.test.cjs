@@ -3560,3 +3560,74 @@ test('Cassiopeia cast cue grows during windup without revealing the cone',()=>{
  assert.ok(late.r>early.r);assert.ok(!arcs.some(a=>a.r===425));
  arcs.length=0;h.casting=false;g.render();assert.ok(!arcs.some(a=>a.x===0&&a.y===-57));
 });
+
+// Q E predictive aim: the pushed sphere follows the same Mindgame Aim style
+// read as the other skillshots (direct, lead, reversal; unsafe reads fall back
+// to direct aim), predicted to the sphere's own arrival time at its aim point.
+function syndraStraightRun(seed,dir,spot,options={}){
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');Object.assign(g.dodgeDirector,{next:999,syndraAt:1e9});g.player.hp=g.player.maxHp=1e6;
+ g.player.x=spot[0];g.player.y=spot[1];const a=dir*Math.PI/4;g.moveTo(g.player.x+Math.cos(a)*600,g.player.y+Math.sin(a)*600);g.update(1/120);
+ g.setRng((seed*2654435761)>>>0);const witness={},start={x:g.player.x,y:g.player.y},arrival=g.SYNDRA.qDelay+g.SYNDRA.eDelay+200/g.SYNDRA.eSpeed,future=g.dodgeReactionPath(arrival).end;
+ if(!g.spawnSyndra(true,witness))return null;const h=g.hazards.find(h=>h.syndra);
+ return {g,h,witness,start,future};
+}
+const SYNDRA_SPOTS=[[600,330],[450,300],[750,420],[600,450]];
+test('Syndra Q E leads a straight route and punishes keeping it',()=>{
+ let leads=0;
+ for(let seed=1;seed<=24;seed++)for(const dir of [0,2,4,6]){
+  const run=syndraStraightRun(seed,dir,SYNDRA_SPOTS[seed%4]);if(!run||run.h.aimPattern!=='lead')continue;const {g,h,future}=run;leads++;
+  // The aim point is the existing route predicted to the sphere's arrival.
+  assert.ok(Math.hypot(h.aimPoint.x-future.x,h.aimPoint.y-future.y)<1e-6);
+  const s=Math.hypot(h.aimPoint.x-h.x,h.aimPoint.y-h.y);assert.ok(Math.abs(s-200)<1e-6);
+  let closest=Infinity,sphere=null;
+  for(let i=0;i<Math.round(2*120);i++){g.update(1/120);sphere=g.shots.find(s=>s.syndraSphere)||sphere;if(sphere&&sphere.alive)closest=Math.min(closest,Math.hypot(sphere.x-g.player.x,sphere.y-g.player.y));}
+  assert.ok(sphere,`seed ${seed} dir ${dir}: no sphere`);assert.equal(sphere.aimPattern,'lead');
+  assert.ok(g.stats.hits>=1,`seed ${seed} dir ${dir}: straight route survived a lead`);
+  assert.ok(closest<=sphere.r+g.player.r||!sphere.alive,`seed ${seed} dir ${dir}: sphere missed by ${closest}`);
+ }
+ assert.ok(leads>=40,`only ${leads} leads`);
+});
+test('Syndra Q E leads and reversals keep an executable walking escape',()=>{
+ const checked={lead:0,reversal:0,direct:0};
+ for(let seed=1;seed<=30;seed++)for(const dir of [1,3,5,7]){
+  const run=syndraStraightRun(seed,dir,SYNDRA_SPOTS[seed%4]);if(!run)continue;const {g,h,witness}=run;
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.8);
+  assert.equal(g.stats.hits,0,`${h.aimPattern} seed ${seed} dir ${dir}`);checked[h.aimPattern]++;
+ }
+ assert.ok(checked.lead>=40&&checked.reversal>0&&checked.direct>0,JSON.stringify(checked));
+});
+test('Syndra Q E reads stay in Q and E range and start outside the E cone',()=>{
+ let n=0;
+ for(let seed=1;seed<=30;seed++)for(const dir of [0,1,2,3,4,5,6,7]){
+  const run=syndraStraightRun(seed,dir,SYNDRA_SPOTS[seed%4]);if(!run)continue;const {g,h,start}=run;n++;
+  const qDistance=Math.hypot(h.x-h.source.x,h.y-h.source.y),aimDistance=Math.hypot(h.aimPoint.x-h.source.x,h.aimPoint.y-h.source.y);
+  assert.ok(qDistance<=g.SYNDRA.qRange+1e-6,`Q ${qDistance}`);assert.ok(aimDistance<g.SYNDRA.eEnd,`E ${aimDistance}`);
+  assert.ok(Math.hypot(start.x-h.source.x,start.y-h.source.y)>g.SYNDRA.eDirectRange,`${h.aimPattern} starts in the cone`);
+ }
+ assert.ok(n>=200,`only ${n} placements`);
+});
+test('Syndra Q E mixes leads with direct and reversal reads like Mindgame Aim',()=>{
+ const counts={direct:0,lead:0,reversal:0};
+ for(let seed=1;seed<=60;seed++)for(const dir of [0,1,2,3,4,5,6,7]){const run=syndraStraightRun(seed,dir,SYNDRA_SPOTS[seed%4]);if(run)counts[run.h.aimPattern]++;}
+ const total=counts.direct+counts.lead+counts.reversal;
+ // 15/75/10 selection; unsafe leads fall back to direct, so realized leads are lower.
+ assert.ok(counts.lead>=total*.5&&counts.lead<=total*.8,JSON.stringify(counts));
+ assert.ok(counts.direct>=total*.12&&counts.reversal>=total*.05,JSON.stringify(counts));
+ // A stationary target has nothing to lead and draws no extra aim roll.
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setRng(77);assert.ok(g.spawnSyndra(true));
+ const h=g.hazards[0];assert.equal(h.aimPattern,'direct');assert.ok(Math.hypot(h.aimPoint.x-g.player.x,h.aimPoint.y-g.player.y)<1e-6);
+});
+test('Syndra Q E lead resolves the same at 30, 60 and 120 FPS',()=>{
+ let seedFound=null;
+ for(let seed=1;seed<=40&&!seedFound;seed++){const run=syndraStraightRun(seed,0,SYNDRA_SPOTS[seed%4]);if(run&&run.h.aimPattern==='lead')seedFound=seed;}
+ assert.ok(seedFound);
+ for(const escape of [false,true]){
+  const results=[];
+  for(const fps of [30,60,120]){
+   const {g,h,witness}=syndraStraightRun(seedFound,0,SYNDRA_SPOTS[seedFound%4]);assert.equal(h.aimPattern,'lead');
+   g.loop(1000);for(let i=1;i<=fps*2;i++){g.loop(1000+i*1000/fps+.01);if(escape&&i===fps/5)g.moveTo(witness.destination.x,witness.destination.y);}
+   results.push(g.stats.hits);
+  }
+  assert.ok(escape?results.every(n=>n===0):results.every(n=>n>=1&&n===results[0]),JSON.stringify(results)+' '+`escape=${escape}`);
+ }
+});
