@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="e70ce2a0f527";
+const BUILD_ID="7a9c8f93d5e9";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -1753,6 +1753,23 @@ updateUI();}
 function impactEffect(f){return !!(f.shockwave||f.rockImpact||f.cassio||f.beam||f.syndraImpact||f.syndraWave);}
 function circle(x,y,r,color,fill=true,width=1){ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx[fill?"fillStyle":"strokeStyle"]=color;if(!fill)ctx.lineWidth=width;ctx[fill?"fill":"stroke"]();}
 function polygon(x,y,r,n,rotation,fill,stroke){ctx.beginPath();for(let i=0;i<=n;i++){const a=rotation+i*TAU/n;const px=x+Math.cos(a)*r,py=y+Math.sin(a)*r;i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.closePath();ctx.fillStyle=fill;ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.fill();ctx.stroke();}
+// Dark sphere used by the Syndra-pattern encounter: violet aura, near-black
+// core, lit rim and a slow internal swirl. Visual only; collision radii stay
+// in SYNDRA and the hazard/shot data.
+function drawDarkSphere(x,y,r,alpha=1,charge=0,lift=0){
+ if(r<=.5||alpha<=0)return;
+ ctx.save();ctx.globalAlpha*=alpha;
+ ctx.save();ctx.translate(x,y);ctx.scale(1,.42);circle(0,r*.55,r*1.05,"rgba(10,0,20,.45)");ctx.restore();
+ const cy=y-lift,aura=ctx.createRadialGradient(x,cy,r*.4,x,cy,r*(2.1+charge*.6));
+ aura.addColorStop(0,`rgba(186,96,255,${.42+charge*.3})`);aura.addColorStop(1,"rgba(110,40,190,0)");circle(x,cy,r*(2.1+charge*.6),aura);
+ const body=ctx.createRadialGradient(x-r*.35,cy-r*.4,r*.08,x,cy,r);
+ body.addColorStop(0,"#b77bf0");body.addColorStop(.35,"#4b1d78");body.addColorStop(.8,"#1a0830");body.addColorStop(1,"#0c0418");circle(x,cy,r,body);
+ ctx.save();ctx.lineCap="round";ctx.strokeStyle=`rgba(226,170,255,${.55+charge*.4})`;ctx.lineWidth=Math.max(1,r*.12);
+ for(let i=0;i<2;i++){const spin=time*3.2+i*Math.PI;ctx.beginPath();ctx.arc(x,cy,r*.62,spin,spin+1.1);ctx.stroke();}
+ ctx.strokeStyle="#c58cffcc";ctx.lineWidth=Math.max(1,r*.1);ctx.beginPath();ctx.arc(x,cy,r,0,TAU);ctx.stroke();ctx.restore();
+ circle(x-r*.38,cy-r*.42,r*.18,"rgba(255,240,255,.75)");
+ ctx.restore();
+}
 // A pose, not an aim line: progressively wind up during the existing cast.
 function visitorCastPose(e){
  if(!e.pending)return 0;
@@ -1762,8 +1779,17 @@ function visitorCastPose(e){
 // Original vector ranger and enemy mage silhouettes with facing and articulated steps.
 function drawChampion(x,y,a,friendly,hit,windup,motion,profile=null){
  if(profile==="syndra"){
-  // Original dark mage silhouette with a crown; orbiting spheres are drawn
-  // by the encounter so the caster remains recognizable without Riot assets.
+  // Original generated hooded sorceress (assets/umbral-caster.png), not a
+  // Riot model. The vector silhouette below remains the loading fallback.
+  const sprite=$("umbralArt");
+  if(sprite?.complete&&sprite.naturalWidth){
+   ctx.save();ctx.translate(x,y);ctx.save();ctx.scale(1,.43);circle(0,3,24,"#0009");ctx.restore();
+   const aura=ctx.createRadialGradient(0,-40,4,0,-40,46);aura.addColorStop(0,`rgba(176,92,255,${.16+windup*.22})`);aura.addColorStop(1,"rgba(90,30,150,0)");circle(0,-40,46,aura);
+   ctx.translate(0,-Math.abs(Math.sin(motion*.5))*1.5);ctx.scale(Math.cos(a)>=0?1:-1,1);ctx.rotate(-windup*.06);ctx.drawImage(sprite,-29,-86,58,87);
+   // Casting hands brighten through the windup.
+   const hand=ctx.createRadialGradient(17,-50,0,17,-50,7+windup*9);hand.addColorStop(0,`rgba(246,214,255,${.5+windup*.45})`);hand.addColorStop(1,"rgba(168,84,240,0)");circle(17,-50,7+windup*9,hand);
+   if(hit){ctx.globalAlpha=.45;circle(0,-40,24,"#f6e2ff");}ctx.restore();return;
+  }
   ctx.save();ctx.translate(x,y);ctx.scale(Math.cos(a)>=0?1:-1,1);
   ctx.save();ctx.scale(1,.43);circle(0,3,24,'#0009');ctx.restore();
   ctx.fillStyle=hit?'#f4d8ff':'#38214b';ctx.strokeStyle='#ad6fca';ctx.lineWidth=2;
@@ -1885,14 +1911,25 @@ for(const wall of sweeps){
  ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="left";ctx.fillStyle="#ffe1b5";ctx.fillText("SAFE GAP",46,wall.gap+4);
 }
 for(const h of hazards){if(h.syndra){
- if(h.phase==='q'){const progress=clamp(1-h.ttl/h.max,0,1),glow=ctx.createRadialGradient(h.x,h.y,0,h.x,h.y,h.r);glow.addColorStop(0,'#cd79f777');glow.addColorStop(.55,'#a54ac944');glow.addColorStop(1,'#692a9900');circle(h.x,h.y,h.r,glow);circle(h.x,h.y,5+progress*15,'#dc9bffcc');}
+ if(h.phase==='q'){
+  // Ground indicator: dark area with a lit rim; an inner disc fills to the
+  // rim exactly when the sphere detonates. The sphere condenses at the
+  // centre during the first third of the delay. Timing/radius unchanged.
+  const progress=clamp(1-h.ttl/h.max,0,1),glow=ctx.createRadialGradient(h.x,h.y,0,h.x,h.y,h.r);glow.addColorStop(0,'#3a165c55');glow.addColorStop(.7,'#57228a44');glow.addColorStop(1,'#8d3fd066');circle(h.x,h.y,h.r,glow);
+  const fill=ctx.createRadialGradient(h.x,h.y,0,h.x,h.y,Math.max(1,h.r*progress));fill.addColorStop(0,'#b15cf014');fill.addColorStop(.8,'#b15cf03c');fill.addColorStop(1,'#e2b0ff99');circle(h.x,h.y,h.r*progress,fill);
+  ctx.save();ctx.strokeStyle=`rgba(214,150,255,${.55+progress*.4})`;ctx.lineWidth=2+progress;ctx.beginPath();ctx.arc(h.x,h.y,h.r,0,TAU);ctx.stroke();
+  ctx.strokeStyle='#f0d2ffcc';ctx.lineWidth=3;for(let i=0;i<4;i++){const a=time*1.4+i*TAU/4;ctx.beginPath();ctx.arc(h.x,h.y,h.r-5,a,a+.35);ctx.stroke();}ctx.restore();
+  const form=clamp(progress/.35,0,1),size=14*(.25+.75*form);
+  for(let i=0;i<6&&form<1;i++){const a=time*5+i*TAU/6,d=(1-form)*h.r*.55+size;circle(h.x+Math.cos(a)*d,h.y-10+Math.sin(a)*d*.5,2.5,`rgba(214,150,255,${.8*(1-form)})`);}
+  drawDarkSphere(h.x,h.y,size,.35+.65*form,progress,10+Math.sin(time*6)*2);
+ }
  else if(h.phase==='e'){
   // Scatter the Weak pushes outward from the caster; show its expanding
   // cone only as far as the sphere, without drawing the future projectile path.
   const progress=clamp(1-h.ttl/h.max,0,1),reach=dist(h.source,h),radius=15+(reach-15)*progress;
   ctx.save();ctx.beginPath();ctx.arc(h.source.x,h.source.y,radius,h.angle-.49,h.angle+.49);ctx.strokeStyle='#d99affbb';ctx.lineWidth=5;ctx.stroke();ctx.restore();
-  circle(h.x,h.y,18,'#bd79e9');
- }
+  drawDarkSphere(h.x,h.y,14,1,progress,8);
+ }else if(h.phase==='exit'&&!h.combo&&h.max>0)drawDarkSphere(h.x,h.y,14,clamp(h.ttl/h.max,0,1),0,8);
  continue;
  }if(h.cassio){drawChampion(h.x,h.y,h.casting?h.angle:Math.atan2(player.y-h.y,player.x-h.x),false,false,h.casting?clamp(1-h.ttl/CASSIO_R.cast,0,1):0,time*7,"cassio");continue;}if(h.malphite){ctx.save();ctx.translate(h.x,h.y);const art=$("stoneArt");if(art?.complete&&art.naturalWidth){ctx.drawImage(art,-42,-90,84,90);ctx.restore();continue;}ctx.fillStyle="#665f59";ctx.strokeStyle="#c1aa93";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-25,-16);ctx.lineTo(-22,-52);ctx.lineTo(0,-72);ctx.lineTo(23,-52);ctx.lineTo(27,-15);ctx.lineTo(10,0);ctx.lineTo(-12,0);ctx.closePath();ctx.fill();ctx.stroke();circle(-7,-45,3,"#aad4ee");circle(7,-45,3,"#aad4ee");ctx.restore();continue;}if(h.orianna){drawChampion(h.source.x,h.source.y,Math.atan2(h.y-h.source.y,h.x-h.source.x),false,false,h.casting?1:0,time*7,"clockwork");if(h.casting){
  // Shockwave's visible ring starts with the cast; damage resolves only at
@@ -1971,7 +2008,7 @@ ctx.fillStyle="#102d27";ctx.fillRect(player.x-22,player.y-86,44,4);ctx.fillStyle
 }if(e.syndraCaster){
  const encounter=hazards.find(h=>h.syndra&&h.casterId===e.id);
  drawChampion(e.x,e.y,e.syndraAngle,false,e.hit>0,encounter?.phase==='e'?1:.2,time*7,'syndra');
- for(let i=0;i<3;i++){const a=time*2+i*TAU/3;circle(e.x+Math.cos(a)*22,e.y-35+Math.sin(a)*10,5,'#c479f4');}
+ for(let i=0;i<3;i++){const a=time*2+i*TAU/3;drawDarkSphere(e.x+Math.cos(a)*26,e.y-38+Math.sin(a)*10,5.5,Math.sin(a)<0?.75:1);}
 }else drawChampion(e.x,e.y,e.pending?e.pending.angle:Math.atan2(player.y-e.y,player.x-e.x),false,e.hit>0,visitorCastPose(e),time*7,e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.ezrealDodge?"ezreal":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.luxDodge?"lux":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.ahriDodge?"ahriEnemy":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.blitzDodge?"blitz":e.dodgeVisitor&&e.spell===REFERENCE_SPELLS.velkozDodge?"void":null);
 if(e.charm>0){ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="center";ctx.fillStyle="#ffb2df";ctx.fillText("♥ CHARMED",e.x,e.y-96);}
 ctx.fillStyle="#101e23";ctx.fillRect(e.x-25,e.y-86,50,5);ctx.fillStyle="#ff9290";ctx.fillRect(e.x-25,e.y-86,50*clamp(e.hp/e.maxHp,0,1),5);}
@@ -1979,6 +2016,16 @@ ctx.fillStyle="#101e23";ctx.fillRect(e.x-25,e.y-86,50,5);ctx.fillStyle="#ff9290"
 // Its physical position and the ground-level cast glow remain unchanged.
 for(const h of hazards)if(h.orianna){circle(h.x,h.y,12,h.casting?"#f4d5ff":"#a989d8");circle(h.x,h.y,5,"#f4e6ff");}
 for(const s of shots){
+ if(s.syndraSphere){
+  // Pushed sphere: fading violet wake behind a dark sphere; no future path.
+  const speed=Math.hypot(s.vx,s.vy)||1,ux=s.vx/speed,uy=s.vy/speed,wake=ctx.createRadialGradient(s.x,s.y,0,s.x,s.y,s.r*3);
+  wake.addColorStop(0,'#c27af066');wake.addColorStop(1,'#7d2fc000');
+  ctx.save();ctx.lineCap='round';ctx.strokeStyle='#9c50dd44';ctx.lineWidth=s.r*1.2;ctx.beginPath();ctx.moveTo(s.x-ux*s.r*3,s.y-uy*s.r*3);ctx.lineTo(s.x,s.y);ctx.stroke();
+  // Faint ring marks the true collision width around the smaller sphere art.
+  ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,TAU);ctx.strokeStyle='#d9a6ff44';ctx.lineWidth=1.5;ctx.stroke();ctx.restore();
+  for(let i=1;i<=3;i++)drawDarkSphere(s.x-ux*s.r*.8*i,s.y-uy*s.r*.8*i,s.r*(.5-i*.08),.35-i*.09);
+  drawDarkSphere(s.x,s.y,s.r*.52,1,.6);continue;
+ }
  if(s.spellName==="BLITZ Q"&&s.anchor){ctx.beginPath();ctx.moveTo(s.anchor.x,s.anchor.y-25);ctx.lineTo(s.x,s.y);ctx.lineWidth=4;ctx.strokeStyle="#d0ba86";ctx.stroke();}
  const orb=s.kind==="orb"||s.kind==="enemyOrb",blitz=s.spellName==="BLITZ Q",ez=s.spellName==="EZREAL Q",lux=s.spellName==="LUX Q",vel=s.spellName==="VELKOZ Q"||s.syndraSphere,energy=s.kind==="enemy"&&(ez||lux||vel||blitz);
  // Translucent spell art extends to projectile radius without a debug ring.
@@ -2004,7 +2051,12 @@ for(const s of shots){
 }
 for(const f of fx){
  if(impactEffect(f)&&!f.rendered){f.rendered=true;if(f.ttl<=0)f.ttl=.12;}
- ctx.globalAlpha=clamp(f.ttl/f.max,0,1);if(f.syndraWave){const glow=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r);glow.addColorStop(0,'#f1c8ff77');glow.addColorStop(.65,'#bb6be755');glow.addColorStop(1,'#8e34b800');ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.arc(f.x,f.y,f.r,f.angle-SYNDRA.eHalfAngle,f.angle+SYNDRA.eHalfAngle);ctx.closePath();ctx.fillStyle=glow;ctx.fill();}else if(f.syndraImpact){const glow=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r);glow.addColorStop(0,'#f0bdffcc');glow.addColorStop(.5,'#b75be288');glow.addColorStop(1,'#8e34b800');circle(f.x,f.y,f.r,glow);circle(f.x,f.y,19,'#c57af0');}else if(f.cassio){
+ ctx.globalAlpha=clamp(f.ttl/f.max,0,1);if(f.syndraWave){const glow=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r);glow.addColorStop(0,'#f1c8ff77');glow.addColorStop(.65,'#bb6be755');glow.addColorStop(1,'#8e34b800');ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.arc(f.x,f.y,f.r,f.angle-SYNDRA.eHalfAngle,f.angle+SYNDRA.eHalfAngle);ctx.closePath();ctx.fillStyle=glow;ctx.fill();}else if(f.syndraImpact){
+ // Detonation: full-radius flash, an outward shock ring and dark shards.
+ const k=clamp(1-f.ttl/f.max,0,1),glow=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r);glow.addColorStop(0,'#fbe6ffee');glow.addColorStop(.35,'#c770f5aa');glow.addColorStop(.8,'#6d22a866');glow.addColorStop(1,'#8e34b800');circle(f.x,f.y,f.r,glow);
+ ctx.save();ctx.strokeStyle='#f3d4ff';ctx.lineWidth=4*(1-k)+1;ctx.beginPath();ctx.arc(f.x,f.y,f.r*(.55+.5*k),0,TAU);ctx.stroke();
+ ctx.strokeStyle='#7c34c4';ctx.lineWidth=3;ctx.lineCap='round';for(let i=0;i<8;i++){const a=i*TAU/8+.2,r0=f.r*(.2+.6*k),r1=r0+12;ctx.beginPath();ctx.moveTo(f.x+Math.cos(a)*r0,f.y+Math.sin(a)*r0);ctx.lineTo(f.x+Math.cos(a)*r1,f.y+Math.sin(a)*r1);ctx.stroke();}ctx.restore();
+ drawDarkSphere(f.x,f.y,14*(1+k*.3),1-k*.5,1,8);}else if(f.cassio){
  ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);const glow=ctx.createRadialGradient(0,0,0,0,0,f.r);
  glow.addColorStop(0,"#e8ffd9bb");glow.addColorStop(.35,"#9ff9a777");glow.addColorStop(1,"#45d99100");
  ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,f.r,-CASSIO_R.halfAngle,CASSIO_R.halfAngle);ctx.closePath();ctx.fillStyle=glow;ctx.fill();ctx.restore();
