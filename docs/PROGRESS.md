@@ -1576,3 +1576,17 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 - Replaced the temporary 58-HP Syndra actor with the level-one base snapshot from Riot [Data Dragon 16.21.1](https://ddragon.leagueoflegends.com/cdn/16.21.1/data/en_US/champion/Syndra.json): 583 HP, 25 armor, 30 magic resistance and 330 movement speed (165 at the trainer's 0.5 scale). Riot's [26.12 notes](https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-12-notes/) separately confirm the 583 base HP. No levels, items or runes are modeled.
 - The prior 58 HP allowed one Ahri E to kill her and grant a 75-HP takedown heal. A real Ahri E now applies magic resistance, leaves Syndra alive and still interrupts the pending E. This is a material correction to the new encounter and needs player review; Q/E cadence and aim are unchanged. Expert records use `director_v89`, retaining v87/v88 separately. Local build ID: `ba6b4cdfcf13`; no deployment.
 - The new stat and no-one-shot regression reproduced the previous defect; all 24 targeted Syndra/build checks and the serial full suite (502/502) passed. Syntax and diff checks passed. Browser validation remains outstanding.
+
+## Dodge completion pass: Syndra results and browser smoke (3 November 2026)
+
+- Committed the pending sustained-session check: in seeded 150-second Expert runs, Syndra Q remains the main pattern while Q→E still appears. The test does not change cadence or the Mindgame Aim mix, which stay as approved on 3 November.
+- The results breakdown "Casts:" line now lists Syndra Q and Syndra E totals next to the other champions. Before this, it left Syndra out even though her phase outcomes were already reported. A regression test covers both a run with Syndra and one without her. The blueprint's Dodge roster now also names Syndra. Local build ID: `e70ce2a0f527`; no deployment.
+- Headless Chrome smoke on a local dev server, Expert with Map Awareness enabled:
+  - A natural 23-second run had no console errors.
+  - A second run used a test-only, in-browser schedule override, so Syndra arrived after about 1 second instead of 9. The repository file was unchanged. That run recorded 4 Syndra Q and 1 Syndra E with outcomes in the breakdown, still with no console errors or page errors.
+  - This is a rendering and runtime check, not a review of visual quality or difficulty.
+- Still outstanding:
+  - the §8 adaptive controller and benchmark mode, a design decision that would change the approved Expert balance
+  - human and live-client timing/hitbox review
+  - player review of Map Awareness
+- Validation: the serial full suite passed 504/504.
