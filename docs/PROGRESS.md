@@ -1547,3 +1547,9 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 
 - Added a purple expanding cone-shaped wave from Syndra toward the existing sphere during the E windup, ending at the sphere rather than revealing its future flight path. This is an original approximation of the visible Scatter the Weak cast, not a collision or aiming indicator. Q/E timing, collision, damage and encounter scheduling are unchanged. Current local build ID: `3b7079d9fabc`.
 - A rendering regression verifies the cue is absent during Q, grows during E and disappears after launch. The serial full suite passed 491/491; targeted Syndra/build-ID tests, syntax and diff checks also pass. Browser visual review remains outstanding; no deployment.
+
+## Syndra Q→E starting geometry (3 November 2026)
+
+- Moved the combo's caster to 800 approximate game units from Ahri and placed the initial sphere 400 units from the caster. The previous geometry started Ahri inside the approximated 700-unit direct E cone even though this training encounter models only the pushed-sphere hit. The new initial placement makes the intended long-range sphere dodge coherent while keeping the sphere within Q and assumed E reach. A regression reproduced the old placement and checks both distances; the existing sampled escape and movement tests still pass.
+- This does not implement the direct E cone's collision, damage or displacement: a player who deliberately moves into the cone can still see behavior differ from League. All distances, cone assumptions and terrain remain approximations; the new setup requires browser/human review. This changes combo geometry and therefore may affect difficulty; Q-only geometry and the baseline scheduler are unchanged. Local build ID: `3f1c1211b8e9`; no deployment.
+- Validation: all 492 tests passed in the serial full suite; targeted Syndra tests, syntax and diff checks also passed.

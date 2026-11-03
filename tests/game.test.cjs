@@ -180,6 +180,11 @@ test('Syndra combo offers an executable Q and E escape',()=>{
   advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.5);assert.equal(g.stats.hits,0);assert.equal(g.dodgeDirector.outcomes['SYNDRA E'].avoided,1,`seed ${seed}`);
  }
 });
+test('Syndra Q E starts beyond the approximated direct E cone with the sphere inside it',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0],directRange=350;
+ assert.ok(Math.hypot(h.source.x-g.player.x,h.source.y-g.player.y)>directRange);
+ assert.ok(Math.hypot(h.source.x-h.x,h.source.y-h.y)<directRange);
+});
 test('Syndra E windup is counted as unresolved if a run ends before launch',()=>{
  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));advance(g,.61);
  assert.equal(g.hazards[0].phase,'e');g.end(false);assert.match(node('dodgeBreakdownText').textContent,/1 unresolved phase/);

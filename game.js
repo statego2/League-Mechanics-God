@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="3b7079d9fabc";
+const BUILD_ID="3f1c1211b8e9";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -591,8 +591,8 @@ function spawnSyndra(combo=false,witness=null){
  let qAim={x:player.x,y:player.y},aimPattern='direct';
  if(!combo&&moveLength>2){const roll=random();if(roll>=.15&&roll<.9){qAim=projected;aimPattern='lead';}else if(roll>=.9){qAim={x:player.x-moveX/moveLength*70,y:player.y-moveY/moveLength*70};aimPattern='reversal';}}
  for(let i=0;i<24;i++){
-  const a=first+i*TAU/24,dx=Math.cos(a),dy=Math.sin(a),source={x:player.x-dx*300,y:player.y-dy*300};
-  const q=combo?{x:source.x+dx*150,y:source.y+dy*150}:{x:qAim.x+dx*60,y:qAim.y+dy*60};
+  const a=first+i*TAU/24,dx=Math.cos(a),dy=Math.sin(a),sourceDistance=combo?400:300,source={x:player.x-dx*sourceDistance,y:player.y-dy*sourceDistance};
+  const q=combo?{x:source.x+dx*200,y:source.y+dy*200}:{x:qAim.x+dx*60,y:qAim.y+dy*60};
   if(source.x<60||source.x>W-60||source.y<145||source.y>H-40||!world.pointWalkable(source,20)||dist(source,q)>SYNDRA.qRange||q.x<30||q.x>W-30||q.y<70||q.y>H-30)continue;
   const launch=SYNDRA.qDelay+SYNDRA.eDelay,travel=(SYNDRA.eEnd-dist(source,q))/SYNDRA.eSpeed;
   const incoming=combo?[{x:q.x,y:q.y,vx:dx*SYNDRA.eSpeed,vy:dy*SYNDRA.eSpeed,r:SYNDRA.eRadius,start:launch,end:launch+travel}]:[];
