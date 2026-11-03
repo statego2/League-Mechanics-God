@@ -122,6 +122,7 @@ let state="menu",mode="dodge",time=0,last=0,kills=0,dodged=0,spawn=0,aim={x:W/2+
 const MAP={x:1010,y:485,size:175,visible:3,points:25,heal:20};
 const JUNGLE_SPOTS=[[.22,.34],[.34,.23],[.31,.53],[.46,.35],[.54,.65],[.69,.47],[.66,.77],[.78,.66]];
 let awareness=null,pingArmed=false,pingDrag=null;
+function onAwarenessMap(p){return !!awareness&&p.x>=MAP.x&&p.x<=MAP.x+MAP.size&&p.y>=MAP.y&&p.y<=MAP.y+MAP.size;}
 try{$("mapAwareness").checked=window.localStorage.getItem("lmg.mapAwareness")==="1";}catch(_){}
 function awarenessRandom(){awareness.rng=(Math.imul(awareness.rng,1664525)+1013904223)>>>0;return awareness.rng/4294967296;}
 function startAwareness(){pingArmed=false;pingDrag=null;awareness=mode==="dodge"&&$("mapAwareness").checked?{rng:(seed^0x81d5a7b3)>>>0,next:15,marker:null,pinged:0,missed:0,pingFx:0}:null;if(awareness)awareness.next=15+awarenessRandom()*10;}
@@ -1845,10 +1846,13 @@ drawAwareness();
 function loop(ts){const dt=last?Math.min((ts-last)/1000,.25):0;last=ts;if(state==="playing"){accumulator+=dt;while(accumulator>=STEP&&state==="playing"){update(STEP);accumulator-=STEP;}}else accumulator=0;render();requestAnimationFrame(loop);}
 function coords(e){const b=cv.getBoundingClientRect();return{x:(e.clientX-b.left)*W/b.width,y:(e.clientY-b.top)*H/b.height};}
 cv.addEventListener("contextmenu",e=>{e.preventDefault();if(pingDrag){pingDrag=null;pingArmed=false;}});
-cv.addEventListener("pointermove",e=>{mouse=coords(e);if(pingDrag)return;aim=mouse;if(!(e.buttons&2))stopHeldRight=false;if(state==="playing"&&(e.buttons&2)&&!stopHeldRight){if(mode==="skillshot"){moveTo(mouse.x,mouse.y);return;}const t=nearestEnemy(mouse.x,mouse.y,30);if(t)attackOrder(t);else moveTo(mouse.x,mouse.y);}});
+cv.addEventListener("pointermove",e=>{mouse=coords(e);if(!(e.buttons&2))stopHeldRight=false;if(pingDrag||onAwarenessMap(mouse))return;aim=mouse;if(state==="playing"&&(e.buttons&2)&&!stopHeldRight){if(mode==="skillshot"){moveTo(mouse.x,mouse.y);return;}const t=nearestEnemy(mouse.x,mouse.y,30);if(t)attackOrder(t);else moveTo(mouse.x,mouse.y);}});
 cv.addEventListener("pointerdown",e=>{if(state!=="playing")return;e.preventDefault();mouse=coords(e);
-if(pingDrag&&e.button===2){pingDrag=null;pingArmed=false;return;}
+if((pingDrag||pingArmed)&&e.button===2){pingDrag=null;pingArmed=false;stopHeldRight=true;return;}
 if(awareness&&e.button===0&&(pingArmed||e.altKey||e.ctrlKey)){pingDrag={start:mouse,pointerId:e.pointerId};pingArmed=false;attackMove=false;if(e.pointerId!==undefined)cv.setPointerCapture?.(e.pointerId);return;}
+// The minimap is an interface surface, not the arena behind it. A click on
+// it must not accidentally issue an order to a world-space position beneath.
+if(onAwarenessMap(mouse)){if(e.button===2)stopHeldRight=true;return;}
 aim=mouse;
 if(e.button===2){stopHeldRight=false;attackMove=false;if(mode==="skillshot"){moveTo(mouse.x,mouse.y);return;}const t=nearestEnemy(mouse.x,mouse.y,30);if(t)attackOrder(t);else moveTo(mouse.x,mouse.y);}
 else if(e.button===0){if(attackMove){cancelAttack();player.order={type:"attackMove",...world.nearestWalkable(mouse)};player.route=[];player.routeGoal=null;player.target=null;player.focus=null;attackMove=false;notify("ATTACK MOVE");}else{const t=nearestEnemy(mouse.x,mouse.y,24);if(t)attackOrder(t);}}

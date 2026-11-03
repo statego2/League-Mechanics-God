@@ -58,6 +58,15 @@ test('Alt quick ping, sideways drag, cancellation and pause behave safely',()=>{
   canvas.listeners.pointerup({clientX:m.x+(action==='sideways'?40:0),clientY:m.y,button:0,pointerId:1});assert.equal(g.awareness.pinged,Number(action==='quick'),action);
  }
 });
+test('minimap input cannot command or aim at the hidden arena beneath it',()=>{
+ const {g,node,click,key}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');const canvas=node('arena'),x=g.MAP.x+80,y=g.MAP.y+80;
+ const hidden=foe(g,x,y);click(x,y,0);assert.equal(g.player.order,null);assert.equal(g.player.focus,null);
+ click(x,y,2);assert.equal(g.player.order,null);assert.equal(g.player.focus,null);
+ canvas.listeners.pointermove({clientX:700,clientY:300,buttons:2});assert.equal(g.player.order,null);
+ canvas.listeners.pointermove({clientX:700,clientY:300,buttons:0});click(700,300,2);assert.ok(g.player.target);assert.equal(hidden.alive,true);
+ const target=g.player.target;key('g');click(700,300,2);assert.equal(g.player.target,target);click(x,y,0);assert.equal(g.awareness.pinged,0);
+ canvas.listeners.pointermove({clientX:800,clientY:g.player.y,buttons:0});canvas.listeners.pointermove({clientX:x,clientY:y,buttons:0});g.cast('q');assert.ok(Math.abs(g.player.casting.angle)<1e-8);
+});
 test('Dodge restart varies the opening encounter',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});const openings=[];
  for(let i=0;i<5;i++){g.reset('dodge');g.update(1/120);const e=g.foes.find(x=>x.dodgeVisitor);openings.push(e?`${e.spell.name}:${e.x.toFixed(1)}:${e.y.toFixed(1)}`:'deferred');}
