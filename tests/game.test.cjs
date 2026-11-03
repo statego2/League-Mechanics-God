@@ -2094,6 +2094,16 @@ test('Flash aimed at Ahri herself does not waste its cooldown',()=>{
  window.listeners.keydown({key:'φ',code:'KeyF',repeat:false,preventDefault(){}});
  assert.equal(g.player.cd.f,0);assert.match(node('toast').textContent,/MOVE CURSOR AWAY/);
 });
+test('a failed Flash landing does not cancel an attack windup',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player;p.x=25;p.y=300;p.windup=.2;p.windupTarget=123;
+ node('arena').listeners.pointermove({clientX:0,clientY:300,buttons:0});g.cast('f');
+ assert.equal(p.cd.f,0);assert.equal(p.windup,.2);assert.equal(p.windupTarget,123);assert.equal(g.stats.cancelled,0);assert.match(node('toast').textContent,/NO FLASH LANDING/);
+});
+test('a valid Flash still cancels an uncommitted attack windup',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player;p.windup=.2;p.windupTarget=123;
+ node('arena').listeners.pointermove({clientX:p.x+100,clientY:p.y,buttons:0});g.cast('f');
+ assert.equal(p.windup,0);assert.equal(p.windupTarget,null);assert.equal(g.stats.cancelled,1);assert.equal(p.cd.f,30);
+});
 test('Flash cooldown display never shows zero while Flash is unavailable',()=>{
  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
  node('arena').listeners.pointermove({clientX:1000,clientY:g.player.y,buttons:0});g.cast('f');

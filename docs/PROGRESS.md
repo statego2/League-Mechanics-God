@@ -1476,3 +1476,9 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 
 - Browser-tested the published `clear-map` build with awareness enabled. In a controlled Foundation run, a jungler portrait appeared; pausing immediately after a screenshot kept the sighting available, and after resume a G+click at the visible icon produced the on-screen `JUNGLER PINGED +25 · +20 HP` feedback. This validates the real browser input and successful reward path, not Expert balance or the end-of-run success/miss summary; those remain separate checks.
 - Player-approved Expert cadence and Mindgame Aim were unchanged. No production code changed during this check.
+
+## Failed Flash input preserves windup (3 November 2026)
+
+- A Flash rejected because the nearest valid landing is the current location no longer cancels an uncommitted attack windup or increments the cancelled-attack statistic. A valid Flash still cancels the windup as before. Flash range, cooldown, terrain snapping, movement retention and the approved Expert cadence are unchanged.
+- The regression reproduced the previous bug before the fix; both failed-landing and valid-Flash cases pass. Full suite and browser verification are recorded below.
+- Validation: serial full suite 468/468 passed; an additional valid-Flash windup regression added during the run passed separately. `node --check game.js` and `git diff --check` pass. Browser verification of this particular failed-landing interaction is outstanding.
