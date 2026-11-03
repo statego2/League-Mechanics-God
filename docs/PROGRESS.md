@@ -1622,3 +1622,30 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 - Headless Chrome screenshots are in `/workspace/lmg-code2/shots/`, outside the repo: before (c833be4) and after for the Q telegraph, detonation, E windup, Q→E flight and the model, plus an after-only lead Q→E. Syndra was forced only in the browser copy, and there were no console errors.
 - Local build ID: `8d1a53822c17`; no deployment.
 - Validation: the serial full suite passed 509/509.
+
+## Syndra stays, smaller Q and cadence (3 November 2026)
+
+- Smaller Q: `qRadius` went from 210 to 180 game units (105 → 90 canvas). That is League's Syndra Q radius, so it is closer to the real spell. The telegraph, detonation and hit test all read `SYNDRA.qRadius`, so the visual still equals the hitbox. The Q→E sphere offset is now `qRadius × 4/7` (about 51) instead of a fixed 60.
+- Expert Syndra now stays on screen like a laning champion (`SYNDRA_STAY`):
+  - She first arrives about 6 s in. Each stay lasts 15–20 s, then she walks out over 1.2 s, and the next stay comes 5–8 s later.
+  - During a stay she walks a strafing band around Ahri: 250 px for Q and 420 px before a Q E. Blocked spots send her around walls. She stands still for the E and the first 0.25 s of Q.
+  - She casts again 0.6–1 s after each Q lands. Every cast still uses Mindgame Aim (direct / lead / reversal), the clear-board rule and the executed-escape check.
+  - A Q E comes after three Qs, or after two Qs 30% of the time. If she cannot line up a Q E, she casts a plain Q instead.
+  - Charm holds her next cast. Killing her ends the stay.
+  - Ordinary visitors keep coming between her casts, and straight shots can still join an Ahri orb.
+- Expert 60 s sessions, before (cf69383) → after, 40 seeds with a wandering Ahri:
+  - first appearance: 10.8 → 7.1 s
+  - presence: 3.1% → 64.8%
+  - Q: 1.68 → 11.0 per minute (one every 3.5 s while she is present)
+  - Q E: 0.33 → 3.58 per minute (one every 10.9 s while present)
+  - other champions: 37.6 → 24.0 casts per minute
+  - hits: 28 → 26.2 per minute
+  - ultimates: about 4.4 per minute, unchanged
+  - casts without an escape: 0
+- Expert records now use `director_v91`. v87–v90 records are kept, and the records test now also checks that v90 is preserved.
+- New tests cover the 180-unit radius, a walking multi-cast stay, the Mindgame Aim mix during stays, an executable escape for every mid-stay Q and Q E, walking out and defeat, charm, and the 60 s cadence.
+- Screenshots (`/workspace/lmg-code2/shots/round2-*.png`), with no console errors:
+  - the smaller Q telegraph
+  - Syndra walking mid-stay
+  - a Q E
+- Validation: the serial full suite passed 516/516. Local build only; nothing deployed.
