@@ -259,6 +259,25 @@ test('Syndra events pause, reset and preserve prior Expert records',()=>{
  const old='lmg.best.v1.dodge.hard.director_v87.endless.survival';values.set(old,'100');g.setTime(10);g.end(false);
  assert.equal(values.get(old),'100');assert.equal(values.get('lmg.best.v1.dodge.hard.director_v88.endless.survival'),'10');
 });
+test('Syndra Q and both E hit paths agree at 30, 60 and 120 FPS',()=>{
+ for(const scenario of ['q','cone','sphere','dodge']){
+  const results=[];
+  for(const fps of [30,60,120]){
+   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setRng(1234);const witness={};assert.ok(g.spawnSyndra(scenario!=='q',witness));const h=g.hazards[0];
+   if(scenario==='q'){g.player.x=h.x;g.player.y=h.y;}
+   g.loop(1000);
+   for(let i=1;i<=fps*2;i++){
+    g.loop(1000+i*1000/fps+.01);
+    if(scenario==='dodge'&&i===fps/5)g.moveTo(witness.destination.x,witness.destination.y);
+    if((scenario==='cone'||scenario==='sphere')&&i===fps*2/3){const d=scenario==='cone'?300:380;g.player.x=h.source.x+Math.cos(h.angle)*d;g.player.y=h.source.y+Math.sin(h.angle)*d;}
+   }
+   assert.equal(g.stats.hits,scenario==='dodge'?0:1,`${scenario} ${fps} FPS`);
+   assert.equal(g.dodgeDirector.outcomes[scenario==='q'?'SYNDRA Q':'SYNDRA E'][scenario==='dodge'?'avoided':'hit'],1);
+   results.push(JSON.stringify({hits:g.stats.hits,damage:g.stats.damage,dodged:g.dodged,outcomes:g.dodgeDirector.outcomes}));
+  }
+  assert.deepEqual(results,[results[0],results[0],results[0]],scenario);
+ }
+});
 test('Orianna shockwave draws animated impact arcs',()=>{
  const {g,strokes}=boot('ahri');g.reset('dodge');
  g.fx.push({x:600,y:330,r:207.5,ttl:.1,max:.2,shockwave:true});g.render();
