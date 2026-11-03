@@ -19,7 +19,7 @@ function boot(preset="standard", options={}){
  const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,DODGE_TUNING,DODGE_DIRECTOR,REFERENCE_SPELLS,MAP,updateAwareness,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,visitorPathsCrowded,updateDodgeVisitor,dodgeAimPoint,dodgeRhythmMultiplier,spawnXerathW,spawnXerathQ,spawnLuxR,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,oriannaFlashEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get awareness(){return awareness},get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
- return {g,node,window,draws,drawSizes,strokes,strokeWidths,arcs,texts,lines,rotations,renderEvents,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
+ return {g,node,window,draws,drawSizes,strokes,strokeWidths,arcs,texts,lines,rotations,renderEvents,click(x,y,button=2){const e={clientX:x,clientY:y,button,preventDefault(){}};node('arena').listeners.pointerdown(e);node('arena').listeners.pointerup(e);},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
 }
 function foe(g,x=800,y=337.5){const e=g.enemy(x,y);e.speed=0;e.shoot=999;e.hp=e.maxHp=10000;g.setFoes([e]);return e;}
 function advance(g,seconds){for(let i=0;i<Math.round(seconds*120);i++)g.update(1/120);}
@@ -44,6 +44,19 @@ test('awareness rewards cap at max health and never consume combat RNG',()=>{
 test('a successful awareness ping is included in the Dodge result',()=>{
  const {g,node,key,click}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');g.awareness.next=0;g.updateAwareness(.01);const m=g.awareness.marker;
  key('g');click(m.x,m.y,0);g.end(false);assert.match(node('menuDescription').textContent,/25 points/);assert.match(node('menuDescription').textContent,/Map pings 1 hit \/ 0 missed/);
+});
+test('Alt click and drag upward pings the original jungler position on release',()=>{
+ const {g,node}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');g.awareness.next=0;g.updateAwareness(.01);const m=g.awareness.marker,canvas=node('arena');g.player.hp=100;
+ canvas.listeners.pointerdown({clientX:m.x,clientY:m.y,button:0,pointerId:2,altKey:true,preventDefault(){}});assert.equal(g.awareness.pinged,0);
+ canvas.listeners.pointermove({clientX:m.x,clientY:m.y-40,buttons:1});canvas.listeners.pointerup({clientX:m.x,clientY:m.y-40,button:0,pointerId:2});
+ assert.equal(g.awareness.pinged,1);assert.equal(g.player.hp,120);assert.equal(g.awareness.pingDanger,true);
+});
+test('Alt quick ping, sideways drag, cancellation and pause behave safely',()=>{
+ for(const action of ['quick','sideways','cancel','pause']){const {g,node}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');g.awareness.next=0;g.updateAwareness(.01);const m=g.awareness.marker,canvas=node('arena');
+  canvas.listeners.pointerdown({clientX:m.x,clientY:m.y,button:0,pointerId:1,altKey:true,preventDefault(){}});
+  if(action==='cancel')canvas.listeners.contextmenu({preventDefault(){}});if(action==='pause'){g.pause();g.pause();}
+  canvas.listeners.pointerup({clientX:m.x+(action==='sideways'?40:0),clientY:m.y,button:0,pointerId:1});assert.equal(g.awareness.pinged,Number(action==='quick'),action);
+ }
 });
 test('Dodge restart varies the opening encounter',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});const openings=[];
