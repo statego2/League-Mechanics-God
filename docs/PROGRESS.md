@@ -1453,3 +1453,7 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 
 - User requested the current updates on the hosted page. Fetched and merged the two newer remote documentation commits (Nightmare Lane design) without losing either line of work. GitHub Pages is configured for the root of `codex/controls-and-dodge`.
 - Validation before publishing: 467/467 tests passed using `node --test --test-concurrency=1 tests/*.test.cjs`; `node --check game.js` passed. The expected player-facing build label is `tower-positions`. Verify the Pages deployment and served build after push.
+
+## Clear Map Awareness minimap (3 November 2026)
+
+- Removed the stationary player marker from the minimap at the player’s request. The terrain, towers, jungler sightings, pings, rewards and result accounting remain unchanged. Twelve targeted awareness/minimap tests, syntax and diff checks pass. Build label: `clear-map`.
