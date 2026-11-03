@@ -3632,3 +3632,11 @@ test('Syndra Q E lead resolves the same at 30, 60 and 120 FPS',()=>{
   assert.ok(escape?results.every(n=>n===0):results.every(n=>n>=1&&n===results[0]),JSON.stringify(results)+' '+`escape=${escape}`);
  }
 });
+test('Syndra Q telegraph and hit area are both 180 game units, matching League Syndra Q',()=>{
+ assert.equal(g0().SYNDRA.qRadius,g0().SIMULATION.toCanvas(180));
+ const {g,arcs}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(false));const h=g.hazards[0];assert.equal(h.r,90);
+ g.render();const ring=arcs.filter(a=>a.x===h.x&&a.y===h.y);assert.ok(ring.length);assert.ok(Math.max(...ring.map(a=>a.r))<=h.r+1e-9,'telegraph larger than hitbox');assert.ok(ring.some(a=>Math.abs(a.r-h.r)<1e-9));
+ advance(g,.59);g.player.x=h.x+h.r-1;g.player.y=h.y;advance(g,.02);assert.equal(g.stats.hits,1,'edge of the drawn circle hits');
+ const out=boot('ahri').g;out.reset('dodge');out.dodgeDirector.next=999;assert.ok(out.spawnSyndra(false));const o=out.hazards[0];advance(out,.59);out.player.x=o.x+o.r+out.player.hitRadius+2;out.player.y=o.y;advance(out,.02);assert.equal(out.stats.hits,0,'outside the drawn circle is safe');
+});
+function g0(){const b=boot('ahri');return b.g;}

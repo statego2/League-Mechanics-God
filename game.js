@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="8d1a53822c17";
+const BUILD_ID="850b4648a187";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -582,7 +582,7 @@ const XERATH_Q={radius:SIMULATION.toCanvas(145/2),range:SIMULATION.toCanvas(1450
 // Syndra's Q and pushed-sphere E use a compact isolated training encounter.
 // Values not confirmed by Riot's public spell description are documented
 // approximations; CC is omitted in Dodge by player request.
-const SYNDRA={qRange:SIMULATION.toCanvas(800),qRadius:SIMULATION.toCanvas(210),qDelay:.6,qDamage:90,eDelay:.25,eSpeed:SIMULATION.toCanvas(2000),eRadius:SIMULATION.toCanvas(100),eEnd:SIMULATION.toCanvas(1200),eDamage:60,eDirectRange:SIMULATION.toCanvas(700),eHalfAngle:28*Math.PI/180};
+const SYNDRA={qRange:SIMULATION.toCanvas(800),qRadius:SIMULATION.toCanvas(180),qDelay:.6,qDamage:90,eDelay:.25,eSpeed:SIMULATION.toCanvas(2000),eRadius:SIMULATION.toCanvas(100),eEnd:SIMULATION.toCanvas(1200),eDamage:60,eDirectRange:SIMULATION.toCanvas(700),eHalfAngle:28*Math.PI/180};
 // Riot Data Dragon 16.21.1 base defenses and movement; no items or growth.
 const SYNDRA_BASE={hp:583,armor:25,mr:30,speed:SIMULATION.toCanvas(330)};
 // Q E places the sphere 200 canvas units short of its aim point and pushes it
