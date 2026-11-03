@@ -1492,3 +1492,8 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 
 - A champion ability input after A now cancels the pending attack-move cursor before the next click, including when the ability cannot cast. Previously the stale A command consumed that click. This does not alter abilities, collision, pacing or the approved Expert balance. The test reproduced the Q case before the fix and covers Q/W/E/R/F afterward, as well as the existing G and Flash keyboard tests.
 - Validation: targeted tests and the serial full suite (471/471) pass, as do `node --check game.js` and `git diff --check`. The cache key is `command-cancel`. The published build is unchanged. A browser check of this exact interaction is outstanding; the in-app browser returned `browser.user is unavailable` when selecting the published tab during this session.
+
+## Published Map Awareness pending result (3 November 2026)
+
+- Opened a fresh in-app browser tab on the published `clear-map` build and ran Expert with Map Awareness enabled. An unattended 21.3-second run ended while a jungler sighting was still active; the real results screen displayed `NO COMPLETED SIGHTINGS · 1 IN PROGRESS`, correctly not calling it missed. A second unattended run ended before any completed sighting and displayed `NO COMPLETED SIGHTINGS`.
+- This confirms the two published-browser result states only. The published end-screen count after an expired sighting and the newer local input fixes still need browser verification; automated tests cover the mixed pinged/missed/pending counts. These stationary runs are not human balance tests and did not change gameplay or the approved Expert tuning. No deployment.
