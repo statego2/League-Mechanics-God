@@ -242,6 +242,13 @@ test('lethal direct Syndra E resolves once and leaves its impact visible',()=>{
  assert.equal(g.state,'ended');assert.match(node('dodgeBreakdownText').textContent,/SYNDRA E: 0 avoided \/ 1 hit/);assert.match(node('dodgeBreakdownText').textContent,/0 unresolved phases/);
  arcs.length=0;g.render();assert.ok(arcs.some(a=>a.x===h.source.x&&a.y===h.source.y&&a.r===350));
 });
+test('Dodge results list Syndra Q and E among the cast totals',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));advance(g,.9);
+ assert.equal(g.dodgeDirector.syndra,1);assert.equal(g.dodgeDirector.syndraE,1);g.end(false);
+ assert.match(node('dodgeBreakdownText').textContent,/Casts: [^\n]*1 Syndra Q, 1 Syndra E/);
+ const other=boot('ahri');other.g.reset('dodge');other.g.dodgeDirector.next=999;other.g.end(false);
+ assert.match(other.node('dodgeBreakdownText').textContent,/Casts: [^\n]*0 Syndra Q, 0 Syndra E/);
+});
 test('Syndra E windup is counted as unresolved if a run ends before launch',()=>{
  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));advance(g,.61);
  assert.equal(g.hazards[0].phase,'e');g.end(false);assert.match(node('dodgeBreakdownText').textContent,/1 unresolved phase/);

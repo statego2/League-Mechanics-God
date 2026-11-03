@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="ba6b4cdfcf13";
+const BUILD_ID="e70ce2a0f527";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -280,7 +280,7 @@ function end(win){
   const cassioLesson=d.cassio?"\nTrainer rule: turn away before Petrifying Gaze lands to avoid this pure-Dodge hit. League normally deals damage and applies a slow when you face away; this drill omits CC and uses the turn as the full evade lesson.":"";
   const malphiteLesson=d.malDirect?`\nMalphite direct casts: ${d.malDirect} / Flash used during ${d.malDirectFlash}`:"";
   const openQ=shots.filter(s=>s.alive&&s.trainingSkill==="q"&&!s.trainingHit).length,openE=shots.filter(s=>s.alive&&s.trainingSkill==="e"&&!s.trainingHit).length;
-  $("dodgeBreakdownText").textContent=`Casts: ${d.ezreal} Ezreal, ${d.lux} Lux Q, ${d.luxR||0} Lux R, ${d.ahri} Ahri, ${d.blitz} Blitz, ${d.velkoz} Vel’Koz, ${d.xerath} Xerath W, ${d.xerathQ} Xerath Q, ${d.oriannaQ} Orianna Q, ${d.orianna} Orianna R, ${d.malphite} Malphite R, ${d.cassio} Cassiopeia R${malphiteLesson}\nCassiopeia: ${d.cassTurns} turned away / ${d.cassFails} facing her / ${d.cassEscapes} outside cone${cassioLesson}\nAhri skillshots: Q ${stats.dodgeQHits}/${stats.dodgeQShots} casts hit (${openQ} in flight) / E ${stats.dodgeEHits}/${stats.dodgeEShots} casts hit (${openE} in flight) · ${skillPoints} skill points (+20 Q / +30 E)\n\n${dodgeOutcomeSummary()}`;
+  $("dodgeBreakdownText").textContent=`Casts: ${d.ezreal} Ezreal, ${d.lux} Lux Q, ${d.luxR||0} Lux R, ${d.ahri} Ahri, ${d.blitz} Blitz, ${d.velkoz} Vel’Koz, ${d.xerath} Xerath W, ${d.xerathQ} Xerath Q, ${d.oriannaQ} Orianna Q, ${d.orianna} Orianna R, ${d.malphite} Malphite R, ${d.cassio} Cassiopeia R, ${d.syndra||0} Syndra Q, ${d.syndraE||0} Syndra E${malphiteLesson}\nCassiopeia: ${d.cassTurns} turned away / ${d.cassFails} facing her / ${d.cassEscapes} outside cone${cassioLesson}\nAhri skillshots: Q ${stats.dodgeQHits}/${stats.dodgeQShots} casts hit (${openQ} in flight) / E ${stats.dodgeEHits}/${stats.dodgeEShots} casts hit (${openE} in flight) · ${skillPoints} skill points (+20 Q / +30 E)\n\n${dodgeOutcomeSummary()}`;
   $("dodgeBreakdown").hidden=false;
  }
 }
