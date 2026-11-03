@@ -1335,12 +1335,17 @@ if(player.target&&player.windup<=0&&player.root<=0&&!player.casting&&!player.das
 
 player.x=clamp(player.x,22,W-22);player.y=clamp(player.y,59,H-36);
 const plannedEndX=player.x,plannedEndY=player.y;let interruptedAt=Infinity,interruptedPosition=null;
-const positionAt=f=>{if(f>=interruptedAt)return interruptedPosition;const span=moveEnd-moveLock,t=span>0?clamp((f*dt-moveLock)/span,0,1):0;return {x:oldX+(plannedEndX-oldX)*t,y:oldY+(plannedEndY-oldY)*t};};
+const plannedPositionAt=f=>{const span=moveEnd-moveLock,t=span>0?clamp((f*dt-moveLock)/span,0,1):0;return {x:oldX+(plannedEndX-oldX)*t,y:oldY+(plannedEndY-oldY)*t};};
+const positionAt=f=>f>=interruptedAt?interruptedPosition:plannedPositionAt(f);
 // Split swept collision where movement begins or ends within the step.
 function playerContact(sx,sy,ex,ey,startF,endF,r){
  const parts=[0,1];if(dt>0&&endF>startF)for(const boundary of [moveLock,moveEnd,interruptedAt*dt]){const split=(boundary/dt-startF)/(endF-startF);if(split>0&&split<1)parts.push(split);}parts.sort((a,b)=>a-b);
  for(let i=1;i<parts.length;i++){
-  const a=parts[i-1],b=parts[i],pa=positionAt(startF+(endF-startF)*a),pb=positionAt(startF+(endF-startF)*b);
+  const a=parts[i-1],b=parts[i],fa=startF+(endF-startF)*a,fb=startF+(endF-startF)*b;
+  // Terrain correction can snap at the interruption instant. Sample the
+  // original path up to that instant and the corrected position after it;
+  // never interpolate across the snap or erase the preceding dash path.
+  const sample=(fa+fb)/2<interruptedAt?plannedPositionAt:positionAt,pa=sample(fa),pb=sample(fb);
   const t=segmentHitTime(sx+(ex-sx)*a-pa.x,sy+(ey-sy)*a-pa.y,sx+(ex-sx)*b-pb.x,sy+(ey-sy)*b-pb.y,r);
   if(Number.isFinite(t))return a+(b-a)*t;
  }

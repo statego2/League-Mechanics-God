@@ -1373,6 +1373,16 @@ test('a later projectile does not hit the portion of movement cancelled by a Bli
  g.fire(start.x+p.speed*.1+p.hitRadius+1,start.y,0,0,'enemy',10,2,1);g.update(.1);
  assert.ok(p.hooked);assert.equal(g.stats.hits,1);
 });
+test('terrain correction after a hook preserves the earlier dash path for collisions',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setFoes([]);const p=g.player;p.x=640;p.y=580;p.dashing={x:850,y:580,speed:1000,throughTerrain:true};
+ const hook=g.fire(720,580,0,0,'enemy',10,5,1);Object.assign(hook,{hook:true,anchor:{x:600,y:580}});
+ g.fire(684,580,0,0,'enemy',10,5,.07);g.update(.1);assert.ok(p.hooked);assert.equal(g.stats.hits,2);
+});
+test('terrain correction after a hook does not create collisions along the snap',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setFoes([]);const p=g.player;p.x=640;p.y=580;p.dashing={x:850,y:580,speed:1000,throughTerrain:true};
+ const hook=g.fire(734,580,0,0,'enemy',10,5,1);Object.assign(hook,{hook:true,anchor:{x:600,y:580}});
+ g.fire(670,545,0,0,'enemy',10,5,.08);g.update(.1);assert.ok(p.hooked);assert.equal(g.stats.hits,1);
+});
 test('Blitz hook interrupts Ahri dash instead of resuming it after the pull',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player;
  p.dashing={x:p.x+250,y:p.y,speed:300,throughTerrain:true};
