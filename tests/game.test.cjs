@@ -661,7 +661,7 @@ test('skillshot drill counts fired and hit Q accurately and ends at 45 seconds',
 
 test('personal best is saved per drill and difficulty; unavailable storage never interrupts results',()=>{
  const {g,window,node}=boot();const values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
- g.reset('skillshot');g.stats.skillHits=3;g.stats.skillShots=4;g.end(true);assert.match(node('menuDescription').textContent,/Local best \(normal\): 3 hits/);
+ g.reset('skillshot');g.stats.skillHits=3;g.stats.skillShots=4;g.end(true);assert.match(node('menuDescription').textContent,/Local best \(Standard\): 3 hits/);
  g.reset('skillshot');g.stats.skillHits=1;g.end(true);assert.equal(values.get('lmg.best.v1.skillshot.normal'),'3');
  window.localStorage={getItem(){throw Error('blocked')}};g.reset('dodge');g.end(false);assert.equal(g.state,'ended');
 });
@@ -1290,6 +1290,21 @@ test('directed projectile outcomes distinguish hits, avoided threats and harmles
  shot(g.player.y);advance(g,.01);g.player.y=500;advance(g,1.3);
  const outcomes=g.dodgeDirector.outcomes['EZREAL Q'];
  assert.equal(outcomes.hit,1);assert.equal(outcomes.harmless,1);assert.equal(outcomes.avoided,1);assert.equal(g.dodged,1);
+});
+test('a reversal shot that never threatens Ahri is not credited as a dodge',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
+ const p=g.player,e=g.enemy(200,p.y),spec=g.REFERENCE_SPELLS.ezrealDodge;
+ Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'enter',origin:{x:e.x,y:e.y},entry:{x:100,y:e.y},speed:120,preCastWait:0});g.setFoes([e]);
+ g.moveTo(p.x,p.y+200);g.setRng(1900);g.update(1/120);
+ assert.equal(e.pending?.pattern,'reversal');p.target=null;p.order=null;advance(g,2);
+ assert.equal(g.stats.hits,0);assert.equal(g.dodged,0);assert.equal(g.dodgeDirector.outcomes['EZREAL Q'].harmless,1);
+});
+test('dodging a directly aimed shot during windup still earns credit',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
+ const p=g.player,e=g.enemy(200,p.y),spec=g.REFERENCE_SPELLS.ezrealDodge;
+ Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'enter',origin:{x:e.x,y:e.y},entry:{x:100,y:e.y},speed:120,preCastWait:0});g.setFoes([e]);
+ g.update(1/120);assert.equal(e.pending?.pattern,'direct');g.moveTo(p.x,p.y+200);advance(g,2);
+ assert.equal(g.stats.hits,0);assert.equal(g.dodged,1);assert.equal(g.dodgeDirector.outcomes['EZREAL Q'].avoided,1);
 });
 test('lethal directed hits are recorded before the result screen and in-flight phases remain unresolved',()=>{
  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.hp=1;
@@ -2575,10 +2590,10 @@ test('Dodge counts Charm hits against a visitor once per released E',()=>{
 });
 test('skill-scored Dodge records stay separate while retaining the survival record',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
- const oldScore='lmg.best.v1.dodge.normal.director_v87.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(oldScore+'.skill_v3','8888');values.set(oldScore+'.skill_v4','7777');values.set(survival,'120');
+ const oldScore='lmg.best.v1.dodge.normal.director_v87.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(oldScore+'.skill_v3','8888');values.set(oldScore+'.skill_v4','7777');values.set(oldScore+'.skill_v5','6666');values.set(survival,'120');
  g.reset('dodge');g.setTime(10);g.stats.dodgeQHits=1;g.stats.dodgeEHits=1;g.end(false);
  assert.match(node('menuDescription').textContent,/150 points/);assert.match(node('menuDescription').textContent,/Best survival: 120.0s/);
- assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v3'),'8888');assert.equal(values.get(oldScore+'.skill_v4'),'7777');assert.equal(values.get(oldScore+'.skill_v5'),'150');assert.equal(values.get(survival),'120');
+ assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v3'),'8888');assert.equal(values.get(oldScore+'.skill_v4'),'7777');assert.equal(values.get(oldScore+'.skill_v5'),'6666');assert.equal(values.get(oldScore+'.skill_v6'),'150');assert.equal(values.get(survival),'120');
 });
 test('new Dodge balance keeps previous survival records separate',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};

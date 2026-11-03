@@ -190,7 +190,7 @@ function pause(){attackMove=false;pingArmed=false;pingDrag=null;if(state==="play
 // Records are local and partitioned by drill and difficulty; storage can be unavailable.
 function saveRecord(value){
  try{
-  const key="lmg.best.v1."+mode+"."+difficulty+recordSuffix()+(mode==="dodge"&&dodgeDirector?".skill_v5":"")+(awareness?".awareness_v1":"");
+  const key="lmg.best.v1."+mode+"."+difficulty+recordSuffix()+(mode==="dodge"&&dodgeDirector?".skill_v6":"")+(awareness?".awareness_v1":"");
   const previous=Number(window.localStorage.getItem(key));
   const best=Math.max(Number.isFinite(previous)?previous:0,value);
   window.localStorage.setItem(key,String(best));return best;
@@ -1065,7 +1065,11 @@ function updateDodgeVisitor(e,dt){
   // A lead that fails the safety forecast need not discard a safe direct cast.
   if(!safe&&aimPoint!==player&&isolated&&regularAllowed(e.spell.name)){aimPoint=player;aim.pattern="direct";angle=Math.atan2(player.y-e.y,player.x-e.x);safe=canEvadeDodgeCast(e,e.spell);}
   if(!safe)e.phase="exit";else{
-   e.pending={angle,fan:false,spell:e.spell,splitDistance,pattern:aim.pattern,threat:!e.spell.split};e.charge=e.spell.cast;e.phase="cast";recordRegular(e.spell.name);
+   // Credit an early dodge only if the committed, finite projectile path
+   // actually intersects the player's current hitbox. Later movement into a
+   // shot's path is still tracked during flight by threatening().
+   const range=e.spell.range,threat=!e.spell.split&&Number.isFinite(segmentHitTime(e.x-player.x,e.y-player.y,e.x+Math.cos(angle)*range-player.x,e.y+Math.sin(angle)*range-player.y,dodgeSpellRadius(e.spell)+player.hitRadius));
+   e.pending={angle,fan:false,spell:e.spell,splitDistance,pattern:aim.pattern,threat};e.charge=e.spell.cast;e.phase="cast";recordRegular(e.spell.name);
    // One seeded opportunity per Ezreal cast. Each candidate must pass its
    // own shared-path forecast and the normal active-threat limit.
    if(e.spell===REFERENCE_SPELLS.ezrealDodge&&!e.followUp&&time>=(difficulty==="hard"?0:45)&&difficulty!=="easy"){
