@@ -1486,4 +1486,4 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 ## Armed map ping and gameplay commands (3 November 2026)
 
 - Pressing A, S, or a champion ability after arming a G ping now cancels the pending ping, so the next left click is handled normally. Previously G followed by A could silently consume an attack-move click. Ping gestures already in progress, Alt-click pings, rewards and the player-approved Expert balance are unchanged.
-- The new regression reproduced the attack-move failure before the fix; targeted ping and command tests pass. The build cache key is `ping-command`. Browser verification of this specific sequence remains outstanding.
+- The new regression reproduced the attack-move failure before the fix; targeted ping and command tests and the serial full suite (470/470) pass. `node --check game.js` and `git diff --check` pass. The build cache key is `ping-command`. Browser verification of this specific sequence remains outstanding. Implementation commit: `17c4c99`.
