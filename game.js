@@ -161,7 +161,7 @@ function pause(){attackMove=false;pingArmed=false;pingDrag=null;if(state==="play
 // Records are local and partitioned by drill and difficulty; storage can be unavailable.
 function saveRecord(value){
  try{
-  const key="lmg.best.v1."+mode+"."+difficulty+recordSuffix()+(mode==="dodge"&&dodgeDirector?".skill_v3":"")+(awareness?".awareness_v1":"");
+  const key="lmg.best.v1."+mode+"."+difficulty+recordSuffix()+(mode==="dodge"&&dodgeDirector?".skill_v4":"")+(awareness?".awareness_v1":"");
   const previous=Number(window.localStorage.getItem(key));
   const best=Math.max(Number.isFinite(previous)?previous:0,value);
   window.localStorage.setItem(key,String(best));return best;
@@ -1482,7 +1482,9 @@ for(const h of hazards){
   continue;
  }
  const hitRadius=h.xerath?h.r:h.r+player.hitRadius;
- if(dist(effectPlayer,h)<=hitRadius)h.threat=true;
+ // Count a threatened area crossed before impact even if the player is
+ // outside at both sampled endpoints. This does not change the impact test.
+ if(h.xerath?Number.isFinite(playerContact(h.x,h.y,h.x,h.y,0,impactFraction,hitRadius)):dist(effectPlayer,h)<=hitRadius)h.threat=true;
  h.ttl-=dt;if(h.ttl<=0){
   if(dist(effectPlayer,h)<=hitRadius){if(player.invuln>0){recordDodgeOutcome(h,"blocked");stats.blocked++;}else{recordDodgeOutcome(h,"hit");const raw=h.xerath?XERATH_W.raw*(dist(effectPlayer,h)<=XERATH_W.center?1.667:1):25;takeHit(h.xerath?physicalDamage(raw,30):raw);}}else{recordDodgeOutcome(h,h.threat?"avoided":"harmless");if(h.threat){dodged++;cue("dodge");}}
   if(state!=="playing")return;

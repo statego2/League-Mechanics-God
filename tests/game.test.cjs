@@ -1347,6 +1347,17 @@ test('Xerath W uses its compact center based edge and outside hits use base dama
   g.player.x=h.x+offset;g.player.y=h.y;advance(g,.97);assert.ok(Math.abs(g.stats.damage-expected)<1e-7,`offset ${offset}`);
  }
 });
+test('Xerath W credits a grazing crossing before impact without inventing a hit',()=>{
+ for(const dt of [.1,1/120]){const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setFoes([]);const p=g.player,start={x:p.x,y:p.y},travel=p.speed*dt;
+  const h={x:start.x+travel/2,y:start.y+99.999,r:100,ttl:dt,max:dt,xerath:true,directed:true,spellName:'XERATH W',threat:false};g.hazards.push(h);g.moveTo(start.x+100,start.y);g.update(dt);
+  assert.equal(g.stats.hits,0);assert.equal(g.dodged,1);assert.equal(g.dodgeDirector.outcomes['XERATH W'].avoided,1);
+ }
+});
+test('Xerath W does not credit a crossing that happens after impact',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setFoes([]);const p=g.player,start={x:p.x,y:p.y},travel=p.speed*.1;
+ const h={x:start.x+travel*.75,y:start.y+99.9,r:100,ttl:.025,max:.1,xerath:true,directed:true,spellName:'XERATH W',threat:false};g.hazards.push(h);g.moveTo(start.x+100,start.y);g.update(.1);
+ assert.equal(g.stats.hits,0);assert.equal(g.dodged,0);assert.equal(g.dodgeDirector.outcomes['XERATH W'].harmless,1);
+});
 test('Xerath W renders a compact rune without a textual countdown',()=>{
  const {g,arcs,texts}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnXerathW());const h=g.hazards[0];g.render();
  assert.ok(arcs.some(a=>a.x===0&&a.y===0&&a.r<h.r),'missing local rune arcs');assert.ok(!texts.includes('IMPACT'));
@@ -2496,10 +2507,10 @@ test('Dodge counts Charm hits against a visitor once per released E',()=>{
 });
 test('skill-scored Dodge records stay separate while retaining the survival record',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
- const oldScore='lmg.best.v1.dodge.normal.director_v87.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(survival,'120');
+ const oldScore='lmg.best.v1.dodge.normal.director_v87.endless',survival=oldScore+'.survival';values.set(oldScore,'9999');values.set(oldScore+'.skill_v3','8888');values.set(survival,'120');
  g.reset('dodge');g.setTime(10);g.stats.dodgeQHits=1;g.stats.dodgeEHits=1;g.end(false);
  assert.match(node('menuDescription').textContent,/150 points/);assert.match(node('menuDescription').textContent,/Best survival: 120.0s/);
- assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v3'),'150');assert.equal(values.get(survival),'120');
+ assert.equal(values.get(oldScore),'9999');assert.equal(values.get(oldScore+'.skill_v3'),'8888');assert.equal(values.get(oldScore+'.skill_v4'),'150');assert.equal(values.get(survival),'120');
 });
 test('new Dodge balance keeps previous survival records separate',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};

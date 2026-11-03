@@ -1424,3 +1424,9 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 - When Blitz interrupts a terrain-crossing dash and the arena snaps Ahri to walkable ground, later projectile checks now sample the actual pre-contact dash and post-correction position separately. They no longer interpolate through the correction or erase the earlier path. Added regressions for an earlier real hit and an apparent hit only along the snap.
 - This fixes geometry only; impacts are still processed in array/order rather than globally sorted by impact time, and the correction is an arena-specific approximation. Human/browser verification of the interaction remains outstanding.
 - Validation: 460/460 automated tests pass in the serial full suite, plus syntax and diff checks. The lost-pre-contact collision regression was observed failing before the fix and passing afterward. No browser/live-client test of this rare combination was performed.
+
+## Xerath W grazing outcome (3 November 2026)
+
+- A Xerath W that the player crosses at the edge before impact now marks that cast as threatening even when both fixed-step endpoints lie outside the area. If the player is outside at impact, it is credited as avoided; a crossing after impact is not credited. Impact hit geometry, damage, visuals and Expert cadence are unchanged. This is an area-intersection proxy for a threat, not a measurement of human reaction.
+- Added regressions for a pre-impact grazing crossing at both 1/120 s and a larger step, and a post-impact crossing. Dodge skill-scored bests use `.skill_v4` because scoring changed; old scores remain stored and the survival record is preserved. Browser/human playtesting is still required.
+- Validation: 462/462 tests passed in the serial full suite; the additional old-score preservation assertion passed separately afterward. Syntax and diff checks pass. No browser playtest was performed for this narrow outcome correction.
