@@ -1397,3 +1397,9 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 ## Minimap tier 3 towers (3 November 2026)
 
 - Added the missing base-side tower icons to all three lanes on both teams, including the top tier 3 noted by the player. Locations are schematic, presentation-only and do not change gameplay. The awareness render regression verifies the top tier 3 icons on both sides. Seven targeted awareness/minimap tests, syntax check and diff check passed; no browser visual review was performed for this small correction.
+
+## Spirit Rush interrupted by Blitz (3 November 2026)
+
+- When Blitz hook stops an active Ahri dash, Spirit Rush bolts now originate at the interruption point; a dash completed before the hook in the same step keeps its landing origin. Bolts are emitted after projectile resolution and travel starting on the next fixed step (up to 1/120 s later). This is an approximation and projectile/area events are still not globally ordered within a step. If the hit ends the run, bolts are not emitted.
+- Riot describes Spirit Rush as a dash firing nearby bolts: https://www.leagueoflegends.com/en-us/champions/ahri/ . The specific nonlethal interruption behavior is an unverified community-reported detail and requires live-client confirmation. Tests exercise both hit-before-landing and hit-after-landing cases and existing rush/hook behavior.
+- Validation: 22 targeted Spirit Rush/Blitz tests and all 456 tests with `node --test --test-concurrency=1 tests/*.test.cjs` passed. An initial default-concurrency full run terminated its game test process at startup without a diagnostic; the game file separately and the full serial run both passed. Syntax and diff checks passed. Browser playtesting of this interaction is still outstanding.

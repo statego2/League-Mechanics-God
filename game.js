@@ -1303,11 +1303,11 @@ if(player.fox){const f=player.fox;f.remaining-=dt;f.next-=dt;
   if(targets.length){const target=targets[0],angle=Math.atan2(target.y-player.y,target.x-player.x),shot=fire(player.x,player.y,Math.cos(angle)*700,Math.sin(angle)*700,"fox",40,7,1);shot.targetId=target.id;shot.foxCast=f;f.count--;f.next=.12;}}
  if(f.remaining<=0||(f.count===0))player.fox=null;
 }
-const oldX=player.x,oldY=player.y,oldFacing=player.facing;let moveEnd=dt;
+const oldX=player.x,oldY=player.y,oldFacing=player.facing;let moveEnd=dt,rushFinish=null;
 if(player.hooked){const pull=player.hooked,dx=pull.x-player.x,dy=pull.y-player.y,len=Math.hypot(dx,dy),step=Math.min(len,pull.speed*dt),next=world.clip(player,{x:player.x+(len?dx/len*step:0),y:player.y+(len?dy/len*step:0)}),travelled=Math.hypot(next.x-player.x,next.y-player.y);player.x=next.x;player.y=next.y;pull.ttl-=dt;moveEnd=pull.speed>0?Math.min(dt,travelled/pull.speed):0;if(len<=step+1e-6||travelled<step-1e-4||dist(player,pull)<1||pull.ttl<=0)player.hooked=null;
 }else if(player.dashing){const dest=player.dashing,dx=dest.x-player.x,dy=dest.y-player.y,len=Math.hypot(dx,dy),step=Math.min(len,dest.speed*dt),point={x:player.x+(len?dx/len*step:0),y:player.y+(len?dy/len*step:0)};const next=dest.throughTerrain?point:world.clip(player,point);const blocked=Math.hypot(next.x-player.x,next.y-player.y)<step-1e-4;player.x=next.x;player.y=next.y;
  moveEnd=dest.speed>0?Math.min(dt,Math.hypot(player.x-oldX,player.y-oldY)/dest.speed):0;
- if(len<=step+1e-6||blocked){player.dashing=null;const targets=foes.filter(e=>e.alive&&!e.minion&&!e.baitCaster&&!e.referenceCaster&&dist(player,e)<=300).sort((a,b)=>dist(player,a)-dist(player,b)).slice(0,3);for(const target of targets){const a=Math.atan2(target.y-player.y,target.x-player.x),s=fire(player.x,player.y,Math.cos(a)*700,Math.sin(a)*700,"rush",75,7,1);s.targetId=target.id;}burst(player.x,player.y,"#b4eaff",10);}}
+ if(len<=step+1e-6||blocked){player.dashing=null;rushFinish={x:player.x,y:player.y};}}
 if(!player.casting&&!player.dashing&&!player.hooked)updateOrder();
 // Time with a target in range and the attack ready, but no windup. This is
 // descriptive feedback; positioning or dodging can make waiting intentional.
@@ -1563,7 +1563,7 @@ for(const s of shots){if(!s.alive)continue;
   // Vel’Koz splits at the first contact, not where the bolt would have
   // ended its step if the champion had not stopped it.
   if(collision&&s.velkoz==="main"){s.x=s.px+(s.x-s.px)*contact;s.y=s.py+(s.y-s.py)*contact;}
-  if(collision){s.alive=false;if(s.group)s.group.hit=true;if(player.invuln>0){recordDodgeOutcome(s,"blocked");stats.blocked++;}else {recordDodgeOutcome(s,"hit");const impactFraction=startFraction+(travelFraction-startFraction)*contact;if(s.hook){const impact=positionAt(impactFraction);player.x=impact.x;player.y=impact.y;}takeHit(s.damage);if(state==="playing"&&s.hook){startHookPull(s);interruptedAt=impactFraction;interruptedPosition={x:player.x,y:player.y};}if(state==="playing"&&s.root&&mode!=="dodge"){
+  if(collision){s.alive=false;if(s.group)s.group.hit=true;if(player.invuln>0){recordDodgeOutcome(s,"blocked");stats.blocked++;}else {recordDodgeOutcome(s,"hit");const impactFraction=startFraction+(travelFraction-startFraction)*contact;if(s.hook){const impact=positionAt(impactFraction);player.x=impact.x;player.y=impact.y;}takeHit(s.damage);if(state==="playing"&&s.hook){const interruptsDash=wasDashing&&impactFraction*dt<moveEnd;startHookPull(s);if(interruptsDash)rushFinish={x:player.x,y:player.y};interruptedAt=impactFraction;interruptedPosition={x:player.x,y:player.y};}if(state==="playing"&&s.root&&mode!=="dodge"){
    player.root=s.root;
    // A dash interrupted inside a wall must leave the player on walkable ground.
    if(player.dashing&&!world.pointWalkable(player,player.r)){const safe=world.nearestWalkable(player,player.r);player.x=safe.x;player.y=safe.y;}
@@ -1599,6 +1599,10 @@ for(const s of shots){if(!s.alive)continue;
  if(state!=="playing")break;
 }
 if(state!=="playing")return;
+// Resolve Spirit Rush after hook contacts are known. Bolts from a dash cut
+// short by a hook originate at the interruption rather than its planned end.
+// They start travelling next fixed step (at most 1/120 s later).
+if(rushFinish){const targets=foes.filter(e=>e.alive&&!e.minion&&!e.baitCaster&&!e.referenceCaster&&dist(rushFinish,e)<=300).sort((a,b)=>dist(rushFinish,a)-dist(rushFinish,b)).slice(0,3);for(const target of targets){const a=Math.atan2(target.y-rushFinish.y,target.x-rushFinish.x),s=fire(rushFinish.x,rushFinish.y,Math.cos(a)*700,Math.sin(a)*700,"rush",75,7,1);s.targetId=target.id;}burst(rushFinish.x,rushFinish.y,"#b4eaff",10);}
 // Resolve after this step's impacts, allowing a champion hit during the grace
 // window to receive credit. The fixed-step clock quantizes expiry by <= 1 tick.
 for(const unit of [...foes,...allies])if(unit.alive&&unit.deathGrace&&time>=unit.deathGrace.until){unit.hp=0;resolveDeath(unit,{...unit.deathGrace.impact,time});}

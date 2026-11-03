@@ -1368,6 +1368,16 @@ test('Blitz hook interrupts Ahri dash instead of resuming it after the pull',()=
  const s=g.fire(p.x-5,p.y,1,0,'enemy',10,5,1);Object.assign(s,{directed:true,spellName:'BLITZ Q',hook:true,anchor:{x:300,y:p.y},pullSpeed:900,pullDistance:37.5});
  g.update(1/120);assert.ok(p.hooked);assert.equal(p.dashing,null);advance(g,.6);assert.equal(p.hooked,null);assert.ok(p.x<350,`dash resumed after hook: ${p.x}`);
 });
+test('Spirit Rush fires from the interruption point if Blitz grabs Ahri mid dash',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player,start={x:p.x,y:p.y},e=foe(g,p.x+110,p.y);
+ p.dashing={x:start.x+100,y:start.y,speed:200};const hook=g.fire(start.x+20,start.y,0,0,'enemy',10,5,1);Object.assign(hook,{hook:true,anchor:{x:start.x-200,y:start.y}});
+ g.update(.05);assert.ok(p.hooked);const bolt=g.shots.find(s=>s.kind==='rush');assert.ok(bolt);assert.equal(bolt.targetId,e.id);assert.ok(Math.abs(bolt.x-p.x)<1e-8);assert.ok(bolt.x<start.x+10);
+});
+test('Spirit Rush keeps its landing origin when Blitz hits after dash completion in the same step',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player,start={x:p.x,y:p.y};foe(g,p.x+110,p.y);
+ p.dashing={x:start.x+10,y:start.y,speed:200};const hook=g.fire(start.x-90,start.y,1000,0,'enemy',10,5,1);Object.assign(hook,{hook:true,anchor:{x:start.x-200,y:start.y}});
+ g.update(.1);assert.ok(p.hooked);const bolt=g.shots.find(s=>s.kind==='rush');assert.ok(bolt);assert.ok(Math.abs(bolt.x-(start.x+10))<1e-8);
+});
 test('a hook interrupting a terrain-crossing dash leaves Ahri walkable',()=>{
  const world=require('../world.js'),{g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player;p.x=110;p.y=165;
  p.dashing={x:250,y:165,speed:300,throughTerrain:true};assert.equal(world.pointWalkable(p,p.r),false);
