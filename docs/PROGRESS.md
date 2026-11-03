@@ -1497,3 +1497,8 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 
 - Opened a fresh in-app browser tab on the published `clear-map` build and ran Expert with Map Awareness enabled. An unattended 21.3-second run ended while a jungler sighting was still active; the real results screen displayed `NO COMPLETED SIGHTINGS · 1 IN PROGRESS`, correctly not calling it missed. A second unattended run ended before any completed sighting and displayed `NO COMPLETED SIGHTINGS`.
 - This confirms the two published-browser result states only. The published end-screen count after an expired sighting and the newer local input fixes still need browser verification; automated tests cover the mixed pinged/missed/pending counts. These stationary runs are not human balance tests and did not change gameplay or the approved Expert tuning. No deployment.
+
+## Consistent difficulty labels (3 November 2026)
+
+- The published browser check exposed that selecting Expert showed `HARD` in play and `hard` in the local-best result (similarly for Foundation/Standard). The HUD and results now use the same Foundation/Standard/Expert names as the menu. Internal preset IDs and local-storage record keys are unchanged, preserving existing scores and gameplay balance. Cache key: `difficulty-labels`.
+- The new regression failed before the change and verifies all three labels at start, after an update and in the result, including preservation of the old difficulty IDs in storage keys. Seventeen targeted tests, syntax and diff checks pass. No browser test of the new local build or deployment was performed.

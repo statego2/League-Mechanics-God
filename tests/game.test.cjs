@@ -31,6 +31,16 @@ test('map awareness is optional, Dodge only, and pings reward once',()=>{
  key('g');click(m.x,m.y,0);assert.equal(g.awareness.pinged,1);assert.equal(g.player.hp,120);
  g.updateAwareness(3);assert.equal(g.awareness.missed,0);assert.equal(g.awareness.marker,null);
 });
+test('difficulty names match the menu in play and in local-best results',()=>{
+ for(const [value,label] of [['easy','Foundation'],['normal','Standard'],['hard','Expert']]){
+  const {g,node,window}=boot('ahri'),stored={};window.localStorage={getItem:k=>stored[k]??null,setItem:(k,v)=>{stored[k]=v;}};
+  node('difficulty').listeners.change({target:{value}});g.reset('dodge');
+  assert.match(node('encounterValue').textContent,new RegExp('^'+label.toUpperCase()));
+  g.update(1/120);assert.match(node('encounterValue').textContent,new RegExp('^'+label.toUpperCase()));
+  g.end(false);assert.match(node('menuDescription').textContent,new RegExp('Local best \\('+label));
+  assert.ok(Object.keys(stored).some(k=>k.includes('.dodge.'+value+'.')),'existing record key');
+ }
+});
 test('awareness expires after three seconds and a wrong ping earns nothing',()=>{
  const {g,node,click,key}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');g.awareness.next=0;g.updateAwareness(.01);const m=g.awareness.marker;
  g.player.hp=100;key('g');click(m.x+30,m.y,0);assert.equal(g.awareness.pinged,0);assert.equal(g.player.hp,100);
