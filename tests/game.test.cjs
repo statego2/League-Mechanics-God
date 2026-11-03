@@ -55,7 +55,7 @@ test('awareness results show missed sightings and do not count unfinished ones a
 });
 test('awareness minimap draws the top tier 3 towers for both teams',()=>{
  const {g,node,arcs}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');g.render();
- for(const [x,y] of [[.08,.82],[.82,.08]])assert.ok(arcs.some(a=>Math.abs(a.x-(g.MAP.x+x*g.MAP.size))<1e-8&&Math.abs(a.y-(g.MAP.y+y*g.MAP.size))<1e-8&&a.r===2.1));
+ for(const [x,y] of [[.08,.82],[.82,.08]])assert.ok(arcs.some(a=>Math.abs(a.x-(g.MAP.x+x*g.MAP.size))<1e-8&&Math.abs(a.y-(g.MAP.y+y*g.MAP.size-.6))<1e-8&&a.r===1.65));
 });
 test('Alt click and drag upward pings the original jungler position on release',()=>{
  const {g,node}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');g.awareness.next=0;g.updateAwareness(.01);const m=g.awareness.marker,canvas=node('arena');g.player.hp=100;
