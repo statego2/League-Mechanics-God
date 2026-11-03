@@ -16,13 +16,35 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,DODGE_TUNING,DODGE_DIRECTOR,REFERENCE_SPELLS,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,visitorPathsCrowded,updateDodgeVisitor,dodgeAimPoint,dodgeRhythmMultiplier,spawnXerathW,spawnXerathQ,spawnLuxR,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,oriannaFlashEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,DODGE_TUNING,DODGE_DIRECTOR,REFERENCE_SPELLS,MAP,updateAwareness,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,visitorPathsCrowded,updateDodgeVisitor,dodgeAimPoint,dodgeRhythmMultiplier,spawnXerathW,spawnXerathQ,spawnLuxR,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,oriannaFlashEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get awareness(){return awareness},get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,drawSizes,strokes,strokeWidths,arcs,texts,lines,rotations,renderEvents,click(x,y,button=2){node('arena').listeners.pointerdown({clientX:x,clientY:y,button,preventDefault(){}});},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
 }
 function foe(g,x=800,y=337.5){const e=g.enemy(x,y);e.speed=0;e.shoot=999;e.hp=e.maxHp=10000;g.setFoes([e]);return e;}
 function advance(g,seconds){for(let i=0;i<Math.round(seconds*120);i++)g.update(1/120);}
+test('map awareness is optional, Dodge only, and pings reward once',()=>{
+ const {g,node,click,key}=boot('ahri');g.reset('dodge');assert.equal(g.awareness,null);
+ node('mapAwareness').checked=true;g.reset('kite');assert.equal(g.awareness,null);g.reset('dodge');
+ g.awareness.next=0;g.updateAwareness(1/120);const m=g.awareness.marker;assert.ok(m);g.player.hp=100;
+ key('g');click(m.x,m.y,0);assert.equal(g.awareness.pinged,1);assert.equal(g.player.hp,120);
+ key('g');click(m.x,m.y,0);assert.equal(g.awareness.pinged,1);assert.equal(g.player.hp,120);
+ g.updateAwareness(3);assert.equal(g.awareness.missed,0);assert.equal(g.awareness.marker,null);
+});
+test('awareness expires after three seconds and a wrong ping earns nothing',()=>{
+ const {g,node,click,key}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');g.awareness.next=0;g.updateAwareness(.01);const m=g.awareness.marker;
+ g.player.hp=100;key('g');click(m.x+30,m.y,0);assert.equal(g.awareness.pinged,0);assert.equal(g.player.hp,100);
+ g.updateAwareness(2.99);assert.ok(g.awareness.marker);g.updateAwareness(.02);assert.equal(g.awareness.missed,1);assert.equal(g.awareness.marker,null);
+});
+test('awareness rewards cap at max health and never consume combat RNG',()=>{
+ const a=boot('ahri'),b=boot('ahri');b.node('mapAwareness').checked=true;a.g.reset('dodge');b.g.reset('dodge');a.g.setRng(123);b.g.setRng(123);
+ b.g.awareness.next=0;b.g.updateAwareness(.01);const m=b.g.awareness.marker;b.g.player.hp=b.g.player.maxHp-1;b.key('g');b.click(m.x,m.y,0);assert.equal(b.g.player.hp,b.g.player.maxHp);
+ assert.equal(a.g.dodgeAimPoint(a.g.REFERENCE_SPELLS.ezrealDodge).x,b.g.dodgeAimPoint(b.g.REFERENCE_SPELLS.ezrealDodge).x);
+});
+test('a successful awareness ping is included in the Dodge result',()=>{
+ const {g,node,key,click}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');g.awareness.next=0;g.updateAwareness(.01);const m=g.awareness.marker;
+ key('g');click(m.x,m.y,0);g.end(false);assert.match(node('menuDescription').textContent,/25 points/);assert.match(node('menuDescription').textContent,/Map pings 1 hit \/ 0 missed/);
+});
 test('Dodge restart varies the opening encounter',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});const openings=[];
  for(let i=0;i<5;i++){g.reset('dodge');g.update(1/120);const e=g.foes.find(x=>x.dodgeVisitor);openings.push(e?`${e.spell.name}:${e.x.toFixed(1)}:${e.y.toFixed(1)}`:'deferred');}
@@ -1298,6 +1320,13 @@ test('Blitz hook interrupts Ahri dash instead of resuming it after the pull',()=
  p.dashing={x:p.x+250,y:p.y,speed:300,throughTerrain:true};
  const s=g.fire(p.x-5,p.y,1,0,'enemy',10,5,1);Object.assign(s,{directed:true,spellName:'BLITZ Q',hook:true,anchor:{x:300,y:p.y},pullSpeed:900,pullDistance:37.5});
  g.update(1/120);assert.ok(p.hooked);assert.equal(p.dashing,null);advance(g,.6);assert.equal(p.hooked,null);assert.ok(p.x<350,`dash resumed after hook: ${p.x}`);
+});
+test('a hook interrupting a terrain-crossing dash leaves Ahri walkable',()=>{
+ const world=require('../world.js'),{g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player;p.x=110;p.y=165;
+ p.dashing={x:250,y:165,speed:300,throughTerrain:true};assert.equal(world.pointWalkable(p,p.r),false);
+ const s=g.fire(p.x-5,p.y,1,0,'enemy',10,5,1);Object.assign(s,{directed:true,spellName:'BLITZ Q',hook:true,anchor:{x:300,y:p.y},pullSpeed:900,pullDistance:37.5});
+ g.update(1/120);assert.ok(p.hooked);assert.equal(p.dashing,null);assert.equal(world.pointWalkable(p,p.r),true);
+ advance(g,.7);assert.equal(p.hooked,null);assert.equal(world.pointWalkable(p,p.r),true);
 });
 test('a long Blitz hook completes its pull instead of expiring midair',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const p=g.player;p.x=800;p.y=337.5;
