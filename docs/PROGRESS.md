@@ -1487,3 +1487,8 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 
 - Pressing A, S, or a champion ability after arming a G ping now cancels the pending ping, so the next left click is handled normally. Previously G followed by A could silently consume an attack-move click. Ping gestures already in progress, Alt-click pings, rewards and the player-approved Expert balance are unchanged.
 - The new regression reproduced the attack-move failure before the fix; targeted ping and command tests and the serial full suite (470/470) pass. `node --check game.js` and `git diff --check` pass. The build cache key is `ping-command`. Browser verification of this specific sequence remains outstanding. Implementation commit: `17c4c99`.
+
+## Ability input cancels attack-move targeting (3 November 2026)
+
+- A champion ability input after A now cancels the pending attack-move cursor before the next click, including when the ability cannot cast. Previously the stale A command consumed that click. This does not alter abilities, collision, pacing or the approved Expert balance. The test reproduced the Q case before the fix and covers Q/W/E/R/F afterward, as well as the existing G and Flash keyboard tests.
+- Validation: targeted tests and the serial full suite (471/471) pass, as do `node --check game.js` and `git diff --check`. The cache key is `command-cancel`. The published build is unchanged. A browser check of this exact interaction is outstanding; the in-app browser returned `browser.user is unavailable` when selecting the published tab during this session.

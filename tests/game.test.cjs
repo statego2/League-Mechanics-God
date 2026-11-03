@@ -118,6 +118,14 @@ test('a gameplay command cancels an armed map ping before the next click',()=>{
   assert.equal(g.awareness.pingFx,0,command);
  }
 });
+test('casting an ability cancels an armed attack-move before the next click',()=>{
+ for(const command of ['q','w','e','r','f']){
+  const {g,key,click}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+  const enemy=foe(g,800,337.5);key('a');key(command);click(enemy.x,enemy.y,0);
+  assert.notEqual(g.player.order?.type,'attackMove',command);
+  assert.equal(g.player.focus,enemy.id,command);
+ }
+});
 test('Dodge restart varies the opening encounter',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});const openings=[];
  for(let i=0;i<5;i++){g.reset('dodge');g.update(1/120);const e=g.foes.find(x=>x.dodgeVisitor);openings.push(e?`${e.spell.name}:${e.x.toFixed(1)}:${e.y.toFixed(1)}`:'deferred');}
