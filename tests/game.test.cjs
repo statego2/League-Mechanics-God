@@ -41,6 +41,29 @@ test('awareness rewards cap at max health and never consume combat RNG',()=>{
  b.g.awareness.next=0;b.g.updateAwareness(.01);const m=b.g.awareness.marker;b.g.player.hp=b.g.player.maxHp-1;b.key('g');b.click(m.x,m.y,0);assert.equal(b.g.player.hp,b.g.player.maxHp);
  assert.equal(a.g.dodgeAimPoint(a.g.REFERENCE_SPELLS.ezrealDodge).x,b.g.dodgeAimPoint(b.g.REFERENCE_SPELLS.ezrealDodge).x);
 });
+test('awareness feedback reports the health actually restored',()=>{
+ for(const [missing,expected] of [[0,0],[3.5,3.5],[40,20]]){const {g,node,key,click}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');g.awareness.next=0;g.updateAwareness(.01);const m=g.awareness.marker;g.player.hp=g.player.maxHp-missing;key('g');click(m.x,m.y,0);
+  assert.equal(g.player.hp,g.player.maxHp-missing+expected);assert.match(node('toast').textContent,new RegExp(`\\+${expected} HP`));
+ }
+});
+test('a ping on empty minimap space gives visible feedback without awarding a sighting',()=>{
+ const {g,node,key,click,arcs}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');const x=g.MAP.x+40,y=g.MAP.y+40,hp=g.player.hp;
+ key('g');click(x,y,0);g.render();assert.ok(arcs.some(a=>a.x===x&&a.y===y&&a.r===12));assert.equal(g.awareness.pinged,0);assert.equal(g.player.hp,hp);
+ g.updateAwareness(.71);assert.equal(g.awareness.pingFx,0);
+});
+test('jungler appearances stay silent and a player ping uses the optional sound',()=>{
+ const {g,node,window,key,click}=boot('ahri');let sounds=0;
+ window.AudioContext=class{constructor(){this.currentTime=1;this.destination={};}resume(){}createOscillator(){sounds++;return {frequency:{setValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){},start(){},stop(){}};}createGain(){return {gain:{setValueAtTime(){},exponentialRampToValueAtTime(){}},connect(){}};}};
+ node('mapAwareness').checked=true;g.reset('dodge');node('soundBtn').listeners.click();const before=sounds;g.awareness.next=0;g.updateAwareness(.01);assert.equal(sounds,before);
+ key('g');click(g.MAP.x+40,g.MAP.y+40,0);assert.equal(sounds,before+1);
+});
+test('an old or empty ping gesture cannot claim a later jungler appearance',()=>{
+ for(const initial of [true,false]){const {g,node}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');if(initial){g.awareness.next=0;g.updateAwareness(.01);}const m=g.awareness.marker,canvas=node('arena'),x=m?m.x:g.MAP.x+40,y=m?m.y:g.MAP.y+40;
+  canvas.listeners.pointerdown({clientX:x,clientY:y,button:0,pointerId:1,altKey:true,preventDefault(){}});
+  if(initial)g.updateAwareness(3);g.awareness.next=0;g.updateAwareness(.01);Object.assign(g.awareness.marker,{x,y});
+  canvas.listeners.pointerup({clientX:x,clientY:y,button:0,pointerId:1});assert.equal(g.awareness.pinged,0);assert.equal(g.awareness.marker.pinged,false);
+ }
+});
 test('a successful awareness ping is included in the Dodge result',()=>{
  const {g,node,key,click}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');g.awareness.next=0;g.updateAwareness(.01);const m=g.awareness.marker;
  key('g');click(m.x,m.y,0);g.end(false);assert.match(node('menuDescription').textContent,/25 points/);assert.equal(node('awarenessResult').hidden,false);assert.match(node('awarenessResult').textContent,/1 \/ 1 PINGED · 0 MISSED · 100%/);

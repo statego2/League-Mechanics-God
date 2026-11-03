@@ -1436,3 +1436,10 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 - Lux R and Xerath Q now detect a player crossing the beam warning area between fixed-step endpoints for threat/outcome accounting. The swept test uses the same oriented flat-ended rectangle and rounded champion-radius corners as the impact check. Damage, hitboxes, animation and encounter pacing do not change. As with other threat counts, an intersection is a geometric proxy, not a measured reaction.
 - Tests cover pre-impact and post-impact corner grazes at 1/120 s and a larger step, for both beams and horizontal/vertical orientations. Dodge skill-scored bests use `.skill_v5`; earlier keys remain stored and survival bests are unchanged. Browser/human playtesting remains outstanding.
 - Validation: 463/463 tests passed in the serial full suite; the expanded vertical-orientation cases passed separately after that run. Syntax and diff checks pass. No browser playtest was performed for this outcome-only change.
+
+## Map ping feedback and sighting identity (3 November 2026)
+
+- A minimap ping now displays at the clicked location even when it misses a jungler, with the existing optional sound system producing a short synthesized ping only after player input. Sightings themselves remain silent. Only a valid, timely ping still awards points/HP. Reward text reports actual HP gained after the maximum-health cap.
+- The gesture remembers the specific visible sighting at mouse-down: an old held ping or a ping begun before a sighting cannot claim a later appearance, even if it appears at the same position. The full 3-second deadline still applies at release.
+- Targeted tests cover empty-map visual feedback, capped healing text, stale gestures, standard/danger pings and existing map controls. Browser/human verification remains outstanding, including the player-reported top tower issue.
+- Validation: 466/466 tests pass in the serial full suite; an additional sound/silent-sighting regression passed separately afterward. Syntax and diff checks pass. No browser playtest was performed for this change.
