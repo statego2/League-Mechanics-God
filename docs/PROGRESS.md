@@ -1457,3 +1457,9 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 ## Clear Map Awareness minimap (3 November 2026)
 
 - Removed the stationary player marker from the minimap at the player’s request. The terrain, towers, jungler sightings, pings, rewards and result accounting remain unchanged. Twelve targeted awareness/minimap tests, syntax and diff checks pass. Build label: `clear-map`.
+
+## Dodge readiness check and published build (3 November 2026)
+
+- Player asked for a count of remaining work areas and progress reports. Current working grouping: (1) spell hitbox/timing audit, (2) Expert rhythm and overlap fairness, (3) Map Awareness and minimap verification, (4) sustained browser/human playtests and resulting fixes. These are work areas, not a fixed task count or time estimate; keep player-approved Expert rhythm and defer future Syndra Q/QE until the current Dodge is ready.
+- User requested removing the stationary player marker. Commit `6d17771` was pushed; GitHub Pages reported that exact commit built, and the public HTML served `game.js?v=20261103-clear-map`. In a separate in-app browser tab, Expert Dodge with awareness enabled started; the map had no player marker, its three blue top towers were visible, a right-click was issued, and Flash went on cooldown. The short test run ended at 17 seconds; it is not a meaningful human fairness/difficulty evaluation and did not reach a completed jungler sighting.
+- Ran 16 targeted spell tests covering Orianna R timing/position, Lux R collision/charge, Malphite, Blitz, Cassiopeia cone and Ahri Dodge collision. All passed. Larger outstanding work includes live/human multi-minute playtests, checking the jungler ping flow and actual visual readability, and timing/hitbox validation against appropriate references.
