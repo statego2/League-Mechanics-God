@@ -42,6 +42,8 @@ The user explicitly wants a few excellent drills, not many separate modes. Dodge
 
 **Latest Dodge direction (31 October 2026):** The user wants an endless game, with Expert as the development and balancing priority. Do not reintroduce a countdown or forced win at a duration. Elapsed survival time is a result metric; improve the intensity and training value while preserving readable, avoidable patterns. Other difficulty options and modes remain playable but are not the priority.
 
+**Expert balance approval (3 November 2026):** The user has personally tested the current Dodge and confirmed that its difficulty and balance feel good. Treat the current Expert cadence and Mindgame Aim mix as the accepted baseline; do not retune them based solely on automated runs or an agent's speculation. Address concrete reproducible bugs and spell accuracy, and revisit balance only if the user reports an issue or clear evidence shows a specific defect.
+
 ## 2. What the game should actually look and feel like
 
 **Camera and world:** A readable top-down / three-quarter MOBA-like perspective, coherent arena or lane, ground textures or tiles, obstacles where appropriate, readable combat distance and safe/unsafe zones. Not a generic blank grid.
