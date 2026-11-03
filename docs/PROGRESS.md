@@ -1471,3 +1471,8 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 
 - The player confirmed they personally tested Dodge and like its current balance. Close the open-ended cadence tuning question: preserve the existing Expert pressure and Mindgame Aim mix unless the player reports a specific issue or evidence establishes a concrete bug. The automated high-HP runs are stability evidence, not a reason to override the player’s direct assessment.
 - Remaining readiness work is narrower: verify and fix specific spell timing/hitbox defects, finish checking the optional Map Awareness interaction and resulting score, and address concrete bugs found in normal play. Do not require another general difficulty sign-off for the already approved baseline. No gameplay changed in this documentation update.
+
+## Live Map Awareness success check (3 November 2026)
+
+- Browser-tested the published `clear-map` build with awareness enabled. In a controlled Foundation run, a jungler portrait appeared; pausing immediately after a screenshot kept the sighting available, and after resume a G+click at the visible icon produced the on-screen `JUNGLER PINGED +25 · +20 HP` feedback. This validates the real browser input and successful reward path, not Expert balance or the end-of-run success/miss summary; those remain separate checks.
+- Player-approved Expert cadence and Mindgame Aim were unchanged. No production code changed during this check.
