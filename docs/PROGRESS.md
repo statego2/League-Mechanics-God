@@ -1393,3 +1393,7 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 - Reworked the optional minimap with layered jungle paths, terrain, a curved river, bases, brush and colored structures; this remains an original schematic, not an exact Riot minimap. Existing marker positions, 3-second window, rewards, input and gameplay RNG are unchanged.
 - The end screen now has a distinct Map Awareness result showing pinged / resolved sightings, missed count and success percentage. A sighting still visible at death is shown as in progress, not charged as a miss; zero resolved sightings do not produce a misleading percentage. The panel is hidden on return to the normal menu and absent when awareness is disabled.
 - Validation: 453/453 automated tests pass, including mixed ping/miss/pending and no-sighting cases; syntax and diff checks pass. Local browser launched Expert Dodge with awareness, displayed the updated map and reached the no-completed-sightings result panel; a live successful/missed ping result and extended human visual review are still needed. No deployment.
+
+## Minimap tier 3 towers (3 November 2026)
+
+- Added the missing base-side tower icons to all three lanes on both teams, including the top tier 3 noted by the player. Locations are schematic, presentation-only and do not change gameplay. The awareness render regression verifies the top tier 3 icons on both sides. Seven targeted awareness/minimap tests, syntax check and diff check passed; no browser visual review was performed for this small correction.

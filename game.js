@@ -144,7 +144,8 @@ function drawAwareness(){if(!awareness)return;const {x,y,size:s}=MAP;ctx.save();
  for(const [px,py,rx,ry] of [[.10,.90,.13,.10],[.90,.10,.13,.10]]){ctx.fillStyle=px<.5?"#697e83":"#81766b";ctx.beginPath();ctx.ellipse(px,py,rx,ry,-.7,0,TAU);ctx.fill();}
  for(const [px,py] of [[.23,.29],[.30,.42],[.38,.22],[.19,.55],[.77,.71],[.70,.58],[.62,.78],[.81,.45]]){ctx.fillStyle="#102419";ctx.fillRect(px-.025,py-.025,.05,.05);ctx.fillStyle="#416047";ctx.fillRect(px-.018,py-.018,.023,.018);}
  ctx.restore();
- for(const [px,py] of [[.08,.68],[.08,.40],[.28,.92],[.43,.92],[.24,.76],[.36,.64],[.60,.40],[.72,.28],[.92,.32],[.92,.60],[.72,.08],[.57,.08]]){const blue=px<py;circle(x+s*px,y+s*py,3.5,"#152122");circle(x+s*px,y+s*py,2.1,blue?"#62c2d0":"#dc6964");}
+ // Three towers per lane for each side, including the base-side tier 3.
+ for(const [px,py] of [[.08,.82],[.08,.68],[.08,.40],[.18,.92],[.28,.92],[.43,.92],[.16,.84],[.24,.76],[.36,.64],[.64,.36],[.76,.24],[.84,.16],[.92,.18],[.92,.32],[.92,.60],[.82,.08],[.72,.08],[.57,.08]]){const blue=px<py;circle(x+s*px,y+s*py,3.5,"#152122");circle(x+s*px,y+s*py,2.1,blue?"#62c2d0":"#dc6964");}
  circle(x+12,y+s-12,6,"#72cdd5");circle(x+s-12,y+12,6,"#e56c6c");
  circle(x+s*.43,y+s*.57,4,"#8ee5e1");const m=awareness.marker;if(m){circle(m.x,m.y,10,"#361419");const art=$("explorerArt");if(art?.complete&&art.naturalWidth){ctx.save();ctx.beginPath();ctx.arc(m.x,m.y,8,0,TAU);ctx.clip();ctx.drawImage(art,m.x-9,m.y-12,18,24);ctx.restore();}else circle(m.x,m.y,6,"#e4bd91");circle(m.x,m.y,9,"#f05555",false,2);if(awareness.pingFx>0){circle(m.x,m.y,12+(1-awareness.pingFx/.7)*14,awareness.pingDanger?"#ff6d5f":"#ffd36a",false,2);if(awareness.pingDanger){ctx.font="bold 20px sans-serif";ctx.textAlign="center";ctx.fillStyle="#ff6d5f";ctx.fillText("!",m.x,m.y-15);}}}
  if(pingDrag){const p=pingDrag.start;ctx.font="bold 20px sans-serif";ctx.textAlign="center";ctx.fillStyle="#ff7769";ctx.fillText("!",p.x,p.y-30);}
