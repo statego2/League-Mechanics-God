@@ -57,6 +57,12 @@ test('awareness minimap draws the top tier 3 towers for both teams',()=>{
  const {g,node,arcs}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');g.render();
  for(const [x,y] of [[.08,.82],[.82,.08]])assert.ok(arcs.some(a=>Math.abs(a.x-(g.MAP.x+x*g.MAP.size))<1e-8&&Math.abs(a.y-(g.MAP.y+y*g.MAP.size-.6))<1e-8&&a.r===1.65));
 });
+test('awareness uses a bounded enemy portrait with a safe missing-art fallback',()=>{
+ for(const loaded of [true,false]){const {g,node,drawSizes}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');g.awareness.next=0;g.updateAwareness(.01);const m=g.awareness.marker,art=node('stoneArt');
+  if(loaded)Object.assign(art,{complete:true,naturalWidth:1211,naturalHeight:1299});g.render();const portrait=drawSizes.find(d=>d[0]===art&&d.length===9);
+  if(loaded){assert.ok(portrait);assert.equal(portrait[5],m.x-8);assert.equal(portrait[6],m.y-8);assert.equal(portrait[7],16);assert.equal(portrait[8],16);}else assert.equal(portrait,undefined);
+ }
+});
 test('Alt click and drag upward pings the original jungler position on release',()=>{
  const {g,node}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');g.awareness.next=0;g.updateAwareness(.01);const m=g.awareness.marker,canvas=node('arena');g.player.hp=100;
  canvas.listeners.pointerdown({clientX:m.x,clientY:m.y,button:0,pointerId:2,altKey:true,preventDefault(){}});assert.equal(g.awareness.pinged,0);

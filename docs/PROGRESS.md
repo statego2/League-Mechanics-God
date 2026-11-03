@@ -1407,3 +1407,8 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 ## Visible minimap towers (3 November 2026)
 
 - Replaced tiny tower dots with outlined blue/red tower silhouettes, including the previously added top tier 3 icons, so all three towers are distinguishable at minimap scale. Positions and gameplay are unchanged. Seven awareness/minimap tests, syntax and diff checks pass. The player reported the top tower still missing; the previous version was not pushed, and readability of the previous dots was also poor. The file URL open in Chrome could not be inspected due to browser URL policy; which version the player saw is unconfirmed. Human visual confirmation of the new icons remains needed.
+
+## Map awareness enemy portrait (3 November 2026)
+
+- Replaced the tiny full-body explorer sprite in the jungler sighting with a 16×16 clipped face crop from the existing original stone-caster art. This is a generic trainer portrait, not a Riot champion icon. The existing marker position, red border, ping tolerance, reward and 3-second visibility are unchanged; unloaded art retains a simple fallback.
+- Eight targeted awareness/minimap tests passed, including bounded source cropping and unloaded-art fallback; syntax and diff checks passed. Browser visual confirmation remains outstanding, including the player-reported top tier 3 issue. The previous attempt to inspect the player file URL was blocked by browser policy; it was not bypassed.
