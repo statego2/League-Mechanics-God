@@ -1439,6 +1439,35 @@ test('Xerath W does not credit a crossing that happens after impact',()=>{
  const h={x:start.x+travel*.75,y:start.y+99.9,r:100,ttl:.025,max:.1,xerath:true,directed:true,spellName:'XERATH W',threat:false};g.hazards.push(h);g.moveTo(start.x+100,start.y);g.update(.1);
  assert.equal(g.stats.hits,0);assert.equal(g.dodged,0);assert.equal(g.dodgeDirector.outcomes['XERATH W'].harmless,1);
 });
+test('Blitz hook keeps its chain visible during the actual pull',()=>{
+ const {g,strokes,lines}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const p=g.player,s=g.fire(p.x-30,p.y,500,0,'enemy',10,8,1);
+ Object.assign(s,{hook:true,anchor:{x:200,y:p.y},directed:true,spellName:'BLITZ Q'});g.update(1/120);
+ assert.ok(p.hooked);assert.ok(!g.shots.includes(s));
+ for(let i=0;i<3;i++){
+  strokes.length=0;lines.length=0;g.render();assert.ok(strokes.includes('#d0ba86'));
+  assert.ok(lines.some(end=>end.x===p.x&&end.y===p.y));g.update(1/120);assert.ok(p.hooked);
+ }
+ advance(g,1);assert.equal(p.hooked,null);strokes.length=0;g.render();assert.ok(!strokes.includes('#d0ba86'));
+});
+test('Blitz visitor stays at the hook source briefly after landing a grab',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+ const p=g.player,e=g.enemy(200,p.y),s=g.fire(p.x-30,p.y,500,0,'enemy',10,8,1);
+ Object.assign(e,{dodgeVisitor:true,spell:g.REFERENCE_SPELLS.blitzDodge,phase:'hookFlight',entry:{x:100,y:e.y},speed:120,orbShot:s});g.setFoes([e]);
+ Object.assign(s,{hook:true,casterId:e.id,anchor:{x:e.x,y:e.y},directed:true,spellName:'BLITZ Q'});g.update(1/120);
+ assert.ok(p.hooked);const x=e.x;advance(g,.2);assert.equal(e.x,x);
+ advance(g,.2);assert.ok(e.x<x,'Blitz should resume exiting after the short hold');
+});
+test('Blitz can leave after a missed hook and charm can move him during the hold',()=>{
+ for(const hit of [false,true]){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;
+  const p=g.player,e=g.enemy(200,p.y),s=g.fire(hit?p.x-30:10,hit?p.y:100,500,0,'enemy',10,8,hit?1:.01);
+  Object.assign(e,{dodgeVisitor:true,spell:g.REFERENCE_SPELLS.blitzDodge,phase:'hookFlight',entry:{x:100,y:e.y},speed:120,orbShot:s});g.setFoes([e]);
+  Object.assign(s,{hook:true,casterId:e.id,anchor:{x:e.x,y:e.y},directed:true,spellName:'BLITZ Q'});g.update(1/120);advance(g,.025);
+  const x=e.x;if(hit){assert.ok(e.hookHold>0);e.charm=.2;}advance(g,.1);
+  assert.ok(hit?e.x>x:e.x<x,hit?'charm should move Blitz':'miss should not hold Blitz');
+ }
+});
 test('beam outcomes detect a curved-corner crossing before, but not after, impact',()=>{
  for(const name of ['XERATH Q','LUX R'])for(const dt of [.1,1/120])for(const before of [true,false])for(const rotated of [false,true]){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setFoes([]);const p=g.player,r=p.hitRadius-.001,half=p.speed*dt/(2*Math.SQRT2),sx=600-r/Math.SQRT2-half,sy=310+r/Math.SQRT2-half,start=rotated?{x:600-(sy-300),y:300+(sx-600)}:{x:sx,y:sy};p.x=start.x;p.y=start.y;

@@ -1042,6 +1042,9 @@ function updateDodgeVisitor(e,dt){
   const next=world.clip(e,{x:e.x+dx/d*step,y:e.y+dy/d*step},e.r);e.x=next.x;e.y=next.y;
   return;
  }
+ // Keep the grab source visibly anchored briefly after impact. Charm above
+ // remains able to move the caster; this hold is a training approximation.
+ if(e.phase==="exit"&&e.hookHold>0){e.hookHold=Math.max(0,e.hookHold-dt);return;}
  if(e.phase==="enter"||e.phase==="exit"){
   const finalGoal=e.phase==="enter"?e.origin:e.entry;
   let goal=finalGoal;
@@ -1233,6 +1236,8 @@ function takeHit(d){if(player.invuln>0||state!=="playing")return;applyImpact(pla
 // edge behaviour and the following Blitz auto are deliberately out of scope.
 function startHookPull(shot){
  if(!shot.anchor||state!=="playing")return;
+ const caster=foes.find(e=>e.id===shot.casterId&&e.alive&&e.dodgeVisitor);
+ if(caster)caster.hookHold=.25;
  const d=Math.hypot(shot.vx,shot.vy)||1,ux=shot.vx/d,uy=shot.vy/d,reach=shot.pullDistance??SIMULATION.toCanvas(75);
  const desired={x:shot.anchor.x+ux*reach,y:shot.anchor.y+uy*reach},landing=world.nearestWalkable(desired);
  // A hook interrupts an active dash. If a terrain-crossing dash is caught
