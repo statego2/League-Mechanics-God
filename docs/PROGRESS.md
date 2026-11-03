@@ -1590,3 +1590,35 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
   - human and live-client timing/hitbox review
   - player review of Map Awareness
 - Validation: the serial full suite passed 504/504.
+
+## Syndra visuals and Q→E predictive aim (3 November 2026)
+
+- Visuals only; Syndra's timings and hitboxes are unchanged:
+  - The caster is now a painted sprite (`assets/umbral-caster.png`), an original hooded sorceress, not a Riot asset. She has a violet aura, a casting-hand glow during windup and a slight lean. If the image has not loaded, the old vector silhouette is drawn instead.
+  - Spheres are now dark violet with an aura, swirl and rim (`drawDarkSphere`). This applies to her three orbiting spheres, the Q sphere and the pushed E sphere.
+  - Q telegraph: a dark ground circle whose inner disc fills to the rim by detonation, with a brightening rim and rotating rune ticks. The sphere condenses from converging motes and then hovers.
+  - Q detonation: a flash across the full radius, an expanding shock ring, dark shards and a fading sphere.
+  - Pushed E sphere: a smaller core, a faint ring at the true collision width, and a fading wake of ghost spheres.
+- Q→E now uses Mindgame Aim style reads:
+  - The weights are the same as the visitor skillshots and Syndra's lone Q: 15% direct, 75% lead, 10% reversal 70 px behind.
+  - The lead predicts the existing route to the moment the pushed sphere's centre reaches its aim point. Placement puts the sphere 200 canvas units short of that point, so arrival is fixed at qDelay + eDelay + 200/eSpeed = 1.05 s, capped at 1.2 s like `dodgeAimPoint`.
+  - The geometry (source 400 from the aim, Q 200 from the source) and the 32-direction escape search are built around the aim point.
+  - The source must start outside the E cone's reach from Ahri.
+  - If no safe lead or reversal placement exists, the read falls back to a separately searched direct cast.
+  - Stationary targets draw no aim roll, so existing seeded runs are unchanged. Expert cadence and Syndra's selection are unchanged.
+- Seeded trials (120 seeds × 8 straight headings × 4 spots, 960 runs each; Ahri keeps walking straight unless noted):
+  - Q→E with direct only: 49.7% hit.
+  - Q→E with the new mix: 77.5% hit. Lone Q with Mindgame Aim: 80.5% hit, so Q→E is now on par with the other skills.
+  - Realised Q→E patterns: 609 lead, 249 direct, 102 reversal. Unsafe leads fell back to direct.
+  - Every lead hit a straight walker. Reversing at 0–0.2 s dodged all 609 leads, but lost to all reversal reads when reversing at 0.2 s.
+  - The executed escape witness avoided every one of the 960 Q→E and 960 Q placements. No placement left Q or E range.
+- Expert records now use `director_v90`. Prior v87, v88 and v89 records stay stored, and the records test now also checks that v89 is preserved.
+- Five new tests:
+  - a lead punishes a straight route and the sphere crosses Ahri
+  - lead, reversal and direct reads keep an executed walking escape
+  - placements stay in range and start outside the cone
+  - the 15/75/10 mix, with stationary targets staying direct
+  - lead outcomes agree at 30, 60 and 120 FPS
+- Headless Chrome screenshots are in `/workspace/lmg-code2/shots/`, outside the repo: before (c833be4) and after for the Q telegraph, detonation, E windup, Q→E flight and the model, plus an after-only lead Q→E. Syndra was forced only in the browser copy, and there were no console errors.
+- Local build ID: `8d1a53822c17`; no deployment.
+- Validation: the serial full suite passed 509/509.
