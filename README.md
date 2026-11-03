@@ -29,7 +29,7 @@ The finished **League Mechanics God** is intentionally focused on **exactly four
 
 ### What is actually playable today (alpha)
 
-- **Dodge Trial:** an endless Expert-first Dodge Gauntlet foundation. It has visible champion entries for Ezreal Q, Lux Q, Blitz Q, Ahri Q and Vel’Koz Q, hidden-source Xerath Q/W, and rare Lux R, Cassiopeia R, Orianna R and Malphite R encounters. The director uses sampled walkable escapes and an Expert budget of up to four concurrent directed threats; it is still an evolving training approximation, not a claim of exact live-client parity.
+- **Dodge Trial:** an endless Expert-first Dodge Gauntlet foundation. It has visible champion entries for Ezreal Q, Lux Q, Blitz Q, Ahri Q and Vel’Koz Q, hidden-source Xerath Q/W, and rare Lux R, Cassiopeia R, Orianna R and Malphite R encounters. Expert also includes Syndra Q and occasional Q→E pushed spheres; their presentation and hitboxes are training approximations, and Dodge omits their immobilization. The director uses sampled walkable escapes and an Expert budget of up to four concurrent directed threats; it is still an evolving training approximation, not a claim of exact live-client parity.
 - **Kite Arena:** movement, autos and abilities against enemies; this is **not yet** the approved solo-versus-many Combat Survival experience.
 - **CS Practice:** farm with Ahri across 20 waves over up to ten minutes (126 possible CS), with cannon on every third wave. Two-sided combat, wave placement and attack behavior remain approximations. Melee health grows every three early waves; other minion upgrades and turrets are not yet implemented. This is the unfinished foundation for CS Mastery.
 

@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="ce6349f15bce";
+const BUILD_ID="5c8094e403ff";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -53,7 +53,7 @@ const ahriBase=()=>attackPreset==="ahri"&&mode!=="bait";
 const autoDamage=()=>ahriBase()?AHRI.damage:28;
 const physicalDamage=(raw,armor=0)=>raw*(armor>=0?100/(100+armor):2-100/(100-armor));
 const autoSpeed=()=>ahriBase()?AHRI.missileSpeed:920; // 0.5 canvas units per League unit, an initial approximation.
-function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?".director_v87":".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
+function recordSuffix(){return ahriCS()?".cs_ahri_v14":mode==="dodge"?(ahriBase()?(difficulty==="hard"?".director_v88":".director_v87"):".no_line_"+attackPreset)+".endless":attackPreset==="standard"?"":".as_"+attackPreset+(ahriBase()&&!referenceSpell()?".move_v5":"");}
 const targetHitRadius=e=>ahriBase()?(e.minion?(e.minionType==="siege"?32.5:24):AHRI.radius):e.r;
 const attackReach=e=>ahriBase()?AHRI.range+AHRI.radius+targetHitRadius(e):ATTACK.range;
 // League's upper movement-speed soft caps apply after bonus speed is added.
@@ -245,7 +245,7 @@ function dodgeOutcomeSummary(){
  // A still-outbound Ahri orb also has a future return phase, even if its
  // outgoing leg already hit. Do not count that future phase once it starts.
  const pendingReturns=shots.filter(s=>s.alive&&s.directed&&s.kind==="enemyOrb"&&s.phase==="out").length;
- const unresolved=new Set(pendingShots.map(s=>s.group||s)).size+pendingReturns+hazards.filter(h=>h.directed&&!h.phaseResolved&&(!(h.orianna||h.malphite||h.cassio)||h.casting)).length+hazards.filter(h=>h.orianna&&h.q&&!h.q.phaseResolved).length;
+ const unresolved=new Set(pendingShots.map(s=>s.group||s)).size+pendingReturns+hazards.filter(h=>h.directed&&!h.phaseResolved&&(!(h.orianna||h.malphite||h.cassio)||h.casting)).length+hazards.filter(h=>h.orianna&&h.q&&!h.q.phaseResolved).length+hazards.filter(h=>h.syndra&&h.phase==='e').length;
  return `Phase outcomes${entries.length?`\n${entries.join("\n")}`:": none"}\n${unresolved} unresolved phase${unresolved===1?"":"s"}`;
 }
 function end(win){
@@ -579,6 +579,36 @@ function spawnXerathW(witness=null){
 // magic damage and ~0.5 s recast delay. Its source cue, line placement and
 // 0.528 s timing are deliberate training approximations.
 const XERATH_Q={radius:SIMULATION.toCanvas(145/2),range:SIMULATION.toCanvas(1450),delay:.65,raw:70};
+// Syndra's Q and pushed-sphere E use a compact isolated training encounter.
+// Values not confirmed by Riot's public spell description are documented
+// approximations; CC is omitted in Dodge by player request.
+const SYNDRA={qRange:SIMULATION.toCanvas(800),qRadius:SIMULATION.toCanvas(210),qDelay:.6,qDamage:90,eDelay:.25,eSpeed:SIMULATION.toCanvas(2000),eRadius:SIMULATION.toCanvas(100),eEnd:SIMULATION.toCanvas(1200),eDamage:60};
+function spawnSyndra(combo=false,witness=null){
+ if(!dodgeDirector||foes.some(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit")||shots.some(s=>s.alive&&s.directed)||hazards.some(h=>h.directed))return false;
+ const reaction=dodgeReactionDelay();if(!Number.isFinite(reaction)||reaction>=SYNDRA.qDelay)return false;
+ const first=rand(0,TAU),approach=dodgeReactionPath(reaction),start=approach.end;
+ const projected=dodgeReactionPath(SYNDRA.qDelay).end,moveX=projected.x-player.x,moveY=projected.y-player.y,moveLength=Math.hypot(moveX,moveY);
+ let qAim={x:player.x,y:player.y},aimPattern='direct';
+ if(!combo&&moveLength>2){const roll=random();if(roll>=.15&&roll<.9){qAim=projected;aimPattern='lead';}else if(roll>=.9){qAim={x:player.x-moveX/moveLength*70,y:player.y-moveY/moveLength*70};aimPattern='reversal';}}
+ for(let i=0;i<24;i++){
+  const a=first+i*TAU/24,dx=Math.cos(a),dy=Math.sin(a),source={x:player.x-dx*300,y:player.y-dy*300};
+  const q=combo?{x:source.x+dx*150,y:source.y+dy*150}:{x:qAim.x+dx*60,y:qAim.y+dy*60};
+  if(source.x<60||source.x>W-60||source.y<145||source.y>H-40||!world.pointWalkable(source,20)||dist(source,q)>SYNDRA.qRange||q.x<30||q.x>W-30||q.y<70||q.y>H-30)continue;
+  const launch=SYNDRA.qDelay+SYNDRA.eDelay,travel=(SYNDRA.eEnd-dist(source,q))/SYNDRA.eSpeed;
+  const incoming=combo?[{x:q.x,y:q.y,vx:dx*SYNDRA.eSpeed,vy:dy*SYNDRA.eSpeed,r:SYNDRA.eRadius,start:launch,end:launch+travel}]:[];
+  const horizon=combo?launch+travel:SYNDRA.qDelay,distance=forecastTravel(reaction,horizon);
+  const existing=combo?dodgeReactionPath(horizon):null,eThreat=combo&&!forecastDodgePath(incoming,existing.end,horizon,0,existing);
+  for(let j=0;j<32;j++){
+   const turn=j*TAU/32,raw={x:start.x+Math.cos(turn)*distance,y:start.y+Math.sin(turn)*distance},bounded={x:clamp(raw.x,world.bounds.left,world.bounds.right),y:clamp(raw.y,world.bounds.top,world.bounds.bottom)},destination=world.clip(start,bounded,player.r);
+   if(!world.pointWalkable(destination,player.r)||!world.segmentClear(start,destination,player.r))continue;
+   if(!forecastDodgePath(incoming,destination,reaction,0,approach,[{x:q.x,y:q.y,r:SYNDRA.qRadius-10,ttl:SYNDRA.qDelay}]))continue;
+   hazards.push({x:q.x,y:q.y,source,angle:a,ttl:SYNDRA.qDelay,max:SYNDRA.qDelay,r:SYNDRA.qRadius,syndra:true,phase:'q',combo,aimPattern,eThreat,threat:dist(player,q)<=SYNDRA.qRadius||dist(projected,q)<=SYNDRA.qRadius,directed:true,spellName:'SYNDRA Q'});
+   dodgeDirector.attempted++;dodgeDirector.syndra=(dodgeDirector.syndra||0)+1;if(combo)dodgeDirector.syndraCombo=(dodgeDirector.syndraCombo||0)+1;
+   if(witness)witness.destination=destination;return true;
+  }
+ }
+ return false;
+}
 // Final Spark is a separate encounter from Lux Q. The current League Wiki
 // data lists a one-second cast time. The 0.9-second cast is a requested
 // training adjustment, with the separate source tell retained.
@@ -1113,6 +1143,7 @@ function updateDodgeDirector(dt){
   dodgeDirector.cassAt=35;dodgeDirector.rareAt=50;dodgeDirector.malAt=15;
  }
  if(difficulty==="hard"&&dodgeDirector.luxRAt===undefined)dodgeDirector.luxRAt=26;
+ if(difficulty==="hard"&&dodgeDirector.syndraAt===undefined)dodgeDirector.syndraAt=time+9;
  if(time<dodgeDirector.hitRecoveryUntil)return;
  // Flash-only reaction checks wait until the player has Flash again without
  // suppressing ordinary skillshots during the cooldown.
@@ -1147,6 +1178,12 @@ function updateDodgeDirector(dt){
  if(time>=dodgeDirector.rareAt&&time>=dodgeDirector.rareGuardUntil){
   if(spawnOriannaR()){hazards[hazards.length-1].directorScheduled=true;dodgeDirector.rareAt=time+(difficulty==="hard"?rand(90,150):rand(90,150));dodgeDirector.rareGuardUntil=time+(difficulty==="hard"?8:35);return;}
   dodgeDirector.rareAt=time+1;if(difficulty==="hard"){dodgeDirector.next=Math.max(dodgeDirector.next,1.1);return;}
+ }
+ if(difficulty==="hard"&&time>=dodgeDirector.syndraAt&&time>=dodgeDirector.rareGuardUntil){
+  const clear=!foes.some(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit")&&!shots.some(s=>s.alive&&s.directed)&&!hazards.some(h=>h.directed);
+  if(clear){const combo=(dodgeDirector.syndraQStreak||0)>=3||random()<.2;
+   if(spawnSyndra(combo)){dodgeDirector.syndraQStreak=combo?0:(dodgeDirector.syndraQStreak||0)+1;dodgeDirector.syndraAt=time+rand(18,25);dodgeDirector.next=Math.max(dodgeDirector.next,.7);return;}}
+  dodgeDirector.syndraAt=time+.5;
  }
  dodgeDirector.next-=dt;if(dodgeDirector.next>0)return;
  if(spawnDodgeVisitor())dodgeDirector.next=DODGE_DIRECTOR[difficulty].interval*dodgeRhythmMultiplier(time)*rand(.88,1.12);
@@ -1417,6 +1454,22 @@ for(const h of hazards){
  // not at a later point in the same simulation step.
  const impactFraction=dt>0?clamp(h.ttl/dt,0,1):0;
  const effectPlayer=positionAt(impactFraction);
+ if(h.syndra){
+  if(h.phase==='q'&&Number.isFinite(playerContact(h.x,h.y,h.x,h.y,0,impactFraction,h.r)))h.threat=true;
+  h.ttl-=dt;
+  if(h.ttl<=0&&h.phase==='q'){
+   fx.push({x:h.x,y:h.y,vx:0,vy:0,r:h.r,ttl:.22,max:.22,syndraImpact:true});
+   if(dist(effectPlayer,h)<=h.r){recordDodgeOutcome(h,'hit');takeHit(physicalDamage(SYNDRA.qDamage,30));}
+   else{recordDodgeOutcome(h,h.threat?'avoided':'harmless');if(h.threat){dodged++;cue('dodge');}}
+   if(state!=="playing")return;burst(h.x,h.y,'#d991ff',16);
+   h.phase=h.combo?'e':'exit';h.ttl=h.combo?SYNDRA.eDelay:.3;h.max=h.ttl;
+  }else if(h.ttl<=0&&h.phase==='e'){
+   const range=SYNDRA.eEnd-dist(h.source,h),s=fire(h.x,h.y,Math.cos(h.angle)*SYNDRA.eSpeed,Math.sin(h.angle)*SYNDRA.eSpeed,'enemy',physicalDamage(SYNDRA.eDamage,30),SYNDRA.eRadius,range/SYNDRA.eSpeed);
+   Object.assign(s,{directed:true,spellName:'SYNDRA E',syndraSphere:true,threat:h.eThreat,spawnOffset:clamp(dt+h.ttl,0,dt)});
+   dodgeDirector.attempted++;dodgeDirector.syndraE=(dodgeDirector.syndraE||0)+1;h.phase='exit';h.ttl=h.max=.35;
+  }
+  continue;
+ }
  if(h.cassio){
   if(h.departing){h.ttl-=dt;h.x+=Math.cos(h.exitAngle)*150*dt;h.y+=Math.sin(h.exitAngle)*150*dt;continue;}
   h.ttl-=dt;
@@ -1673,7 +1726,7 @@ for(const f of fx){f.x+=f.vx*dt;f.y+=f.vy*dt;f.ttl-=dt;}
 fx=fx.filter(f=>f.ttl>0||(impactEffect(f)&&!f.rendered&&f.ttl>-.3));
 if(toastTime>0){toastTime-=dt;if(toastTime<=0)ui.toast.classList.remove("show");}
 updateUI();}
-function impactEffect(f){return !!(f.shockwave||f.rockImpact||f.cassio||f.beam);}
+function impactEffect(f){return !!(f.shockwave||f.rockImpact||f.cassio||f.beam||f.syndraImpact);}
 function circle(x,y,r,color,fill=true,width=1){ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx[fill?"fillStyle":"strokeStyle"]=color;if(!fill)ctx.lineWidth=width;ctx[fill?"fill":"stroke"]();}
 function polygon(x,y,r,n,rotation,fill,stroke){ctx.beginPath();for(let i=0;i<=n;i++){const a=rotation+i*TAU/n;const px=x+Math.cos(a)*r,py=y+Math.sin(a)*r;i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.closePath();ctx.fillStyle=fill;ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.fill();ctx.stroke();}
 // A pose, not an aim line: progressively wind up during the existing cast.
@@ -1684,6 +1737,16 @@ function visitorCastPose(e){
 }
 // Original vector ranger and enemy mage silhouettes with facing and articulated steps.
 function drawChampion(x,y,a,friendly,hit,windup,motion,profile=null){
+ if(profile==="syndra"){
+  // Original dark mage silhouette with a crown; orbiting spheres are drawn
+  // by the encounter so the caster remains recognizable without Riot assets.
+  ctx.save();ctx.translate(x,y);ctx.scale(Math.cos(a)>=0?1:-1,1);
+  ctx.save();ctx.scale(1,.43);circle(0,3,24,'#0009');ctx.restore();
+  ctx.fillStyle=hit?'#f4d8ff':'#38214b';ctx.strokeStyle='#ad6fca';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(-17,-6);ctx.lineTo(-10,-48);ctx.lineTo(10,-48);ctx.lineTo(17,-6);ctx.closePath();ctx.fill();ctx.stroke();
+  circle(0,-57,9,'#d8b5c9');ctx.fillStyle='#2a1a3c';ctx.beginPath();ctx.moveTo(-11,-58);ctx.lineTo(-15,-76);ctx.lineTo(-5,-69);ctx.lineTo(0,-79);ctx.lineTo(6,-69);ctx.lineTo(15,-76);ctx.lineTo(11,-58);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.strokeStyle='#b575df';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(8,-41);ctx.lineTo(20+windup*4,-30);ctx.stroke();circle(21+windup*4,-30,5,'#e4a8ff');ctx.restore();return;
+ }
  if(profile==="cassio"){
   const sprite=$("serpentArt");
   if(sprite?.complete&&sprite.naturalWidth){
@@ -1797,7 +1860,13 @@ for(const wall of sweeps){
  ctx.beginPath();ctx.moveTo(0,top);ctx.lineTo(W,top);ctx.moveTo(0,bottom);ctx.lineTo(W,bottom);ctx.stroke();ctx.restore();
  ctx.font="bold 12px ui-monospace,monospace";ctx.textAlign="left";ctx.fillStyle="#ffe1b5";ctx.fillText("SAFE GAP",46,wall.gap+4);
 }
-for(const h of hazards){if(h.cassio){drawChampion(h.x,h.y,h.casting?h.angle:Math.atan2(player.y-h.y,player.x-h.x),false,false,h.casting?clamp(1-h.ttl/CASSIO_R.cast,0,1):0,time*7,"cassio");continue;}if(h.malphite){ctx.save();ctx.translate(h.x,h.y);const art=$("stoneArt");if(art?.complete&&art.naturalWidth){ctx.drawImage(art,-42,-90,84,90);ctx.restore();continue;}ctx.fillStyle="#665f59";ctx.strokeStyle="#c1aa93";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-25,-16);ctx.lineTo(-22,-52);ctx.lineTo(0,-72);ctx.lineTo(23,-52);ctx.lineTo(27,-15);ctx.lineTo(10,0);ctx.lineTo(-12,0);ctx.closePath();ctx.fill();ctx.stroke();circle(-7,-45,3,"#aad4ee");circle(7,-45,3,"#aad4ee");ctx.restore();continue;}if(h.orianna){drawChampion(h.source.x,h.source.y,Math.atan2(h.y-h.source.y,h.x-h.source.x),false,false,h.casting?1:0,time*7,"clockwork");if(h.casting){
+for(const h of hazards){if(h.syndra){
+ drawChampion(h.source.x,h.source.y,h.angle,false,false,h.phase==='e'?1:.2,time*7,'syndra');
+ for(let i=0;i<3;i++){const a=time*2+i*TAU/3;circle(h.source.x+Math.cos(a)*22,h.source.y-35+Math.sin(a)*10,5,'#c479f4');}
+ if(h.phase==='q'){const progress=clamp(1-h.ttl/h.max,0,1),glow=ctx.createRadialGradient(h.x,h.y,0,h.x,h.y,h.r);glow.addColorStop(0,'#cd79f777');glow.addColorStop(.55,'#a54ac944');glow.addColorStop(1,'#692a9900');circle(h.x,h.y,h.r,glow);circle(h.x,h.y,5+progress*15,'#dc9bffcc');}
+ else if(h.phase==='e')circle(h.x,h.y,18,'#bd79e9');
+ continue;
+ }if(h.cassio){drawChampion(h.x,h.y,h.casting?h.angle:Math.atan2(player.y-h.y,player.x-h.x),false,false,h.casting?clamp(1-h.ttl/CASSIO_R.cast,0,1):0,time*7,"cassio");continue;}if(h.malphite){ctx.save();ctx.translate(h.x,h.y);const art=$("stoneArt");if(art?.complete&&art.naturalWidth){ctx.drawImage(art,-42,-90,84,90);ctx.restore();continue;}ctx.fillStyle="#665f59";ctx.strokeStyle="#c1aa93";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-25,-16);ctx.lineTo(-22,-52);ctx.lineTo(0,-72);ctx.lineTo(23,-52);ctx.lineTo(27,-15);ctx.lineTo(10,0);ctx.lineTo(-12,0);ctx.closePath();ctx.fill();ctx.stroke();circle(-7,-45,3,"#aad4ee");circle(7,-45,3,"#aad4ee");ctx.restore();continue;}if(h.orianna){drawChampion(h.source.x,h.source.y,Math.atan2(h.y-h.source.y,h.x-h.source.x),false,false,h.casting?1:0,time*7,"clockwork");if(h.casting){
  // Shockwave's visible ring starts with the cast; damage resolves only at
  // the end of the windup, giving the player a readable Flash window.
  const charge=clamp(1-h.ttl/(h.max||ORIANNA_R.cast),0,1);
@@ -1879,7 +1948,7 @@ ctx.fillStyle="#101e23";ctx.fillRect(e.x-25,e.y-86,50,5);ctx.fillStyle="#ff9290"
 for(const h of hazards)if(h.orianna){circle(h.x,h.y,12,h.casting?"#f4d5ff":"#a989d8");circle(h.x,h.y,5,"#f4e6ff");}
 for(const s of shots){
  if(s.spellName==="BLITZ Q"&&s.anchor){ctx.beginPath();ctx.moveTo(s.anchor.x,s.anchor.y-25);ctx.lineTo(s.x,s.y);ctx.lineWidth=4;ctx.strokeStyle="#d0ba86";ctx.stroke();}
- const orb=s.kind==="orb"||s.kind==="enemyOrb",blitz=s.spellName==="BLITZ Q",ez=s.spellName==="EZREAL Q",lux=s.spellName==="LUX Q",vel=s.spellName==="VELKOZ Q",energy=s.kind==="enemy"&&(ez||lux||vel||blitz);
+ const orb=s.kind==="orb"||s.kind==="enemyOrb",blitz=s.spellName==="BLITZ Q",ez=s.spellName==="EZREAL Q",lux=s.spellName==="LUX Q",vel=s.spellName==="VELKOZ Q"||s.syndraSphere,energy=s.kind==="enemy"&&(ez||lux||vel||blitz);
  // Translucent spell art extends to projectile radius without a debug ring.
  // It fades at the edge, so this is not an exact visual collision boundary.
  const visualRadius=orb?s.r*.55:energy?s.r*.48:s.kind==="charm"?10:s.kind==="enemy"&&s.r>15?11:s.r;
@@ -1903,7 +1972,7 @@ for(const s of shots){
 }
 for(const f of fx){
  if(impactEffect(f)&&!f.rendered){f.rendered=true;if(f.ttl<=0)f.ttl=.12;}
- ctx.globalAlpha=clamp(f.ttl/f.max,0,1);if(f.cassio){
+ ctx.globalAlpha=clamp(f.ttl/f.max,0,1);if(f.syndraImpact){const glow=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r);glow.addColorStop(0,'#f0bdffcc');glow.addColorStop(.5,'#b75be288');glow.addColorStop(1,'#8e34b800');circle(f.x,f.y,f.r,glow);circle(f.x,f.y,19,'#c57af0');}else if(f.cassio){
  ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);const glow=ctx.createRadialGradient(0,0,0,0,0,f.r);
  glow.addColorStop(0,"#e8ffd9bb");glow.addColorStop(.35,"#9ff9a777");glow.addColorStop(1,"#45d99100");
  ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,f.r,-CASSIO_R.halfAngle,CASSIO_R.halfAngle);ctx.closePath();ctx.fillStyle=glow;ctx.fill();ctx.restore();

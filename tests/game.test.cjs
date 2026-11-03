@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,DODGE_TUNING,DODGE_DIRECTOR,REFERENCE_SPELLS,MAP,updateAwareness,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,visitorPathsCrowded,updateDodgeVisitor,dodgeAimPoint,dodgeRhythmMultiplier,spawnXerathW,spawnXerathQ,spawnLuxR,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,oriannaFlashEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get awareness(){return awareness},get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,DODGE_TUNING,DODGE_DIRECTOR,REFERENCE_SPELLS,MAP,updateAwareness,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnSyndra,SYNDRA,visitorPathsCrowded,updateDodgeVisitor,dodgeAimPoint,dodgeRhythmMultiplier,spawnXerathW,spawnXerathQ,spawnLuxR,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,oriannaFlashEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get awareness(){return awareness},get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,drawSizes,strokes,strokeWidths,arcs,texts,lines,rotations,renderEvents,click(x,y,button=2){const e={clientX:x,clientY:y,button,preventDefault(){}};node('arena').listeners.pointerdown(e);node('arena').listeners.pointerup(e);},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -149,6 +149,78 @@ test('Dodge restart varies the opening encounter',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});const openings=[];
  for(let i=0;i<5;i++){g.reset('dodge');g.update(1/120);const e=g.foes.find(x=>x.dodgeVisitor);openings.push(e?`${e.spell.name}:${e.x.toFixed(1)}:${e.y.toFixed(1)}`:'deferred');}
  assert.ok(new Set(openings).size>1,openings.join(', '));
+});
+test('Syndra Q stays in cast range, visibly resolves at 0.6 seconds, and a witness can dodge',()=>{
+ const {g,arcs}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const witness={};assert.ok(g.spawnSyndra(false,witness));
+ const h=g.hazards[0];assert.ok(Math.hypot(h.x-h.source.x,h.y-h.source.y)<=g.SYNDRA.qRange);g.render();assert.ok(arcs.some(a=>a.x===h.x&&a.y===h.y));
+ advance(g,.59);assert.equal(g.stats.hits,0);g.player.x=h.x;g.player.y=h.y;advance(g,.02);assert.equal(g.stats.hits,1);assert.equal(g.dodgeDirector.outcomes['SYNDRA Q'].hit,1);
+ const impact=g.fx.find(f=>f.syndraImpact);assert.ok(impact);assert.ok(Number.isFinite(impact.x)&&Number.isFinite(impact.y));arcs.length=0;g.render();assert.ok(arcs.some(a=>a.x===h.x&&a.y===h.y&&a.r===h.r));
+ const other=boot('ahri').g;other.reset('dodge');other.dodgeDirector.next=999;const safe={};assert.ok(other.spawnSyndra(false,safe));advance(other,.2);other.moveTo(safe.destination.x,safe.destination.y);advance(other,.45);assert.equal(other.stats.hits,0);
+});
+test('Syndra Q E creates a pushed sphere after Q and its separate damage does not immobilize',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0];advance(g,.61);assert.equal(h.phase,'e');
+ g.player.x=h.x+Math.cos(h.angle)*80;g.player.y=h.y+Math.sin(h.angle)*80;const hits=g.stats.hits;advance(g,.35);
+ assert.equal(g.stats.hits,hits+1);assert.equal(g.dodgeDirector.outcomes['SYNDRA E'].hit,1);assert.equal(g.player.root,0);assert.equal(g.player.hooked,null);
+});
+test('lethal Syndra Q records the hit and retains its impact animation',()=>{
+ const {g,node,arcs}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(false));const h=g.hazards[0];g.player.x=h.x;g.player.y=h.y;g.player.hp=1;
+ advance(g,.61);assert.equal(g.state,'ended');assert.match(node('dodgeBreakdownText').textContent,/SYNDRA Q: 0 avoided \/ 1 hit/);
+ arcs.length=0;g.render();assert.ok(arcs.some(a=>a.x===h.x&&a.y===h.y&&a.r===h.r));
+});
+test('Syndra combo offers an executable Q and E escape',()=>{
+ for(let seed=1;seed<=20;seed++){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setRng(seed*70001);const witness={};assert.ok(g.spawnSyndra(true,witness));
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.5);assert.equal(g.stats.hits,0);assert.equal(g.dodgeDirector.outcomes['SYNDRA E'].avoided,1,`seed ${seed}`);
+ }
+});
+test('Syndra E windup is counted as unresolved if a run ends before launch',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));advance(g,.61);
+ assert.equal(g.hazards[0].phase,'e');g.end(false);assert.match(node('dodgeBreakdownText').textContent,/1 unresolved phase/);
+});
+test('Syndra Q and combo escapes remain executable around the arena',()=>{
+ for(const combo of [false,true]){let checked=0;
+  for(const [x,y] of [[600,337],[250,180],[930,210],[340,550],[950,530]]){
+   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.x=x;g.player.y=y;const witness={};if(!g.spawnSyndra(combo,witness))continue;
+   advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.5);assert.equal(g.stats.hits,0,`${combo} ${x},${y}`);checked++;
+  }
+  assert.ok(checked>=3,`only ${checked} placements for combo=${combo}`);
+ }
+});
+test('Syndra escape witnesses work with an existing movement order and W boost',()=>{
+ for(const combo of [false,true]){let checked=0;
+  for(let seed=1;seed<=12;seed++){
+   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setRng(seed*8317);
+   g.moveTo(g.player.x+80,g.player.y+120);g.cast('w');const witness={};if(!g.spawnSyndra(combo,witness))continue;
+   advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.5);
+   assert.equal(g.stats.hits,0,`combo ${combo}, seed ${seed}`);checked++;
+  }
+  assert.ok(checked>=5,`only ${checked} moving witnesses for combo ${combo}`);
+ }
+});
+test('Expert director schedules Syndra as part of endless Dodge',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
+ advance(g,100);assert.ok(g.dodgeDirector.syndra>=1,'Syndra never appeared');
+});
+test('Syndra Q can lead, aim directly, and read a reversal while remaining in range',()=>{
+ const patterns=new Set();
+ for(let i=0;i<100;i++){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.moveTo(g.player.x,g.player.y+200);g.setRng(i*100003);
+  if(!g.spawnSyndra(false))continue;const h=g.hazards[0];patterns.add(h.aimPattern);
+  assert.ok(Math.hypot(h.x-h.source.x,h.y-h.source.y)<=g.SYNDRA.qRange);
+ }
+ assert.deepEqual([...patterns].sort(),['direct','lead','reversal']);
+});
+test('Expert guarantees an occasional Syndra combo after three Q-only encounters',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');
+ Object.assign(g.dodgeDirector,{next:999,syndraAt:0,syndraQStreak:3});g.update(1/120);
+ assert.ok(g.hazards.some(h=>h.syndra&&h.combo));assert.equal(g.dodgeDirector.syndraQStreak,0);
+});
+test('Syndra events pause, reset and preserve prior Expert records',()=>{
+ const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
+ node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0],ttl=h.ttl;
+ g.pause();advance(g,1);assert.equal(h.ttl,ttl);g.pause();g.reset('dodge');assert.equal(g.hazards.length,0);
+ const old='lmg.best.v1.dodge.hard.director_v87.endless.survival';values.set(old,'100');g.setTime(10);g.end(false);
+ assert.equal(values.get(old),'100');assert.equal(values.get('lmg.best.v1.dodge.hard.director_v88.endless.survival'),'10');
 });
 test('Orianna shockwave draws animated impact arcs',()=>{
  const {g,strokes}=boot('ahri');g.reset('dodge');
@@ -1187,7 +1259,7 @@ test('successive melee waves receive the sourced 90-second health upgrade',()=>{
 });
 
 test('Dodge director remains deterministic and Ezreal-heavy across seeded runs',()=>{
- function run(seed){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed);g.player.hp=g.player.maxHp=100000;advance(g,55);return [g.dodgeDirector.ezreal,g.dodgeDirector.lux,g.dodgeDirector.ahri,g.dodgeDirector.blitz,g.dodgeDirector.velkoz,g.dodgeDirector.xerath,g.dodgeDirector.xerathQ,g.dodgeDirector.oriannaQ,g.dodgeDirector.orianna,g.dodgeDirector.malphite,g.dodgeDirector.cassio,g.dodgeDirector.luxR||0,g.dodgeDirector.attempted];}
+ function run(seed){const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed);g.player.hp=g.player.maxHp=100000;advance(g,55);return [g.dodgeDirector.ezreal,g.dodgeDirector.lux,g.dodgeDirector.ahri,g.dodgeDirector.blitz,g.dodgeDirector.velkoz,g.dodgeDirector.xerath,g.dodgeDirector.xerathQ,g.dodgeDirector.oriannaQ,g.dodgeDirector.orianna,g.dodgeDirector.malphite,g.dodgeDirector.cassio,g.dodgeDirector.luxR||0,g.dodgeDirector.syndra||0,g.dodgeDirector.syndraE||0,g.dodgeDirector.attempted];}
  const first=run(1);assert.deepEqual(first,run(1));let ezreal=0,lux=0;
  for(const seed of [1,2,3,4,5,6]){const counts=seed===1?first:run(seed);assert.equal(counts.slice(0,-1).reduce((sum,n)=>sum+n,0),counts.at(-1));assert.ok(counts.at(-1)>=10,`seed ${seed}: ${counts}`);ezreal+=counts[0];lux+=counts[1];}
  assert.ok(ezreal>lux,`six runs: Ezreal ${ezreal}, Lux ${lux}`);
