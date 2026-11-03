@@ -270,6 +270,15 @@ test('Expert director schedules Syndra as part of endless Dodge',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
  advance(g,100);assert.ok(g.dodgeDirector.syndra>=1,'Syndra never appeared');
 });
+test('Syndra Q remains the main pattern while Q E appears in sustained Expert sessions',(t)=>{
+ const observed=[];
+ for(const seed of [11,29,71]){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed);g.player.hp=g.player.maxHp=1000000;
+  let firstQ=null,firstE=null;for(let i=0;i<240*120;i++){g.update(1/120);if(firstQ===null&&g.dodgeDirector.syndra)firstQ=g.time;if(firstE===null&&g.dodgeDirector.syndraE)firstE=g.time;}
+  const d=g.dodgeDirector;assert.ok(d.syndra>=4,`seed ${seed}: ${d.syndra||0} Q casts`);assert.ok(d.syndraE>=1,`seed ${seed}: no E`);assert.ok(d.syndra>d.syndraE,`seed ${seed}: Q should remain more common`);observed.push({seed,q:d.syndra,e:d.syndraE,firstQ:+firstQ.toFixed(1),firstE:+firstE.toFixed(1)});
+ }
+ t.diagnostic(JSON.stringify(observed));
+});
 test('Syndra Q can lead, aim directly, and read a reversal while remaining in range',()=>{
  const patterns=new Set();
  for(let i=0;i<100;i++){
