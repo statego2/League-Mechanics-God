@@ -1292,29 +1292,33 @@ test('directed projectile outcomes distinguish hits, avoided threats and harmles
  assert.equal(outcomes.hit,1);assert.equal(outcomes.harmless,1);assert.equal(outcomes.avoided,1);assert.equal(g.dodged,1);
 });
 test('a reversal shot that never threatens Ahri is not credited as a dodge',()=>{
- const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
- const p=g.player,e=g.enemy(200,p.y),spec=g.REFERENCE_SPELLS.ezrealDodge;
- Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'enter',origin:{x:e.x,y:e.y},entry:{x:100,y:e.y},speed:120,preCastWait:0});g.setFoes([e]);
- g.moveTo(p.x,p.y+200);g.setRng(1900);g.update(1/120);
- assert.equal(e.pending?.pattern,'reversal');p.target=null;p.order=null;advance(g,2);
- assert.equal(g.stats.hits,0);assert.equal(g.dodged,0);assert.equal(g.dodgeDirector.outcomes['EZREAL Q'].harmless,1);
+ for(const [id,name] of [['ezrealDodge','EZREAL Q'],['luxDodge','LUX Q'],['blitzDodge','BLITZ Q']]){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
+  const p=g.player,e=g.enemy(200,p.y),spec=g.REFERENCE_SPELLS[id];
+  Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'enter',origin:{x:e.x,y:e.y},entry:{x:100,y:e.y},speed:120,preCastWait:0});g.setFoes([e]);
+  g.moveTo(p.x,p.y+200);g.setRng(1900);g.update(1/120);
+  assert.equal(e.pending?.pattern,'reversal',name);p.target=null;p.order=null;advance(g,2);
+  assert.equal(g.stats.hits,0,name);assert.equal(g.dodged,0,name);assert.equal(g.dodgeDirector.outcomes[name].harmless,1,name);
+ }
 });
 test('dodging a directly aimed shot during windup still earns credit',()=>{
- const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
- const p=g.player,e=g.enemy(200,p.y),spec=g.REFERENCE_SPELLS.ezrealDodge;
- Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'enter',origin:{x:e.x,y:e.y},entry:{x:100,y:e.y},speed:120,preCastWait:0});g.setFoes([e]);
- g.update(1/120);assert.equal(e.pending?.pattern,'direct');g.moveTo(p.x,p.y+200);advance(g,2);
- assert.equal(g.stats.hits,0);assert.equal(g.dodged,1);assert.equal(g.dodgeDirector.outcomes['EZREAL Q'].avoided,1);
+ for(const [id,name] of [['ezrealDodge','EZREAL Q'],['luxDodge','LUX Q'],['blitzDodge','BLITZ Q'],['ahriDodge','AHRI Q']]){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
+  const p=g.player,e=g.enemy(200,p.y),spec=g.REFERENCE_SPELLS[id];
+  Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'enter',origin:{x:e.x,y:e.y},entry:{x:100,y:e.y},speed:120,preCastWait:0});g.setFoes([e]);
+  g.update(1/120);assert.equal(e.pending?.pattern,'direct',name);g.moveTo(p.x,p.y+200);advance(g,2);
+  assert.equal(g.stats.hits,0,name);assert.equal(g.dodged,1,name);assert.equal(g.dodgeDirector.outcomes[name].avoided,1,name);
+ }
 });
 test('an early change of direction is credited when a lead would hit the existing path',()=>{
- for(const turn of [false,true]){
+ for(const [id,name] of [['ezrealDodge','EZREAL Q'],['luxDodge','LUX Q'],['blitzDodge','BLITZ Q']])for(const turn of [false,true]){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.dodgeDirector.rareAt=999;g.dodgeDirector.malAt=999;
-  const p=g.player,e=g.enemy(200,p.y),spec=g.REFERENCE_SPELLS.ezrealDodge;
+  const p=g.player,e=g.enemy(200,p.y),spec=g.REFERENCE_SPELLS[id];
   Object.assign(e,{dodgeVisitor:true,spell:spec,phase:'enter',origin:{x:e.x,y:e.y},entry:{x:100,y:e.y},speed:120,preCastWait:0});g.setFoes([e]);
-  g.moveTo(p.x,p.y+200);g.setRng(1000);g.update(1/120);assert.equal(e.pending?.pattern,'lead');
+  g.moveTo(p.x,p.y+200);g.setRng(1000);g.update(1/120);assert.equal(e.pending?.pattern,'lead',name);
   if(turn)g.moveTo(p.x,p.y-200);advance(g,2);
-  assert.equal(g.stats.hits,turn?0:1);assert.equal(g.dodged,turn?1:0);
-  assert.equal(g.dodgeDirector.outcomes['EZREAL Q'][turn?'avoided':'hit'],1);
+  assert.equal(g.stats.hits,turn?0:1,name);assert.equal(g.dodged,turn?1:0,name);
+  assert.equal(g.dodgeDirector.outcomes[name][turn?'avoided':'hit'],1,name);
  }
 });
 test('lethal directed hits are recorded before the result screen and in-flight phases remain unresolved',()=>{
