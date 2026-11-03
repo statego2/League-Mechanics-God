@@ -162,6 +162,13 @@ test('Syndra Q E creates a pushed sphere after Q and its separate damage does no
  g.player.x=h.x+Math.cos(h.angle)*80;g.player.y=h.y+Math.sin(h.angle)*80;const hits=g.stats.hits;advance(g,.35);
  assert.equal(g.stats.hits,hits+1);assert.equal(g.dodgeDirector.outcomes['SYNDRA E'].hit,1);assert.equal(g.player.root,0);assert.equal(g.player.hooked,null);
 });
+test('Syndra E shows a growing cast wave before the pushed sphere launches',()=>{
+ const {g,arcs,strokes}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0];
+ g.render();assert.ok(!strokes.includes('#d99affbb'));advance(g,.61);
+ function waveRadius(){arcs.length=0;strokes.length=0;g.render();assert.ok(strokes.includes('#d99affbb'));return arcs.find(a=>a.x===h.source.x&&a.y===h.source.y)?.r;}
+ const first=waveRadius();advance(g,.1);const later=waveRadius();assert.ok(first>0&&later>first);assert.ok(later<Math.hypot(h.x-h.source.x,h.y-h.source.y));
+ advance(g,.2);strokes.length=0;g.render();assert.ok(!strokes.includes('#d99affbb'));
+});
 test('lethal Syndra Q records the hit and retains its impact animation',()=>{
  const {g,node,arcs}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(false));const h=g.hazards[0];g.player.x=h.x;g.player.y=h.y;g.player.hp=1;
  advance(g,.61);assert.equal(g.state,'ended');assert.match(node('dodgeBreakdownText').textContent,/SYNDRA Q: 0 avoided \/ 1 hit/);

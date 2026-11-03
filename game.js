@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="5c8094e403ff";
+const BUILD_ID="3b7079d9fabc";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -1864,7 +1864,13 @@ for(const h of hazards){if(h.syndra){
  drawChampion(h.source.x,h.source.y,h.angle,false,false,h.phase==='e'?1:.2,time*7,'syndra');
  for(let i=0;i<3;i++){const a=time*2+i*TAU/3;circle(h.source.x+Math.cos(a)*22,h.source.y-35+Math.sin(a)*10,5,'#c479f4');}
  if(h.phase==='q'){const progress=clamp(1-h.ttl/h.max,0,1),glow=ctx.createRadialGradient(h.x,h.y,0,h.x,h.y,h.r);glow.addColorStop(0,'#cd79f777');glow.addColorStop(.55,'#a54ac944');glow.addColorStop(1,'#692a9900');circle(h.x,h.y,h.r,glow);circle(h.x,h.y,5+progress*15,'#dc9bffcc');}
- else if(h.phase==='e')circle(h.x,h.y,18,'#bd79e9');
+ else if(h.phase==='e'){
+  // Scatter the Weak pushes outward from the caster; show its expanding
+  // cone only as far as the sphere, without drawing the future projectile path.
+  const progress=clamp(1-h.ttl/h.max,0,1),reach=dist(h.source,h),radius=15+(reach-15)*progress;
+  ctx.save();ctx.beginPath();ctx.arc(h.source.x,h.source.y,radius,h.angle-.49,h.angle+.49);ctx.strokeStyle='#d99affbb';ctx.lineWidth=5;ctx.stroke();ctx.restore();
+  circle(h.x,h.y,18,'#bd79e9');
+ }
  continue;
  }if(h.cassio){drawChampion(h.x,h.y,h.casting?h.angle:Math.atan2(player.y-h.y,player.x-h.x),false,false,h.casting?clamp(1-h.ttl/CASSIO_R.cast,0,1):0,time*7,"cassio");continue;}if(h.malphite){ctx.save();ctx.translate(h.x,h.y);const art=$("stoneArt");if(art?.complete&&art.naturalWidth){ctx.drawImage(art,-42,-90,84,90);ctx.restore();continue;}ctx.fillStyle="#665f59";ctx.strokeStyle="#c1aa93";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-25,-16);ctx.lineTo(-22,-52);ctx.lineTo(0,-72);ctx.lineTo(23,-52);ctx.lineTo(27,-15);ctx.lineTo(10,0);ctx.lineTo(-12,0);ctx.closePath();ctx.fill();ctx.stroke();circle(-7,-45,3,"#aad4ee");circle(7,-45,3,"#aad4ee");ctx.restore();continue;}if(h.orianna){drawChampion(h.source.x,h.source.y,Math.atan2(h.y-h.source.y,h.x-h.source.x),false,false,h.casting?1:0,time*7,"clockwork");if(h.casting){
  // Shockwave's visible ring starts with the cast; damage resolves only at
