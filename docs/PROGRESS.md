@@ -1502,3 +1502,8 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 
 - The published browser check exposed that selecting Expert showed `HARD` in play and `hard` in the local-best result (similarly for Foundation/Standard). The HUD and results now use the same Foundation/Standard/Expert names as the menu. Internal preset IDs and local-storage record keys are unchanged, preserving existing scores and gameplay balance. Cache key: `difficulty-labels`.
 - The new regression failed before the change and verifies all three labels at start, after an update and in the result, including preservation of the old difficulty IDs in storage keys. Seventeen targeted tests, syntax and diff checks pass. No browser test of the new local build or deployment was performed.
+
+## Published Map Awareness missed result (3 November 2026)
+
+- In a fresh in-app browser tab on the published `clear-map` build, played an Expert run with Map Awareness enabled and deliberately did not ping. On death after 24.6 seconds, the actual result displayed `MAP AWARENESS · 0 / 1 PINGED · 1 MISSED · 0%`. Combined with the previously observed successful ping and pending result, this confirms the three individual browser paths; a mixed multi-sighting run is still only covered by automated tests.
+- This was a short input-driven smoke test, not an assessment of Expert balance. The later local fixes and their browser checks are not in this published build; no deployment was made.
