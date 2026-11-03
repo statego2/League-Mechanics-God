@@ -10,7 +10,7 @@ The player also wants a **Q→E stun-dodge pattern**, while Q remains the primar
 
 
 **Date:** 2026-10-30  
-**Status:** Product design proposal; figures below are **training-director defaults to playtest**, not LoL spell stats, not implemented code.  
+**Status:** Historical product design proposal. The player-approved implementation and later feedback override proposed timings, caps and scheduling below; consult `docs/PROGRESS.md` and `game.js` for current behavior. Figures below are training targets, not verified LoL spell stats.
 **Owner requirement:** Ezreal Q should arrive **much more often**; Malphite R should be a **rare, memorable interrupt**, not routine spam. Maintain the accepted roster: Ezreal Q, Malphite R, Blitzcrank Q, Lux Q, Vel'Koz Q, Orianna R, Xerath Q/W from the map with no visible Xerath, and Ahri Q outbound + return.
 
 **Related vision:** [MECHANICS_ACCELERATOR_VISION.md](MECHANICS_ACCELERATOR_VISION.md).  
@@ -37,11 +37,11 @@ Imagine an endless continuous drill, with Expert as the main balancing target:
 
 ### Initial encounter: Cassiopeia R turn-away reaction (31 October 2026)
 
-An initial **Petrifying Gaze** encounter now exists in Expert endless Dodge, not another menu mode. The first attempt is scheduled around 60–90 seconds and later attempts 150–240 seconds apart, with isolation and a shared rare-event guard; these are training policies, not champion cooldowns. The source uses a generated static sprite and a simple cast cue. Timing, geometry, CC omissions and readability require further validation and human playtesting before the Gauntlet is finished.
+An initial **Petrifying Gaze** encounter exists in Expert endless Dodge, not another menu mode. The current implementation uses an earlier Expert schedule and occasional feints; consult the director and progress log for actual timing rather than the old proposal. The source uses a generated sprite and cast cue. Timing, geometry, CC omissions and readability require further validation and human playtesting before the Gauntlet is finished.
 
 - **Actual mechanic:** Riot describes a frontal attack that stuns enemies facing Cassiopeia and slows enemies facing away. Both outcomes still take damage; escaping the cone is the way to avoid the hit entirely. Sources: [Riot's ability description](https://na.leagueoflegends.com/en/featured/mid-season-magic), [community mechanics reference](https://wiki.leagueoflegends.com/en-us/Cassiopeia/LoL). The community reference lists a 0.5 s cast, 850 range, 80° cone and 2 s CC; the implementation uses these community values as approximations; verify patch/version and collision edge rules against the live client.
-- **Player skill:** turn the champion away before impact, using the game's real facing state; mouse position alone must not count. Distinguish turning away inside the cone (damage but no stun), facing her inside it (would-be stun), and leaving the cone (miss). Test movement, stopped facing, attacks/casts and Flash against the eventual facing rules and clearly document any simplifications.
-- **Dodge-specific accommodation:** preserve the user's no-immobilization requirement. A would-be stun must be recorded and communicated as a failed turn, without rooting the player or causing an artificial chain death. Any slow treatment must be explicitly described and playtested; do not silently claim exact LoL CC. Record the damage and turn outcome separately so turning away is not mislabeled as a full dodge.
+- **Player skill:** turn the champion away before impact, using the game's real facing state; mouse position alone must not count. Distinguish turning away inside the cone, facing her inside it, and leaving the cone. Test movement, stopped facing, attacks/casts and Flash against the eventual facing rules and clearly document any simplifications.
+- **Dodge-specific accommodation:** the user explicitly requested that turning away avoids damage in this drill. A successful turn is credited as an evade; facing her at impact takes damage, without a stun or slow. This differs from live League, where turning away still takes damage and applies a slow. Do not revert the training rule or present it as authentic League damage behavior.
 - **Fairness and verification:** use a bounded source position and a reaction window consistent with the supported cast time; validate a feasible turn or escape under player movement and overlapping attacks before scheduling. Test cone edges, facing boundary, impact timing, interrupted/pause/restart and result accounting. Review the source and animation in a real browser encounter. No unverified cone overlay or extra graphics should be added as a substitute for a readable cast.
 
 ## 2. Separate three independent knobs
