@@ -1443,3 +1443,8 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 - The gesture remembers the specific visible sighting at mouse-down: an old held ping or a ping begun before a sighting cannot claim a later appearance, even if it appears at the same position. The full 3-second deadline still applies at release.
 - Targeted tests cover empty-map visual feedback, capped healing text, stale gestures, standard/danger pings and existing map controls. Browser/human verification remains outstanding, including the player-reported top tower issue.
 - Validation: 466/466 tests pass in the serial full suite; an additional sound/silent-sighting regression passed separately afterward. Syntax and diff checks pass. No browser playtest was performed for this change.
+
+## Minimap tower coordinates (3 November 2026)
+
+- Replaced hand-placed symmetric tower dots with projected historical Summoner Rift match-timeline positions for all 18 lane towers and four nexus towers, and adjusted the stylized lane paths to pass through them. In particular blue top tier 3 is near 8.6% across and 70.8% down, not the old 82% down near the nexus. Source: https://hextechdocs.dev/map-data/ (2021 map bounds/building table); the user-provided minimap screenshot is the visual reference. These historical coordinates and the schematic background are an approximation, not a verified current-client map.
+- Twelve targeted awareness/minimap and ping tests pass, including both top tier 3 positions and a count of 22 tower icons; syntax and diff checks pass. Human visual review in the current build is still required. No deployment.

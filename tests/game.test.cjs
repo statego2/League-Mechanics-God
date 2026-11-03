@@ -78,7 +78,8 @@ test('awareness results show missed sightings and do not count unfinished ones a
 });
 test('awareness minimap draws the top tier 3 towers for both teams',()=>{
  const {g,node,arcs}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');g.render();
- for(const [x,y] of [[.08,.82],[.82,.08]])assert.ok(arcs.some(a=>Math.abs(a.x-(g.MAP.x+x*g.MAP.size))<1e-8&&Math.abs(a.y-(g.MAP.y+y*g.MAP.size-.6))<1e-8&&a.r===1.65));
+ for(const [wx,wy] of [[1169,4287],[10481,13650]]){const x=g.MAP.x+(wx+120)/14990*g.MAP.size,y=g.MAP.y+(1-(wy+120)/15100)*g.MAP.size-.6;assert.ok(arcs.some(a=>Math.abs(a.x-x)<1e-8&&Math.abs(a.y-y)<1e-8&&a.r===1.65));}
+ const towerIcons=arcs.filter(a=>a.r===1.65&&a.x>=g.MAP.x&&a.x<=g.MAP.x+g.MAP.size&&a.y>=g.MAP.y&&a.y<=g.MAP.y+g.MAP.size);assert.equal(towerIcons.length,22);
 });
 test('awareness uses a bounded enemy portrait with a safe missing-art fallback',()=>{
  for(const loaded of [true,false]){const {g,node,drawSizes}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');g.awareness.next=0;g.updateAwareness(.01);const m=g.awareness.marker,art=node('stoneArt');

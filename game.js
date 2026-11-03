@@ -131,6 +131,17 @@ function cue(kind){
 let state="menu",mode="dodge",time=0,last=0,kills=0,dodged=0,spawn=0,aim={x:W/2+120,y:H/2},mouse={x:W/2,y:H/2},player,foes=[],allies=[],shots=[],fx=[],keys=new Set(),attackMove=false,stopHeldRight=false,toastTime=0,enemySeq=0,impactSeq=0,stats;
 // Awareness has its own random stream: switching it on cannot alter spell RNG.
 const MAP={x:1010,y:485,size:175,visible:3,points:25,heal:20};
+// Historic Summoner's Rift match-timeline coordinates, projected into the
+// schematic map. Source and limitations are documented in PROGRESS.md.
+const MAP_TOWERS=[
+ [981,10441,1],[1512,6699,1],[1169,4287,1],
+ [5846,6396,1],[5048,4812,1],[3651,3696,1],
+ [10504,1029,1],[6919,1483,1],[4281,1253,1],[1748,2270,1],[2177,1807,1],
+ [4318,13875,0],[7943,13411,0],[10481,13650,0],
+ [8955,8510,0],[9767,10113,0],[11134,11207,0],
+ [13866,4505,0],[13327,8226,0],[13624,10572,0],[12611,13084,0],[13052,12612,0]
+];
+const mapU=x=>(x+120)/14990,mapV=y=>1-(y+120)/15100;
 const JUNGLE_SPOTS=[[.22,.34],[.34,.23],[.31,.53],[.46,.35],[.54,.65],[.69,.47],[.66,.77],[.78,.66]];
 let awareness=null,pingArmed=false,pingDrag=null;
 function onAwarenessMap(p){return !!awareness&&p.x>=MAP.x&&p.x<=MAP.x+MAP.size&&p.y>=MAP.y&&p.y<=MAP.y+MAP.size;}
@@ -150,14 +161,19 @@ function drawAwareness(){if(!awareness)return;const {x,y,size:s}=MAP;ctx.save();
  for(const [px,py,rx,ry] of [[.18,.30,.09,.06],[.31,.25,.07,.06],[.24,.48,.08,.09],[.40,.34,.08,.06],[.60,.66,.08,.06],[.76,.52,.08,.09],[.69,.75,.07,.06],[.82,.70,.09,.06]]){ctx.beginPath();ctx.ellipse(px,py,rx,ry,-.45,0,TAU);ctx.fillStyle="#1c3023";ctx.fill();ctx.stroke();}
  ctx.strokeStyle="#354c50";ctx.lineWidth=.16;ctx.beginPath();ctx.moveTo(.02,.04);ctx.bezierCurveTo(.20,.12,.22,.32,.40,.40);ctx.bezierCurveTo(.55,.48,.56,.62,.74,.70);ctx.bezierCurveTo(.87,.78,.90,.90,.99,.96);ctx.stroke();
  ctx.strokeStyle="#3b6570";ctx.lineWidth=.10;ctx.stroke();
- ctx.strokeStyle="#7a7a60";ctx.lineWidth=.085;ctx.beginPath();ctx.moveTo(.07,.93);ctx.lineTo(.07,.07);ctx.lineTo(.93,.07);ctx.moveTo(.07,.93);ctx.lineTo(.93,.93);ctx.lineTo(.93,.07);ctx.moveTo(.07,.93);ctx.lineTo(.93,.07);ctx.stroke();
+ ctx.strokeStyle="#7a7a60";ctx.lineWidth=.085;ctx.beginPath();
+ // Connect lane paths through their actual tower locations instead of a
+ // rectangular outline; canvas y is inverted relative to world coordinates.
+ for(const lane of [[2,1,0,-1,11,12,13],[8,7,6,-2,17,18,19],[5,4,3,14,15,16]]){
+  ctx.moveTo(.10,.90);for(const i of lane){if(i===-1){ctx.lineTo(.08,.09);continue;}if(i===-2){ctx.lineTo(.91,.91);continue;}const [wx,wy]=MAP_TOWERS[i];ctx.lineTo(mapU(wx),mapV(wy));}ctx.lineTo(.90,.10);
+ }ctx.stroke();
  ctx.strokeStyle="#a09a76";ctx.lineWidth=.036;ctx.stroke();
  for(const [px,py,rx,ry] of [[.10,.90,.13,.10],[.90,.10,.13,.10]]){ctx.fillStyle=px<.5?"#697e83":"#81766b";ctx.beginPath();ctx.ellipse(px,py,rx,ry,-.7,0,TAU);ctx.fill();}
  for(const [px,py] of [[.23,.29],[.30,.42],[.38,.22],[.19,.55],[.77,.71],[.70,.58],[.62,.78],[.81,.45]]){ctx.fillStyle="#102419";ctx.fillRect(px-.025,py-.025,.05,.05);ctx.fillStyle="#416047";ctx.fillRect(px-.018,py-.018,.023,.018);}
  ctx.restore();
- // Three towers per lane for each side, including the base-side tier 3.
- for(const [px,py] of [[.08,.82],[.08,.68],[.08,.40],[.18,.92],[.28,.92],[.43,.92],[.16,.84],[.24,.76],[.36,.64],[.64,.36],[.76,.24],[.84,.16],[.92,.18],[.92,.32],[.92,.60],[.82,.08],[.72,.08],[.57,.08]]){
-  const tx=x+s*px,ty=y+s*py,blue=px<py;
+ // All three lane towers plus two nexus towers per side.
+ for(const [wx,wy,blue] of MAP_TOWERS){
+  const tx=x+s*mapU(wx),ty=y+s*mapV(wy);
   // A small tower silhouette stays readable on the in-game minimap; the
   // previous two-pixel dot was easily mistaken for terrain detail.
   ctx.beginPath();ctx.moveTo(tx,ty-5.5);ctx.lineTo(tx+3.6,ty-2);ctx.lineTo(tx+3,ty+4);ctx.lineTo(tx-3,ty+4);ctx.lineTo(tx-3.6,ty-2);ctx.closePath();ctx.fillStyle="#10201f";ctx.fill();ctx.strokeStyle=blue?"#80e3ee":"#ff9690";ctx.lineWidth=1.2;ctx.stroke();circle(tx,ty-.6,1.65,blue?"#6bd9e8":"#f27b74");
