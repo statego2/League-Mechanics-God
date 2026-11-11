@@ -388,6 +388,26 @@ test('Syndra Q and both E hit paths agree at 30, 60 and 120 FPS',()=>{
   assert.deepEqual(results,[results[0],results[0],results[0]],scenario);
  }
 });
+test('a Syndra sphere interrupts a real Ahri R dash consistently at 30, 60 and 120 FPS',()=>{
+ const snapshots=[];
+ for(const fps of [30,60,120]){
+  const {g,node}=boot('ahri');g.reset('dodge');Object.assign(g.dodgeDirector,{next:999,syndraAt:Infinity,cassAt:Infinity,rareAt:Infinity,malAt:Infinity,luxRAt:Infinity});
+  const start={x:g.player.x,y:g.player.y};node('arena').listeners.pointermove({clientX:start.x+350,clientY:start.y,buttons:0});g.cast('r');assert.ok(g.player.dashing);
+  const s=g.fire(start.x+150,start.y,-1000,0,'enemy',30,50,1);Object.assign(s,{directed:true,spellName:'SYNDRA E',syndraSphere:true,threat:true});
+  g.loop(1000);for(let i=1;i<=fps/2;i++)g.loop(1000+i*1000/fps+.01);
+  assert.equal(g.stats.hits,1);assert.equal(g.dodgeDirector.outcomes['SYNDRA E'].hit,1);assert.equal(g.player.dashing,null);assert.ok(g.player.stun>0);assert.equal(g.player.rushCharges,2);assert.ok(g.player.cd.r>0);
+  snapshots.push({x:g.player.x,y:g.player.y,stun:g.player.stun,hp:g.player.hp});
+ }
+ for(const snapshot of snapshots.slice(1))for(const key of ['x','y','stun','hp'])assert.ok(Math.abs(snapshot[key]-snapshots[0][key])<1e-7,`${key} differs across frame rates`);
+});
+test('Syndra sphere interrupting Ahri R through terrain leaves her on walkable ground',()=>{
+ const {g,node}=boot('ahri'),world=require('../world.js');g.reset('dodge');Object.assign(g.dodgeDirector,{next:999,syndraAt:Infinity,cassAt:Infinity,rareAt:Infinity,malAt:Infinity,luxRAt:Infinity});
+ g.player.x=620;g.player.y=580;node('arena').listeners.pointermove({clientX:900,clientY:580,buttons:0});g.cast('r');assert.ok(g.player.dashing?.throughTerrain);
+ const s=g.fire(870,580,-1000,0,'enemy',30,50,1);Object.assign(s,{directed:true,spellName:'SYNDRA E',syndraSphere:true,threat:true});
+ let enteredWall=false;for(let i=0;i<120;i++){if(!world.pointWalkable(g.player,g.player.r))enteredWall=true;g.update(1/120);if(g.player.stun>0){assert.ok(world.pointWalkable(g.player,g.player.r),'stunned Ahri must not be trapped in terrain');break;}}
+ assert.ok(enteredWall,'fixture must interrupt a dash already inside the wall');
+ assert.ok(g.player.stun>0);assert.equal(g.player.dashing,null);assert.equal(g.stats.hits,1);advance(g,.4);assert.ok(world.pointWalkable(g.player,g.player.r));
+});
 test('Orianna shockwave draws animated impact arcs',()=>{
  const {g,strokes}=boot('ahri');g.reset('dodge');
  g.fx.push({x:600,y:330,r:207.5,ttl:.1,max:.2,shockwave:true});g.render();
