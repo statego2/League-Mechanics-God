@@ -1,3 +1,5 @@
+> **Ιστορικό audit της 10/11.** Για τη σημερινή κατάσταση και τα ήδη διορθωμένα ευρήματα διάβασε [DODGE_RELEASE_AUDIT.md](DODGE_RELEASE_AUDIT.md) και [DODGE_SHIP_PLAN.md](DODGE_SHIP_PLAN.md).
+
 # Project audit — Dodge / Syndra
 
 10 Νοεμβρίου 2026. Έγινε επισκόπηση της δομής ολόκληρου του παρόντος workspace και στοχευμένη ανάλυση του ενεργού browser παιχνιδιού, των tests, των προδιαγραφών και των δύο παραδοτέων Code 2. Δεν έγινε νέο browser playtest, αλλαγή gameplay ή deployment. Δεν ισχυριζόμαστε line-by-line έλεγχο όλων των παλιών research dumps, δυαδικών assets ή ignored downloaded archives.
