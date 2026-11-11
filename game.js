@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="28781371432d";
+const BUILD_ID="9afc90e62756";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -1236,8 +1236,11 @@ function updateSyndraCaster(e,dt){
  const stay=e.syndraStay,bounds={left:80,right:W-80,top:160,bottom:H-60};
  if(stay.leaving!==undefined){
   const dx=e.x-player.x,dy=e.y-player.y,d=Math.hypot(dx,dy)||1,step=e.speed*dt;
-  e.x+=dx/d*step;e.y+=dy/d*step;e.syndraAngle=Math.atan2(dy,dx);e.walking=true;
-  if(time-stay.leaving>=SYNDRA_STAY.exit||e.x<-40||e.x>W+40||e.y<-40||e.y>H+40)e.alive=false;return;
+  const goal={x:clamp(e.x+dx/d*step,world.bounds.left,world.bounds.right),y:clamp(e.y+dy/d*step,world.bounds.top,world.bounds.bottom)},next=world.clip(e,goal,e.r);
+  e.walking=dist(e,next)>1e-4;e.x=next.x;e.y=next.y;e.syndraAngle=Math.atan2(dy,dx);
+  // Wait at a wall, then leave on the normal schedule; this preserves the
+  // director's cadence without walking through impassable terrain.
+  if(time-stay.leaving>=SYNDRA_STAY.exit)e.alive=false;return;
  }
  const own=hazards.find(h=>h.syndra&&h.casterId===e.id);
  // The committed combo keeps its source fixed until E releases, so the

@@ -1883,8 +1883,8 @@ test('Ahri orb and Ezreal shared escapes survive existing movement and W decay',
 });
 test('Expert naturally schedules Ezreal pressure while an Ahri orb is active',()=>{
  let found=false;
- for(let seed=0;seed<5&&!found;seed++){
-  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});for(let i=0;i<seed;i++)node('newSeed').listeners.click();g.reset('dodge');g.player.hp=g.player.maxHp=1e6;
+ for(let seed=1;seed<=30&&!found;seed++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed*7919);g.player.hp=g.player.maxHp=1e6;
   while(g.time<120&&!found){g.update(1/120);found=g.shots.some(s=>s.alive&&s.kind==='enemyOrb')&&(g.foes.some(e=>e.alive&&e.dodgeVisitor&&e.spell===g.REFERENCE_SPELLS.ezrealDodge&&e.phase==='cast')||g.shots.some(s=>s.alive&&s.spellName==='EZREAL Q'));}
  }
  assert.ok(found,'no natural Ahri orb + Ezreal overlap');
@@ -3716,6 +3716,14 @@ test('Syndra walks out at the end of a stay and a defeat ends it early',()=>{
  assert.ok(gone,'she leaves');const d=g.dodgeDirector;g.update(1/120);assert.equal(d.syndraCasterId,null);assert.ok(d.syndraAt-g.time>=4.9&&d.syndraAt-g.time<=8,'next arrival after a gap');
  const casts=d.syndra;advance(g,4.5);assert.equal(d.syndra,casts,'no casts during the gap');
  const b=syndraStayBoot(5).g;syndraStayRun(b,3);const s=b.foes.find(e=>e.alive&&e.syndraCaster);b.damageEnemy(s,1e5);assert.equal(s.alive,false);const n=b.dodgeDirector.syndra;advance(b,3);assert.equal(b.dodgeDirector.syndra,n,'defeated Syndra stops casting');assert.ok(!b.foes.some(e=>e.alive&&e.syndraCaster));
+});
+test('Syndra exit never crosses a wall or the world bounds',()=>{
+ for(const [caster,player] of [[{x:649,y:580},{x:500,y:580}],[{x:1177,y:400},{x:1000,y:400}]]){
+  const {g}=syndraStayBoot(7);syndraStayRun(g,1);const e=g.foes.find(e=>e.alive&&e.syndraCaster);assert.ok(e);
+  Object.assign(e,caster);Object.assign(g.player,player);e.syndraStay.leaving=g.time;
+  for(let i=0;i<240&&e.alive;i++){g.update(1/120);assert.ok(e.x<=1178&&e.x>=22&&e.y>=59&&e.y<=639,'exit remains inside world bounds');assert.ok(!(e.x>650&&e.x<795&&e.y>535&&e.y<640),'exit cannot enter the expanded wall');}
+  assert.equal(e.alive,false,'blocked exit terminates');
+ }
 });
 test('a charmed staying Syndra holds her next cast until the charm ends',()=>{
  const {g}=syndraStayBoot(6);syndraStayRun(g,2.5,{wander:false});const c=g.foes.find(e=>e.alive&&e.syndraCaster);assert.ok(c);
