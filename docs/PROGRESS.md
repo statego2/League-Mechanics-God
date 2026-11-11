@@ -1760,3 +1760,7 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 
 - Extended `benchmark-syndra-e-reaction.cjs` with `--edges`: at a 150 ms post-cue response, all 80 sampled accepted Q→E casts had at least one tested perpendicular side avoid E, and all 80 reserved witnesses avoided E. This is a fixed-step synthetic corpus, not a claim about every player position or browser reaction.
 - Added a director-level entry regression at six edge/corner starts: Syndra is drawn before Q, remains on walkable ground and does not instantly cast. In the stationary fixture, 4/6 entries cast a safe combo within four seconds; both left-corner entries deferred it rather than forcing one. Three targeted introduction/perpendicular tests passed. No runtime behavior changed; the prior full suite remains 538/538 for build `db8f4af40213`. Human/browser review remains outstanding.
+
+## Syndra sphere visual/collision boundary (11 November 2026)
+
+- Added an actual-projectile regression for horizontal, diagonal and vertical sphere travel. It checks that the rendered ring uses the sphere's collision radius, that a pass 0.1 canvas units inside the combined sphere/player boundary hits, and that 0.1 outside avoids; both the boundary test and the E-cue escape test passed. This checks Canvas draw calls and simulation geometry in the mocked VM; it does not replace visual browser inspection of sprite scale or perceived hitboxes. No runtime change; build remains `db8f4af40213`.

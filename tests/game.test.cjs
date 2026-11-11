@@ -195,6 +195,15 @@ test('Syndra pushed sphere deals damage and applies stun and push',()=>{
  g.player.x=h.x+Math.cos(h.angle)*300;g.player.y=h.y+Math.sin(h.angle)*300;const hits=g.stats.hits;advance(g,.5);
  assert.equal(g.stats.hits,hits+1);assert.equal(g.dodgeDirector.outcomes['SYNDRA E'].hit,1);assert.equal(g.player.root,0);assert.ok(g.player.stun>1&&g.player.stun<=1.5);assert.ok(g.player.hooked?.knock);
 });
+test('Syndra sphere collision matches its rendered width and Ahri hitbox',()=>{
+ for(const angle of [0,Math.PI/4,Math.PI/2])for(const [delta,hit] of [[-.1,true],[.1,false]]){
+  const {g,arcs}=boot('ahri');g.reset('dodge');Object.assign(g.dodgeDirector,{next:999,syndraAt:Infinity,cassAt:Infinity,rareAt:Infinity,malAt:Infinity,luxRAt:Infinity});
+  const r=g.SYNDRA.eRadius,ux=Math.cos(angle),uy=Math.sin(angle),offset=r+g.player.hitRadius+delta,s=g.fire(g.player.x-ux*200-uy*offset,g.player.y-uy*200+ux*offset,ux*1000,uy*1000,'enemy',30,r,1);
+  Object.assign(s,{directed:true,spellName:'SYNDRA E',syndraSphere:true,threat:true});g.render();
+  assert.ok(arcs.some(a=>Math.abs(a.x-s.x)<1e-7&&Math.abs(a.y-s.y)<1e-7&&Math.abs(a.r-r)<1e-7),'rendered ring follows projectile collision radius');
+  advance(g,1.1);assert.equal(g.stats.hits,Number(hit),`angle ${angle}, collision offset ${delta}`);assert.equal(g.dodgeDirector.outcomes['SYNDRA E'][hit?'hit':'avoided'],1);
+ }
+});
 test('Syndra sphere stun blocks movement and abilities, expires and resets',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0];advance(g,.61);
  g.player.x=h.x+Math.cos(h.angle)*300;g.player.y=h.y+Math.sin(h.angle)*300;advance(g,.5);assert.ok(g.player.stun>0);
