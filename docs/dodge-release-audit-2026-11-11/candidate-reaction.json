@@ -1,0 +1,46 @@
+{
+  "continue": {
+    "accepted": 79,
+    "qHits": 0,
+    "eHits": 54,
+    "spellCount": {
+      "lead": 27,
+      "direct": 41,
+      "reversal": 11
+    }
+  },
+  "perpendicularLeft": {
+    "accepted": 79,
+    "qHits": 0,
+    "eHits": 30,
+    "spellCount": {
+      "lead": 27,
+      "direct": 41,
+      "reversal": 11
+    }
+  },
+  "perpendicularRight": {
+    "accepted": 79,
+    "qHits": 0,
+    "eHits": 44,
+    "spellCount": {
+      "lead": 27,
+      "direct": 41,
+      "reversal": 11
+    }
+  },
+  "verifiedWitness": {
+    "accepted": 79,
+    "qHits": 0,
+    "eHits": 0,
+    "spellCount": {
+      "lead": 27,
+      "direct": 41,
+      "reversal": 11
+    }
+  },
+  "eitherSideAvoids": 79,
+  "bothSidesHit": 0,
+  "bothSidesHitSeeds": [],
+  "witnessHitSeeds": []
+}

@@ -23,6 +23,20 @@ function boot(preset="standard", options={}){
 }
 function foe(g,x=800,y=337.5){const e=g.enemy(x,y);e.speed=0;e.shoot=999;e.hp=e.maxHp=10000;g.setFoes([e]);return e;}
 function advance(g,seconds){for(let i=0;i<Math.round(seconds*120);i++)g.update(1/120);}
+test('drills home, pause and results keep their own menu state and settings',()=>{
+ const {g,node}=boot('ahri'),classes=new Set();
+ node('menu').classList.toggle=(name,on)=>{if(on)classes.add(name);else classes.delete(name);};
+ node('mapAwareness').checked=true;g.reset('dodge');g.pause();
+ assert.deepEqual([...classes],['paused']);assert.equal(node('modeButtons').hidden,true);assert.equal(node('resumeBtn').hidden,false);
+ g.pause();g.end(false);assert.deepEqual([...classes],['results']);assert.equal(node('modeButtons').hidden,false);
+ node('menuBtn').listeners.click();assert.deepEqual([...classes],['home']);assert.equal(node('mapAwareness').checked,true);assert.equal(node('resumeBtn').hidden,true);
+});
+test('drills home retains one playable button for each mode and unique settings',()=>{
+ const html=fs.readFileSync(require.resolve('../index.html'),'utf8');
+ for(const mode of ['dodge','kite','lastHit'])assert.equal((html.match(new RegExp(`data-mode="${mode}"`,'g'))||[]).length,1);
+ for(const id of ['settings','difficulty','mapAwareness','attackSpeed','newSeed','seedLabel','soundBtn','buildLabel'])assert.equal((html.match(new RegExp(`id="${id}"`,'g'))||[]).length,1);
+ assert.match(html,/DODGE TRIAL[\s\S]*PLAY DODGE/);assert.equal((html.match(/IN DEVELOPMENT · PLAYABLE/g)||[]).length,3);
+});
 test('visible build identifies the executed script and matches its cache key',()=>{
  const html=fs.readFileSync(require.resolve('../index.html'),'utf8'),source=fs.readFileSync(require.resolve('../game.js'),'utf8');
  const cache=html.match(/game\.js\?v=([^"']+)/)?.[1],build=source.match(/const BUILD_ID="([^"]+)"/)?.[1];
@@ -450,8 +464,8 @@ test('Syndra events pause, reset and preserve prior Expert records',()=>{
  g.pause();advance(g,1);assert.equal(h.ttl,ttl);g.pause();g.reset('dodge');assert.equal(g.hazards.length,0);
  const old='lmg.best.v1.dodge.hard.director_v87.endless.survival',prior='lmg.best.v1.dodge.hard.director_v88.endless.survival';values.set(old,'100');values.set(prior,'80');
  const syndraV1='lmg.best.v1.dodge.hard.director_v89.endless.survival';values.set(syndraV1,'90');
- const syndraV2='lmg.best.v1.dodge.hard.director_v90.endless.survival',syndraV3='lmg.best.v1.dodge.hard.director_v91.endless.survival';values.set(syndraV2,'95');values.set(syndraV3,'96');g.setTime(10);g.end(false);
- assert.equal(values.get(old),'100');assert.equal(values.get(prior),'80');assert.equal(values.get(syndraV1),'90');assert.equal(values.get(syndraV2),'95');assert.equal(values.get(syndraV3),'96');assert.equal(values.get('lmg.best.v1.dodge.hard.director_v92.endless.survival'),'10');
+ const syndraV2='lmg.best.v1.dodge.hard.director_v90.endless.survival',syndraV3='lmg.best.v1.dodge.hard.director_v91.endless.survival';values.set(syndraV2,'95');values.set(syndraV3,'96');const syndraV4='lmg.best.v1.dodge.hard.director_v92.endless.survival';values.set(syndraV4,'97');g.setTime(10);g.end(false);
+ assert.equal(values.get(old),'100');assert.equal(values.get(prior),'80');assert.equal(values.get(syndraV1),'90');assert.equal(values.get(syndraV2),'95');assert.equal(values.get(syndraV3),'96');assert.equal(values.get(syndraV4),'97');assert.equal(values.get('lmg.best.v1.dodge.hard.director_v93.endless.survival'),'10');
 });
 test('Syndra Q and both E hit paths agree at 30, 60 and 120 FPS',()=>{
  for(const scenario of ['q','cone','sphere','dodge']){
@@ -3934,7 +3948,7 @@ test('Staying Syndra keeps Mindgame Aim: lead, direct and reversal Qs plus led Q
 test('every mid-stay Syndra Q and Q E has an executable escape',()=>{
  let casts=0,combos=0;
  for(const seed of [1,2,3,4,5,6,7,8]){
-  const {g}=syndraStayBoot(seed);const seen=syndraStayRun(g,16,{follow:true});casts+=seen.size;combos+=[...seen.keys()].filter(h=>h.combo).length;
+  const {g}=syndraStayBoot(seed);const seen=syndraStayRun(g,20,{follow:true});casts+=seen.size;combos+=[...seen.keys()].filter(h=>h.combo).length;
   const syndraHits=Object.entries(g.dodgeDirector.outcomes||{}).filter(([k])=>k.startsWith('SYNDRA')).reduce((a,[,v])=>a+(v.hit||0),0);
   assert.equal(syndraHits,0,`seed ${seed}: following the witness was hit`);
  }
@@ -3945,9 +3959,9 @@ test('Syndra walks out at the end of a stay and a defeat ends it early',()=>{
  c.syndraStay.until=g.time;let gone=false,leftFor=0;
  for(let i=0;i<120*3&&!gone;i++){const before={x:c.x,y:c.y};g.update(1/120);if(!c.alive)gone=true;else if(c.syndraStay.leaving!==undefined){leftFor+=1/120;assert.ok(c.walking&&Math.hypot(c.x-before.x,c.y-before.y)>0,'she walks out');}}
  assert.ok(leftFor<=1.25,'leaves within her exit walk');
- assert.ok(gone,'she leaves');const d=g.dodgeDirector;g.update(1/120);assert.equal(d.syndraCasterId,null);assert.ok(d.syndraAt-g.time>=2.4&&d.syndraAt-g.time<=4.5,'next arrival after a gap');
- const casts=d.syndra;advance(g,2.3);assert.equal(d.syndra,casts,'no casts during the gap');
- const b=syndraStayBoot(5).g;syndraStayRun(b,3);const s=b.foes.find(e=>e.alive&&e.syndraCaster);b.damageEnemy(s,1e5);assert.equal(s.alive,false);const n=b.dodgeDirector.syndra;advance(b,2.3);assert.equal(b.dodgeDirector.syndra,n,'defeated Syndra stops casting');assert.ok(!b.foes.some(e=>e.alive&&e.syndraCaster));
+ assert.ok(gone,'she leaves');const d=g.dodgeDirector;g.update(1/120);assert.equal(d.syndraCasterId,null);assert.ok(d.syndraAt-g.time>=6.4&&d.syndraAt-g.time<=8.5,'next arrival after a gap');
+ const casts=d.syndra;advance(g,6.3);assert.equal(d.syndra,casts,'no casts during the gap');
+ const b=syndraStayBoot(5).g;syndraStayRun(b,3);const s=b.foes.find(e=>e.alive&&e.syndraCaster);b.damageEnemy(s,1e5);assert.equal(s.alive,false);const n=b.dodgeDirector.syndra;advance(b,6.3);assert.equal(b.dodgeDirector.syndra,n,'defeated Syndra stops casting');assert.ok(!b.foes.some(e=>e.alive&&e.syndraCaster));
 });
 test('Syndra exit never crosses a wall or the world bounds',()=>{
  for(const [caster,player] of [[{x:649,y:580},{x:500,y:580}],[{x:1177,y:400},{x:1000,y:400}]]){
@@ -3960,7 +3974,7 @@ test('Syndra exit never crosses a wall or the world bounds',()=>{
 test('a defeated Syndra is removed and her next visit is booked during hit recovery',()=>{
  const {g}=syndraStayBoot(5);syndraStayRun(g,1);const caster=g.foes.find(e=>e.alive&&e.syndraCaster);assert.ok(caster);
  g.dodgeDirector.hitRecoveryUntil=g.time+5;g.damageEnemy(caster,1e5);g.update(1/120);
- assert.equal(g.dodgeDirector.syndraCasterId,null);assert.ok(g.dodgeDirector.syndraAt>g.time+2.4&&g.dodgeDirector.syndraAt<=g.time+4.5);
+ assert.equal(g.dodgeDirector.syndraCasterId,null);assert.ok(g.dodgeDirector.syndraAt>g.time+6.4&&g.dodgeDirector.syndraAt<=g.time+8.5);
  const n=g.dodgeDirector.syndra;advance(g,4.8);assert.equal(g.dodgeDirector.syndra,n,'recovery still blocks new casts');
 });
 test('a charmed staying Syndra holds her next cast until the charm ends',()=>{

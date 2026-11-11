@@ -7,16 +7,16 @@
   <meta name="description" content="League Mechanics God — a free, original browser arena for dodging, kiting and skillshot practice.">
   <title>League Mechanics God · Arena</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
   <script defer src="world.js"></script>
   <script defer src="ahri-data.js"></script>
-  <script defer src="game.js?v=2c9a3f00f828"></script>
+  <script defer src="game.js?v=4a7db6fefed9"></script>
 </head>
 <body>
   <main class="app">
     <header class="topbar">
       <div class="brand"><span class="logo" aria-hidden="true">◇</span><div><div class="eyebrow">BROWSER MECHANICS TRAINER</div><h1>LEAGUE <em>MECHANICS</em> GOD</h1></div></div>
-      <div class="top-actions"><span class="build">ALPHA · v0.5</span><button class="ghost-button" id="soundBtn" type="button" aria-pressed="false">SOUND OFF</button><button class="ghost-button" id="menuBtn" type="button">DRILLS</button><button class="ghost-button" id="pauseBtn" type="button" disabled>PAUSE <kbd>P</kbd></button><button class="ghost-button" id="restartBtn" type="button" disabled>RESTART <kbd>↻</kbd></button></div>
+      <div class="top-actions"><span class="build">DODGE v1.0</span><button class="ghost-button" id="soundBtn" type="button" aria-pressed="false">SOUND OFF</button><button class="ghost-button" id="menuBtn" type="button">DRILLS</button><button class="ghost-button" id="pauseBtn" type="button" disabled>PAUSE <kbd>P</kbd></button><button class="ghost-button" id="restartBtn" type="button" disabled>RESTART <kbd>↻</kbd></button></div>
     </header>
 
     <section class="game-shell" aria-label="Play area">
@@ -45,22 +45,23 @@
       <canvas id="arena" aria-label="Real-time top-down training arena. Use mouse and keyboard to play."></canvas>
       <div class="toast" id="toast" aria-live="polite"></div>
       <div class="overlay" id="overlay">
-        <div class="menu" id="menu">
+        <div class="menu home" id="menu">
           <div class="menu-kicker">THE PRACTICE GROUNDS</div>
-          <h2 id="menuTitle">READ. REACT.<br><span>OUTPLAY.</span></h2>
-          <p id="menuDescription">A fast, original browser combat arena built for League-style movement, skillshots and kiting. Choose a mode and jump straight in.</p>
+          <h2 id="menuTitle">CHOOSE YOUR <span>DRILL.</span></h2>
+          <p id="menuDescription">Jump into Dodge. Keep improving.</p>
           <p class="awareness-result" id="awarenessResult" hidden></p>
           <details id="dodgeBreakdown" class="dodge-breakdown" hidden><summary>Spell breakdown</summary><pre id="dodgeBreakdownText"></pre></details>
+          <div class="mode-buttons" id="modeButtons">
+            <button class="mode-card featured" data-mode="dodge" type="button"><span class="mode-icon" aria-hidden="true">◎</span><span class="mode-info"><b>DODGE TRIAL <span class="mode-status">v1.0 · READY</span></b><small>Endless survival against champion skillshots.<br>Read the cast. Dodge. Survive.</small></span><span class="play-cta">PLAY DODGE →</span></button>
           <div class="settings" id="settings">
             <label for="difficulty">DIFFICULTY <select id="difficulty"><option value="easy">Foundation</option><option value="normal">Standard</option><option value="hard" selected>Expert</option></select></label>
             <label class="awareness-setting"><input id="mapAwareness" type="checkbox"> MAP AWARENESS <small>G or Alt + click · drag up for danger</small></label>
             <label for="attackSpeed" hidden>ATTACK SPEED <select id="attackSpeed"><option value="ahri" selected>0.668 · Ahri timing / CS</option><option value="slow">0.80</option><option value="standard">1.39</option><option value="fast">2.00</option></select></label>
             <button type="button" class="ghost-button" id="newSeed" title="Change the encounter for your next run" hidden><span id="seedLabel">SEED 73129</span> ↻</button>
           </div>
-          <div class="mode-buttons" id="modeButtons">
-            <button class="mode-card" data-mode="dodge" type="button"><span class="mode-icon">◎</span><span class="mode-info"><b>DODGE TRIAL</b><small>Endless survival against champion skillshots</small></span><span class="mode-arrow">→</span></button>
-            <button class="mode-card" data-mode="kite" type="button"><span class="mode-icon">⌁</span><span class="mode-info"><b>KITE ARENA</b><small>Orbwalk, attack-move and defeat 10 foes</small></span><span class="mode-arrow">→</span></button>
-            <button class="mode-card" data-mode="lastHit" type="button"><span class="mode-icon">♜</span><span class="mode-info"><b>CS PRACTICE</b><small>Farm with Ahri against minion waves</small></span><span class="mode-arrow">→</span></button>
+            <div class="prototype-label">IN DEVELOPMENT · PLAYABLE PROTOTYPES</div>
+            <button class="mode-card prototype" data-mode="kite" type="button"><span class="mode-icon" aria-hidden="true">⌁</span><span class="mode-info"><b>KITE ARENA</b><small>IN DEVELOPMENT · PLAYABLE<br>Orbwalking and combat</small><span class="try-prototype">Try prototype →</span></span></button>
+            <button class="mode-card prototype" data-mode="lastHit" type="button"><span class="mode-icon" aria-hidden="true">♜</span><span class="mode-info"><b>CS PRACTICE</b><small>IN DEVELOPMENT · PLAYABLE<br>Farm with Ahri against minion waves</small><span class="try-prototype">Try prototype →</span></span></button>
           </div>
           <p class="tiny-note" id="menuFooter">No installation · No login · Desktop mouse and keyboard</p>
           <p class="tiny-note" id="buildLabel">Build: unavailable</p>

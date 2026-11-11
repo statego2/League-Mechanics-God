@@ -13,3 +13,30 @@
 .menu .awareness-result:not([hidden]){display:block;margin:0 auto 14px;padding:9px 12px;border:1px solid #53746e;border-radius:6px;background:#142c2c;color:#afe9d7;font:700 11px/1.5 ui-monospace,monospace;letter-spacing:.3px}
 
 .dodge-breakdown{max-width:415px;margin:0 auto 16px;text-align:left;color:#bcd4df;font-size:12px}.dodge-breakdown summary{cursor:pointer;color:#8ce8dc;font-weight:700}.dodge-breakdown pre{white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.6 ui-monospace,Menlo,monospace;color:#b2c6d1;margin:8px 0 0}
+
+/* Dodge v1.0 drills home. All cards are real, keyboard-accessible buttons. */
+.menu{width:min(720px,100%);padding:20px 22px}
+.menu.home h2{font-size:clamp(30px,3.2vw,40px);margin:10px 0}
+.menu.home #menuDescription{margin-bottom:14px}
+.mode-buttons{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.mode-card:nth-child(odd):last-child{grid-column:auto}
+.mode-card.featured,.mode-buttons>.settings,.prototype-label{grid-column:1/-1}
+.mode-card.featured{min-height:104px;background:#12363b;border-color:#70e8d5;box-shadow:0 0 18px #70e8d51c}
+.mode-card.featured .mode-icon{background:#1c4c4d;color:#9cf5e5}
+.mode-card.featured .mode-info b{font-size:22px;letter-spacing:1px}
+.mode-card.featured .mode-info small{font-size:12px;color:#c2ded9;line-height:1.5}
+.mode-status{font-size:10px;letter-spacing:1px;color:#a2f5df;margin-left:8px;white-space:nowrap}
+.play-cta{background:#70e8d5;color:#092a2d;border-radius:6px;padding:10px 13px;font-size:11px;font-weight:900;white-space:nowrap}
+.mode-buttons>.settings{margin:2px 0 4px}
+.prototype-label{text-align:left;color:#9eacb5;font-size:10px;font-weight:800;letter-spacing:1px;margin-top:4px}
+.mode-card.prototype{background:#17212c;border-color:#465260;color:#dce5e9}
+.mode-card.prototype:hover{background:#22313e;border-color:#a5c4c4}
+.mode-card.prototype .mode-icon{color:#a5b9c0;background:#23323e}
+.mode-card.prototype .mode-info small{color:#c3ccd4;line-height:1.5}
+.try-prototype{color:#b9d6d5;font-size:10px;font-weight:800}
+:where(button,select,input,summary):focus-visible{outline:2px solid #a3fff0;outline-offset:3px}
+.menu.results .mode-card.featured{min-height:0;padding:9px 14px}
+.menu.results .mode-card.featured .mode-info b{font-size:14px}
+.menu.results .mode-card.featured .mode-info small{font-size:10px}
+.menu.results .mode-card.prototype{padding:8px 12px}
+@media(max-width:640px){.menu{padding:12px}.mode-buttons{grid-template-columns:1fr}.mode-card.featured,.mode-buttons>.settings,.prototype-label{grid-column:1}.mode-card.featured .mode-info b{font-size:17px}.play-cta{padding:8px;font-size:10px}.settings{gap:8px}}

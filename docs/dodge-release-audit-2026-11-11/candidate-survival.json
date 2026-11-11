@@ -1,0 +1,165 @@
+{
+  "fixture": "normal HP, scripted movement every 0.6 s, no abilities or Flash",
+  "runs": [
+    {
+      "seed": 1,
+      "time": 30.66,
+      "ended": true,
+      "hits": 15,
+      "syndraQ": 4,
+      "syndraE": 2
+    },
+    {
+      "seed": 2,
+      "time": 33.04,
+      "ended": true,
+      "hits": 14,
+      "syndraQ": 5,
+      "syndraE": 2
+    },
+    {
+      "seed": 3,
+      "time": 51.37,
+      "ended": true,
+      "hits": 18,
+      "syndraQ": 7,
+      "syndraE": 3
+    },
+    {
+      "seed": 4,
+      "time": 28.98,
+      "ended": true,
+      "hits": 15,
+      "syndraQ": 4,
+      "syndraE": 1
+    },
+    {
+      "seed": 5,
+      "time": 50.17,
+      "ended": true,
+      "hits": 19,
+      "syndraQ": 7,
+      "syndraE": 3
+    },
+    {
+      "seed": 6,
+      "time": 52.35,
+      "ended": true,
+      "hits": 21,
+      "syndraQ": 8,
+      "syndraE": 3
+    },
+    {
+      "seed": 7,
+      "time": 53.07,
+      "ended": true,
+      "hits": 20,
+      "syndraQ": 4,
+      "syndraE": 1
+    },
+    {
+      "seed": 8,
+      "time": 32.99,
+      "ended": true,
+      "hits": 12,
+      "syndraQ": 5,
+      "syndraE": 2
+    },
+    {
+      "seed": 9,
+      "time": 29.32,
+      "ended": true,
+      "hits": 13,
+      "syndraQ": 5,
+      "syndraE": 2
+    },
+    {
+      "seed": 10,
+      "time": 50.41,
+      "ended": true,
+      "hits": 21,
+      "syndraQ": 7,
+      "syndraE": 3
+    },
+    {
+      "seed": 11,
+      "time": 46.66,
+      "ended": true,
+      "hits": 18,
+      "syndraQ": 7,
+      "syndraE": 2
+    },
+    {
+      "seed": 12,
+      "time": 60,
+      "ended": false,
+      "hits": 19,
+      "syndraQ": 10,
+      "syndraE": 4
+    },
+    {
+      "seed": 13,
+      "time": 27.93,
+      "ended": true,
+      "hits": 16,
+      "syndraQ": 3,
+      "syndraE": 0
+    },
+    {
+      "seed": 14,
+      "time": 28.63,
+      "ended": true,
+      "hits": 14,
+      "syndraQ": 4,
+      "syndraE": 2
+    },
+    {
+      "seed": 15,
+      "time": 29.34,
+      "ended": true,
+      "hits": 11,
+      "syndraQ": 4,
+      "syndraE": 1
+    },
+    {
+      "seed": 16,
+      "time": 60,
+      "ended": false,
+      "hits": 22,
+      "syndraQ": 8,
+      "syndraE": 3
+    },
+    {
+      "seed": 17,
+      "time": 60,
+      "ended": false,
+      "hits": 17,
+      "syndraQ": 9,
+      "syndraE": 4
+    },
+    {
+      "seed": 18,
+      "time": 31.34,
+      "ended": true,
+      "hits": 13,
+      "syndraQ": 5,
+      "syndraE": 2
+    },
+    {
+      "seed": 19,
+      "time": 29.32,
+      "ended": true,
+      "hits": 14,
+      "syndraQ": 4,
+      "syndraE": 1
+    },
+    {
+      "seed": 20,
+      "time": 31.71,
+      "ended": true,
+      "hits": 13,
+      "syndraQ": 3,
+      "syndraE": 1
+    }
+  ]
+}

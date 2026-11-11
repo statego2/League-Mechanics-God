@@ -2,6 +2,13 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Dodge v1.0 release candidate (11 November 2026)
+
+- Implemented the Drills home and changed only Syndra's post-visit gap from 2.5–4.5 to 6.5–8.5 seconds. Expert records use v93 and older records remain intact. Candidate build: `4a7db6fefed9`.
+- The fixed 20-seed measurements are in `dodge-release-audit-2026-11-11/candidate-visits.json`: stationary visits/min 5.075 → 3.675 (0.724), moving 4.950 → 3.775 (0.763). Q/E and other-cast rates and per-seed arrivals are recorded there. Both profiles meet the 0.70–0.80 target. The reaction and scripted survival outputs are alongside the fixture; isolated Q→E escape witnesses had zero hits, including edges.
+- Full final suite passed 549/549; the focused Syndra/awareness/build/record suite passed 86/86. This is a **release candidate, not shipped**. Complete the real-browser home/pause/results and normal-HP playtest gates in `DODGE_SHIP_PLAN.md` before pushing. A prior browser policy denied local visual access; do not bypass that denial through another browser or surface. No browser visual result is claimed. `CODE2_HANDOFF/` is unrelated untracked material and must remain untouched.
+- Pages source was rechecked as `codex/controls-and-dodge` at `/`; fetch succeeded. The public site still runs the previous deployment until the release gates pass and the branch is pushed.
+
 ## Blitz hook interrupts dash and completes long pulls (2 November 2026)
 
 - Fixed Rocket Grab leaving Ahri's active Spirit Rush dash stored during the pull: it could resume after the hook ended. A successful hook now interrupts the active dash and, if caught inside approximate terrain during a wall-crossing dash, first returns Ahri to walkable ground. Other casts and available R charges are not changed. [Community dash reference](https://wiki.leagueoflegends.com/en-us/Dash) describes airborne displacement overriding a dash; exact live-client wall snapping remains an approximation.
