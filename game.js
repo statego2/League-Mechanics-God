@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="52a99bab82ac";
+const BUILD_ID="f14cb92ec702";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -593,7 +593,7 @@ const SYNDRA_BASE={hp:583,armor:25,mr:30,speed:SIMULATION.toCanvas(330)};
 // 200 / eSpeed after the cast. Mindgame Aim style weights for the push:
 // these are selection weights; an unsafe lead or reversal falls back to a
 // separately verified direct cast, as for the visitor skillshots.
-const SYNDRA_EQ={sphereLead:200,sourceDistance:400,direct:.15,lead:.75};
+const SYNDRA_EQ={sphereLead:200,sourceDistance:520,direct:.15,lead:.75};
 // Expert Syndra makes short visits, walking into separate Q and Q E bands.
 // A visit ends after its varied cast sequence or a bounded time.
 // Times are seconds, bands are canvas units from Ahri.
@@ -628,7 +628,7 @@ function spawnSyndra(combo=false,witness=null,fixedCaster=null){
  // A staying Syndra casts from where she stands: one angle, real distance.
  const angles=fixedCaster?[Math.atan2((combo?aim:player).y-fixedCaster.y,(combo?aim:player).x-fixedCaster.x)]:Array.from({length:24},(_,i)=>first+i*TAU/24);
  for(const a of angles){
-  const dx=Math.cos(a),dy=Math.sin(a),anchor=combo?aim:player,sourceDistance=fixedCaster?dist(fixedCaster,anchor):combo?SYNDRA_EQ.sourceDistance:300,source=fixedCaster?{x:fixedCaster.x,y:fixedCaster.y}:{x:anchor.x-dx*sourceDistance,y:anchor.y-dy*sourceDistance};
+  const dx=Math.cos(a),dy=Math.sin(a),anchor=combo?aim:player,sourceDistance=fixedCaster?dist(fixedCaster,anchor):combo?SYNDRA_EQ.sourceDistance:330,source=fixedCaster?{x:fixedCaster.x,y:fixedCaster.y}:{x:anchor.x-dx*sourceDistance,y:anchor.y-dy*sourceDistance};
   if(fixedCaster&&(combo?sourceDistance>=SYNDRA.eEnd-20||sourceDistance-SYNDRA_EQ.sphereLead<60:sourceDistance<120))continue;
   const q=combo?{x:source.x+dx*(sourceDistance-SYNDRA_EQ.sphereLead),y:source.y+dy*(sourceDistance-SYNDRA_EQ.sphereLead)}:fixedCaster?{x:aim.x+Math.cos(Math.atan2(aim.y-source.y,aim.x-source.x))*qOffset,y:aim.y+Math.sin(Math.atan2(aim.y-source.y,aim.x-source.x))*qOffset}:{x:aim.x+dx*qOffset,y:aim.y+dy*qOffset};
   if(source.x<60||source.x>W-60||source.y<145||source.y>H-40||!world.pointWalkable(source,20)||dist(source,q)>SYNDRA.qRange||(combo&&dist(source,q)>SYNDRA.eDirectRange)||q.x<30||q.x>W-30||q.y<70||q.y>H-30)continue;

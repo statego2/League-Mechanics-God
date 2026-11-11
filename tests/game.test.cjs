@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,DODGE_TUNING,DODGE_DIRECTOR,REFERENCE_SPELLS,MAP,updateAwareness,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnSyndra,applySyndraStun,SYNDRA,visitorPathsCrowded,updateDodgeVisitor,dodgeAimPoint,dodgeRhythmMultiplier,spawnXerathW,spawnXerathQ,spawnLuxR,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,oriannaFlashEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get awareness(){return awareness},get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,DODGE_TUNING,DODGE_DIRECTOR,REFERENCE_SPELLS,MAP,updateAwareness,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnSyndra,syndraConeContains,applySyndraStun,SYNDRA,visitorPathsCrowded,updateDodgeVisitor,dodgeAimPoint,dodgeRhythmMultiplier,spawnXerathW,spawnXerathQ,spawnLuxR,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,oriannaFlashEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get awareness(){return awareness},get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,drawSizes,strokes,strokeWidths,arcs,texts,lines,rotations,renderEvents,click(x,y,button=2){const e={clientX:x,clientY:y,button,preventDefault(){}};node('arena').listeners.pointerdown(e);node('arena').listeners.pointerup(e);},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -165,6 +165,7 @@ test('Syndra is targetable and her committed Q survives her defeat',()=>{
 test('Syndra uses Riot snapshot base defenses and an Ahri E cannot one-shot her',()=>{
  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const caster=g.foes.find(e=>e.syndraCaster);
  assert.equal(caster.hp,583);assert.equal(caster.maxHp,583);assert.equal(caster.armor,25);assert.equal(caster.mr,30);assert.equal(caster.speed,165);
+ g.player.x=caster.x+(g.player.x-caster.x)*.85;g.player.y=caster.y+(g.player.y-caster.y)*.85;
  g.player.hp=300;node('arena').listeners.pointermove({clientX:caster.x,clientY:caster.y,buttons:0});g.cast('e');advance(g,.8);
  assert.ok(caster.alive);assert.ok(Math.abs(caster.hp-(583-80/1.3))<1e-7);assert.ok(g.player.hp<350,'no champion-takedown heal');assert.equal(g.dodgeDirector.syndraE||0,0);
 });
@@ -260,6 +261,14 @@ test('Syndra Q E starts beyond the approximated direct E cone with the sphere in
  assert.ok(Math.hypot(h.source.x-g.player.x,h.source.y-g.player.y)>directRange);
  assert.ok(Math.hypot(h.source.x-h.x,h.source.y-h.y)<directRange);
 });
+test('Syndra first appears in the intended Q or Q E standoff band',()=>{
+ for(const [combo,expected] of [[false,330],[true,520]]){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const witness={};assert.ok(g.spawnSyndra(combo,witness));
+  const h=g.hazards[0];assert.ok(Math.abs(Math.hypot(h.source.x-g.player.x,h.source.y-g.player.y)-expected)<1e-6);
+  assert.ok(Math.hypot(h.x-h.source.x,h.y-h.source.y)<=g.SYNDRA.qRange);if(combo)assert.ok(Math.hypot(h.x-h.source.x,h.y-h.source.y)<=g.SYNDRA.eDirectRange);
+  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,1.5);assert.equal(g.stats.hits,0);
+ }
+});
 test('Syndra E cone hits at release once even if its pushed sphere also crosses Ahri',()=>{
  const {g,arcs}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0];advance(g,.61);
  g.player.x=h.source.x+Math.cos(h.angle)*300;g.player.y=h.source.y+Math.sin(h.angle)*300;const hits=g.stats.hits;
@@ -273,10 +282,11 @@ test('Syndra E direct cone excludes players outside its angular boundary',()=>{
  assert.equal(g.stats.hits,0);
 });
 test('Syndra E direct cone uses the documented training radius and angle',()=>{
- for(const [distance,offset,hit] of [[349,0,true],[351,0,false],[300,.48,true],[300,.5,false]]){
+ const boundary=boot('ahri').g;assert.equal(boundary.syndraConeContains({x:0,y:0},0,{x:349,y:0}),true);assert.equal(boundary.syndraConeContains({x:0,y:0},0,{x:351,y:0}),false);
+ for(const [distance,offset,hit] of [[349,0,true],[460,0,false],[300,.48,true],[300,.5,false]]){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0];advance(g,.61);
   g.player.x=h.source.x+Math.cos(h.angle+offset)*distance;g.player.y=h.source.y+Math.sin(h.angle+offset)*distance;advance(g,.26);
-  assert.equal(g.stats.hits,Number(hit),`${distance},${offset}`);
+  assert.equal(g.stats.hits,Number(hit),`${distance},${offset}: ${JSON.stringify(g.dodgeDirector.outcomes)}`);
  }
 });
 test('lethal direct Syndra E resolves once and leaves its impact visible',()=>{
