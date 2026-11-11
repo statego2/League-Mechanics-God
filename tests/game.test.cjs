@@ -3590,26 +3590,36 @@ test('Cassiopeia cast cue grows during windup without revealing the cone',()=>{
 // to direct aim), predicted to the sphere's own arrival time at its aim point.
 function syndraStraightRun(seed,dir,spot,options={}){
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');Object.assign(g.dodgeDirector,{next:999,syndraAt:1e9});g.player.hp=g.player.maxHp=1e6;
- g.player.x=spot[0];g.player.y=spot[1];const a=dir*Math.PI/4;g.moveTo(g.player.x+Math.cos(a)*600,g.player.y+Math.sin(a)*600);g.update(1/120);
- g.setRng((seed*2654435761)>>>0);const witness={},start={x:g.player.x,y:g.player.y},arrival=g.SYNDRA.qDelay+g.SYNDRA.eDelay+200/g.SYNDRA.eSpeed,future=g.dodgeReactionPath(arrival).end;
+ g.player.x=spot[0];g.player.y=spot[1];const a=dir*Math.PI/4;g.moveTo(g.player.x+Math.cos(a)*600,g.player.y+Math.sin(a)*600);advance(g,.4);
+ g.setRng((seed*2654435761)>>>0);const witness={},start={x:g.player.x,y:g.player.y},arrival=g.SYNDRA.qDelay+g.SYNDRA.eDelay+200/g.SYNDRA.eSpeed,track=g.dodgeDirector.syndraTrack,first=track[0],last=track[track.length-1],span=last.t-first.t,future={x:g.player.x+(last.x-first.x)/span*arrival,y:g.player.y+(last.y-first.y)/span*arrival};
  if(!g.spawnSyndra(true,witness))return null;const h=g.hazards.find(h=>h.syndra);
  return {g,h,witness,start,future};
 }
 const SYNDRA_SPOTS=[[600,330],[450,300],[750,420],[600,450]];
-test('Syndra Q E leads a straight route and punishes keeping it',()=>{
- let leads=0;
+test('Syndra movement history clears for displacement and restart',()=>{
+ const {g}=boot('ahri');g.reset('dodge');Object.assign(g.dodgeDirector,{next:999,syndraAt:Infinity});g.moveTo(900,350);advance(g,.4);
+ assert.ok(g.dodgeDirector.syndraTrack.length>=2);g.player.x+=200;advance(g,.06);assert.ok(g.dodgeDirector.syndraTrack.length<=2,'teleport clears old samples');
+ g.applySyndraStun(0);advance(g,.06);assert.equal(g.dodgeDirector.syndraTrack.length,0,'forced movement must not be learned');
+ g.reset('dodge');assert.ok(!g.dodgeDirector.syndraTrack,'restart clears history');
+});
+test('Syndra Q E locks the observed read at cast time',()=>{
+ const run=syndraStraightRun(7,0,[600,330]);assert.ok(run);const {g,h}=run,aim={...h.aimPoint},angle=h.angle;
+ g.moveTo(g.player.x-300,g.player.y);advance(g,.1);assert.equal(h.aimPoint.x,aim.x);assert.equal(h.aimPoint.y,aim.y);assert.equal(h.angle,angle);
+});
+test('Syndra Q E leads observed movement and often punishes keeping it',t=>{
+ let leads=0,hits=0;
  for(let seed=1;seed<=24;seed++)for(const dir of [0,2,4,6]){
-  const run=syndraStraightRun(seed,dir,SYNDRA_SPOTS[seed%4]);if(!run||run.h.aimPattern!=='lead')continue;const {g,h,future}=run;leads++;
-  // The aim point is the existing route predicted to the sphere's arrival.
-  assert.ok(Math.hypot(h.aimPoint.x-future.x,h.aimPoint.y-future.y)<1e-6);
+  const run=syndraStraightRun(seed,dir,SYNDRA_SPOTS[seed%4]);if(!run||run.h.aimPattern!=='lead')continue;const {g,h,start,future}=run;leads++;
+  // A full or half lead extrapolates observed movement, never a later click.
+  const half={x:(start.x+future.x)/2,y:(start.y+future.y)/2};
+  assert.ok(Math.min(Math.hypot(h.aimPoint.x-future.x,h.aimPoint.y-future.y),Math.hypot(h.aimPoint.x-half.x,h.aimPoint.y-half.y))<1e-6);
   const s=Math.hypot(h.aimPoint.x-h.x,h.aimPoint.y-h.y);assert.ok(Math.abs(s-200)<1e-6);
   let closest=Infinity,sphere=null;
   for(let i=0;i<Math.round(2*120);i++){g.update(1/120);sphere=g.shots.find(s=>s.syndraSphere)||sphere;if(sphere&&sphere.alive)closest=Math.min(closest,Math.hypot(sphere.x-g.player.x,sphere.y-g.player.y));}
   assert.ok(sphere,`seed ${seed} dir ${dir}: no sphere`);assert.equal(sphere.aimPattern,'lead');
-  assert.ok(g.stats.hits>=1,`seed ${seed} dir ${dir}: straight route survived a lead`);
-  assert.ok(closest<=sphere.r+g.player.r||!sphere.alive,`seed ${seed} dir ${dir}: sphere missed by ${closest}`);
+  if(g.dodgeDirector.outcomes["SYNDRA E"]?.hit)hits++;
  }
- assert.ok(leads>=40,`only ${leads} leads`);
+ assert.ok(leads>=40,`only ${leads} leads`);t.diagnostic(`straight-walker hits ${hits}/${leads}`);assert.ok(hits/leads>=.65,`straight-walker hits ${hits}/${leads}`);
 });
 test('Syndra Q E leads and reversals keep an executable walking escape',()=>{
  const checked={lead:0,reversal:0,direct:0};

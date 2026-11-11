@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="5c73c0205559";
+const BUILD_ID="4c1ff211cdcb";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -609,13 +609,17 @@ function spawnSyndra(combo=false,witness=null,fixedCaster=null){
  let qAim={x:player.x,y:player.y},aimPattern='direct';
  if(!combo&&moveLength>2){const roll=random();if(roll>=.15&&roll<.9){qAim=projected;aimPattern='lead';}else if(roll>=.9){qAim={x:player.x-moveX/moveLength*70,y:player.y-moveY/moveLength*70};aimPattern='reversal';}}
  if(combo){
-  // Predict the existing route to the moment the pushed sphere's centre
-  // reaches its aim point (capped like dodgeAimPoint). Geometry fixes that
-  // arrival time, so no distance iteration is needed.
-  const arrival=SYNDRA.qDelay+SYNDRA.eDelay+SYNDRA_EQ.sphereLead/SYNDRA.eSpeed,future=dodgeReactionPath(Math.min(arrival,1.2)).end;
+  // Extrapolate observed movement to the sphere’s arrival at its aim point.
+  // The fixed sphere offset determines that flight time.
+  const arrival=SYNDRA.qDelay+SYNDRA.eDelay+SYNDRA_EQ.sphereLead/SYNDRA.eSpeed,velocity=syndraObservedVelocity(),future={x:player.x+velocity.x*arrival,y:player.y+velocity.y*arrival};
   const dx=future.x-player.x,dy=future.y-player.y,d=Math.hypot(dx,dy);
   if(d>2){const roll=random();
-   if(roll>=SYNDRA_EQ.direct&&roll<SYNDRA_EQ.direct+SYNDRA_EQ.lead){qAim=future;aimPattern='lead';}
+   if(roll>=SYNDRA_EQ.direct&&roll<SYNDRA_EQ.direct+SYNDRA_EQ.lead){
+    // Some leads cover a likely hesitation or reversal instead of assuming
+    // the player will keep the same speed for the entire flight.
+    const fraction=roll<SYNDRA_EQ.direct+SYNDRA_EQ.lead*.25?.5:1;
+    qAim={x:player.x+dx*fraction,y:player.y+dy*fraction};aimPattern='lead';
+   }
    else if(roll>=SYNDRA_EQ.direct+SYNDRA_EQ.lead){qAim={x:player.x-dx/d*70,y:player.y-dy/d*70};aimPattern='reversal';}}
  }
  const qOffset=SYNDRA.qRadius*4/7;
@@ -1181,6 +1185,21 @@ function updateDodgeVisitor(e,dt){
  }
 }
 // Draw a varied visit plan; a long solo-Q streak starts the next visit with Q E.
+// Sample observed movement rather than reading future clicks. Forced movement
+// and dashes clear the buffer so they cannot train a false movement habit.
+function trackSyndraMovement(){
+ const d=dodgeDirector;if(!d)return;
+ if(player.hooked||player.dashing||player.stun>0){d.syndraTrack=[];return;}
+ const track=d.syndraTrack||(d.syndraTrack=[]),last=track[track.length-1];
+ if(last&&time-last.t<.05-1e-8)return;
+ if(last&&dist(last,player)>playerMoveSpeed()*(time-last.t)*1.5+4)track.length=0;
+ track.push({x:player.x,y:player.y,t:time});while(track.length>1&&time-track[0].t>.4)track.shift();
+}
+function syndraObservedVelocity(){
+ const track=dodgeDirector?.syndraTrack||[];if(track.length<2)return {x:0,y:0};
+ const first=track[0],last=track[track.length-1],dt=last.t-first.t;if(dt<.1)return {x:0,y:0};
+ return {x:(last.x-first.x)/dt,y:(last.y-first.y)/dt};
+}
 function chooseSyndraPlan(){
  const d=dodgeDirector,plans=SYNDRA_STAY.plans;
  if((d.syndraQStreak||0)>=3){d.syndraLastPlan=2;return [...plans[2]];}
@@ -1269,6 +1288,7 @@ function updateSyndraCaster(e,dt){
 function updateDodgeDirector(dt){
  // Expert opens with ordinary pressure first. Major patterns earn distinct
  // reading space instead of all arriving during the opening scramble.
+ trackSyndraMovement();
  if(difficulty==="hard"&&!dodgeDirector.rhythmConfigured){
   dodgeDirector.rhythmConfigured=true;
   dodgeDirector.cassAt=35;dodgeDirector.rareAt=50;dodgeDirector.malAt=15;
