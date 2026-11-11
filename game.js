@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="4c1ff211cdcb";
+const BUILD_ID="f080821ce159";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -1295,6 +1295,11 @@ function updateDodgeDirector(dt){
  }
  if(difficulty==="hard"&&dodgeDirector.luxRAt===undefined)dodgeDirector.luxRAt=26;
  if(difficulty==="hard"&&dodgeDirector.syndraAt===undefined)dodgeDirector.syndraAt=time+SYNDRA_STAY.first;
+ // Book the next visit when she actually leaves, even if hit recovery is
+ // currently suppressing new casts. A dead caster must not remain active.
+ if(dodgeDirector.syndraCasterId&&!foes.some(e=>e.id===dodgeDirector.syndraCasterId&&e.alive)){
+  dodgeDirector.syndraCasterId=null;dodgeDirector.syndraAt=time+rand(SYNDRA_STAY.gap[0],SYNDRA_STAY.gap[1]);
+ }
  if(time<dodgeDirector.hitRecoveryUntil)return;
  // Flash-only reaction checks wait until the player has Flash again without
  // suppressing ordinary skillshots during the cooldown.

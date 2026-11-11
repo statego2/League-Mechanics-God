@@ -1696,3 +1696,7 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 
 - Extended `benchmark-syndra.cjs` with `--edges`: 40 seeds per behavior across six near-edge/corner/wall starting positions before 0.4 s movement. Baseline `6ce41cb` → current E hits: straight 36→34, reverse 0.2 s 12→17, reverse 0.4 s 21→24, sidestep 24→20, juke 32→32; all 40 casts were accepted per scenario and all 40 walking witnesses avoided Q and E in both versions. This finite corpus is not a universal fairness proof.
 - A tentative perpendicular source-angle choice made current edge sidestep hits 20→17 and juke 32→28, while not improving sidesteps in the five-position corpus. It was discarded; the executable game remains build `4c1ff211cdcb` and was not retested as a committed change. Continued player/browser review and broader juke behavior work remain open.
+
+## Syndra recovery scheduling (11 November 2026)
+
+- When a staying Syndra dies or departs during hit recovery, clear her director reference and schedule the next visit immediately; recovery still blocks new casts until it ends. A focused regression verifies the death/recovery case. Another verifies stun recovery suppresses newly directed casts without deleting an existing hostile projectile. All 47 focused Syndra/build tests and the complete serial suite (526/526) passed on build `f080821ce159`. All 19 HTML-referenced local assets exist.

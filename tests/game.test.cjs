@@ -216,6 +216,13 @@ test('blocked or lethal Syndra sphere hits do not apply stun',()=>{
   advance(g,.4);assert.ok(!g.player.stun&&!g.player.hooked);if(blocked)assert.equal(g.dodgeDirector.outcomes['SYNDRA E'].blocked,1);else assert.equal(g.state,'ended');
  }
 });
+test('Syndra stun delays new directed casts without erasing committed projectiles',()=>{
+ const {g}=boot('ahri');g.reset('dodge');Object.assign(g.dodgeDirector,{next:0,syndraAt:Infinity,cassAt:Infinity,rareAt:Infinity,malAt:Infinity,luxRAt:Infinity});
+ g.applySyndraStun(0);const count=g.dodgeDirector.attempted,p=g.player;
+ const s=g.fire(p.x-100,p.y,400,0,'enemy',10,4,1);s.directed=true;s.spellName='EXISTING';
+ advance(g,.4);assert.equal(g.dodgeDirector.attempted,count,'director cannot launch new threats during stun');assert.equal(g.stats.hits,1,'a projectile committed before stun still hits');
+ assert.ok(g.player.stun>0);assert.ok(g.dodgeDirector.hitRecoveryUntil>g.time+g.player.stun);
+});
 test('Syndra E shows a growing cast wave before the pushed sphere launches',()=>{
  const {g,arcs,strokes}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0];
  g.render();assert.ok(!strokes.includes('#d99affbb'));advance(g,.61);
@@ -3770,6 +3777,12 @@ test('Syndra exit never crosses a wall or the world bounds',()=>{
   for(let i=0;i<240&&e.alive;i++){g.update(1/120);assert.ok(e.x<=1178&&e.x>=22&&e.y>=59&&e.y<=639,'exit remains inside world bounds');assert.ok(!(e.x>650&&e.x<795&&e.y>535&&e.y<640),'exit cannot enter the expanded wall');}
   assert.equal(e.alive,false,'blocked exit terminates');
  }
+});
+test('a defeated Syndra is removed and her next visit is booked during hit recovery',()=>{
+ const {g}=syndraStayBoot(5);syndraStayRun(g,1);const caster=g.foes.find(e=>e.alive&&e.syndraCaster);assert.ok(caster);
+ g.dodgeDirector.hitRecoveryUntil=g.time+5;g.damageEnemy(caster,1e5);g.update(1/120);
+ assert.equal(g.dodgeDirector.syndraCasterId,null);assert.ok(g.dodgeDirector.syndraAt>g.time+2.4&&g.dodgeDirector.syndraAt<=g.time+4.5);
+ const n=g.dodgeDirector.syndra;advance(g,4.8);assert.equal(g.dodgeDirector.syndra,n,'recovery still blocks new casts');
 });
 test('a charmed staying Syndra holds her next cast until the charm ends',()=>{
  const {g}=syndraStayBoot(6);syndraStayRun(g,2.5,{wander:false});const c=g.foes.find(e=>e.alive&&e.syndraCaster);assert.ok(c);
