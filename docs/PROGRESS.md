@@ -1720,3 +1720,8 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 ## Normal-HP simulation smoke (11 November 2026)
 
 - Added `scripts/benchmark-survival.cjs`: 20 fixed-seed Expert runs, normal HP, scripted movement command every 0.6 s, no abilities/Flash, capped at 60 s. All 20 saw Syndra Q and a released E; median survival was 34.4 s, range 19.4–60 s, and 2 runs reached the cap. This verifies the encounter can occur in a normal-HP simulation; this intentionally unsophisticated bot is not representative of a human player and these numbers are not a difficulty target. Build `d4e2ec22849d`; human playtesting and browser visual acceptance still required.
+
+## Current Dodge verification (11 November 2026)
+
+- Current executable build `d4e2ec22849d` passed `node --check game.js`, `node --check world.js`, the full serial test suite (528/528), asset existence checks and HTTP delivery from the local no-cache server. The local server provided `http://127.0.0.1:8082/` during the session; it is not a permanent deployment.
+- The synthetic timing, behavior and escape corpora are not substitutes for normal-HP human play or browser visual review. The user has been offered this local build for feedback. No push or deployment was performed. The next step is to inspect the user's Syndra and overall Dodge feedback and correct concrete issues, then complete the browser acceptance checklist in `DODGE_COMPLETION_PLAN.md` before declaring Dodge ready.
