@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="ef273b73272f";
+const BUILD_ID="5c73c0205559";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -593,11 +593,10 @@ const SYNDRA_BASE={hp:583,armor:25,mr:30,speed:SIMULATION.toCanvas(330)};
 // these are selection weights; an unsafe lead or reversal falls back to a
 // separately verified direct cast, as for the visitor skillshots.
 const SYNDRA_EQ={sphereLead:200,sourceDistance:400,direct:.15,lead:.75};
-// Expert Syndra lanes for a while instead of casting once and vanishing: she
-// walks at her own speed, keeps a Q band (or backs off before Q E) and casts
-// again castEvery seconds after each Q lands, whenever the board is clear.
+// Expert Syndra makes short visits, walking into separate Q and Q E bands.
+// A visit ends after its varied cast sequence or a bounded time.
 // Times are seconds, bands are canvas units from Ahri.
-const SYNDRA_STAY={first:6,duration:[15,20],gap:[5,8],castEvery:[.6,1],qBand:250,comboBand:420,clearAhead:0,hold:2,exit:1.2};
+const SYNDRA_STAY={first:5,duration:7,gap:[2.5,4.5],castEvery:[.6,1],qBand:330,comboBand:520,clearAhead:0,hold:2,exit:1.2,plans:[[false,false,true],[false,true,false],[true,false,false],[false,true]]};
 function syndraConeContains(source,angle,point){
  const dx=point.x-source.x,dy=point.y-source.y,d=Math.hypot(dx,dy);
  return d<=SYNDRA.eDirectRange&&(d<1e-8||Math.cos(Math.atan2(dy,dx)-angle)>=Math.cos(SYNDRA.eHalfAngle));
@@ -1181,13 +1180,17 @@ function updateDodgeVisitor(e,dt){
   if(!e.orbShot||!e.orbShot.alive)e.phase="exit";
  }
 }
-// Q E stays rarer than Q: a combo after three straight Qs, sometimes after two.
-function chooseSyndraCombo(){const streak=dodgeDirector.syndraQStreak||0;return streak>=3||streak>=2&&random()<.3;}
+// Draw a varied visit plan; a long solo-Q streak starts the next visit with Q E.
+function chooseSyndraPlan(){
+ const d=dodgeDirector,plans=SYNDRA_STAY.plans;
+ if((d.syndraQStreak||0)>=3){d.syndraLastPlan=2;return [...plans[2]];}
+ const choices=plans.map((_,i)=>i).filter(i=>i!==d.syndraLastPlan),pick=choices[Math.floor(random()*choices.length)];d.syndraLastPlan=pick;return [...plans[pick]];
+}
 function syndraBoardClear(){return !foes.some(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit")&&!shots.some(s=>s.alive&&s.directed)&&!hazards.some(h=>h.directed);}
-function syndraCastDone(combo){
- const d=dodgeDirector;d.syndraQStreak=combo?0:(d.syndraQStreak||0)+1;
+function syndraCastDone(combo,stay){
+ const d=dodgeDirector;stay.index++;d.syndraQStreak=combo?0:(d.syndraQStreak||0)+1;
  d.syndraCastAt=time+(combo?SYNDRA.qDelay+SYNDRA.eDelay:SYNDRA.qDelay)+rand(SYNDRA_STAY.castEvery[0],SYNDRA_STAY.castEvery[1]);
- d.syndraNextCombo=chooseSyndraCombo();d.next=Math.max(d.next,.7);
+ d.syndraNextCombo=!!stay.plan[stay.index];d.next=Math.max(d.next,.7);
 }
 // Returns true when Syndra used (or is holding) this director step. Every
 // cast still goes through spawnSyndra's clear-board and escape checks.
@@ -1201,12 +1204,12 @@ function updateSyndraStay(){
   // Syndra is regular laning pressure now, so only a clear board (not the
   // rare-ultimate guard) gates her arrival.
   if(time<d.syndraAt)return false;
-  if(d.syndraNextCombo==null)d.syndraNextCombo=chooseSyndraCombo();
+  if(!d.syndraPlan){d.syndraPlan=chooseSyndraPlan();d.syndraNextCombo=d.syndraPlan[0];}
   if(syndraBoardClear()){
    const combo=d.syndraNextCombo;
    if(spawnSyndra(combo)){
-    const c=foes[foes.length-1];c.syndraStay={until:time+rand(SYNDRA_STAY.duration[0],SYNDRA_STAY.duration[1])};d.syndraCasterId=c.id;d.syndraStays=(d.syndraStays||0)+1;
-    syndraCastDone(combo);return true;
+    const c=foes[foes.length-1];c.syndraStay={until:time+SYNDRA_STAY.duration,plan:d.syndraPlan,index:0};d.syndraPlan=null;d.syndraCasterId=c.id;d.syndraStays=(d.syndraStays||0)+1;
+    syndraCastDone(combo,c.syndraStay);return true;
    }
   }
   // Hold ordinary visitors briefly so her arrival can find a clear board.
@@ -1216,17 +1219,16 @@ function updateSyndraStay(){
  }
  const stay=caster.syndraStay;if(!stay||stay.leaving)return false;
  const busy=hazards.some(h=>h.syndra&&h.casterId===caster.id);
- if(time>=stay.until){if(!busy)stay.leaving=time;return false;}
+ if(time>=stay.until||stay.index>=stay.plan.length){if(!busy&&!shots.some(s=>s.alive&&s.syndraSphere))stay.leaving=time;return false;}
  if(caster.charm>0)return false;
  // Stop adding visitors shortly before her next cast so the board can clear.
  if(orbOut)return false;
  if(time<d.syndraCastAt)return time>=d.syndraCastAt-SYNDRA_STAY.clearAhead&&!busy;
  if(syndraBoardClear()&&time>=(d.syndraRetry||0)){
-  const combo=!!d.syndraNextCombo;
-  if(spawnSyndra(combo,null,caster)){d.syndraRetry=0;syndraCastDone(combo);return true;}
-  // A Q E she cannot line up (Ahri hugging a wall or edge) becomes a plain
-  // Q once the hold runs out; the streak keeps the next cast a Q E.
-  if(combo&&time-d.syndraCastAt>=SYNDRA_STAY.hold&&spawnSyndra(false,null,caster)){d.syndraRetry=0;syndraCastDone(false);return true;}
+  const combo=!!d.syndraNextCombo||(d.syndraQStreak||0)>=3;
+  if(spawnSyndra(combo,null,caster)){d.syndraRetry=0;syndraCastDone(combo,stay);return true;}
+  // If a Q E cannot be placed safely, end the visit instead of forcing it.
+  if(combo&&time-d.syndraCastAt>=SYNDRA_STAY.hold){stay.until=time;return false;}
   d.syndraRetry=time+.2;
  }
  if(time-d.syndraCastAt<SYNDRA_STAY.hold)return true;
@@ -1236,6 +1238,7 @@ function updateSyndraStay(){
 // strafe sideways, stand still while casting, then walk out after the stay.
 function updateSyndraCaster(e,dt){
  const stay=e.syndraStay,bounds={left:80,right:W-80,top:160,bottom:H-60};
+ if(stay.leaving===undefined&&(time>=stay.until||stay.index>=stay.plan.length)&&!hazards.some(h=>h.syndra&&h.casterId===e.id)&&!shots.some(s=>s.alive&&s.syndraSphere))stay.leaving=time;
  if(stay.leaving!==undefined){
   const dx=e.x-player.x,dy=e.y-player.y,d=Math.hypot(dx,dy)||1,step=e.speed*dt;
   const goal={x:clamp(e.x+dx/d*step,world.bounds.left,world.bounds.right),y:clamp(e.y+dy/d*step,world.bounds.top,world.bounds.bottom)},next=world.clip(e,goal,e.r);
