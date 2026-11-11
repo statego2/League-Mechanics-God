@@ -1716,3 +1716,7 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 ## Syndra input, HUD and record regressions (11 November 2026)
 
 - Added focused checks using the real keyboard and pointer handlers: stun displays its status, locks Flash's HUD and Q/W/E/R/F and movement inputs, then unlocks the HUD and movement when it ends. Verified Expert `director_v91` records remain intact alongside v87–v90 after writing v92. Both new/updated focused tests passed; the preceding complete suite passed 527/527. No executable change; build remains `d4e2ec22849d`.
+
+## Normal-HP simulation smoke (11 November 2026)
+
+- Added `scripts/benchmark-survival.cjs`: 20 fixed-seed Expert runs, normal HP, scripted movement command every 0.6 s, no abilities/Flash, capped at 60 s. All 20 saw Syndra Q and a released E; median survival was 34.4 s, range 19.4–60 s, and 2 runs reached the cap. This verifies the encounter can occur in a normal-HP simulation; this intentionally unsophisticated bot is not representative of a human player and these numbers are not a difficulty target. Build `d4e2ec22849d`; human playtesting and browser visual acceptance still required.
