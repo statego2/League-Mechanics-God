@@ -1700,3 +1700,11 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 ## Syndra recovery scheduling (11 November 2026)
 
 - When a staying Syndra dies or departs during hit recovery, clear her director reference and schedule the next visit immediately; recovery still blocks new casts until it ends. A focused regression verifies the death/recovery case. Another verifies stun recovery suppresses newly directed casts without deleting an existing hostile projectile. All 47 focused Syndra/build tests and the complete serial suite (526/526) passed on build `f080821ce159`. All 19 HTML-referenced local assets exist.
+
+## Correction: overlap test diagnosis (11 November 2026)
+
+- The earlier note calling the Ahri/Ezreal overlap test random was incorrect: the Node harness fixes `Math.random` to 0.5, so its original seed sequence was deterministic. The tested five sequences stopped producing the requested natural overlap after encounter scheduling changed. The revised test explicitly sets a bounded seed corpus and still verifies real overlap; it does not establish overlap frequency in normal play. The equivalent Lux/Blitz test was already explicitly seeded, and its corpus was broadened after the stun changed encounter progression. We should measure occurrence rates rather than treat expanded search as evidence that cadence is unchanged.
+
+## Repeatable overlap and cadence sample (11 November 2026)
+
+- Added `scripts/benchmark-overlap.cjs` to measure the previously discussed natural projectile overlaps and aggregate casts over 20 fixed seeds × 120 simulated seconds, with stationary scripted input and artificially high HP. This is a diagnostic stress fixture, not human difficulty data. Comparing `505fb4c` to `d016097`: sessions containing Ahri-orb overlap with Ezreal 3→5, Lux 2→4 and Blitz 2→1; attempted casts 1625→1302, Syndra Q 714→426, released Syndra E 182→152. After subtracting both Syndra Q and E, other champion casts are 729→724 over the same 40 simulated minutes (~18.2→18.1/min). Fewer total casts here largely reflect the deliberately shorter Syndra visits; overlapping projectiles remain uncommon in this idle sample. No change in actual player difficulty can be inferred without human playtesting.
