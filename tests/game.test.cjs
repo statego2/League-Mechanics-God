@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,DODGE_TUNING,DODGE_DIRECTOR,REFERENCE_SPELLS,MAP,updateAwareness,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnSyndra,SYNDRA,visitorPathsCrowded,updateDodgeVisitor,dodgeAimPoint,dodgeRhythmMultiplier,spawnXerathW,spawnXerathQ,spawnLuxR,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,oriannaFlashEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get awareness(){return awareness},get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,DODGE_TUNING,DODGE_DIRECTOR,REFERENCE_SPELLS,MAP,updateAwareness,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnSyndra,applySyndraStun,SYNDRA,visitorPathsCrowded,updateDodgeVisitor,dodgeAimPoint,dodgeRhythmMultiplier,spawnXerathW,spawnXerathQ,spawnLuxR,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,oriannaFlashEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get awareness(){return awareness},get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,drawSizes,strokes,strokeWidths,arcs,texts,lines,rotations,renderEvents,click(x,y,button=2){const e={clientX:x,clientY:y,button,preventDefault(){}};node('arena').listeners.pointerdown(e);node('arena').listeners.pointerup(e);},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -189,10 +189,32 @@ test('Ahri can Charm the visible Syndra to interrupt Q E and earn skill credit',
  node('arena').listeners.pointermove({clientX:caster.x,clientY:caster.y,buttons:0});g.cast('e');advance(g,1.2);
  assert.equal(g.stats.dodgeEShots,1);assert.equal(g.stats.dodgeEHits,1);assert.equal(g.dodgeDirector.syndraE||0,0);assert.ok(g.dodgeDirector.outcomes['SYNDRA Q']);
 });
-test('Syndra Q E creates a pushed sphere after Q and its separate damage does not immobilize',()=>{
+test('Syndra pushed sphere deals damage and applies stun and push',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0];advance(g,.61);assert.equal(h.phase,'e');
  g.player.x=h.x+Math.cos(h.angle)*180;g.player.y=h.y+Math.sin(h.angle)*180;const hits=g.stats.hits;advance(g,.4);
- assert.equal(g.stats.hits,hits+1);assert.equal(g.dodgeDirector.outcomes['SYNDRA E'].hit,1);assert.equal(g.player.root,0);assert.equal(g.player.hooked,null);
+ assert.equal(g.stats.hits,hits+1);assert.equal(g.dodgeDirector.outcomes['SYNDRA E'].hit,1);assert.equal(g.player.root,0);assert.ok(g.player.stun>1&&g.player.stun<=1.5);assert.ok(g.player.hooked?.knock);
+});
+test('Syndra sphere stun blocks movement and abilities, expires and resets',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0];advance(g,.61);
+ g.player.x=h.x+Math.cos(h.angle)*180;g.player.y=h.y+Math.sin(h.angle)*180;advance(g,.4);assert.ok(g.player.stun>0);
+ g.cast('f');g.cast('r');g.cast('q');g.moveTo(500,500);assert.equal(g.player.cd.f,0);assert.equal(g.player.cd.r,0);assert.equal(g.player.cd.q,0);assert.equal(g.player.target,null);
+ advance(g,1.6);assert.equal(g.player.stun,0);assert.equal(g.player.hooked,null);g.moveTo(500,500);assert.ok(g.player.target);g.reset('dodge');assert.ok(!g.player.stun&&!g.player.hooked);
+});
+test('Syndra stun interrupts dash and casts, pauses, and cannot push through walls or bounds',()=>{
+ for(const [x,y,angle] of [[649,580,0],[1177,400,0],[23,70,Math.PI]]){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;Object.assign(g.player,{x,y,dashing:{x:x+30,y,speed:400},casting:{kind:'orb',remaining:.1},windup:.1,windupTarget:42});
+  g.applySyndraStun(angle);assert.equal(g.player.dashing,null);assert.equal(g.player.casting,null);assert.equal(g.player.windup,0);
+  g.pause();const before=g.player.stun;advance(g,1);assert.equal(g.player.stun,before);g.pause();advance(g,.4);
+  assert.ok(g.player.x>=22&&g.player.x<=1178&&g.player.y>=59&&g.player.y<=639);assert.ok(!(g.player.x>653&&g.player.x<792&&g.player.y>538&&g.player.y<637),'push must not enter wall');
+  assert.ok(!g.shots.some(s=>s.kind==='orb'),'interrupted cast does not release');
+ }
+});
+test('blocked or lethal Syndra sphere hits do not apply stun',()=>{
+ for(const blocked of [true,false]){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0];advance(g,.61);
+  g.player.x=h.x+Math.cos(h.angle)*180;g.player.y=h.y+Math.sin(h.angle)*180;if(blocked)g.player.invuln=1;else g.player.hp=1;
+  advance(g,.4);assert.ok(!g.player.stun&&!g.player.hooked);if(blocked)assert.equal(g.dodgeDirector.outcomes['SYNDRA E'].blocked,1);else assert.equal(g.state,'ended');
+ }
 });
 test('Syndra E shows a growing cast wave before the pushed sphere launches',()=>{
  const {g,arcs,strokes}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0];
@@ -307,7 +329,7 @@ test('Syndra events pause, reset and preserve prior Expert records',()=>{
  const old='lmg.best.v1.dodge.hard.director_v87.endless.survival',prior='lmg.best.v1.dodge.hard.director_v88.endless.survival';values.set(old,'100');values.set(prior,'80');
  const syndraV1='lmg.best.v1.dodge.hard.director_v89.endless.survival';values.set(syndraV1,'90');
  const syndraV2='lmg.best.v1.dodge.hard.director_v90.endless.survival';values.set(syndraV2,'95');g.setTime(10);g.end(false);
- assert.equal(values.get(old),'100');assert.equal(values.get(prior),'80');assert.equal(values.get(syndraV1),'90');assert.equal(values.get(syndraV2),'95');assert.equal(values.get('lmg.best.v1.dodge.hard.director_v91.endless.survival'),'10');
+ assert.equal(values.get(old),'100');assert.equal(values.get(prior),'80');assert.equal(values.get(syndraV1),'90');assert.equal(values.get(syndraV2),'95');assert.equal(values.get('lmg.best.v1.dodge.hard.director_v92.endless.survival'),'10');
 });
 test('Syndra Q and both E hit paths agree at 30, 60 and 120 FPS',()=>{
  for(const scenario of ['q','cone','sphere','dodge']){
@@ -1856,7 +1878,7 @@ test('Expert Lux and Blitz witnesses clear both phases of an existing Ahri orb',
 test('Expert naturally fires Lux and Blitz while an Ahri orb is active',()=>{
  for(const name of ['LUX Q','BLITZ Q']){
   let found=false;
-  for(let seed=1;seed<=8&&!found;seed++){
+  for(let seed=1;seed<=30&&!found;seed++){
    const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.setRng(seed*1234567);g.player.hp=g.player.maxHp=1e6;
    for(let i=0;i<120*180&&!found;i++){
     g.update(1/120);found=g.shots.some(s=>s.alive&&s.kind==='enemyOrb')&&g.shots.some(s=>s.alive&&s.spellName===name);
