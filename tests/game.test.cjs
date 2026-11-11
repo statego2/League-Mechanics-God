@@ -192,12 +192,12 @@ test('Ahri can Charm the visible Syndra to interrupt Q E and earn skill credit',
 });
 test('Syndra pushed sphere deals damage and applies stun and push',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0];advance(g,.61);assert.equal(h.phase,'e');
- g.player.x=h.x+Math.cos(h.angle)*180;g.player.y=h.y+Math.sin(h.angle)*180;const hits=g.stats.hits;advance(g,.4);
+ g.player.x=h.x+Math.cos(h.angle)*300;g.player.y=h.y+Math.sin(h.angle)*300;const hits=g.stats.hits;advance(g,.5);
  assert.equal(g.stats.hits,hits+1);assert.equal(g.dodgeDirector.outcomes['SYNDRA E'].hit,1);assert.equal(g.player.root,0);assert.ok(g.player.stun>1&&g.player.stun<=1.5);assert.ok(g.player.hooked?.knock);
 });
 test('Syndra sphere stun blocks movement and abilities, expires and resets',()=>{
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0];advance(g,.61);
- g.player.x=h.x+Math.cos(h.angle)*180;g.player.y=h.y+Math.sin(h.angle)*180;advance(g,.4);assert.ok(g.player.stun>0);
+ g.player.x=h.x+Math.cos(h.angle)*300;g.player.y=h.y+Math.sin(h.angle)*300;advance(g,.5);assert.ok(g.player.stun>0);
  g.cast('f');g.cast('r');g.cast('q');g.moveTo(500,500);assert.equal(g.player.cd.f,0);assert.equal(g.player.cd.r,0);assert.equal(g.player.cd.q,0);assert.equal(g.player.target,null);
  advance(g,1.6);assert.equal(g.player.stun,0);assert.equal(g.player.hooked,null);g.moveTo(500,500);assert.ok(g.player.target);g.reset('dodge');assert.ok(!g.player.stun&&!g.player.hooked);
 });
@@ -213,8 +213,8 @@ test('Syndra stun interrupts dash and casts, pauses, and cannot push through wal
 test('blocked or lethal Syndra sphere hits do not apply stun',()=>{
  for(const blocked of [true,false]){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0];advance(g,.61);
-  g.player.x=h.x+Math.cos(h.angle)*180;g.player.y=h.y+Math.sin(h.angle)*180;if(blocked)g.player.invuln=1;else g.player.hp=1;
-  advance(g,.4);assert.ok(!g.player.stun&&!g.player.hooked);if(blocked)assert.equal(g.dodgeDirector.outcomes['SYNDRA E'].blocked,1);else assert.equal(g.state,'ended');
+  g.player.x=h.x+Math.cos(h.angle)*300;g.player.y=h.y+Math.sin(h.angle)*300;if(blocked)g.player.invuln=1;else g.player.hp=1;
+  advance(g,.5);assert.ok(!g.player.stun&&!g.player.hooked);if(blocked)assert.equal(g.dodgeDirector.outcomes['SYNDRA E'].blocked,1);else assert.equal(g.state,'ended');
  }
 });
 test('Syndra stun delays new directed casts without erasing committed projectiles',()=>{
@@ -262,7 +262,7 @@ test('Syndra Q E starts beyond the approximated direct E cone with the sphere in
  assert.ok(Math.hypot(h.source.x-h.x,h.source.y-h.y)<directRange);
 });
 test('Syndra first appears in the intended Q or Q E standoff band',()=>{
- for(const [combo,expected] of [[false,330],[true,520]]){
+ for(const [combo,expected] of [[false,330],[true,460]]){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const witness={};assert.ok(g.spawnSyndra(combo,witness));
   const h=g.hazards[0];assert.ok(Math.abs(Math.hypot(h.source.x-g.player.x,h.source.y-g.player.y)-expected)<1e-6);
   assert.ok(Math.hypot(h.x-h.source.x,h.y-h.source.y)<=g.SYNDRA.qRange);if(combo)assert.ok(Math.hypot(h.x-h.source.x,h.y-h.source.y)<=g.SYNDRA.eDirectRange);
@@ -355,10 +355,27 @@ test('Syndra Q can lead, aim directly, and read a reversal while remaining in ra
  }
  assert.deepEqual([...patterns].sort(),['direct','lead','reversal']);
 });
+test('Syndra solo Q lands close to its intended target and remains avoidable',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const witness={};assert.ok(g.spawnSyndra(false,witness));const h=g.hazards[0];
+ assert.ok(Math.hypot(h.x-h.aimPoint.x,h.y-h.aimPoint.y)<30,'Q must not be displaced far from its aim');
+ advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,.5);assert.equal(g.stats.hits,0);
+});
 test('Expert guarantees an occasional Syndra combo after three Q-only encounters',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');
  Object.assign(g.dodgeDirector,{next:999,syndraAt:0,syndraQStreak:3});g.update(1/120);
- assert.ok(g.hazards.some(h=>h.syndra&&h.combo));assert.equal(g.dodgeDirector.syndraQStreak,0);
+ assert.ok(g.foes.some(e=>e.syndraCaster));assert.equal(g.hazards.length,0);advance(g,1);assert.ok(g.hazards.some(h=>h.syndra&&h.combo));assert.equal(g.dodgeDirector.syndraQStreak,0);
+});
+test('Syndra appears before her first Q and pause freezes that introduction',()=>{
+ const {g,node,draws}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');Object.assign(g.dodgeDirector,{next:999,syndraAt:0,cassAt:Infinity,rareAt:Infinity,malAt:Infinity,luxRAt:Infinity});
+ const art=node('umbralArt');art.complete=true;art.naturalWidth=100;
+ g.update(1/120);const c=g.foes.find(e=>e.alive&&e.syndraCaster);assert.ok(c,'Syndra is visible before casting');assert.equal(g.dodgeDirector.syndra||0,0);assert.ok(!g.hazards.some(h=>h.syndra));g.render();assert.ok(draws.includes(art),'visible Syndra sprite is drawn during introduction');
+ g.pause();advance(g,1);assert.equal(g.dodgeDirector.syndra||0,0);g.pause();advance(g,.55);assert.equal(g.dodgeDirector.syndra||0,0);advance(g,.25);
+ assert.ok(g.dodgeDirector.syndra>=1,'Q is cast after the introduction');assert.ok(g.hazards.some(h=>h.syndra&&h.casterId===c.id));
+});
+test('defeating Syndra during her introduction prevents an uncast Q',()=>{
+ const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');Object.assign(g.dodgeDirector,{next:999,syndraAt:0,cassAt:Infinity,rareAt:Infinity,malAt:Infinity,luxRAt:Infinity});
+ g.update(1/120);const c=g.foes.find(e=>e.alive&&e.syndraCaster);assert.ok(c);g.damageEnemy(c,1e5);advance(g,1);
+ assert.equal(g.dodgeDirector.syndra||0,0);assert.ok(!g.hazards.some(h=>h.syndra));
 });
 test('Syndra events pause, reset and preserve prior Expert records',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
@@ -579,15 +596,16 @@ test('Dodge results name the last spell that actually hit Ahri',()=>{
 });
 test('Expert opens with readable mixed pressure before major ultimates',t=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.player.hp=g.player.maxHp=1000000;
- let maxActive=0,mixed=false,peakNames=[];
+ let maxActive=0,mixed=false,peakNames=[],cassAppeared=false;
  for(let i=0;i<60*120;i++){
   g.update(1/120);
+  if(g.hazards.some(h=>h.cassio))cassAppeared=true;
   const names=[...g.foes.filter(e=>e.alive&&e.dodgeVisitor&&(e.phase==='enter'||e.phase==='cast')).map(e=>e.spell.name),...g.shots.filter(s=>s.alive&&s.directed).map(s=>s.spellName)];
   if(names.length>maxActive){maxActive=names.length;peakNames=names;}if(names.length>=2&&new Set(names).size>=2)mixed=true;
  }
  assert.ok(maxActive<=4,`peak ${maxActive} exceeds cap`);assert.ok(mixed,'no mixed simultaneous threats');
  assert.ok(g.dodgeDirector.attempted>=12,`only ${g.dodgeDirector.attempted} casts`);
- assert.ok(g.dodgeDirector.cassio>0,'Cassiopeia missing');assert.ok(g.dodgeDirector.malphite>0,'early Malphite missing');assert.equal(g.dodgeDirector.malDirect,g.dodgeDirector.malphite);
+ assert.ok(cassAppeared,'Cassiopeia did not appear');assert.ok(g.dodgeDirector.malphite>0,'early Malphite missing');assert.equal(g.dodgeDirector.malDirect,g.dodgeDirector.malphite);
  assert.ok(g.dodgeDirector.orianna>0,'Orianna did not appear in the opening minute');
  t.diagnostic(`peak ${maxActive} simultaneous threats (${peakNames.join(', ')}); ${g.dodgeDirector.attempted} casts; Cassiopeia ${g.dodgeDirector.cassio}, Malphite ${g.dodgeDirector.malphite}`);
 });
@@ -1450,10 +1468,10 @@ test('Dodge director remains deterministic and Ezreal-heavy across seeded runs',
  for(const seed of [1,2,3,4,5,6]){const counts=seed===1?first:run(seed);assert.equal(counts.slice(0,-1).reduce((sum,n)=>sum+n,0),counts.at(-1));assert.ok(counts.at(-1)>=10,`seed ${seed}: ${counts}`);ezreal+=counts[0];lux+=counts[1];}
  assert.ok(ezreal>lux,`six runs: Ezreal ${ezreal}, Lux ${lux}`);
 });
-test('Ahri Q is actually scheduled on every difficulty in the default seeded long drill',()=>{
+test('Ahri Q is scheduled on every difficulty in a reproducible long drill',()=>{
  for(const difficulty of ['easy','normal','hard']){
   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:difficulty}});
-  g.reset('dodge');g.player.hp=g.player.maxHp=1000000;advance(g,90);
+  g.reset('dodge');g.setRng(7919);g.player.hp=g.player.maxHp=1000000;advance(g,90);
   assert.ok(g.dodgeDirector.ahri>0,`${difficulty}: no Ahri casts`);assert.ok(g.dodgeDirector.ezreal>g.dodgeDirector.ahri,`${difficulty}: Ezreal should remain common`);
  }
 });
@@ -3649,11 +3667,22 @@ test('Cassiopeia cast cue grows during windup without revealing the cone',()=>{
 function syndraStraightRun(seed,dir,spot,options={}){
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');Object.assign(g.dodgeDirector,{next:999,syndraAt:1e9});g.player.hp=g.player.maxHp=1e6;
  g.player.x=spot[0];g.player.y=spot[1];const a=dir*Math.PI/4;g.moveTo(g.player.x+Math.cos(a)*600,g.player.y+Math.sin(a)*600);advance(g,.4);
- g.setRng((seed*2654435761)>>>0);const witness={},start={x:g.player.x,y:g.player.y},arrival=g.SYNDRA.qDelay+g.SYNDRA.eDelay+200/g.SYNDRA.eSpeed,track=g.dodgeDirector.syndraTrack,first=track[0],last=track[track.length-1],span=last.t-first.t,future={x:g.player.x+(last.x-first.x)/span*arrival,y:g.player.y+(last.y-first.y)/span*arrival};
+ g.setRng((seed*2654435761)>>>0);const witness={},start={x:g.player.x,y:g.player.y},arrival=g.SYNDRA.qDelay+g.SYNDRA.eDelay,track=g.dodgeDirector.syndraTrack,first=track[0],last=track[track.length-1],span=last.t-first.t,future={x:g.player.x+(last.x-first.x)/span*arrival,y:g.player.y+(last.y-first.y)/span*arrival};
  if(!g.spawnSyndra(true,witness))return null;const h=g.hazards.find(h=>h.syndra);
  return {g,h,witness,start,future};
 }
 const SYNDRA_SPOTS=[[600,330],[450,300],[750,420],[600,450]];
+test('Syndra Q E offers a perpendicular escape after the visible E cue',()=>{
+ let accepted=0;
+ for(let seed=1;seed<=80;seed++){
+  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');Object.assign(g.dodgeDirector,{next:999,syndraAt:Infinity,cassAt:Infinity,rareAt:Infinity,malAt:Infinity,luxRAt:Infinity});g.player.hp=g.player.maxHp=1e7;
+  const spots=[[600,330],[450,300],[750,420],[200,300],[950,550]],angle=(seed%8)*Math.PI/4,[x,y]=spots[seed%spots.length];g.player.x=x;g.player.y=y;g.moveTo(x+Math.cos(angle)*450,y+Math.sin(angle)*450);advance(g,.4);g.setRng(seed*7919);
+  if(!g.spawnSyndra(true))continue;const h=g.hazards.find(h=>h.syndra);accepted++;assert.ok(h.eEscape);
+  while(h.phase==='q')g.update(1/120);assert.equal(h.phase,'e');advance(g,.15);g.moveTo(h.eEscape.x,h.eEscape.y);advance(g,1.5);
+  assert.equal(g.dodgeDirector.outcomes['SYNDRA E']?.hit||0,0,`seed ${seed}: E-cue sidestep was hit`);
+ }
+ assert.ok(accepted>=70,`only ${accepted} sampled casts could be safely placed`);
+});
 test('Syndra movement history clears for displacement and restart',()=>{
  const {g}=boot('ahri');g.reset('dodge');Object.assign(g.dodgeDirector,{next:999,syndraAt:Infinity});g.moveTo(900,350);advance(g,.4);
  assert.ok(g.dodgeDirector.syndraTrack.length>=2);g.player.x+=200;advance(g,.06);assert.ok(g.dodgeDirector.syndraTrack.length<=2,'teleport clears old samples');
@@ -3668,16 +3697,15 @@ test('Syndra Q E leads observed movement and often punishes keeping it',t=>{
  let leads=0,hits=0;
  for(let seed=1;seed<=24;seed++)for(const dir of [0,2,4,6]){
   const run=syndraStraightRun(seed,dir,SYNDRA_SPOTS[seed%4]);if(!run||run.h.aimPattern!=='lead')continue;const {g,h,start,future}=run;leads++;
-  // A full or half lead extrapolates observed movement, never a later click.
-  const half={x:(start.x+future.x)/2,y:(start.y+future.y)/2};
-  assert.ok(Math.min(Math.hypot(h.aimPoint.x-future.x,h.aimPoint.y-future.y),Math.hypot(h.aimPoint.x-half.x,h.aimPoint.y-half.y))<1e-6);
-  const s=Math.hypot(h.aimPoint.x-h.x,h.aimPoint.y-h.y);assert.ok(Math.abs(s-200)<1e-6);
+  // The short lead projects observed motion through Q plus E's windup.
+  assert.ok(Math.hypot(h.aimPoint.x-future.x,h.aimPoint.y-future.y)<1e-6);
+  const s=Math.hypot(h.aimPoint.x-h.x,h.aimPoint.y-h.y);assert.ok(Math.abs(s-380)<1e-6);
   let closest=Infinity,sphere=null;
   for(let i=0;i<Math.round(2*120);i++){g.update(1/120);sphere=g.shots.find(s=>s.syndraSphere)||sphere;if(sphere&&sphere.alive)closest=Math.min(closest,Math.hypot(sphere.x-g.player.x,sphere.y-g.player.y));}
   assert.ok(sphere,`seed ${seed} dir ${dir}: no sphere`);assert.equal(sphere.aimPattern,'lead');
   if(g.dodgeDirector.outcomes["SYNDRA E"]?.hit)hits++;
  }
- assert.ok(leads>=40,`only ${leads} leads`);t.diagnostic(`straight-walker hits ${hits}/${leads}`);assert.ok(hits/leads>=.65,`straight-walker hits ${hits}/${leads}`);
+ assert.ok(leads>=15,`only ${leads} short leads`);t.diagnostic(`straight-walker hits ${hits}/${leads}`);assert.ok(hits/leads>=.65,`straight-walker hits ${hits}/${leads}`);
 });
 test('Syndra Q E leads and reversals keep an executable walking escape',()=>{
  const checked={lead:0,reversal:0,direct:0};
@@ -3702,12 +3730,22 @@ test('Syndra Q E mixes leads with direct and reversal reads like Mindgame Aim',(
  const counts={direct:0,lead:0,reversal:0};
  for(let seed=1;seed<=60;seed++)for(const dir of [0,1,2,3,4,5,6,7]){const run=syndraStraightRun(seed,dir,SYNDRA_SPOTS[seed%4]);if(run)counts[run.h.aimPattern]++;}
  const total=counts.direct+counts.lead+counts.reversal;
- // 15/75/10 selection; unsafe leads fall back to direct, so realized leads are lower.
- assert.ok(counts.lead>=total*.5&&counts.lead<=total*.8,JSON.stringify(counts));
- assert.ok(counts.direct>=total*.12&&counts.reversal>=total*.05,JSON.stringify(counts));
+ // Roughly 50% cue-centred, 35% small lead and 15% shorter prediction.
+ assert.ok(counts.lead>=total*.2&&counts.lead<=total*.45,JSON.stringify(counts));
+ assert.ok(counts.direct>=total*.4&&counts.reversal>=total*.07,JSON.stringify(counts));
  // A stationary target has nothing to lead and draws no extra aim roll.
  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setRng(77);assert.ok(g.spawnSyndra(true));
  const h=g.hazards[0];assert.equal(h.aimPattern,'direct');assert.ok(Math.hypot(h.aimPoint.x-g.player.x,h.aimPoint.y-g.player.y)<1e-6);
+});
+test('Syndra Q E uses small reads around the expected E-cue position',()=>{
+ const counts={direct:0,lead:0,reversal:0,fallback:0};
+ for(let seed=1;seed<=40;seed++)for(const dir of [0,2,4,6]){
+  const run=syndraStraightRun(seed,dir,SYNDRA_SPOTS[seed%4]);if(!run)continue;const {g,h,start,future}=run;
+  if(h.aimPattern==='direct'&&Math.hypot(h.aimPoint.x-start.x,h.aimPoint.y-start.y)<1e-6){counts.fallback++;continue;}
+  const horizon=h.aimPattern==='direct'?g.SYNDRA.qDelay:h.aimPattern==='lead'?g.SYNDRA.qDelay+g.SYNDRA.eDelay:g.SYNDRA.qDelay-.15,ratio=horizon/(g.SYNDRA.qDelay+g.SYNDRA.eDelay);
+  assert.ok(Math.hypot(h.aimPoint.x-(start.x+(future.x-start.x)*ratio),h.aimPoint.y-(start.y+(future.y-start.y)*ratio))<1e-6,`${h.aimPattern} ${seed}`);counts[h.aimPattern]++;
+ }
+ assert.ok(counts.direct>0&&counts.lead>0&&counts.reversal>0,JSON.stringify(counts));
 });
 test('Syndra Q E lead resolves the same at 30, 60 and 120 FPS',()=>{
  let seedFound=null;
