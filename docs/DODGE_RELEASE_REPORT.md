@@ -18,7 +18,7 @@ Both are in the 0.70–0.80 acceptance range. Only the Syndra post-visit gap cha
 - Syntax and whitespace checks passed. The targeted Syndra, awareness, build and record suite passed 86 tests. Home/menu state checks passed 2 tests.
 - The 0.15-second reaction fixture accepted 79 regular and 80 edge casts. Its verified escape witness received zero Q or E hits in each corpus; full output is stored in `dodge-release-audit-2026-11-11/`.
 - The normal-HP scripted survival fixture is stored there as well. It is a simulation with no abilities or Flash, not a human difficulty assessment.
-- Full final suite: **549/549 passed** (`node --test --test-concurrency=1 tests/*.test.cjs`).
+- Full final suite: **550/550 passed** (`node --test --test-concurrency=1 tests/*.test.cjs`), including the benchmark output invariant added after the original candidate run.
 
 ## Required before publishing
 
