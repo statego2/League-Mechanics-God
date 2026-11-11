@@ -296,6 +296,13 @@ test('Syndra E windup is counted as unresolved if a run ends before launch',()=>
  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));advance(g,.61);
  assert.equal(g.hazards[0].phase,'e');g.end(false);assert.match(node('dodgeBreakdownText').textContent,/1 unresolved phase/);
 });
+test('cancelled Syndra E is not unresolved if the run ends before the next update',()=>{
+ for(const interruption of ['death','charm']){
+  const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));advance(g,.61);
+  const caster=g.foes.find(e=>e.syndraCaster);if(interruption==='death')g.damageEnemy(caster,1e5);else caster.charm=1;
+  g.end(false);assert.match(node('dodgeBreakdownText').textContent,/0 unresolved phases/,interruption);
+ }
+});
 test('Syndra Q and combo escapes remain executable around the arena',()=>{
  for(const combo of [false,true]){let checked=0;
   for(const [x,y] of [[600,337],[250,180],[930,210],[340,550],[950,530]]){

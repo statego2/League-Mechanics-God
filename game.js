@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="51b71785d09c";
+const BUILD_ID="52a99bab82ac";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -245,7 +245,8 @@ function dodgeOutcomeSummary(){
  // A still-outbound Ahri orb also has a future return phase, even if its
  // outgoing leg already hit. Do not count that future phase once it starts.
  const pendingReturns=shots.filter(s=>s.alive&&s.directed&&s.kind==="enemyOrb"&&s.phase==="out").length;
- const unresolved=new Set(pendingShots.map(s=>s.group||s)).size+pendingReturns+hazards.filter(h=>h.directed&&!h.phaseResolved&&(!(h.orianna||h.malphite||h.cassio)||h.casting)).length+hazards.filter(h=>h.orianna&&h.q&&!h.q.phaseResolved).length+hazards.filter(h=>h.syndra&&h.phase==='e').length;
+ const pendingSyndraE=hazards.filter(h=>h.syndra&&h.phase==='e'&&h.combo&&foes.some(e=>e.id===h.casterId&&e.alive&&!(e.charm>0))).length;
+ const unresolved=new Set(pendingShots.map(s=>s.group||s)).size+pendingReturns+hazards.filter(h=>h.directed&&!h.phaseResolved&&(!(h.orianna||h.malphite||h.cassio)||h.casting)).length+hazards.filter(h=>h.orianna&&h.q&&!h.q.phaseResolved).length+pendingSyndraE;
  return `Phase outcomes${entries.length?`\n${entries.join("\n")}`:": none"}\n${unresolved} unresolved phase${unresolved===1?"":"s"}`;
 }
 function end(win){

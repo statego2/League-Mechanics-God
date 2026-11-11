@@ -1730,3 +1730,7 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 ## Syndra Q blocked-outcome correction (11 November 2026)
 
 - A regression reproduced Syndra Q recording a hit when the player was invulnerable, despite taking no damage. Q now records `blocked` and increments the shared blocked counter, like the other Dodge impacts; hit count, damage and last-hit attribution are not changed. This changes results bookkeeping only, not difficulty or damage. Focused Syndra/build tests passed 50/50; full serial suite passed 529/529. Build `51b71785d09c`.
+
+## Cancelled Syndra E results (11 November 2026)
+
+- Reproduced a results-only edge case: if a Syndra E windup had become invalid because its caster died or was charmed, and the run ended before another update, the results still listed it as unresolved. The results now count that pending E only if the caster can still release it. Both death and Charm regressions pass, and a genuine pending E remains unresolved. No damage, timing or difficulty change. Targeted checks passed 5/5; the full serial suite passed 530/530 on build `52a99bab82ac`.
