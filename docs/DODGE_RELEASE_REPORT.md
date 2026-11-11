@@ -1,6 +1,6 @@
 # Dodge v1.0 release candidate verification
 
-Status: **not shipped**. Build `4a7db6fefed9` is local; the hosted page has not been updated with this candidate. The browser and deployment gates in `DODGE_SHIP_PLAN.md` remain outstanding. Do not infer playable visual verification from automated simulation.
+Status: **verified locally, deployment pending**. Build `0030a3a91f5a`. Browser access succeeded through the Chrome extension after restarting the development server with approval. Earlier reports of a continuing browser permission blocker were inaccurate; the server had stopped.
 
 ## Cadence
 
@@ -18,8 +18,16 @@ Both are in the 0.70–0.80 acceptance range. Only the Syndra post-visit gap cha
 - Syntax and whitespace checks passed. The targeted Syndra, awareness, build and record suite passed 86 tests. Home/menu state checks passed 2 tests.
 - The 0.15-second reaction fixture accepted 79 regular and 80 edge casts. Its verified escape witness received zero Q or E hits in each corpus; full output is stored in `dodge-release-audit-2026-11-11/`.
 - The normal-HP scripted survival fixture is stored there as well. It is a simulation with no abilities or Flash, not a human difficulty assessment.
-- Full final suite: **550/550 passed** (`node --test --test-concurrency=1 tests/*.test.cjs`), including the benchmark output invariant added after the original candidate run.
+- Full final suite: **551/551 passed** (`node --test --test-concurrency=1 tests/*.test.cjs`), including the benchmark output invariant added after the original candidate run.
 
-## Required before publishing
+## Browser verification — 11 November 2026
 
-The prior browser policy denied access during local visual verification and explicitly forbade bypass through alternative browser surfaces. Home, pause, results, focus, real-time gameplay, assets and awareness require a permitted real-browser run and screenshots. Then follow the ship plan's complete pre-push gates, push the verified branch, and verify the exact executing build and gameplay on GitHub Pages. Fetch and the Pages API confirmed `codex/controls-and-dodge` as the `/` source, but this alone does not verify a deployment.
+Chrome: inspected home at 1440×900, 1024×768 and 800×650; visible focus, Enter activation, Space checkbox, settings, scroll, prototypes and result breakdown. Normal-HP Expert retries totalled over three minutes, with movement, QWER/F, Syndra Q/E and stun/recovery, other champions, pause/resume and restart. Foundation/Standard, Kite and CS started with their correct HUD and inputs. Sound toggled back off. Awareness OFF removed the minimap; ON displayed it and missed sightings appeared in results.
+
+A separate temporary QA page added only a visible force-sighting button to exercise rare awareness interactions promptly. G click, Alt click and G drag-up were exercised, with the visible +25 / +20 HP reward. This is controlled-fixture evidence, not a claim about natural appearance timing. The fixture was deleted and is not deployed. Automatic tests cover wrong, missed and unresolved sightings and scoring. Production images were complete with nonzero dimensions; console warning/error checks were empty. No repeated visible freeze was observed. This is functional QA, not a human balance assessment or a guarantee for every reaction scenario. Safari was not exercised in this Chrome session.
+
+Browser testing exposed stale awareness results in pause after retry. Reset now clears them; a regression test and the complete 551-test suite pass. Home, pause, results and awareness screenshots are in the evidence directory. Screenshots before the fix bear the earlier build ID and remain historical evidence.
+
+## Publication
+
+Pages source is `codex/controls-and-dodge`, path `/`. Push and exact live deployment verification follow this local verification commit.

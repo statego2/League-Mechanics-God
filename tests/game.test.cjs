@@ -4005,3 +4005,8 @@ test('Expert 60 s sessions retain Q and Q E while other champions remain active'
  }
  t.diagnostic(summary.join('; '));
 });
+
+test('retry clears previous awareness result before a new pause',()=>{
+ const {g,node}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');g.end(false);assert.equal(node('awarenessResult').hidden,false);
+ g.reset('dodge');g.pause();assert.equal(node('awarenessResult').hidden,true);
+});
