@@ -223,6 +223,13 @@ test('Syndra stun delays new directed casts without erasing committed projectile
  advance(g,.4);assert.equal(g.dodgeDirector.attempted,count,'director cannot launch new threats during stun');assert.equal(g.stats.hits,1,'a projectile committed before stun still hits');
  assert.ok(g.player.stun>0);assert.ok(g.dodgeDirector.hitRecoveryUntil>g.time+g.player.stun);
 });
+test('Syndra stun is visible and blocks actual keyboard and mouse gameplay input',()=>{
+ const {g,node,key,click,texts}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;let flashLocked=null;node('cdF').classList.toggle=(name,active)=>{if(name==='on-cd')flashLocked=active;};g.applySyndraStun(0);g.update(1/120);assert.equal(flashLocked,true,'Flash HUD shows the input lock');
+ g.render();assert.ok(texts.includes('STUNNED'),'status is visible');const original={x:g.player.x,y:g.player.y};
+ for(const k of ['q','w','e','r','f','a'])key(k);click(900,400);advance(g,.4);
+ assert.equal(g.player.cd.q,0);assert.equal(g.player.cd.w,0);assert.equal(g.player.cd.e,0);assert.equal(g.player.cd.r,0);assert.equal(g.player.cd.f,0);assert.equal(g.player.target,null);
+ assert.ok(g.player.x>=original.x,'only the intended push moves Ahri');advance(g,1.2);assert.equal(flashLocked,false,'Flash HUD unlocks after stun');click(900,400);assert.ok(g.player.target,'mouse movement works after recovery');
+});
 test('Syndra E shows a growing cast wave before the pushed sphere launches',()=>{
  const {g,arcs,strokes}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0];
  g.render();assert.ok(!strokes.includes('#d99affbb'));advance(g,.61);
@@ -335,8 +342,8 @@ test('Syndra events pause, reset and preserve prior Expert records',()=>{
  g.pause();advance(g,1);assert.equal(h.ttl,ttl);g.pause();g.reset('dodge');assert.equal(g.hazards.length,0);
  const old='lmg.best.v1.dodge.hard.director_v87.endless.survival',prior='lmg.best.v1.dodge.hard.director_v88.endless.survival';values.set(old,'100');values.set(prior,'80');
  const syndraV1='lmg.best.v1.dodge.hard.director_v89.endless.survival';values.set(syndraV1,'90');
- const syndraV2='lmg.best.v1.dodge.hard.director_v90.endless.survival';values.set(syndraV2,'95');g.setTime(10);g.end(false);
- assert.equal(values.get(old),'100');assert.equal(values.get(prior),'80');assert.equal(values.get(syndraV1),'90');assert.equal(values.get(syndraV2),'95');assert.equal(values.get('lmg.best.v1.dodge.hard.director_v92.endless.survival'),'10');
+ const syndraV2='lmg.best.v1.dodge.hard.director_v90.endless.survival',syndraV3='lmg.best.v1.dodge.hard.director_v91.endless.survival';values.set(syndraV2,'95');values.set(syndraV3,'96');g.setTime(10);g.end(false);
+ assert.equal(values.get(old),'100');assert.equal(values.get(prior),'80');assert.equal(values.get(syndraV1),'90');assert.equal(values.get(syndraV2),'95');assert.equal(values.get(syndraV3),'96');assert.equal(values.get('lmg.best.v1.dodge.hard.director_v92.endless.survival'),'10');
 });
 test('Syndra Q and both E hit paths agree at 30, 60 and 120 FPS',()=>{
  for(const scenario of ['q','cone','sphere','dodge']){

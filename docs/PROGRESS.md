@@ -1712,3 +1712,7 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 ## Syndra visit sequence consistency (11 November 2026)
 
 - Fixed a visit-plan edge case: when the prior visit ended with two solo Qs, a plan beginning with two additional solo Qs could force an unplanned early Q→E. Plan selection now excludes that invalid opening; the three-Q safeguard remains. A new regression checks that actual casts match each visit's planned sequence across eight seeds and 35 seconds each, including incomplete visits. All 48 targeted Syndra/build tests and the complete serial suite (527/527) passed on build `d4e2ec22849d`.
+
+## Syndra input, HUD and record regressions (11 November 2026)
+
+- Added focused checks using the real keyboard and pointer handlers: stun displays its status, locks Flash's HUD and Q/W/E/R/F and movement inputs, then unlocks the HUD and movement when it ends. Verified Expert `director_v91` records remain intact alongside v87–v90 after writing v92. Both new/updated focused tests passed; the preceding complete suite passed 527/527. No executable change; build remains `d4e2ec22849d`.
