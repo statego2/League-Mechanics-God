@@ -1,6 +1,6 @@
 # Dodge v1.0 release candidate verification
 
-Status: **verified locally, deployment pending**. Build `0030a3a91f5a`. Browser access succeeded through the Chrome extension after restarting the development server with approval. Earlier reports of a continuing browser permission blocker were inaccurate; the server had stopped.
+Status: **shipped**. Build `0030a3a91f5a`. Browser access succeeded through the Chrome extension after restarting the development server with approval. Earlier reports of a continuing browser permission blocker were inaccurate; the server had stopped.
 
 ## Cadence
 
@@ -30,4 +30,6 @@ Browser testing exposed stale awareness results in pause after retry. Reset now 
 
 ## Publication
 
-Pages source is `codex/controls-and-dodge`, path `/`. Push and exact live deployment verification follow this local verification commit.
+Published at https://statego2.github.io/League-Mechanics-God/ from `codex/controls-and-dodge`, path `/`.
+
+Gameplay release commit: `7c601c7edc8a8d0cb69516524a190e46da72115f`; executing build `0030a3a91f5a`. GitHub runs `43053526492` (Gameplay regression checks) and `43053521842` (Pages build and deployment) completed successfully on that exact SHA. The Pages API reported it built. A fresh Chrome tab loaded the new home and real executing build label; Play, awareness ON, movement, W, Flash and pause worked. Images were loaded and console warning/error checks returned empty. `live-home.jpg` and `live-playing.jpg` record the deployed build. This report and live screenshots are a subsequent documentation-only commit; they do not change runtime bytes.

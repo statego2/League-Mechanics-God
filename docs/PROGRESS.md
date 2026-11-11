@@ -2,10 +2,14 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Dodge v1.0 shipped (11 November 2026)
+
+- Published gameplay commit `7c601c7edc8a8d0cb69516524a190e46da72115f`, build `0030a3a91f5a`. CI and Pages deployment succeeded for that SHA. Fresh live-tab verification confirmed the executing build, new home, Play, awareness ON, movement/W/Flash/pause, loaded images and no console errors. See DODGE_RELEASE_REPORT.md for evidence and limitations. Kite/CS remain playable and in development.
+
 ## Dodge v1.0 local browser verification (11 November 2026)
 
 - Browser access succeeded through the existing Chrome tab. The localhost server had stopped; it was restarted with explicit tool approval. The earlier ongoing-permission-block diagnosis was inaccurate. Real normal-HP Expert retries totalled over three minutes. Home at 1440×900, 1024×768 and 800×650, pause/results, keyboard activation, sound, awareness OFF/ON, Kite/CS and Foundation/Standard smoke were checked. Forced-sighting QA verified ping rewards; temporary QA files were removed. See DODGE_RELEASE_REPORT.md for precise scope and limitations.
-- Fixed stale awareness results visible in pause after retry. Full suite: 551/551; build `0030a3a91f5a`. Deployment pending.
+- Fixed stale awareness results visible in pause after retry. Full suite: 551/551; build `0030a3a91f5a`. Deployment subsequently completed; see shipped entry above.
 
 ## Dodge v1.0 release candidate (11 November 2026; historical pre-browser notes)
 

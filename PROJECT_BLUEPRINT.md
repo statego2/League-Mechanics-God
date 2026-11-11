@@ -12,7 +12,7 @@
 
 The current release scope is [DODGE_SHIP_PLAN.md](docs/DODGE_SHIP_PLAN.md), with the [Drills home specification](docs/DRILLS_HOME_DESIGN.md) and [current progress audit](docs/DODGE_RELEASE_AUDIT.md). This supersedes the November 10 recovery plan and older release-approval hold for this delivery.
 
-The local candidate implements this scope and passes the automated suite, but is **not shipped**: real-browser and deployment verification remain open. See [DODGE_RELEASE_REPORT.md](docs/DODGE_RELEASE_REPORT.md). Kite and CS remain playable, unfinished prototypes.
+Dodge v1.0 is **shipped** with build `0030a3a91f5a`: 551 automated checks passed, Chrome functional QA completed, and the public executing build was verified after successful CI/Pages deployment. See [DODGE_RELEASE_REPORT.md](docs/DODGE_RELEASE_REPORT.md). Kite and CS remain playable, unfinished prototypes.
 
 - Reduce **only Syndra's actual visit frequency by approximately 25%** from gameplay baseline b37dd9d. Preserve the other champions' cadence parameters and the current Syndra ability/aim/entry behavior.
 - Feature Dodge as the finished v1.0 product on the Drills home; retain playable Kite and CS in muted cards explicitly labeled in development. Preserve Map Awareness, difficulty, sound, controls, assets and results.

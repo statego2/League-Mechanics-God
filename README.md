@@ -14,7 +14,7 @@ python3 scripts/dev-server.py
 
 Visit **http://127.0.0.1:8082/**. This local development server disables browser caching, so a refresh loads the current checkout. Pass `--port 8083` to select another port.
 
-The published project URL is [statego2.github.io/League-Mechanics-God](https://statego2.github.io/League-Mechanics-God/). The local Dodge v1.0 release candidate has not yet passed its browser and deployment gates, so the public site still runs the previous build. See the [release report](docs/DODGE_RELEASE_REPORT.md); use the local server for unpushed work.
+The published project URL is [statego2.github.io/League-Mechanics-God](https://statego2.github.io/League-Mechanics-God/). Dodge v1.0 is published and verified with build `0030a3a91f5a`. See the [release report](docs/DODGE_RELEASE_REPORT.md) for checks and training approximations.
 
 ## Product vision: four main modes (planned)
 
@@ -29,7 +29,7 @@ The finished **League Mechanics God** is intentionally focused on **exactly four
 
 ### What is playable in this checkout
 
-- **Dodge Trial:** an endless Expert-first Dodge v1.0 release candidate, pending the checks above. It has visible champion entries for Ezreal Q, Lux Q, Blitz Q, Ahri Q and Vel’Koz Q, hidden-source Xerath Q/W, and rare Lux R, Cassiopeia R, Orianna R and Malphite R encounters. Expert also includes Syndra Q and occasional Q→E pushed spheres; their presentation and hitboxes are training approximations; her pushed sphere applies a short push and stun. The director uses sampled walkable escapes and an Expert budget of up to four concurrent directed threats; it is a training approximation, not a claim of exact live-client parity.
+- **Dodge Trial:** an endless Expert-first Dodge v1.0 mechanics trainer. It has visible champion entries for Ezreal Q, Lux Q, Blitz Q, Ahri Q and Vel’Koz Q, hidden-source Xerath Q/W, and rare Lux R, Cassiopeia R, Orianna R and Malphite R encounters. Expert also includes Syndra Q and occasional Q→E pushed spheres; their presentation and hitboxes are training approximations; her pushed sphere applies a short push and stun. The director uses sampled walkable escapes and an Expert budget of up to four concurrent directed threats; it is a training approximation, not a claim of exact live-client parity.
 - **Kite Arena:** movement, autos and abilities against enemies; this is **not yet** the approved solo-versus-many Combat Survival experience.
 - **CS Practice:** farm with Ahri across 20 waves over up to ten minutes (126 possible CS), with cannon on every third wave. Two-sided combat, wave placement and attack behavior remain approximations. Melee health grows every three early waves; other minion upgrades and turrets are not yet implemented. This is the unfinished foundation for CS Mastery.
 
