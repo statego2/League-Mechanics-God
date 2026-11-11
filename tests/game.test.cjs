@@ -3709,6 +3709,19 @@ test('Syndra Q E offers a perpendicular escape after the visible E cue',()=>{
  }
  assert.ok(accepted>=70,`only ${accepted} sampled casts could be safely placed`);
 });
+test('Syndra E-cue perpendicular escapes remain executable as Ahri W speed decays',t=>{
+ for(const elapsed of [.1,1]){
+  let accepted=0;
+  for(let seed=1;seed<=40;seed++){
+   const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');Object.assign(g.dodgeDirector,{next:999,syndraAt:Infinity,cassAt:Infinity,rareAt:Infinity,malAt:Infinity,luxRAt:Infinity});g.player.hp=g.player.maxHp=1e7;
+   const spots=[[600,330],[450,300],[750,420],[200,300],[950,550]],angle=(seed%8)*Math.PI/4,[x,y]=spots[seed%spots.length];g.player.x=x;g.player.y=y;g.moveTo(x+Math.cos(angle)*450,y+Math.sin(angle)*450);g.cast('w');advance(g,elapsed);g.setRng(seed*7919);
+   if(!g.spawnSyndra(true))continue;const h=g.hazards.find(h=>h.syndra);accepted++;assert.ok(h.eEscape);
+   while(h.phase==='q')g.update(1/120);assert.equal(h.phase,'e');advance(g,.15);g.moveTo(h.eEscape.x,h.eEscape.y);advance(g,1.5);
+   assert.equal(g.dodgeDirector.outcomes['SYNDRA E']?.hit||0,0,`seed ${seed}, W elapsed ${elapsed}`);
+  }
+  t.diagnostic(`W elapsed ${elapsed}: ${accepted}/40 placements accepted and avoided`);assert.ok(accepted>=20,`only ${accepted} safe placements with W elapsed ${elapsed}`);
+ }
+});
 test('Syndra movement history clears for displacement and restart',()=>{
  const {g}=boot('ahri');g.reset('dodge');Object.assign(g.dodgeDirector,{next:999,syndraAt:Infinity});g.moveTo(900,350);advance(g,.4);
  assert.ok(g.dodgeDirector.syndraTrack.length>=2);g.player.x+=200;advance(g,.06);assert.ok(g.dodgeDirector.syndraTrack.length<=2,'teleport clears old samples');
