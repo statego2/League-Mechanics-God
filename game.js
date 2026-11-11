@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="fe40532814ca";
+const BUILD_ID="00c72d9aca36";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -625,7 +625,7 @@ function spawnSyndra(combo=false,witness=null,fixedCaster=null){
  const angles=fixedCaster?[Math.atan2((combo?aim:player).y-fixedCaster.y,(combo?aim:player).x-fixedCaster.x)]:Array.from({length:24},(_,i)=>first+i*TAU/24);
  for(const a of angles){
   const dx=Math.cos(a),dy=Math.sin(a),anchor=combo?aim:player,sourceDistance=fixedCaster?dist(fixedCaster,anchor):combo?SYNDRA_EQ.sourceDistance:330,source=fixedCaster?{x:fixedCaster.x,y:fixedCaster.y}:{x:anchor.x-dx*sourceDistance,y:anchor.y-dy*sourceDistance};
-  if(fixedCaster&&(combo?sourceDistance>=SYNDRA.eEnd-20||sourceDistance-SYNDRA_EQ.sphereLead<60:sourceDistance<120))continue;
+  if(fixedCaster&&combo&&(sourceDistance>=SYNDRA.eEnd-20||sourceDistance-SYNDRA_EQ.sphereLead<60))continue;
   let q=combo?{x:source.x+dx*(sourceDistance-SYNDRA_EQ.sphereLead),y:source.y+dy*(sourceDistance-SYNDRA_EQ.sphereLead)}:fixedCaster?{x:aim.x+Math.cos(Math.atan2(aim.y-source.y,aim.x-source.x))*qOffset,y:aim.y+Math.sin(Math.atan2(aim.y-source.y,aim.x-source.x))*qOffset}:{x:aim.x+dx*qOffset,y:aim.y+dy*qOffset};
   // The trainer clamps a Q predicted beyond range to the range edge. Escape
   // and terrain checks still apply; live-client targeting remains unverified.

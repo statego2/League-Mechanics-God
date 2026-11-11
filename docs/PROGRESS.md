@@ -1774,3 +1774,8 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 
 - Added a game-loop regression for Syndra Q→E while Ahri's W movement boost is decaying, starting casts at 0.1 and 1.0 seconds into W. In fixed-step simulation 39/40 and 35/40 placements respectively were accepted; every accepted 150-ms post-cue perpendicular witness avoided E. Tested with the existing normal-speed cue and 30/60/120-FPS checks. This finite corpus is not proof of every trajectory or visual fairness. No runtime change; build remains `fe40532814ca`.
 - The first Node 24.21.0 invocation ended at the test-file process level without an assertion or diagnostic; two consecutive targeted reruns passed, including the combined three-test run. The cause of that process-level failure is unknown. The previous complete serial suite passed 541/541 before this test-only addition.
+
+## Syndra solo Q at close range (11 November 2026)
+
+- Reproduced an artificial 120-canvas-unit minimum-distance condition that made a staying Syndra skip solo Q when Ahri was close. Removed that condition for solo Q; combo geometry and the existing range, terrain and executable-escape checks remain unchanged. Targeted regressions cover caster/player distances of 0, 25, 100 and 119 canvas units, as well as maximum-range clamping. These are trainer behavior checks, not proof of exact live-client targeting; Riot's [champion page](https://www.leagueoflegends.com/en-us/champions/syndra/) identifies Dark Sphere but does not specify a minimum range.
+- Focused tests and the full serial suite (543/543) passed on build `00c72d9aca36`. Browser/player review remains outstanding. Removing a skipped-cast case can alter close-range encounter frequency and should be included in the user's playtest.
