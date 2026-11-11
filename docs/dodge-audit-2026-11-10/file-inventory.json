@@ -1,0 +1,902 @@
+[
+  {
+    "path": "League-Mechanics-God/.github/workflows/game-tests.yml",
+    "bytes": 336
+  },
+  {
+    "path": "League-Mechanics-God/.github/workflows/reference-import-tests.yml",
+    "bytes": 707
+  },
+  {
+    "path": "League-Mechanics-God/.gitignore",
+    "bytes": 29
+  },
+  {
+    "path": "League-Mechanics-God/AGENTS.md",
+    "bytes": 395
+  },
+  {
+    "path": "League-Mechanics-God/CODE2_HANDOFF/HANDOFF.md",
+    "bytes": 5159
+  },
+  {
+    "path": "League-Mechanics-God/CODE2_HANDOFF/code2-review.bundle",
+    "bytes": 29383418
+  },
+  {
+    "path": "League-Mechanics-God/CODE2_HANDOFF/round3-wip.patch",
+    "bytes": 61563
+  },
+  {
+    "path": "League-Mechanics-God/PROJECT_BLUEPRINT.md",
+    "bytes": 24529
+  },
+  {
+    "path": "League-Mechanics-God/README.md",
+    "bytes": 7260
+  },
+  {
+    "path": "League-Mechanics-God/ahri-data.js",
+    "bytes": 501
+  },
+  {
+    "path": "League-Mechanics-God/assets/README.md",
+    "bytes": 11747
+  },
+  {
+    "path": "League-Mechanics-God/assets/ahri-back.png",
+    "bytes": 1584869
+  },
+  {
+    "path": "League-Mechanics-God/assets/ahri-side.png",
+    "bytes": 1541201
+  },
+  {
+    "path": "League-Mechanics-God/assets/arena-lane.png",
+    "bytes": 2811387
+  },
+  {
+    "path": "League-Mechanics-God/assets/clockwork-caster.png",
+    "bytes": 1677311
+  },
+  {
+    "path": "League-Mechanics-God/assets/explorer-caster.png",
+    "bytes": 1121139
+  },
+  {
+    "path": "League-Mechanics-God/assets/mage.png",
+    "bytes": 1500189
+  },
+  {
+    "path": "League-Mechanics-God/assets/mid-centered-v3.png",
+    "bytes": 2367881
+  },
+  {
+    "path": "League-Mechanics-God/assets/mid-lane.png",
+    "bytes": 2896339
+  },
+  {
+    "path": "League-Mechanics-God/assets/mid-reference-v2.png",
+    "bytes": 2517749
+  },
+  {
+    "path": "League-Mechanics-God/assets/minion.png",
+    "bytes": 1194596
+  },
+  {
+    "path": "League-Mechanics-God/assets/ranger-back.png",
+    "bytes": 1358528
+  },
+  {
+    "path": "League-Mechanics-God/assets/ranger-front.png",
+    "bytes": 1501685
+  },
+  {
+    "path": "League-Mechanics-God/assets/ranger.png",
+    "bytes": 1379943
+  },
+  {
+    "path": "League-Mechanics-God/assets/serpent-caster.png",
+    "bytes": 1816660
+  },
+  {
+    "path": "League-Mechanics-God/assets/stone-caster.png",
+    "bytes": 2144570
+  },
+  {
+    "path": "League-Mechanics-God/assets/void-caster.png",
+    "bytes": 1138634
+  },
+  {
+    "path": "League-Mechanics-God/data/ahri-snapshot.json",
+    "bytes": 4034
+  },
+  {
+    "path": "League-Mechanics-God/docs/DODGE_GAUNTLET_RHYTHM.md",
+    "bytes": 25420
+  },
+  {
+    "path": "League-Mechanics-God/docs/MECHANICS_ACCELERATOR_VISION.md",
+    "bytes": 19923
+  },
+  {
+    "path": "League-Mechanics-God/docs/MECHANICS_ARENA_DESIGN.md",
+    "bytes": 11567
+  },
+  {
+    "path": "League-Mechanics-God/docs/MID_LANE_MASTERY_DESIGN.md",
+    "bytes": 22273
+  },
+  {
+    "path": "League-Mechanics-God/docs/PROGRESS.md",
+    "bytes": 301661
+  },
+  {
+    "path": "League-Mechanics-God/favicon.svg",
+    "bytes": 283
+  },
+  {
+    "path": "League-Mechanics-God/game.js",
+    "bytes": 176881
+  },
+  {
+    "path": "League-Mechanics-God/index.html",
+    "bytes": 7128
+  },
+  {
+    "path": "League-Mechanics-God/reference/league-of-dodge/.gitignore",
+    "bytes": 131
+  },
+  {
+    "path": "League-Mechanics-God/reference/league-of-dodge/GAMEPLAY_ANALYSIS.md",
+    "bytes": 14605
+  },
+  {
+    "path": "League-Mechanics-God/reference/league-of-dodge/README.md",
+    "bytes": 4611
+  },
+  {
+    "path": "League-Mechanics-God/reference/league-of-dodge/ZIP_INVENTORY.md",
+    "bytes": 26888
+  },
+  {
+    "path": "League-Mechanics-God/reference/league-of-dodge/archives/.gitkeep",
+    "bytes": 0
+  },
+  {
+    "path": "League-Mechanics-God/reference/league-of-dodge/manifest.md",
+    "bytes": 4146
+  },
+  {
+    "path": "League-Mechanics-God/reference/league-of-dodge/originals/.gitkeep",
+    "bytes": 0
+  },
+  {
+    "path": "League-Mechanics-God/reference/league-of-dodge/tools/audit_local_tree.py",
+    "bytes": 5257
+  },
+  {
+    "path": "League-Mechanics-God/reference/league-of-dodge/tools/import_local_refs.py",
+    "bytes": 9019
+  },
+  {
+    "path": "League-Mechanics-God/reference/league-of-dodge/tools/test_audit_local_tree.py",
+    "bytes": 2417
+  },
+  {
+    "path": "League-Mechanics-God/reference/league-of-dodge/tools/test_import_local_refs.py",
+    "bytes": 2400
+  },
+  {
+    "path": "League-Mechanics-God/scripts/build-ahri-data.cjs",
+    "bytes": 2015
+  },
+  {
+    "path": "League-Mechanics-God/scripts/dev-server.py",
+    "bytes": 1006
+  },
+  {
+    "path": "League-Mechanics-God/scripts/update-build.cjs",
+    "bytes": 1064
+  },
+  {
+    "path": "League-Mechanics-God/style.css",
+    "bytes": 9080
+  },
+  {
+    "path": "League-Mechanics-God/tests/ahri-data.test.cjs",
+    "bytes": 1522
+  },
+  {
+    "path": "League-Mechanics-God/tests/game.test.cjs",
+    "bytes": 300254
+  },
+  {
+    "path": "League-Mechanics-God/tests/world.test.cjs",
+    "bytes": 1879
+  },
+  {
+    "path": "League-Mechanics-God/world.js",
+    "bytes": 3510
+  },
+  {
+    "path": "dodge-gauntlet-engine/.github/workflows/game-tests.yml",
+    "bytes": 336
+  },
+  {
+    "path": "dodge-gauntlet-engine/.github/workflows/reference-import-tests.yml",
+    "bytes": 707
+  },
+  {
+    "path": "dodge-gauntlet-engine/.gitignore",
+    "bytes": 29
+  },
+  {
+    "path": "dodge-gauntlet-engine/AGENTS.md",
+    "bytes": 395
+  },
+  {
+    "path": "dodge-gauntlet-engine/PROJECT_BLUEPRINT.md",
+    "bytes": 22250
+  },
+  {
+    "path": "dodge-gauntlet-engine/README.md",
+    "bytes": 5937
+  },
+  {
+    "path": "dodge-gauntlet-engine/ahri-data.js",
+    "bytes": 501
+  },
+  {
+    "path": "dodge-gauntlet-engine/assets/README.md",
+    "bytes": 8878
+  },
+  {
+    "path": "dodge-gauntlet-engine/assets/ahri-back.png",
+    "bytes": 1584869
+  },
+  {
+    "path": "dodge-gauntlet-engine/assets/ahri-side.png",
+    "bytes": 1541201
+  },
+  {
+    "path": "dodge-gauntlet-engine/assets/arena-lane.png",
+    "bytes": 2811387
+  },
+  {
+    "path": "dodge-gauntlet-engine/assets/mage.png",
+    "bytes": 1500189
+  },
+  {
+    "path": "dodge-gauntlet-engine/assets/mid-centered-v3.png",
+    "bytes": 2367881
+  },
+  {
+    "path": "dodge-gauntlet-engine/assets/mid-lane.png",
+    "bytes": 2896339
+  },
+  {
+    "path": "dodge-gauntlet-engine/assets/mid-reference-v2.png",
+    "bytes": 2517749
+  },
+  {
+    "path": "dodge-gauntlet-engine/assets/minion.png",
+    "bytes": 1194596
+  },
+  {
+    "path": "dodge-gauntlet-engine/assets/ranger-back.png",
+    "bytes": 1358528
+  },
+  {
+    "path": "dodge-gauntlet-engine/assets/ranger-front.png",
+    "bytes": 1501685
+  },
+  {
+    "path": "dodge-gauntlet-engine/assets/ranger.png",
+    "bytes": 1379943
+  },
+  {
+    "path": "dodge-gauntlet-engine/data/ahri-snapshot.json",
+    "bytes": 4034
+  },
+  {
+    "path": "dodge-gauntlet-engine/docs/DODGE_GAUNTLET_RHYTHM.md",
+    "bytes": 20320
+  },
+  {
+    "path": "dodge-gauntlet-engine/docs/MECHANICS_ACCELERATOR_VISION.md",
+    "bytes": 19923
+  },
+  {
+    "path": "dodge-gauntlet-engine/docs/MECHANICS_ARENA_DESIGN.md",
+    "bytes": 11567
+  },
+  {
+    "path": "dodge-gauntlet-engine/docs/MID_LANE_MASTERY_DESIGN.md",
+    "bytes": 13152
+  },
+  {
+    "path": "dodge-gauntlet-engine/docs/PROGRESS.md",
+    "bytes": 54174
+  },
+  {
+    "path": "dodge-gauntlet-engine/favicon.svg",
+    "bytes": 283
+  },
+  {
+    "path": "dodge-gauntlet-engine/game.js",
+    "bytes": 71372
+  },
+  {
+    "path": "dodge-gauntlet-engine/index.html",
+    "bytes": 6276
+  },
+  {
+    "path": "dodge-gauntlet-engine/modules/dodge-gauntlet/README.md",
+    "bytes": 4431
+  },
+  {
+    "path": "dodge-gauntlet-engine/reference/league-of-dodge/.gitignore",
+    "bytes": 131
+  },
+  {
+    "path": "dodge-gauntlet-engine/reference/league-of-dodge/GAMEPLAY_ANALYSIS.md",
+    "bytes": 14605
+  },
+  {
+    "path": "dodge-gauntlet-engine/reference/league-of-dodge/README.md",
+    "bytes": 4611
+  },
+  {
+    "path": "dodge-gauntlet-engine/reference/league-of-dodge/ZIP_INVENTORY.md",
+    "bytes": 26888
+  },
+  {
+    "path": "dodge-gauntlet-engine/reference/league-of-dodge/archives/.gitkeep",
+    "bytes": 0
+  },
+  {
+    "path": "dodge-gauntlet-engine/reference/league-of-dodge/manifest.md",
+    "bytes": 4146
+  },
+  {
+    "path": "dodge-gauntlet-engine/reference/league-of-dodge/originals/.gitkeep",
+    "bytes": 0
+  },
+  {
+    "path": "dodge-gauntlet-engine/reference/league-of-dodge/tools/audit_local_tree.py",
+    "bytes": 5257
+  },
+  {
+    "path": "dodge-gauntlet-engine/reference/league-of-dodge/tools/import_local_refs.py",
+    "bytes": 9019
+  },
+  {
+    "path": "dodge-gauntlet-engine/reference/league-of-dodge/tools/test_audit_local_tree.py",
+    "bytes": 2417
+  },
+  {
+    "path": "dodge-gauntlet-engine/reference/league-of-dodge/tools/test_import_local_refs.py",
+    "bytes": 2400
+  },
+  {
+    "path": "dodge-gauntlet-engine/scripts/build-ahri-data.cjs",
+    "bytes": 2015
+  },
+  {
+    "path": "dodge-gauntlet-engine/style.css",
+    "bytes": 8346
+  },
+  {
+    "path": "dodge-gauntlet-engine/tests/ahri-data.test.cjs",
+    "bytes": 1522
+  },
+  {
+    "path": "dodge-gauntlet-engine/tests/game.test.cjs",
+    "bytes": 59187
+  },
+  {
+    "path": "dodge-gauntlet-engine/tests/world.test.cjs",
+    "bytes": 1879
+  },
+  {
+    "path": "dodge-gauntlet-engine/world.js",
+    "bytes": 3510
+  },
+  {
+    "path": "laning-opponent-ai/.github/workflows/game-tests.yml",
+    "bytes": 399
+  },
+  {
+    "path": "laning-opponent-ai/.github/workflows/reference-import-tests.yml",
+    "bytes": 707
+  },
+  {
+    "path": "laning-opponent-ai/.gitignore",
+    "bytes": 29
+  },
+  {
+    "path": "laning-opponent-ai/AGENTS.md",
+    "bytes": 395
+  },
+  {
+    "path": "laning-opponent-ai/PROJECT_BLUEPRINT.md",
+    "bytes": 22250
+  },
+  {
+    "path": "laning-opponent-ai/README.md",
+    "bytes": 5975
+  },
+  {
+    "path": "laning-opponent-ai/ahri-data.js",
+    "bytes": 501
+  },
+  {
+    "path": "laning-opponent-ai/assets/README.md",
+    "bytes": 8878
+  },
+  {
+    "path": "laning-opponent-ai/assets/ahri-back.png",
+    "bytes": 1584869
+  },
+  {
+    "path": "laning-opponent-ai/assets/ahri-side.png",
+    "bytes": 1541201
+  },
+  {
+    "path": "laning-opponent-ai/assets/arena-lane.png",
+    "bytes": 2811387
+  },
+  {
+    "path": "laning-opponent-ai/assets/mage.png",
+    "bytes": 1500189
+  },
+  {
+    "path": "laning-opponent-ai/assets/mid-centered-v3.png",
+    "bytes": 2367881
+  },
+  {
+    "path": "laning-opponent-ai/assets/mid-lane.png",
+    "bytes": 2896339
+  },
+  {
+    "path": "laning-opponent-ai/assets/mid-reference-v2.png",
+    "bytes": 2517749
+  },
+  {
+    "path": "laning-opponent-ai/assets/minion.png",
+    "bytes": 1194596
+  },
+  {
+    "path": "laning-opponent-ai/assets/ranger-back.png",
+    "bytes": 1358528
+  },
+  {
+    "path": "laning-opponent-ai/assets/ranger-front.png",
+    "bytes": 1501685
+  },
+  {
+    "path": "laning-opponent-ai/assets/ranger.png",
+    "bytes": 1379943
+  },
+  {
+    "path": "laning-opponent-ai/data/ahri-snapshot.json",
+    "bytes": 4034
+  },
+  {
+    "path": "laning-opponent-ai/docs/DODGE_GAUNTLET_RHYTHM.md",
+    "bytes": 20320
+  },
+  {
+    "path": "laning-opponent-ai/docs/MECHANICS_ACCELERATOR_VISION.md",
+    "bytes": 19923
+  },
+  {
+    "path": "laning-opponent-ai/docs/MECHANICS_ARENA_DESIGN.md",
+    "bytes": 11567
+  },
+  {
+    "path": "laning-opponent-ai/docs/MID_LANE_MASTERY_DESIGN.md",
+    "bytes": 13152
+  },
+  {
+    "path": "laning-opponent-ai/docs/PROGRESS.md",
+    "bytes": 60198
+  },
+  {
+    "path": "laning-opponent-ai/favicon.svg",
+    "bytes": 283
+  },
+  {
+    "path": "laning-opponent-ai/game.js",
+    "bytes": 71501
+  },
+  {
+    "path": "laning-opponent-ai/index.html",
+    "bytes": 6350
+  },
+  {
+    "path": "laning-opponent-ai/modules/laning-opponent-ai/README.md",
+    "bytes": 9749
+  },
+  {
+    "path": "laning-opponent-ai/modules/laning-opponent-ai/adapter.mjs",
+    "bytes": 3590
+  },
+  {
+    "path": "laning-opponent-ai/modules/laning-opponent-ai/adapter.test.mjs",
+    "bytes": 1991
+  },
+  {
+    "path": "laning-opponent-ai/modules/laning-opponent-ai/brain.mjs",
+    "bytes": 8593
+  },
+  {
+    "path": "laning-opponent-ai/modules/laning-opponent-ai/brain.test.mjs",
+    "bytes": 7998
+  },
+  {
+    "path": "laning-opponent-ai/modules/laning-opponent-ai/demo.mjs",
+    "bytes": 805
+  },
+  {
+    "path": "laning-opponent-ai/modules/laning-opponent-ai/entry.mjs",
+    "bytes": 270
+  },
+  {
+    "path": "laning-opponent-ai/modules/laning-opponent-ai/simulation.mjs",
+    "bytes": 4834
+  },
+  {
+    "path": "laning-opponent-ai/modules/laning-opponent-ai/threat-tracker.mjs",
+    "bytes": 702
+  },
+  {
+    "path": "laning-opponent-ai/reference/league-of-dodge/.gitignore",
+    "bytes": 131
+  },
+  {
+    "path": "laning-opponent-ai/reference/league-of-dodge/GAMEPLAY_ANALYSIS.md",
+    "bytes": 14605
+  },
+  {
+    "path": "laning-opponent-ai/reference/league-of-dodge/README.md",
+    "bytes": 4611
+  },
+  {
+    "path": "laning-opponent-ai/reference/league-of-dodge/ZIP_INVENTORY.md",
+    "bytes": 26888
+  },
+  {
+    "path": "laning-opponent-ai/reference/league-of-dodge/archives/.gitkeep",
+    "bytes": 0
+  },
+  {
+    "path": "laning-opponent-ai/reference/league-of-dodge/manifest.md",
+    "bytes": 4146
+  },
+  {
+    "path": "laning-opponent-ai/reference/league-of-dodge/originals/.gitkeep",
+    "bytes": 0
+  },
+  {
+    "path": "laning-opponent-ai/reference/league-of-dodge/tools/audit_local_tree.py",
+    "bytes": 5257
+  },
+  {
+    "path": "laning-opponent-ai/reference/league-of-dodge/tools/import_local_refs.py",
+    "bytes": 9019
+  },
+  {
+    "path": "laning-opponent-ai/reference/league-of-dodge/tools/test_audit_local_tree.py",
+    "bytes": 2417
+  },
+  {
+    "path": "laning-opponent-ai/reference/league-of-dodge/tools/test_import_local_refs.py",
+    "bytes": 2400
+  },
+  {
+    "path": "laning-opponent-ai/scripts/build-ahri-data.cjs",
+    "bytes": 2015
+  },
+  {
+    "path": "laning-opponent-ai/style.css",
+    "bytes": 8346
+  },
+  {
+    "path": "laning-opponent-ai/tests/ahri-data.test.cjs",
+    "bytes": 1522
+  },
+  {
+    "path": "laning-opponent-ai/tests/game.test.cjs",
+    "bytes": 64322
+  },
+  {
+    "path": "laning-opponent-ai/tests/world.test.cjs",
+    "bytes": 1879
+  },
+  {
+    "path": "laning-opponent-ai/world.js",
+    "bytes": 3510
+  },
+  {
+    "path": "lol-data-research/.github/workflows/game-tests.yml",
+    "bytes": 336
+  },
+  {
+    "path": "lol-data-research/.github/workflows/reference-import-tests.yml",
+    "bytes": 707
+  },
+  {
+    "path": "lol-data-research/.gitignore",
+    "bytes": 29
+  },
+  {
+    "path": "lol-data-research/AGENTS.md",
+    "bytes": 395
+  },
+  {
+    "path": "lol-data-research/PROJECT_BLUEPRINT.md",
+    "bytes": 19388
+  },
+  {
+    "path": "lol-data-research/README.md",
+    "bytes": 4238
+  },
+  {
+    "path": "lol-data-research/assets/README.md",
+    "bytes": 8878
+  },
+  {
+    "path": "lol-data-research/assets/ahri-back.png",
+    "bytes": 1584869
+  },
+  {
+    "path": "lol-data-research/assets/ahri-side.png",
+    "bytes": 1541201
+  },
+  {
+    "path": "lol-data-research/assets/arena-lane.png",
+    "bytes": 2811387
+  },
+  {
+    "path": "lol-data-research/assets/mage.png",
+    "bytes": 1500189
+  },
+  {
+    "path": "lol-data-research/assets/mid-centered-v3.png",
+    "bytes": 2367881
+  },
+  {
+    "path": "lol-data-research/assets/mid-lane.png",
+    "bytes": 2896339
+  },
+  {
+    "path": "lol-data-research/assets/mid-reference-v2.png",
+    "bytes": 2517749
+  },
+  {
+    "path": "lol-data-research/assets/minion.png",
+    "bytes": 1194596
+  },
+  {
+    "path": "lol-data-research/assets/ranger-back.png",
+    "bytes": 1358528
+  },
+  {
+    "path": "lol-data-research/assets/ranger-front.png",
+    "bytes": 1501685
+  },
+  {
+    "path": "lol-data-research/assets/ranger.png",
+    "bytes": 1379943
+  },
+  {
+    "path": "lol-data-research/docs/PROGRESS.md",
+    "bytes": 36680
+  },
+  {
+    "path": "lol-data-research/favicon.svg",
+    "bytes": 283
+  },
+  {
+    "path": "lol-data-research/game.js",
+    "bytes": 51952
+  },
+  {
+    "path": "lol-data-research/index.html",
+    "bytes": 6233
+  },
+  {
+    "path": "lol-data-research/reference/league-of-dodge/.gitignore",
+    "bytes": 131
+  },
+  {
+    "path": "lol-data-research/reference/league-of-dodge/GAMEPLAY_ANALYSIS.md",
+    "bytes": 10634
+  },
+  {
+    "path": "lol-data-research/reference/league-of-dodge/README.md",
+    "bytes": 4717
+  },
+  {
+    "path": "lol-data-research/reference/league-of-dodge/archives/.gitkeep",
+    "bytes": 0
+  },
+  {
+    "path": "lol-data-research/reference/league-of-dodge/manifest.md",
+    "bytes": 7554
+  },
+  {
+    "path": "lol-data-research/reference/league-of-dodge/originals/.gitkeep",
+    "bytes": 0
+  },
+  {
+    "path": "lol-data-research/reference/league-of-dodge/tools/audit_local_tree.py",
+    "bytes": 4914
+  },
+  {
+    "path": "lol-data-research/reference/league-of-dodge/tools/import_local_refs.py",
+    "bytes": 9019
+  },
+  {
+    "path": "lol-data-research/reference/league-of-dodge/tools/test_audit_local_tree.py",
+    "bytes": 1807
+  },
+  {
+    "path": "lol-data-research/reference/league-of-dodge/tools/test_import_local_refs.py",
+    "bytes": 2400
+  },
+  {
+    "path": "lol-data-research/research/lol-data/DATA_GAPS.md",
+    "bytes": 2172
+  },
+  {
+    "path": "lol-data-research/research/lol-data/ENGINEERING_SPEC.md",
+    "bytes": 25478
+  },
+  {
+    "path": "lol-data-research/research/lol-data/INTEGRATION_GUIDE.md",
+    "bytes": 4142
+  },
+  {
+    "path": "lol-data-research/research/lol-data/README.md",
+    "bytes": 2445
+  },
+  {
+    "path": "lol-data-research/research/lol-data/SOURCES.md",
+    "bytes": 2867
+  },
+  {
+    "path": "lol-data-research/research/lol-data/champions/featured.json",
+    "bytes": 6939
+  },
+  {
+    "path": "lol-data-research/research/lol-data/champions/historical/ahri.json",
+    "bytes": 26620
+  },
+  {
+    "path": "lol-data-research/research/lol-data/champions/historical/blitzcrank.json",
+    "bytes": 22615
+  },
+  {
+    "path": "lol-data-research/research/lol-data/champions/historical/ezreal.json",
+    "bytes": 22956
+  },
+  {
+    "path": "lol-data-research/research/lol-data/champions/historical/lux.json",
+    "bytes": 23359
+  },
+  {
+    "path": "lol-data-research/research/lol-data/champions/historical/morgana.json",
+    "bytes": 25477
+  },
+  {
+    "path": "lol-data-research/research/lol-data/champions/historical/orianna.json",
+    "bytes": 24887
+  },
+  {
+    "path": "lol-data-research/research/lol-data/champions/historical/syndra.json",
+    "bytes": 29829
+  },
+  {
+    "path": "lol-data-research/research/lol-data/champions/historical/thresh.json",
+    "bytes": 30318
+  },
+  {
+    "path": "lol-data-research/research/lol-data/champions/historical/tristana.json",
+    "bytes": 29219
+  },
+  {
+    "path": "lol-data-research/research/lol-data/champions/historical/varus.json",
+    "bytes": 34599
+  },
+  {
+    "path": "lol-data-research/research/lol-data/champions/historical/velkoz.json",
+    "bytes": 26967
+  },
+  {
+    "path": "lol-data-research/research/lol-data/champions/historical/xerath.json",
+    "bytes": 28645
+  },
+  {
+    "path": "lol-data-research/research/lol-data/champions/riot-roster.json",
+    "bytes": 1489244
+  },
+  {
+    "path": "lol-data-research/research/lol-data/core/rules.json",
+    "bytes": 2079
+  },
+  {
+    "path": "lol-data-research/research/lol-data/minions/behavior.json",
+    "bytes": 4228
+  },
+  {
+    "path": "lol-data-research/research/lol-data/minions/stats.json",
+    "bytes": 8814
+  },
+  {
+    "path": "lol-data-research/research/lol-data/minions/waves.json",
+    "bytes": 3268
+  },
+  {
+    "path": "lol-data-research/research/lol-data/schemas/measurement.schema.json",
+    "bytes": 682
+  },
+  {
+    "path": "lol-data-research/research/lol-data/scripts/import.py",
+    "bytes": 3040
+  },
+  {
+    "path": "lol-data-research/research/lol-data/skillshots/abilities.json",
+    "bytes": 4281
+  },
+  {
+    "path": "lol-data-research/research/lol-data/source/riot-champion-16.21.1.json",
+    "bytes": 159011
+  },
+  {
+    "path": "lol-data-research/research/lol-data/tests/test_data.py",
+    "bytes": 2392
+  },
+  {
+    "path": "lol-data-research/style.css",
+    "bytes": 8346
+  },
+  {
+    "path": "lol-data-research/tests/game.test.cjs",
+    "bytes": 40539
+  },
+  {
+    "path": "lol-data-research/tests/world.test.cjs",
+    "bytes": 1879
+  },
+  {
+    "path": "lol-data-research/world.js",
+    "bytes": 3510
+  },
+  {
+    "path": "implementation/LaneLabActorVisual.cs",
+    "bytes": 1251
+  },
+  {
+    "path": "implementation/LaneLabBuilder.cs",
+    "bytes": 14313
+  },
+  {
+    "path": "implementation/LaneLabPresentation.cs",
+    "bytes": 6376
+  },
+  {
+    "path": "research/skillgap-class-methods.json",
+    "bytes": 4978
+  },
+  {
+    "path": "research/skillgap-inspection.md",
+    "bytes": 5485
+  },
+  {
+    "path": "research/skillgap-installer-file-list.txt",
+    "bytes": 8080
+  }
+]

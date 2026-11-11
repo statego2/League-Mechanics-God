@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="23500ca28b3e";
+const BUILD_ID="28781371432d";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -625,7 +625,7 @@ function spawnSyndra(combo=false,witness=null,fixedCaster=null){
   const dx=Math.cos(a),dy=Math.sin(a),anchor=combo?aim:player,sourceDistance=fixedCaster?dist(fixedCaster,anchor):combo?SYNDRA_EQ.sourceDistance:300,source=fixedCaster?{x:fixedCaster.x,y:fixedCaster.y}:{x:anchor.x-dx*sourceDistance,y:anchor.y-dy*sourceDistance};
   if(fixedCaster&&(combo?sourceDistance>=SYNDRA.eEnd-20||sourceDistance-SYNDRA_EQ.sphereLead<60:sourceDistance<120))continue;
   const q=combo?{x:source.x+dx*(sourceDistance-SYNDRA_EQ.sphereLead),y:source.y+dy*(sourceDistance-SYNDRA_EQ.sphereLead)}:fixedCaster?{x:aim.x+Math.cos(Math.atan2(aim.y-source.y,aim.x-source.x))*qOffset,y:aim.y+Math.sin(Math.atan2(aim.y-source.y,aim.x-source.x))*qOffset}:{x:aim.x+dx*qOffset,y:aim.y+dy*qOffset};
-  if(source.x<60||source.x>W-60||source.y<145||source.y>H-40||!world.pointWalkable(source,20)||dist(source,q)>SYNDRA.qRange||q.x<30||q.x>W-30||q.y<70||q.y>H-30)continue;
+  if(source.x<60||source.x>W-60||source.y<145||source.y>H-40||!world.pointWalkable(source,20)||dist(source,q)>SYNDRA.qRange||(combo&&dist(source,q)>SYNDRA.eDirectRange)||q.x<30||q.x>W-30||q.y<70||q.y>H-30)continue;
   // A predicted push must still begin outside the direct E cone's reach.
   if(combo&&dist(source,player)<=SYNDRA.eDirectRange+10)continue;
   const launch=SYNDRA.qDelay+SYNDRA.eDelay,travel=(SYNDRA.eEnd-dist(source,q))/SYNDRA.eSpeed;
@@ -1240,7 +1240,9 @@ function updateSyndraCaster(e,dt){
   if(time-stay.leaving>=SYNDRA_STAY.exit||e.x<-40||e.x>W+40||e.y<-40||e.y>H+40)e.alive=false;return;
  }
  const own=hazards.find(h=>h.syndra&&h.casterId===e.id);
- if(own&&(own.phase==='e'||own.phase==='q'&&own.max-own.ttl<.25)){e.walking=false;return;}
+ // The committed combo keeps its source fixed until E releases, so the
+ // visible caster and the collision cone cannot drift apart.
+ if(own&&(own.phase==='e'||own.phase==='q'&&(own.combo||own.max-own.ttl<.25))){e.walking=false;return;}
  const band=dodgeDirector.syndraNextCombo?SYNDRA_STAY.comboBand:SYNDRA_STAY.qBand;
  const bearing=Math.atan2(e.y-player.y,e.x-player.x)+Math.sin(time*.8+e.id)*.6*dt;
  // Prefer the nearest spot on the band she can walk to in a straight line,

@@ -1,0 +1,3117 @@
+TAP version 13
+# Subtest: checked-in Ahri data matches its provenance-bearing snapshot
+ok 1 - checked-in Ahri data matches its provenance-bearing snapshot
+  ---
+  duration_ms: 23.44975
+  type: 'test'
+  ...
+# Subtest: data generator rejects null, mismatched patch and incorrect units
+ok 2 - data generator rejects null, mismatched patch and incorrect units
+  ---
+  duration_ms: 77.438625
+  type: 'test'
+  ...
+# Subtest: visible build identifies the executed script and matches its cache key
+ok 3 - visible build identifies the executed script and matches its cache key
+  ---
+  duration_ms: 13.255208
+  type: 'test'
+  ...
+# Subtest: map awareness is optional, Dodge only, and pings reward once
+ok 4 - map awareness is optional, Dodge only, and pings reward once
+  ---
+  duration_ms: 3.645916
+  type: 'test'
+  ...
+# Subtest: difficulty names match the menu in play and in local-best results
+ok 5 - difficulty names match the menu in play and in local-best results
+  ---
+  duration_ms: 12.772584
+  type: 'test'
+  ...
+# Subtest: awareness expires after three seconds and a wrong ping earns nothing
+ok 6 - awareness expires after three seconds and a wrong ping earns nothing
+  ---
+  duration_ms: 3.329292
+  type: 'test'
+  ...
+# Subtest: awareness rewards cap at max health and never consume combat RNG
+ok 7 - awareness rewards cap at max health and never consume combat RNG
+  ---
+  duration_ms: 5.842375
+  type: 'test'
+  ...
+# Subtest: awareness feedback reports the health actually restored
+ok 8 - awareness feedback reports the health actually restored
+  ---
+  duration_ms: 9.634167
+  type: 'test'
+  ...
+# Subtest: a ping on empty minimap space gives visible feedback without awarding a sighting
+ok 9 - a ping on empty minimap space gives visible feedback without awarding a sighting
+  ---
+  duration_ms: 4.272292
+  type: 'test'
+  ...
+# Subtest: jungler appearances stay silent and a player ping uses the optional sound
+ok 10 - jungler appearances stay silent and a player ping uses the optional sound
+  ---
+  duration_ms: 3.129458
+  type: 'test'
+  ...
+# Subtest: an old or empty ping gesture cannot claim a later jungler appearance
+ok 11 - an old or empty ping gesture cannot claim a later jungler appearance
+  ---
+  duration_ms: 5.888167
+  type: 'test'
+  ...
+# Subtest: a successful awareness ping is included in the Dodge result
+ok 12 - a successful awareness ping is included in the Dodge result
+  ---
+  duration_ms: 4.177334
+  type: 'test'
+  ...
+# Subtest: awareness results show missed sightings and do not count unfinished ones as missed
+ok 13 - awareness results show missed sightings and do not count unfinished ones as missed
+  ---
+  duration_ms: 3.004875
+  type: 'test'
+  ...
+# Subtest: awareness minimap draws the top tier 3 towers for both teams
+ok 14 - awareness minimap draws the top tier 3 towers for both teams
+  ---
+  duration_ms: 3.17825
+  type: 'test'
+  ...
+# Subtest: awareness uses a bounded enemy portrait with a safe missing-art fallback
+ok 15 - awareness uses a bounded enemy portrait with a safe missing-art fallback
+  ---
+  duration_ms: 5.996125
+  type: 'test'
+  ...
+# Subtest: Alt click and drag upward pings the original jungler position on release
+ok 16 - Alt click and drag upward pings the original jungler position on release
+  ---
+  duration_ms: 2.666334
+  type: 'test'
+  ...
+# Subtest: Alt quick ping, sideways drag, cancellation and pause behave safely
+ok 17 - Alt quick ping, sideways drag, cancellation and pause behave safely
+  ---
+  duration_ms: 12.805125
+  type: 'test'
+  ...
+# Subtest: minimap input cannot command or aim at the hidden arena beneath it
+ok 18 - minimap input cannot command or aim at the hidden arena beneath it
+  ---
+  duration_ms: 3.263584
+  type: 'test'
+  ...
+# Subtest: a gameplay command cancels an armed map ping before the next click
+ok 19 - a gameplay command cancels an armed map ping before the next click
+  ---
+  duration_ms: 9.284042
+  type: 'test'
+  ...
+# Subtest: casting an ability cancels an armed attack-move before the next click
+ok 20 - casting an ability cancels an armed attack-move before the next click
+  ---
+  duration_ms: 15.23375
+  type: 'test'
+  ...
+# Subtest: Dodge restart varies the opening encounter
+ok 21 - Dodge restart varies the opening encounter
+  ---
+  duration_ms: 3.827375
+  type: 'test'
+  ...
+# Subtest: Syndra Q stays in cast range, visibly resolves at 0.6 seconds, and a witness can dodge
+ok 22 - Syndra Q stays in cast range, visibly resolves at 0.6 seconds, and a witness can dodge
+  ---
+  duration_ms: 10.188042
+  type: 'test'
+  ...
+# Subtest: Syndra is targetable and her committed Q survives her defeat
+ok 23 - Syndra is targetable and her committed Q survives her defeat
+  ---
+  duration_ms: 5.448375
+  type: 'test'
+  ...
+# Subtest: Syndra uses Riot snapshot base defenses and an Ahri E cannot one-shot her
+ok 24 - Syndra uses Riot snapshot base defenses and an Ahri E cannot one-shot her
+  ---
+  duration_ms: 4.584042
+  type: 'test'
+  ...
+# Subtest: defeating or charming Syndra before E stops the follow-up but not her committed Q
+ok 25 - defeating or charming Syndra before E stops the follow-up but not her committed Q
+  ---
+  duration_ms: 9.417875
+  type: 'test'
+  ...
+# Subtest: Charm cancels Syndra E during windup but not a sphere already launched
+ok 26 - Charm cancels Syndra E during windup but not a sphere already launched
+  ---
+  duration_ms: 9.726875
+  type: 'test'
+  ...
+# Subtest: Ahri can Charm the visible Syndra to interrupt Q E and earn skill credit
+ok 27 - Ahri can Charm the visible Syndra to interrupt Q E and earn skill credit
+  ---
+  duration_ms: 7.361208
+  type: 'test'
+  ...
+# Subtest: Syndra Q E creates a pushed sphere after Q and its separate damage does not immobilize
+ok 28 - Syndra Q E creates a pushed sphere after Q and its separate damage does not immobilize
+  ---
+  duration_ms: 4.536792
+  type: 'test'
+  ...
+# Subtest: Syndra E shows a growing cast wave before the pushed sphere launches
+ok 29 - Syndra E shows a growing cast wave before the pushed sphere launches
+  ---
+  duration_ms: 6.021083
+  type: 'test'
+  ...
+# Subtest: lethal Syndra Q records the hit and retains its impact animation
+ok 30 - lethal Syndra Q records the hit and retains its impact animation
+  ---
+  duration_ms: 5.535709
+  type: 'test'
+  ...
+# Subtest: Syndra combo offers an executable Q and E escape
+ok 31 - Syndra combo offers an executable Q and E escape
+  ---
+  duration_ms: 114.06775
+  type: 'test'
+  ...
+# Subtest: Syndra Q E starts beyond the approximated direct E cone with the sphere inside it
+ok 32 - Syndra Q E starts beyond the approximated direct E cone with the sphere inside it
+  ---
+  duration_ms: 3.60525
+  type: 'test'
+  ...
+# Subtest: Syndra E cone hits at release once even if its pushed sphere also crosses Ahri
+ok 33 - Syndra E cone hits at release once even if its pushed sphere also crosses Ahri
+  ---
+  duration_ms: 6.284875
+  type: 'test'
+  ...
+# Subtest: Syndra E direct cone excludes players outside its angular boundary
+ok 34 - Syndra E direct cone excludes players outside its angular boundary
+  ---
+  duration_ms: 4.803167
+  type: 'test'
+  ...
+# Subtest: Syndra E direct cone uses the documented training radius and angle
+ok 35 - Syndra E direct cone uses the documented training radius and angle
+  ---
+  duration_ms: 16.1335
+  type: 'test'
+  ...
+# Subtest: lethal direct Syndra E resolves once and leaves its impact visible
+ok 36 - lethal direct Syndra E resolves once and leaves its impact visible
+  ---
+  duration_ms: 5.299209
+  type: 'test'
+  ...
+# Subtest: Dodge results list Syndra Q and E among the cast totals
+ok 37 - Dodge results list Syndra Q and E among the cast totals
+  ---
+  duration_ms: 7.728834
+  type: 'test'
+  ...
+# Subtest: Syndra E windup is counted as unresolved if a run ends before launch
+ok 38 - Syndra E windup is counted as unresolved if a run ends before launch
+  ---
+  duration_ms: 3.961167
+  type: 'test'
+  ...
+# Subtest: Syndra Q and combo escapes remain executable around the arena
+ok 39 - Syndra Q and combo escapes remain executable around the arena
+  ---
+  duration_ms: 51.384708
+  type: 'test'
+  ...
+# Subtest: Syndra escape witnesses work with an existing movement order and W boost
+ok 40 - Syndra escape witnesses work with an existing movement order and W boost
+  ---
+  duration_ms: 129.828916
+  type: 'test'
+  ...
+# Subtest: Expert director schedules Syndra as part of endless Dodge
+ok 41 - Expert director schedules Syndra as part of endless Dodge
+  ---
+  duration_ms: 193.696583
+  type: 'test'
+  ...
+# Subtest: Syndra Q remains the main pattern while Q E appears in sustained Expert sessions
+ok 42 - Syndra Q remains the main pattern while Q E appears in sustained Expert sessions
+  ---
+  duration_ms: 1019.983583
+  type: 'test'
+  ...
+# [{"seed":11,"q":71,"e":18,"firstQ":7.7,"firstE":12.9},{"seed":29,"q":75,"e":19,"firstQ":7.6,"firstE":18.9},{"seed":71,"q":69,"e":18,"firstQ":6.9,"firstE":34.4}]
+# Subtest: Syndra Q can lead, aim directly, and read a reversal while remaining in range
+ok 43 - Syndra Q can lead, aim directly, and read a reversal while remaining in range
+  ---
+  duration_ms: 321.146708
+  type: 'test'
+  ...
+# Subtest: Expert guarantees an occasional Syndra combo after three Q-only encounters
+ok 44 - Expert guarantees an occasional Syndra combo after three Q-only encounters
+  ---
+  duration_ms: 3.4175
+  type: 'test'
+  ...
+# Subtest: Syndra events pause, reset and preserve prior Expert records
+ok 45 - Syndra events pause, reset and preserve prior Expert records
+  ---
+  duration_ms: 3.570625
+  type: 'test'
+  ...
+# Subtest: Syndra Q and both E hit paths agree at 30, 60 and 120 FPS
+ok 46 - Syndra Q and both E hit paths agree at 30, 60 and 120 FPS
+  ---
+  duration_ms: 382.028375
+  type: 'test'
+  ...
+# Subtest: Orianna shockwave draws animated impact arcs
+ok 47 - Orianna shockwave draws animated impact arcs
+  ---
+  duration_ms: 3.476291
+  type: 'test'
+  ...
+# Subtest: Expert Orianna centres her shockwave and a Flash response escapes the real impact
+ok 48 - Expert Orianna centres her shockwave and a Flash response escapes the real impact
+  ---
+  duration_ms: 5.161667
+  type: 'test'
+  ...
+# Subtest: Standard Orianna retains the sourced 0.5 second cast
+ok 49 - Standard Orianna retains the sourced 0.5 second cast
+  ---
+  duration_ms: 4.797292
+  type: 'test'
+  ...
+# Subtest: Orianna R uses the smaller visible area and its true collision boundary
+ok 50 - Orianna R uses the smaller visible area and its true collision boundary
+  ---
+  duration_ms: 8.068458
+  type: 'test'
+  ...
+# Subtest: Expert Orianna gives a visible 0.6 second Flash window
+ok 51 - Expert Orianna gives a visible 0.6 second Flash window
+  ---
+  duration_ms: 4.9765
+  type: 'test'
+  ...
+# Subtest: Expert Orianna can be flashed after a 300ms reaction to R
+ok 52 - Expert Orianna can be flashed after a 300ms reaction to R
+  ---
+  duration_ms: 5.29725
+  type: 'test'
+  ...
+# Subtest: the visible Orianna R circle gives time to Flash and move clear
+ok 53 - the visible Orianna R circle gives time to Flash and move clear
+  ---
+  duration_ms: 5.862958
+  type: 'test'
+  ...
+# Subtest: Expert Orianna ball arrives at a fixed destination and never follows Ahri
+ok 54 - Expert Orianna ball arrives at a fixed destination and never follows Ahri
+  ---
+  duration_ms: 4.346584
+  type: 'test'
+  ...
+# Subtest: Expert Orianna completes the ball combo if Ahri Flashes during Q travel
+ok 55 - Expert Orianna completes the ball combo if Ahri Flashes during Q travel
+  ---
+  duration_ms: 4.83
+  type: 'test'
+  ...
+# Subtest: Expert Orianna commits R after Q even if Ahri becomes unable to Flash
+ok 56 - Expert Orianna commits R after Q even if Ahri becomes unable to Flash
+  ---
+  duration_ms: 4.84775
+  type: 'test'
+  ...
+# Subtest: centred Orianna Flash witnesses survive actual impact while Ahri is moving
+ok 57 - centred Orianna Flash witnesses survive actual impact while Ahri is moving
+  ---
+  duration_ms: 37.597083
+  type: 'test'
+  ...
+# Subtest: centred Orianna Flash witnesses remain executable near sampled arena edges
+ok 58 - centred Orianna Flash witnesses remain executable near sampled arena edges
+  ---
+  duration_ms: 85.812459
+  type: 'test'
+  ...
+# Subtest: Expert Malphite aims at the player and flash-only ultimates wait for Flash
+ok 59 - Expert Malphite aims at the player and flash-only ultimates wait for Flash
+  ---
+  duration_ms: 3.636125
+  type: 'test'
+  ...
+# Subtest: Malphite dash leaves dust only behind its current position
+ok 60 - Malphite dash leaves dust only behind its current position
+  ---
+  duration_ms: 3.066792
+  type: 'test'
+  ...
+# Subtest: Expert naturally introduces direct Malphite early across seeded runs
+ok 61 - Expert naturally introduces direct Malphite early across seeded runs
+  ---
+  duration_ms: 159.640208
+  type: 'test'
+  ...
+# Subtest: Flash cooldown postpones direct ultimates without stopping regular threats
+ok 62 - Flash cooldown postpones direct ultimates without stopping regular threats
+  ---
+  duration_ms: 7.017791
+  type: 'test'
+  ...
+# Subtest: pause and blur freeze direct ultimate casts and Flash cooldown
+ok 63 - pause and blur freeze direct ultimate casts and Flash cooldown
+  ---
+  duration_ms: 9.414666
+  type: 'test'
+  ...
+# Subtest: Expert Dodge has a bounded flow-spike-recovery rhythm
+ok 64 - Expert Dodge has a bounded flow-spike-recovery rhythm
+  ---
+  duration_ms: 3.434625
+  type: 'test'
+  ...
+# Subtest: Expert Lux R shows a source tell before its 0.9 second visible charge
+ok 65 - Expert Lux R shows a source tell before its 0.9 second visible charge
+  ---
+  duration_ms: 4.126958
+  type: 'test'
+  ...
+# Subtest: Lux R impact draws the same width as its collision beam
+ok 66 - Lux R impact draws the same width as its collision beam
+  ---
+  duration_ms: 5.355125
+  type: 'test'
+  ...
+# Subtest: Lux R aims its center through Ahri at spawn across approach angles
+ok 67 - Lux R aims its center through Ahri at spawn across approach angles
+  ---
+  duration_ms: 85.648042
+  type: 'test'
+  ...
+# Subtest: a stationary player at Lux R center takes damage at impact
+ok 68 - a stationary player at Lux R center takes damage at impact
+  ---
+  duration_ms: 4.652125
+  type: 'test'
+  ...
+# Subtest: Lux R supplies and executes a normal walking sidestep
+ok 69 - Lux R supplies and executes a normal walking sidestep
+  ---
+  duration_ms: 84.024042
+  type: 'test'
+  ...
+# Subtest: Lux R locks its beam direction throughout the charge
+ok 70 - Lux R locks its beam direction throughout the charge
+  ---
+  duration_ms: 4.708125
+  type: 'test'
+  ...
+# Subtest: Dodge results name the last spell that actually hit Ahri
+ok 71 - Dodge results name the last spell that actually hit Ahri
+  ---
+  duration_ms: 3.98725
+  type: 'test'
+  ...
+# Subtest: Expert opens with readable mixed pressure before major ultimates
+ok 72 - Expert opens with readable mixed pressure before major ultimates
+  ---
+  duration_ms: 142.303959
+  type: 'test'
+  ...
+# peak 3 simultaneous threats (EZREAL Q, BLITZ Q, LUX Q); 40 casts; Cassiopeia 1, Malphite 1
+# Subtest: Expert arms major Dodge patterns on separate readable clocks
+ok 73 - Expert arms major Dodge patterns on separate readable clocks
+  ---
+  duration_ms: 22.723041
+  type: 'test'
+  ...
+# Subtest: Expert independently schedules up to two concurrent threats in seeded play
+ok 74 - Expert independently schedules up to two concurrent threats in seeded play
+  ---
+  duration_ms: 2869.624541
+  type: 'test'
+  ...
+# peak 3, distinct spells 3, simultaneous missiles 2
+# Subtest: Expert retains occasional overlapping live missiles during sustained seeded play
+ok 75 - Expert retains occasional overlapping live missiles during sustained seeded play
+  ---
+  duration_ms: 745.244208
+  type: 'test'
+  ...
+# peak eligible missiles 2
+# Subtest: Expert avoids a duplicate champion while an earlier visitor is still visible
+ok 76 - Expert avoids a duplicate champion while an earlier visitor is still visible
+  ---
+  duration_ms: 142.058
+  type: 'test'
+  ...
+# Subtest: Dodge reaction forecast follows the retained movement route
+ok 77 - Dodge reaction forecast follows the retained movement route
+  ---
+  duration_ms: 3.701
+  type: 'test'
+  ...
+# Subtest: Mindgame Timing varies visible entry without changing the spell windup
+ok 78 - Mindgame Timing varies visible entry without changing the spell windup
+  ---
+  duration_ms: 115.758833
+  type: 'test'
+  ...
+# Subtest: Expert visitor feints leave without casting or awarding a dodge
+ok 79 - Expert visitor feints leave without casting or awarding a dodge
+  ---
+  duration_ms: 3.621709
+  type: 'test'
+  ...
+# Subtest: a delayed visitor can share a real escape with an already committed cast
+ok 80 - a delayed visitor can share a real escape with an already committed cast
+  ---
+  duration_ms: 31.6605
+  type: 'test'
+  ...
+# Subtest: a waiting caster checks its eventual shot against active Xerath W
+ok 81 - a waiting caster checks its eventual shot against active Xerath W
+  ---
+  duration_ms: 21.990625
+  type: 'test'
+  ...
+# Subtest: visitor separation forecasts the sampled approach speed
+ok 82 - visitor separation forecasts the sampled approach speed
+  ---
+  duration_ms: 3.271083
+  type: 'test'
+  ...
+# Subtest: Mindgame Aim selects approximately 75% leads with direct and reversal reads
+ok 83 - Mindgame Aim selects approximately 75% leads with direct and reversal reads
+  ---
+  duration_ms: 14.728291
+  type: 'test'
+  ...
+# Subtest: Expert Malphite visibly approaches for 0.8 seconds before committing
+ok 84 - Expert Malphite visibly approaches for 0.8 seconds before committing
+  ---
+  duration_ms: 4.238959
+  type: 'test'
+  ...
+# Subtest: director escape witnesses survive actual straight shots from varied angles and overlaps
+ok 85 - director escape witnesses survive actual straight shots from varied angles and overlaps
+  ---
+  duration_ms: 538.157791
+  type: 'test'
+  ...
+# Subtest: multi-shot forecast can use and execute a longer walking response
+ok 86 - multi-shot forecast can use and execute a longer walking response
+  ---
+  duration_ms: 79.295917
+  type: 'test'
+  ...
+# Subtest: candidate escape remains valid when checked independently against live threats
+ok 87 - candidate escape remains valid when checked independently against live threats
+  ---
+  duration_ms: 97.636375
+  type: 'test'
+  ...
+# Subtest: Ahri orb uses a blue effect extending to its actual radius for both teams
+ok 88 - Ahri orb uses a blue effect extending to its actual radius for both teams
+  ---
+  duration_ms: 6.608125
+  type: 'test'
+  ...
+# Subtest: directed energy shots draw their effect over the existing projectile radius
+ok 89 - directed energy shots draw their effect over the existing projectile radius
+  ---
+  duration_ms: 16.64175
+  type: 'test'
+  ...
+# Subtest: Velkoz visitor uses a distinct sprite and still renders when it is unavailable
+ok 90 - Velkoz visitor uses a distinct sprite and still renders when it is unavailable
+  ---
+  duration_ms: 3.39425
+  type: 'test'
+  ...
+# Subtest: enemy Ahri uses the same sprite size and anchor as player Ahri
+ok 91 - enemy Ahri uses the same sprite size and anchor as player Ahri
+  ---
+  duration_ms: 2.924584
+  type: 'test'
+  ...
+# Subtest: Dodge HUD shows hits taken instead of the unrelated kill count
+ok 92 - Dodge HUD shows hits taken instead of the unrelated kill count
+  ---
+  duration_ms: 3.341917
+  type: 'test'
+  ...
+# Subtest: rare area casts count a threatened player who enters and exits before impact
+ok 93 - rare area casts count a threatened player who enters and exits before impact
+  ---
+  duration_ms: 7.281667
+  type: 'test'
+  ...
+# Subtest: rare area threat detects a grazing crossing between fixed-step endpoints
+ok 94 - rare area threat detects a grazing crossing between fixed-step endpoints
+  ---
+  duration_ms: 7.2455
+  type: 'test'
+  ...
+# Subtest: rare area does not credit movement that crosses only after impact
+ok 95 - rare area does not credit movement that crosses only after impact
+  ---
+  duration_ms: 6.366625
+  type: 'test'
+  ...
+# Subtest: rare area casts that never threaten the player remain harmless
+ok 96 - rare area casts that never threaten the player remain harmless
+  ---
+  duration_ms: 6.949709
+  type: 'test'
+  ...
+# Subtest: entering a rare area at impact records a hit, not an avoidance
+ok 97 - entering a rare area at impact records a hit, not an avoidance
+  ---
+  duration_ms: 6.699958
+  type: 'test'
+  ...
+# Subtest: minion death grace preserves player last-hit credit and retargets only after death
+ok 98 - minion death grace preserves player last-hit credit and retargets only after death
+  ---
+  duration_ms: 3.996458
+  type: 'test'
+  ...
+# Subtest: minion death grace expires without extending and excludes ordinary or large hits
+ok 99 - minion death grace expires without extending and excludes ordinary or large hits
+  ---
+  duration_ms: 4.262667
+  type: 'test'
+  ...
+# Subtest: move cancels pre-release attack without consuming cooldown; post-release missile survives
+ok 100 - move cancels pre-release attack without consuming cooldown; post-release missile survives
+  ---
+  duration_ms: 4.563042
+  type: 'test'
+  ...
+# Subtest: chase tracks moving target and latest right-click order wins
+ok 101 - chase tracks moving target and latest right-click order wins
+  ---
+  duration_ms: 3.766042
+  type: 'test'
+  ...
+# Subtest: attack-move persists through travel, acquires in range and selects near cursor
+ok 102 - attack-move persists through travel, acquires in range and selects near cursor
+  ---
+  duration_ms: 6.922333
+  type: 'test'
+  ...
+# Subtest: stationary unrelated missiles earn no dodges; evading a threatened line earns one
+ok 103 - stationary unrelated missiles earn no dodges; evading a threatened line earns one
+  ---
+  duration_ms: 6.645958
+  type: 'test'
+  ...
+# Subtest: pulse counts blocks separately, dash collision does not count as dodge
+ok 104 - pulse counts blocks separately, dash collision does not count as dodge
+  ---
+  duration_ms: 3.632584
+  type: 'test'
+  ...
+# Subtest: swept collision catches a missile crossing the player within one update
+ok 105 - swept collision catches a missile crossing the player within one update
+  ---
+  duration_ms: 3.454167
+  type: 'test'
+  ...
+# Subtest: autos home only to their target and do not damage intervening units
+ok 106 - autos home only to their target and do not damage intervening units
+  ---
+  duration_ms: 4.585042
+  type: 'test'
+  ...
+# Subtest: 30/60/120 FPS produce the same movement and auto cadence
+ok 107 - 30/60/120 FPS produce the same movement and auto cadence
+  ---
+  duration_ms: 165.353458
+  type: 'test'
+  ...
+# Subtest: pause freezes timers, restart clears orders/stats/cooldowns, blur pauses
+ok 108 - pause freezes timers, restart clears orders/stats/cooldowns, blur pauses
+  ---
+  duration_ms: 5.011458
+  type: 'test'
+  ...
+# Subtest: both drill end conditions transition once; restart remains playable
+ok 109 - both drill end conditions transition once; restart remains playable
+  ---
+  duration_ms: 9.183791
+  type: 'test'
+  ...
+# Subtest: telegraphs lock aim before release and alternate line/fan/ground patterns
+ok 110 - telegraphs lock aim before release and alternate line/fan/ground patterns
+  ---
+  duration_ms: 10.661458
+  type: 'test'
+  ...
+# Subtest: ground telegraph counts an evaded threat, never an unrelated explosion
+ok 111 - ground telegraph counts an evaded threat, never an unrelated explosion
+  ---
+  duration_ms: 22.588083
+  type: 'test'
+  ...
+# Subtest: same seed reproduces encounters; cosmetic bursts do not affect gameplay RNG
+ok 112 - same seed reproduces encounters; cosmetic bursts do not affect gameplay RNG
+  ---
+  duration_ms: 6.25425
+  type: 'test'
+  ...
+# Subtest: last-hit waves resolve into exactly 15 misses when the player never attacks
+ok 113 - last-hit waves resolve into exactly 15 misses when the player never attacks
+  ---
+  duration_ms: 36.591792
+  type: 'test'
+  ...
+# Subtest: last-hit auto earns CS while an allied projectile kill earns only a miss
+ok 114 - last-hit auto earns CS while an allied projectile kill earns only a miss
+  ---
+  duration_ms: 5.296584
+  type: 'test'
+  ...
+# Subtest: CS offensive spells are disabled and health bars render
+ok 115 - CS offensive spells are disabled and health bars render
+  ---
+  duration_ms: 3.864833
+  type: 'test'
+  ...
+# Subtest: holding right mouse retargets movement immediately
+ok 116 - holding right mouse retargets movement immediately
+  ---
+  duration_ms: 3.095209
+  type: 'test'
+  ...
+# Subtest: drill menu exits simulation and repeated pause keys never toggle twice
+ok 117 - drill menu exits simulation and repeated pause keys never toggle twice
+  ---
+  duration_ms: 3.099625
+  type: 'test'
+  ...
+# Subtest: resuming after suspended animation frames does not advance the simulation
+ok 118 - resuming after suspended animation frames does not advance the simulation
+  ---
+  duration_ms: 4.178625
+  type: 'test'
+  ...
+# Subtest: starting a new drill discards stale animation frame time
+ok 119 - starting a new drill discards stale animation frame time
+  ---
+  duration_ms: 4.065708
+  type: 'test'
+  ...
+# Subtest: death from contact freezes later hazards and the final result immediately
+ok 120 - death from contact freezes later hazards and the final result immediately
+  ---
+  duration_ms: 3.536833
+  type: 'test'
+  ...
+# Subtest: clicking the elevated enemy silhouette selects its ground-anchored unit
+ok 121 - clicking the elevated enemy silhouette selects its ground-anchored unit
+  ---
+  duration_ms: 3.199583
+  type: 'test'
+  ...
+# Subtest: skillshot drill counts fired and hit Q accurately and ends at 45 seconds
+ok 122 - skillshot drill counts fired and hit Q accurately and ends at 45 seconds
+  ---
+  duration_ms: 4.353208
+  type: 'test'
+  ...
+# Subtest: personal best is saved per drill and difficulty; unavailable storage never interrupts results
+ok 123 - personal best is saved per drill and difficulty; unavailable storage never interrupts results
+  ---
+  duration_ms: 3.583958
+  type: 'test'
+  ...
+# Subtest: bait drill rewards a baited, avoided spell followed by a last-hit
+ok 124 - bait drill rewards a baited, avoided spell followed by a last-hit
+  ---
+  duration_ms: 7.387125
+  type: 'test'
+  ...
+# Subtest: bait drill tracks hits and missed minions across three rounds
+ok 125 - bait drill tracks hits and missed minions across three rounds
+  ---
+  duration_ms: 12.474375
+  type: 'test'
+  ...
+# Subtest: skillshot targets spawn away from the player and existing targets
+ok 126 - skillshot targets spawn away from the player and existing targets
+  ---
+  duration_ms: 3.661292
+  type: 'test'
+  ...
+# Subtest: bait minion cannot be killed before the enemy spell resolves
+ok 127 - bait minion cannot be killed before the enemy spell resolves
+  ---
+  duration_ms: 3.585542
+  type: 'test'
+  ...
+# Subtest: painted assets and procedural fallback both render in all drills
+ok 128 - painted assets and procedural fallback both render in all drills
+  ---
+  duration_ms: 4.439958
+  type: 'test'
+  ...
+# Subtest: T instantly retries from play, pause and results with a fresh score
+ok 129 - T instantly retries from play, pause and results with a fresh score
+  ---
+  duration_ms: 3.232041
+  type: 'test'
+  ...
+# Subtest: ranger changes sprite with vertical facing and falls back if a direction fails to load
+ok 130 - ranger changes sprite with vertical facing and falls back if a direction fails to load
+  ---
+  duration_ms: 3.070625
+  type: 'test'
+  ...
+# Subtest: kite records prefer a win, then the fastest win, over earlier partial runs
+ok 131 - kite records prefer a win, then the fastest win, over earlier partial runs
+  ---
+  duration_ms: 3.236209
+  type: 'test'
+  ...
+# Subtest: right-click routes the player around walls without entering them
+ok 132 - right-click routes the player around walls without entering them
+  ---
+  duration_ms: 5.767917
+  type: 'test'
+  ...
+# Subtest: dash stops at a wall, while flash can cross and ends in walkable space
+ok 133 - dash stops at a wall, while flash can cross and ends in walkable space
+  ---
+  duration_ms: 3.558042
+  type: 'test'
+  ...
+# Subtest: a pursuing enemy routes around a wall rather than crossing or getting stuck
+ok 134 - a pursuing enemy routes around a wall rather than crossing or getting stuck
+  ---
+  duration_ms: 10.812958
+  type: 'test'
+  ...
+# Subtest: attack-move navigates around a wall before acquiring a destination
+ok 135 - attack-move navigates around a wall before acquiring a destination
+  ---
+  duration_ms: 6.096708
+  type: 'test'
+  ...
+# Subtest: a fresh move order interrupts a detour immediately
+ok 136 - a fresh move order interrupts a detour immediately
+  ---
+  duration_ms: 5.769
+  type: 'test'
+  ...
+# Subtest: bait caster moves while waiting and stops to lock its spell
+ok 137 - bait caster moves while waiting and stops to lock its spell
+  ---
+  duration_ms: 4.236209
+  type: 'test'
+  ...
+# Subtest: all difficulty presets give a last-hit window after an allied hit
+ok 138 - all difficulty presets give a last-hit window after an allied hit
+  ---
+  duration_ms: 17.079667
+  type: 'test'
+  ...
+# Subtest: running away along a baited shot is not scored as a dodge before it catches up
+ok 139 - running away along a baited shot is not scored as a dodge before it catches up
+  ---
+  duration_ms: 6.727584
+  type: 'test'
+  ...
+# Subtest: optional sound handles missing audio and never interrupts gameplay
+ok 140 - optional sound handles missing audio and never interrupts gameplay
+  ---
+  duration_ms: 4.299917
+  type: 'test'
+  ...
+# Subtest: enabled sound plays attack cues and the toggle mutes subsequent cues
+ok 141 - enabled sound plays attack cues and the toggle mutes subsequent cues
+  ---
+  duration_ms: 4.792041
+  type: 'test'
+  ...
+# Subtest: lane scenario separates player CS, enemy kills and allied misses
+ok 142 - lane scenario separates player CS, enemy kills and allied misses
+  ---
+  duration_ms: 3.504709
+  type: 'test'
+  ...
+# Subtest: lane scenario resolves all 15 minions and ends at 60 seconds
+ok 143 - lane scenario resolves all 15 minions and ends at 60 seconds
+  ---
+  duration_ms: 49.263291
+  type: 'test'
+  ...
+# Subtest: lane minions do not heal the player, champion defeats still do
+ok 144 - lane minions do not heal the player, champion defeats still do
+  ---
+  duration_ms: 3.920208
+  type: 'test'
+  ...
+# Subtest: a finishing pulse does not damage further enemies or block missiles after the game ends
+ok 145 - a finishing pulse does not damage further enemies or block missiles after the game ends
+  ---
+  duration_ms: 3.624625
+  type: 'test'
+  ...
+# Subtest: retry removes stale toast feedback
+ok 146 - retry removes stale toast feedback
+  ---
+  duration_ms: 3.43325
+  type: 'test'
+  ...
+# Subtest: fatal contact stops later enemies from acting in the same simulation step
+ok 147 - fatal contact stops later enemies from acting in the same simulation step
+  ---
+  duration_ms: 3.41275
+  type: 'test'
+  ...
+# Subtest: attack-speed presets change cadence without affecting frame-rate independence
+ok 148 - attack-speed presets change cadence without affecting frame-rate independence
+  ---
+  duration_ms: 532.942
+  type: 'test'
+  ...
+# Subtest: personal bests are separated by attack-speed preset
+ok 149 - personal bests are separated by attack-speed preset
+  ---
+  duration_ms: 3.541875
+  type: 'test'
+  ...
+# Subtest: target escaping during windup is reported as a cancelled attack, without consuming cooldown
+ok 150 - target escaping during windup is reported as a cancelled attack, without consuming cooldown
+  ---
+  duration_ms: 3.657791
+  type: 'test'
+  ...
+# Subtest: telegraphed sweep has a safe corridor and does not award unrelated dodges
+ok 151 - telegraphed sweep has a safe corridor and does not award unrelated dodges
+  ---
+  duration_ms: 22.689333
+  type: 'test'
+  ...
+# Subtest: sweep warning pauses, resets, and its centre corridor is walkable across the arena
+ok 152 - sweep warning pauses, resets, and its centre corridor is walkable across the arena
+  ---
+  duration_ms: 14.726875
+  type: 'test'
+  ...
+# Subtest: kite feedback measures time ready in range without an active attack
+ok 153 - kite feedback measures time ready in range without an active attack
+  ---
+  duration_ms: 6.254542
+  type: 'test'
+  ...
+# Subtest: results and pause reopen the menu at the top
+ok 154 - results and pause reopen the menu at the top
+  ---
+  duration_ms: 3.197333
+  type: 'test'
+  ...
+# Subtest: skillshot targets spawn and move outside physical walls
+ok 155 - skillshot targets spawn and move outside physical walls
+  ---
+  duration_ms: 21.2545
+  type: 'test'
+  ...
+# Subtest: Ahri timing uses level-one cadence and 20 percent windup
+ok 156 - Ahri timing uses level-one cadence and 20 percent windup
+  ---
+  duration_ms: 155.103583
+  type: 'test'
+  ...
+# Subtest: Ahri CS profile uses 53 damage and separates old timing-only records
+ok 157 - Ahri CS profile uses 53 damage and separates old timing-only records
+  ---
+  duration_ms: 13.919166
+  type: 'test'
+  ...
+# Subtest: Ahri CS unattended waves resolve without breaking the drill
+ok 158 - Ahri CS unattended waves resolve without breaking the drill
+  ---
+  duration_ms: 18818.208708
+  type: 'test'
+  ...
+# Subtest: auto attacks apply armor mitigation at impact and CS lethal boundary
+ok 159 - auto attacks apply armor mitigation at impact and CS lethal boundary
+  ---
+  duration_ms: 18.731917
+  type: 'test'
+  ...
+# Subtest: Ahri can secure a minion after allied damage on each difficulty
+ok 160 - Ahri can secure a minion after allied damage on each difficulty
+  ---
+  duration_ms: 181.914084
+  type: 'test'
+  ...
+# Subtest: reference spells use stated cast, speed, range and mitigated damage
+ok 161 - reference spells use stated cast, speed, range and mitigated damage
+  ---
+  duration_ms: 10.876708
+  type: 'test'
+  ...
+# Subtest: Lux root prevents movement and flash, while pause freezes it
+ok 162 - Lux root prevents movement and flash, while pause freezes it
+  ---
+  duration_ms: 6.91225
+  type: 'test'
+  ...
+# Subtest: reference missiles expire at range and reference drills restart cleanly
+ok 163 - reference missiles expire at range and reference drills restart cleanly
+  ---
+  duration_ms: 11.260917
+  type: 'test'
+  ...
+# Subtest: reference shots retain damage and timing at 30, 60 and 120 FPS
+ok 164 - reference shots retain damage and timing at 30, 60 and 120 FPS
+  ---
+  duration_ms: 237.244167
+  type: 'test'
+  ...
+# Subtest: reference flash does not grant invulnerability
+ok 165 - reference flash does not grant invulnerability
+  ---
+  duration_ms: 3.639625
+  type: 'test'
+  ...
+# Subtest: both reference drills complete a full simulated survival and report correct score
+ok 166 - both reference drills complete a full simulated survival and report correct score
+  ---
+  duration_ms: 57.115875
+  type: 'test'
+  ...
+# Subtest: Ahri waves contain three melee and three caster minions and use edge attack range
+ok 167 - Ahri waves contain three melee and three caster minions and use edge attack range
+  ---
+  duration_ms: 7.7075
+  type: 'test'
+  ...
+# Subtest: Ahri CS allied melee and caster damage use minion ratios
+ok 168 - Ahri CS allied melee and caster damage use minion ratios
+  ---
+  duration_ms: 4.421875
+  type: 'test'
+  ...
+# Subtest: Ahri is the selected default and visible menu has three focused drills
+ok 169 - Ahri is the selected default and visible menu has three focused drills
+  ---
+  duration_ms: 3.926917
+  type: 'test'
+  ...
+# Subtest: Ahri dodge integrates Lux and Ezreal casts in one drill
+ok 170 - Ahri dodge integrates Lux and Ezreal casts in one drill
+  ---
+  duration_ms: 3.333084
+  type: 'test'
+  ...
+# Subtest: Ahri Charm casts for 0.25 seconds and hits the first unit with magic damage and crowd control
+ok 171 - Ahri Charm casts for 0.25 seconds and hits the first unit with magic damage and crowd control
+  ---
+  duration_ms: 4.571625
+  type: 'test'
+  ...
+# Subtest: Ahri Charm interrupts an enemy cast and forces movement toward Ahri
+ok 172 - Ahri Charm interrupts an enemy cast and forces movement toward Ahri
+  ---
+  duration_ms: 4.578167
+  type: 'test'
+  ...
+# Subtest: Charm cast locks movement but accepts a queued move
+ok 173 - Charm cast locks movement but accepts a queued move
+  ---
+  duration_ms: 4.387084
+  type: 'test'
+  ...
+# Subtest: Ahri orb pierces units once each way and returns true damage
+ok 174 - Ahri orb pierces units once each way and returns true damage
+  ---
+  duration_ms: 6.946958
+  type: 'test'
+  ...
+# Subtest: Ahri orb follows the player on return after they move
+ok 175 - Ahri orb follows the player on return after they move
+  ---
+  duration_ms: 5.876375
+  type: 'test'
+  ...
+# Subtest: Ahri Fox-Fire boosts movement and its three flames deal reduced repeat damage
+ok 176 - Ahri Fox-Fire boosts movement and its three flames deal reduced repeat damage
+  ---
+  duration_ms: 5.695833
+  type: 'test'
+  ...
+# Subtest: Ahri Fox-Fire movement observes the upper speed soft cap and decays
+ok 177 - Ahri Fox-Fire movement observes the upper speed soft cap and decays
+  ---
+  duration_ms: 4.992333
+  type: 'test'
+  ...
+# Subtest: Ahri Fox-Fire does not cancel an auto windup and is locked in auto-only CS
+ok 178 - Ahri Fox-Fire does not cancel an auto windup and is locked in auto-only CS
+  ---
+  duration_ms: 4.2765
+  type: 'test'
+  ...
+# Subtest: Ahri Spirit Rush has three timed charges and fires magic bolts
+ok 179 - Ahri Spirit Rush has three timed charges and fires magic bolts
+  ---
+  duration_ms: 7.03525
+  type: 'test'
+  ...
+# Subtest: Dodge Spirit Rush has a shorter maximum dash than the base drill
+ok 180 - Dodge Spirit Rush has a shorter maximum dash than the base drill
+  ---
+  duration_ms: 6.335375
+  type: 'test'
+  ...
+# Subtest: Spirit Rush snapshots capped movement speed when the dash starts
+ok 181 - Spirit Rush snapshots capped movement speed when the dash starts
+  ---
+  duration_ms: 10.249334
+  type: 'test'
+  ...
+# Subtest: Spirit Rush cannot ignore enemy collisions or cast while rooted
+ok 182 - Spirit Rush cannot ignore enemy collisions or cast while rooted
+  ---
+  duration_ms: 3.661125
+  type: 'test'
+  ...
+# Subtest: Spirit Rush crosses a wall only when its destination is walkable
+ok 183 - Spirit Rush crosses a wall only when its destination is walkable
+  ---
+  duration_ms: 4.04025
+  type: 'test'
+  ...
+# Subtest: Spirit Rush remains vulnerable while crossing terrain and completes through a plain root
+ok 184 - Spirit Rush remains vulnerable while crossing terrain and completes through a plain root
+  ---
+  duration_ms: 3.722083
+  type: 'test'
+  ...
+# Subtest: plain root does not cancel an active dash but prevents Flash after landing
+ok 185 - plain root does not cancel an active dash but prevents Flash after landing
+  ---
+  duration_ms: 3.529417
+  type: 'test'
+  ...
+# Subtest: Spirit Rush recast window freezes during pause and expires without refreshing cooldown
+ok 186 - Spirit Rush recast window freezes during pause and expires without refreshing cooldown
+  ---
+  duration_ms: 10.176334
+  type: 'test'
+  ...
+# Subtest: Ahri sprite is selected with a safe fallback when unavailable
+ok 187 - Ahri sprite is selected with a safe fallback when unavailable
+  ---
+  duration_ms: 3.710583
+  type: 'test'
+  ...
+# Subtest: Ahri back sprite appears when facing away and falls back to side
+ok 188 - Ahri back sprite appears when facing away and falls back to side
+  ---
+  duration_ms: 3.474666
+  type: 'test'
+  ...
+# Subtest: Ahri projectile hitbox uses scaled 65-unit gameplay radius at its boundary
+ok 189 - Ahri projectile hitbox uses scaled 65-unit gameplay radius at its boundary
+  ---
+  duration_ms: 8.483416
+  type: 'test'
+  ...
+# Subtest: directed Ahri dodge never adds the legacy synthetic sweep outside the threat budget
+ok 190 - directed Ahri dodge never adds the legacy synthetic sweep outside the threat budget
+  ---
+  duration_ms: 45.429542
+  type: 'test'
+  ...
+# Subtest: Ahri charm respects champion and minion gameplay-radius boundaries
+ok 191 - Ahri charm respects champion and minion gameplay-radius boundaries
+  ---
+  duration_ms: 18.273584
+  type: 'test'
+  ...
+# Subtest: non-piercing skillshot hits the first collision, not the closest center
+ok 192 - non-piercing skillshot hits the first collision, not the closest center
+  ---
+  duration_ms: 3.435792
+  type: 'test'
+  ...
+# Subtest: Ahri heals on ninth minion last hit and champion takedown
+ok 193 - Ahri heals on ninth minion last hit and champion takedown
+  ---
+  duration_ms: 3.614667
+  type: 'test'
+  ...
+# Subtest: allied minion damage respects target armor
+ok 194 - allied minion damage respects target armor
+  ---
+  duration_ms: 4.0075
+  type: 'test'
+  ...
+# Subtest: Ahri champion takedown adds a Spirit Rush charge during its active window
+ok 195 - Ahri champion takedown adds a Spirit Rush charge during its active window
+  ---
+  duration_ms: 4.626958
+  type: 'test'
+  ...
+# Subtest: Dodge Trial applies skillshot damage without immobilizing the player
+ok 196 - Dodge Trial applies skillshot damage without immobilizing the player
+  ---
+  duration_ms: 5.591917
+  type: 'test'
+  ...
+# Subtest: CS waves fight both ways, stop attacking after death and retarget
+ok 197 - CS waves fight both ways, stop attacking after death and retarget
+  ---
+  duration_ms: 53.06975
+  type: 'test'
+  ...
+# Subtest: allied minions retarget after a target dies and player last hits retain credit
+ok 198 - allied minions retarget after a target dies and player last hits retain credit
+  ---
+  duration_ms: 4.819875
+  type: 'test'
+  ...
+# Subtest: bidirectional waves remain deterministic across frame rates and freeze on pause
+ok 199 - bidirectional waves remain deterministic across frame rates and freeze on pause
+  ---
+  duration_ms: 653.71425
+  type: 'test'
+  ...
+# Subtest: impact applies damage types and records one killer once
+ok 200 - impact applies damage types and records one killer once
+  ---
+  duration_ms: 3.605166
+  type: 'test'
+  ...
+# Subtest: timeout survivors are unresolved rather than attributed deaths
+ok 201 - timeout survivors are unresolved rather than attributed deaths
+  ---
+  duration_ms: 3.232709
+  type: 'test'
+  ...
+# Subtest: minion windup cancels when target dies and can reacquire another wave
+ok 202 - minion windup cancels when target dies and can reacquire another wave
+  ---
+  duration_ms: 4.896833
+  type: 'test'
+  ...
+# Subtest: pinned Ahri data is converted once and leaves time and damage unscaled
+ok 203 - pinned Ahri data is converted once and leaves time and damage unscaled
+  ---
+  duration_ms: 3.4605
+  type: 'test'
+  ...
+# Subtest: missing or incompatible champion data uses a visible safe fallback
+ok 204 - missing or incompatible champion data uses a visible safe fallback
+  ---
+  duration_ms: 9.794041
+  type: 'test'
+  ...
+# Subtest: surviving minions advance toward the opposing side and acquire another wave
+ok 205 - surviving minions advance toward the opposing side and acquire another wave
+  ---
+  duration_ms: 7.340084
+  type: 'test'
+  ...
+# Subtest: CS count and kill identity remain consistent across impacts and reset
+ok 206 - CS count and kill identity remain consistent across impacts and reset
+  ---
+  duration_ms: 3.405375
+  type: 'test'
+  ...
+# Subtest: minion retains equal-priority target but switches to a higher-priority attacker
+ok 207 - minion retains equal-priority target but switches to a higher-priority attacker
+  ---
+  duration_ms: 3.29225
+  type: 'test'
+  ...
+# Subtest: caster missile survives source death and calculates bonus from health at impact
+ok 208 - caster missile survives source death and calculates bonus from health at impact
+  ---
+  duration_ms: 5.183125
+  type: 'test'
+  ...
+# Subtest: mirrored first waves move together and meet around the lane centre
+ok 209 - mirrored first waves move together and meet around the lane centre
+  ---
+  duration_ms: 13.770667
+  type: 'test'
+  ...
+# Subtest: Dodge hides cast trajectory and countdown while retaining launched projectile
+ok 210 - Dodge hides cast trajectory and countdown while retaining launched projectile
+  ---
+  duration_ms: 3.553625
+  type: 'test'
+  ...
+# Subtest: non-Dodge training modes retain their trajectory guide
+ok 211 - non-Dodge training modes retain their trajectory guide
+  ---
+  duration_ms: 3.202584
+  type: 'test'
+  ...
+# Subtest: same-step melee releases are committed on both sides before damage resolves
+ok 212 - same-step melee releases are committed on both sides before damage resolves
+  ---
+  duration_ms: 3.321833
+  type: 'test'
+  ...
+# Subtest: minion projectiles hit identical allied and enemy gameplay radii
+ok 213 - minion projectiles hit identical allied and enemy gameplay radii
+  ---
+  duration_ms: 3.145167
+  type: 'test'
+  ...
+# Subtest: caster minions have distinct visible team-coloured staffs
+ok 214 - caster minions have distinct visible team-coloured staffs
+  ---
+  duration_ms: 3.378375
+  type: 'test'
+  ...
+# Subtest: initial formation staggers attack readiness rather than synchronizing all three lanes
+ok 215 - initial formation staggers attack readiness rather than synchronizing all three lanes
+  ---
+  duration_ms: 24.503791
+  type: 'test'
+  ...
+# Subtest: same-team minions separate after converging on one lane point
+ok 216 - same-team minions separate after converging on one lane point
+  ---
+  duration_ms: 5.424125
+  type: 'test'
+  ...
+# Subtest: S stops movement and chase, cancels windup but preserves launched autos
+ok 217 - S stops movement and chase, cancels windup but preserves launched autos
+  ---
+  duration_ms: 5.268458
+  type: 'test'
+  ...
+# Subtest: S overrides a held right-click until a new right press
+ok 218 - S overrides a held right-click until a new right press
+  ---
+  duration_ms: 3.659417
+  type: 'test'
+  ...
+# Subtest: CS gold credits only player last hits; missed and unresolved stay separate
+ok 219 - CS gold credits only player last hits; missed and unresolved stay separate
+  ---
+  duration_ms: 3.274416
+  type: 'test'
+  ...
+# Subtest: minion chases an acquired target around a solid wall rather than getting stuck
+ok 220 - minion chases an acquired target around a solid wall rather than getting stuck
+  ---
+  duration_ms: 7.6995
+  type: 'test'
+  ...
+# Subtest: unopposed minion wave routes around walls and stays on walkable ground
+ok 221 - unopposed minion wave routes around walls and stays on walkable ground
+  ---
+  duration_ms: 6.824875
+  type: 'test'
+  ...
+# Subtest: first cannon appears in wave three and both teams have correct starting health
+ok 222 - first cannon appears in wave three and both teams have correct starting health
+  ---
+  duration_ms: 3.452583
+  type: 'test'
+  ...
+# Subtest: cannon launches a tracked shot and its player last-hit credits 50 gold
+ok 223 - cannon launches a tracked shot and its player last-hit credits 50 gold
+  ---
+  duration_ms: 4.575625
+  type: 'test'
+  ...
+# Subtest: Ahri CS drill continues with a cannon in wave three
+ok 224 - Ahri CS drill continues with a cannon in wave three
+  ---
+  duration_ms: 174.044833
+  type: 'test'
+  ...
+# Subtest: CS arena does not display a last-hit label on low-health minions
+ok 225 - CS arena does not display a last-hit label on low-health minions
+  ---
+  duration_ms: 3.862125
+  type: 'test'
+  ...
+# Subtest: melee minions approach within contact range before committing damage
+ok 226 - melee minions approach within contact range before committing damage
+  ---
+  duration_ms: 4.087958
+  type: 'test'
+  ...
+# Subtest: both teams spawn cannon on waves 3, 6, 9, 12, 15 and 18
+ok 227 - both teams spawn cannon on waves 3, 6, 9, 12, 15 and 18
+  ---
+  duration_ms: 3.466208
+  type: 'test'
+  ...
+# Subtest: opening minion formation keeps rows visibly separated
+ok 228 - opening minion formation keeps rows visibly separated
+  ---
+  duration_ms: 2.969916
+  type: 'test'
+  ...
+# Subtest: champion has no attack timing or permanent hitbox overlays
+ok 229 - champion has no attack timing or permanent hitbox overlays
+  ---
+  duration_ms: 3.47475
+  type: 'test'
+  ...
+# Subtest: survivors wait before opposing ingress and meet the next wave after a long push
+ok 230 - survivors wait before opposing ingress and meet the next wave after a long push
+  ---
+  duration_ms: 56.37925
+  type: 'test'
+  ...
+# Subtest: higher-priority target does not interrupt a minion attack windup
+ok 231 - higher-priority target does not interrupt a minion attack windup
+  ---
+  duration_ms: 4.660083
+  type: 'test'
+  ...
+# Subtest: successive melee waves receive the sourced 90-second health upgrade
+ok 232 - successive melee waves receive the sourced 90-second health upgrade
+  ---
+  duration_ms: 3.449333
+  type: 'test'
+  ...
+# Subtest: Dodge director remains deterministic and Ezreal-heavy across seeded runs
+ok 233 - Dodge director remains deterministic and Ezreal-heavy across seeded runs
+  ---
+  duration_ms: 780.462667
+  type: 'test'
+  ...
+# Subtest: Ahri Q is actually scheduled on every difficulty in the default seeded long drill
+ok 234 - Ahri Q is actually scheduled on every difficulty in the default seeded long drill
+  ---
+  duration_ms: 295.997375
+  type: 'test'
+  ...
+# Subtest: Dodge visitor enters, casts only once, then exits without deleting its missile
+ok 235 - Dodge visitor enters, casts only once, then exits without deleting its missile
+  ---
+  duration_ms: 6.198917
+  type: 'test'
+  ...
+# Subtest: Dodge is endless and uses separate records from timed runs
+ok 236 - Dodge is endless and uses separate records from timed runs
+  ---
+  duration_ms: 3.462125
+  type: 'test'
+  ...
+# Subtest: Dodge director does not grant artificial invulnerability after a hit
+ok 237 - Dodge director does not grant artificial invulnerability after a hit
+  ---
+  duration_ms: 3.831625
+  type: 'test'
+  ...
+# Subtest: Dodge director continues past 12 minutes with bounded directed threats
+ok 238 - Dodge director continues past 12 minutes with bounded directed threats
+  ---
+  duration_ms: 377.501083
+  type: 'test'
+  ...
+# Subtest: Dodge visitor uses distinct existing visual profiles and projectile colours
+ok 239 - Dodge visitor uses distinct existing visual profiles and projectile colours
+  ---
+  duration_ms: 3.929541
+  type: 'test'
+  ...
+# Subtest: surviving minions meet later waves in front of the ingress without spawning on top of them
+ok 240 - surviving minions meet later waves in front of the ingress without spawning on top of them
+  ---
+  duration_ms: 37.03375
+  type: 'test'
+  ...
+# Subtest: enemy Ahri orb can hit once on each leg with true damage on its return
+ok 241 - enemy Ahri orb can hit once on each leg with true damage on its return
+  ---
+  duration_ms: 4.969708
+  type: 'test'
+  ...
+# Subtest: enemy Ahri return orb homes toward its still-living caster
+ok 242 - enemy Ahri return orb homes toward its still-living caster
+  ---
+  duration_ms: 4.2395
+  type: 'test'
+  ...
+# Subtest: Dodge results include the future Ahri Q return while its outgoing orb is live
+ok 243 - Dodge results include the future Ahri Q return while its outgoing orb is live
+  ---
+  duration_ms: 3.119208
+  type: 'test'
+  ...
+# Subtest: a lethal outgoing Ahri Q hit still reports its unplayed return
+ok 244 - a lethal outgoing Ahri Q hit still reports its unplayed return
+  ---
+  duration_ms: 3.450125
+  type: 'test'
+  ...
+# Subtest: Ahri return is not counted twice once it has begun
+ok 245 - Ahri return is not counted twice once it has begun
+  ---
+  duration_ms: 3.092166
+  type: 'test'
+  ...
+# Subtest: Dodge visitors enter and cast with their full silhouettes inside the visible arena
+ok 246 - Dodge visitors enter and cast with their full silhouettes inside the visible arena
+  ---
+  duration_ms: 92.407792
+  type: 'test'
+  ...
+# Subtest: directed projectile outcomes distinguish hits, avoided threats and harmless misses
+ok 247 - directed projectile outcomes distinguish hits, avoided threats and harmless misses
+  ---
+  duration_ms: 6.219
+  type: 'test'
+  ...
+# Subtest: a reversal shot that never threatens Ahri is not credited as a dodge
+ok 248 - a reversal shot that never threatens Ahri is not credited as a dodge
+  ---
+  duration_ms: 17.506583
+  type: 'test'
+  ...
+# Subtest: dodging a directly aimed shot during windup still earns credit
+ok 249 - dodging a directly aimed shot during windup still earns credit
+  ---
+  duration_ms: 25.179833
+  type: 'test'
+  ...
+# Subtest: an early change of direction is credited when a lead would hit the existing path
+ok 250 - an early change of direction is credited when a lead would hit the existing path
+  ---
+  duration_ms: 37.917
+  type: 'test'
+  ...
+# Subtest: lethal directed hits are recorded before the result screen and in-flight phases remain unresolved
+ok 251 - lethal directed hits are recorded before the result screen and in-flight phases remain unresolved
+  ---
+  duration_ms: 3.391292
+  type: 'test'
+  ...
+# Subtest: returning orb records two independent hit phases and never counts a hit as avoided
+ok 252 - returning orb records two independent hit phases and never counts a hit as avoided
+  ---
+  duration_ms: 4.730375
+  type: 'test'
+  ...
+# Subtest: ambient Xerath W has a readable delay, center damage and no caster entity
+ok 253 - ambient Xerath W has a readable delay, center damage and no caster entity
+  ---
+  duration_ms: 4.347459
+  type: 'test'
+  ...
+# Subtest: Xerath W can be escaped and rejects an unsupported directed encounter
+ok 254 - Xerath W can be escaped and rejects an unsupported directed encounter
+  ---
+  duration_ms: 4.678083
+  type: 'test'
+  ...
+# Subtest: Xerath W and an in-flight Ezreal Q have a shared walkable escape
+ok 255 - Xerath W and an in-flight Ezreal Q have a shared walkable escape
+  ---
+  duration_ms: 11.239416
+  type: 'test'
+  ...
+# Subtest: the seeded director naturally schedules an Ezreal Q and Xerath W combination
+ok 256 - the seeded director naturally schedules an Ezreal Q and Xerath W combination
+  ---
+  duration_ms: 1048.540875
+  type: 'test'
+  ...
+# Subtest: normal gameplay reaches the mixed encounter across seeded sessions
+ok 257 - normal gameplay reaches the mixed encounter across seeded sessions
+  ---
+  duration_ms: 597.640333
+  type: 'test'
+  ...
+# Subtest: a seeded Lux follow-up permits ordinary movement to avoid both casts
+ok 258 - a seeded Lux follow-up permits ordinary movement to avoid both casts
+  ---
+  duration_ms: 13.120791
+  type: 'test'
+  ...
+# Subtest: Lux follow-ups occur in natural Expert sessions but not Foundation
+ok 259 - Lux follow-ups occur in natural Expert sessions but not Foundation
+  ---
+  duration_ms: 648.180625
+  type: 'test'
+  ...
+# Subtest: Xerath W rejects unsafe or unsupported overlaps and respects Foundation cap
+ok 260 - Xerath W rejects unsafe or unsupported overlaps and respects Foundation cap
+  ---
+  duration_ms: 24.934084
+  type: 'test'
+  ...
+# Subtest: Xerath W uses its compact center based edge and outside hits use base damage
+ok 261 - Xerath W uses its compact center based edge and outside hits use base damage
+  ---
+  duration_ms: 17.111542
+  type: 'test'
+  ...
+# Subtest: Xerath W credits a grazing crossing before impact without inventing a hit
+ok 262 - Xerath W credits a grazing crossing before impact without inventing a hit
+  ---
+  duration_ms: 6.810708
+  type: 'test'
+  ...
+# Subtest: Xerath W does not credit a crossing that happens after impact
+ok 263 - Xerath W does not credit a crossing that happens after impact
+  ---
+  duration_ms: 3.316541
+  type: 'test'
+  ...
+# Subtest: Blitz hook keeps its chain visible during the actual pull
+ok 264 - Blitz hook keeps its chain visible during the actual pull
+  ---
+  duration_ms: 5.467041
+  type: 'test'
+  ...
+# Subtest: Blitz visitor stays at the hook source briefly after landing a grab
+ok 265 - Blitz visitor stays at the hook source briefly after landing a grab
+  ---
+  duration_ms: 4.458875
+  type: 'test'
+  ...
+# Subtest: Blitz can leave after a missed hook and charm can move him during the hold
+ok 266 - Blitz can leave after a missed hook and charm can move him during the hold
+  ---
+  duration_ms: 7.885
+  type: 'test'
+  ...
+# Subtest: beam outcomes detect a curved-corner crossing before, but not after, impact
+ok 267 - beam outcomes detect a curved-corner crossing before, but not after, impact
+  ---
+  duration_ms: 52.105334
+  type: 'test'
+  ...
+# Subtest: Xerath W renders a compact rune without a textual countdown
+ok 268 - Xerath W renders a compact rune without a textual countdown
+  ---
+  duration_ms: 3.887791
+  type: 'test'
+  ...
+# Subtest: Blitz Q visitor commits one hook, then pulls Ahri to the source-side landing
+ok 269 - Blitz Q visitor commits one hook, then pulls Ahri to the source-side landing
+  ---
+  duration_ms: 4.792375
+  type: 'test'
+  ...
+# Subtest: Blitz hook interrupts movement at the swept contact instead of the end of the step
+ok 270 - Blitz hook interrupts movement at the swept contact instead of the end of the step
+  ---
+  duration_ms: 3.573042
+  type: 'test'
+  ...
+# Subtest: a later projectile does not hit the portion of movement cancelled by a Blitz hook
+ok 271 - a later projectile does not hit the portion of movement cancelled by a Blitz hook
+  ---
+  duration_ms: 3.628708
+  type: 'test'
+  ...
+# Subtest: terrain correction after a hook preserves the earlier dash path for collisions
+ok 272 - terrain correction after a hook preserves the earlier dash path for collisions
+  ---
+  duration_ms: 3.582083
+  type: 'test'
+  ...
+# Subtest: terrain correction after a hook does not create collisions along the snap
+ok 273 - terrain correction after a hook does not create collisions along the snap
+  ---
+  duration_ms: 3.047958
+  type: 'test'
+  ...
+# Subtest: Blitz hook interrupts Ahri dash instead of resuming it after the pull
+ok 274 - Blitz hook interrupts Ahri dash instead of resuming it after the pull
+  ---
+  duration_ms: 4.13875
+  type: 'test'
+  ...
+# Subtest: Spirit Rush fires from the interruption point if Blitz grabs Ahri mid dash
+ok 275 - Spirit Rush fires from the interruption point if Blitz grabs Ahri mid dash
+  ---
+  duration_ms: 3.432417
+  type: 'test'
+  ...
+# Subtest: Spirit Rush keeps its landing origin when Blitz hits after dash completion in the same step
+ok 276 - Spirit Rush keeps its landing origin when Blitz hits after dash completion in the same step
+  ---
+  duration_ms: 3.265917
+  type: 'test'
+  ...
+# Subtest: a hook interrupting a terrain-crossing dash leaves Ahri walkable
+ok 277 - a hook interrupting a terrain-crossing dash leaves Ahri walkable
+  ---
+  duration_ms: 4.467167
+  type: 'test'
+  ...
+# Subtest: a long Blitz hook completes its pull instead of expiring midair
+ok 278 - a long Blitz hook completes its pull instead of expiring midair
+  ---
+  duration_ms: 4.545709
+  type: 'test'
+  ...
+# Subtest: Blitz Q keeps sourced range, width, speed and source-side pull geometry
+ok 279 - Blitz Q keeps sourced range, width, speed and source-side pull geometry
+  ---
+  duration_ms: 3.287333
+  type: 'test'
+  ...
+# Subtest: Blitz hook expires at its configured range and retains first collision swept detection
+ok 280 - Blitz hook expires at its configured range and retains first collision swept detection
+  ---
+  duration_ms: 4.142084
+  type: 'test'
+  ...
+# Subtest: director rejects a point-blank cast and accepts a walkable long-range sidestep
+ok 281 - director rejects a point-blank cast and accepts a walkable long-range sidestep
+  ---
+  duration_ms: 3.840792
+  type: 'test'
+  ...
+# Subtest: director accounts for spell cast locks and defers threats during a dash
+ok 282 - director accounts for spell cast locks and defers threats during a dash
+  ---
+  duration_ms: 4.796167
+  type: 'test'
+  ...
+# Subtest: a sampled escape remains safe when a committed Ahri spell delays movement
+ok 283 - a sampled escape remains safe when a committed Ahri spell delays movement
+  ---
+  duration_ms: 5.984334
+  type: 'test'
+  ...
+# Subtest: straight-shot safety checks reject targets beyond projectile reach including hitboxes
+ok 284 - straight-shot safety checks reject targets beyond projectile reach including hitboxes
+  ---
+  duration_ms: 3.857583
+  type: 'test'
+  ...
+# Subtest: a visitor cancels its uncommitted cast when its target moves out of reach
+ok 285 - a visitor cancels its uncommitted cast when its target moves out of reach
+  ---
+  duration_ms: 3.684583
+  type: 'test'
+  ...
+# Subtest: dodging a locked straight shot during its cast counts as an avoidance
+ok 286 - dodging a locked straight shot during its cast counts as an avoidance
+  ---
+  duration_ms: 5.308917
+  type: 'test'
+  ...
+# Subtest: visitor abandons a cast if the player closes distance during its entry
+ok 287 - visitor abandons a cast if the player closes distance during its entry
+  ---
+  duration_ms: 3.537667
+  type: 'test'
+  ...
+# Subtest: accepted isolated Ezreal shot can be dodged after a 200ms delay by ordinary movement
+ok 288 - accepted isolated Ezreal shot can be dodged after a 200ms delay by ordinary movement
+  ---
+  duration_ms: 5.44525
+  type: 'test'
+  ...
+# Subtest: new directed cast rejects crossing threats that block both sidesteps
+ok 289 - new directed cast rejects crossing threats that block both sidesteps
+  ---
+  duration_ms: 14.914625
+  type: 'test'
+  ...
+# Subtest: new directed cast defers an orb with unknown phase and anchor
+ok 290 - new directed cast defers an orb with unknown phase and anchor
+  ---
+  duration_ms: 4.156
+  type: 'test'
+  ...
+# Subtest: Ezreal overlap with an existing Ahri orb defers if its caster can move
+ok 291 - Ezreal overlap with an existing Ahri orb defers if its caster can move
+  ---
+  duration_ms: 3.197083
+  type: 'test'
+  ...
+# Subtest: Ahri orb overlaps reject imminent hits and unsupported companion spells
+ok 292 - Ahri orb overlaps reject imminent hits and unsupported companion spells
+  ---
+  duration_ms: 4.149
+  type: 'test'
+  ...
+# Subtest: Ezreal walking witnesses clear an existing Ahri orb and its return
+ok 293 - Ezreal walking witnesses clear an existing Ahri orb and its return
+  ---
+  duration_ms: 424.422583
+  type: 'test'
+  ...
+# Subtest: Expert Lux and Blitz witnesses clear both phases of an existing Ahri orb
+ok 294 - Expert Lux and Blitz witnesses clear both phases of an existing Ahri orb
+  ---
+  duration_ms: 880.941208
+  type: 'test'
+  ...
+# Subtest: Expert naturally fires Lux and Blitz while an Ahri orb is active
+ok 295 - Expert naturally fires Lux and Blitz while an Ahri orb is active
+  ---
+  duration_ms: 1374.486958
+  type: 'test'
+  ...
+# Subtest: Ahri orb and Ezreal shared escapes survive existing movement and W decay
+ok 296 - Ahri orb and Ezreal shared escapes survive existing movement and W decay
+  ---
+  duration_ms: 916.025791
+  type: 'test'
+  ...
+# Subtest: Expert naturally schedules Ezreal pressure while an Ahri orb is active
+ok 297 - Expert naturally schedules Ezreal pressure while an Ahri orb is active
+  ---
+  duration_ms: 735.00575
+  type: 'test'
+  ...
+# Subtest: a straight-shot visitor joining an Ahri orb still enters visibly before casting
+ok 298 - a straight-shot visitor joining an Ahri orb still enters visibly before casting
+  ---
+  duration_ms: 178.543834
+  type: 'test'
+  ...
+# Subtest: escape forecast considers an enemy cast that has already locked its aim
+ok 299 - escape forecast considers an enemy cast that has already locked its aim
+  ---
+  duration_ms: 12.162709
+  type: 'test'
+  ...
+# Subtest: ambient Xerath Q resolves after its cue with no on-screen caster
+ok 300 - ambient Xerath Q resolves after its cue with no on-screen caster
+  ---
+  duration_ms: 4.971459
+  type: 'test'
+  ...
+# Subtest: Xerath Q has a walkable sidestep after the training reaction delay and no overlap
+ok 301 - Xerath Q has a walkable sidestep after the training reaction delay and no overlap
+  ---
+  duration_ms: 4.832875
+  type: 'test'
+  ...
+# Subtest: Xerath Q uses the projectile-width and champion hitbox at its beam boundary
+ok 302 - Xerath Q uses the projectile-width and champion hitbox at its beam boundary
+  ---
+  duration_ms: 8.86225
+  type: 'test'
+  ...
+# Subtest: Xerath beam uses a flat-ended rectangle against the champion circle
+ok 303 - Xerath beam uses a flat-ended rectangle against the champion circle
+  ---
+  duration_ms: 3.359584
+  type: 'test'
+  ...
+# Subtest: Velkoz Q splits into two perpendicular faster bolts after a short delay
+ok 304 - Velkoz Q splits into two perpendicular faster bolts after a short delay
+  ---
+  duration_ms: 4.812666
+  type: 'test'
+  ...
+# Subtest: Velkoz main-bolt hit cannot damage the same champion again with its split
+ok 305 - Velkoz main-bolt hit cannot damage the same champion again with its split
+  ---
+  duration_ms: 4.511375
+  type: 'test'
+  ...
+# Subtest: Velkoz angled split can threaten the player outside the main bolt path
+ok 306 - Velkoz angled split can threaten the player outside the main bolt path
+  ---
+  duration_ms: 4.866167
+  type: 'test'
+  ...
+# Subtest: Velkoz split branches cannot both hit the same champion
+ok 307 - Velkoz split branches cannot both hit the same champion
+  ---
+  duration_ms: 4.7535
+  type: 'test'
+  ...
+# Subtest: Velkoz split forecast checks both perpendicular branches and terrain routes
+ok 308 - Velkoz split forecast checks both perpendicular branches and terrain routes
+  ---
+  duration_ms: 4.192375
+  type: 'test'
+  ...
+# Subtest: entering Velkoz reserves its encounter until cast or cancellation
+ok 309 - entering Velkoz reserves its encounter until cast or cancellation
+  ---
+  duration_ms: 3.277167
+  type: 'test'
+  ...
+# Subtest: Expert reserves committed Velkoz splits for an isolated read
+ok 310 - Expert reserves committed Velkoz splits for an isolated read
+  ---
+  duration_ms: 3.542542
+  type: 'test'
+  ...
+# Subtest: committed Velkoz forecast defers unpredictable split trajectories
+ok 311 - committed Velkoz forecast defers unpredictable split trajectories
+  ---
+  duration_ms: 3.555667
+  type: 'test'
+  ...
+# Subtest: Expert does not introduce a visitor during a committed Velkoz cast
+ok 312 - Expert does not introduce a visitor during a committed Velkoz cast
+  ---
+  duration_ms: 25.682791
+  type: 'test'
+  ...
+# Subtest: a sampled Velkoz escape survives the actual split after 200ms reaction
+ok 313 - a sampled Velkoz escape survives the actual split after 200ms reaction
+  ---
+  duration_ms: 6.481375
+  type: 'test'
+  ...
+# Subtest: Expert Velkoz and an existing straight projectile share an executable escape
+ok 314 - Expert Velkoz and an existing straight projectile share an executable escape
+  ---
+  duration_ms: 160.333209
+  type: 'test'
+  ...
+# Subtest: Expert defers Velkoz while a prior straight missile remains active
+ok 315 - Expert defers Velkoz while a prior straight missile remains active
+  ---
+  duration_ms: 78.357542
+  type: 'test'
+  ...
+# Subtest: Expert never naturally releases Velkoz while another missile is already in flight
+ok 316 - Expert never naturally releases Velkoz while another missile is already in flight
+  ---
+  duration_ms: 1488.256584
+  type: 'test'
+  ...
+# Subtest: Velkoz defers an already unavoidable projectile or an active area effect
+ok 317 - Velkoz defers an already unavoidable projectile or an active area effect
+  ---
+  duration_ms: 4.807917
+  type: 'test'
+  ...
+# Subtest: Velkoz forecast rejects a point-blank split with no ordinary escape
+ok 318 - Velkoz forecast rejects a point-blank split with no ordinary escape
+  ---
+  duration_ms: 4.256333
+  type: 'test'
+  ...
+# Subtest: Ezreal and active Velkoz phases share an executable walking escape
+ok 319 - Ezreal and active Velkoz phases share an executable walking escape
+  ---
+  duration_ms: 741.638125
+  type: 'test'
+  ...
+# Subtest: Expert Lux and Blitz share executable escapes with all Velkoz phases
+ok 320 - Expert Lux and Blitz share executable escapes with all Velkoz phases
+  ---
+  duration_ms: 1522.103709
+  type: 'test'
+  ...
+# Subtest: Expert keeps Velkoz missiles separate from Lux and Blitz
+ok 321 - Expert keeps Velkoz missiles separate from Lux and Blitz
+  ---
+  duration_ms: 3139.299542
+  type: 'test'
+  ...
+# Subtest: Velkoz overlap defers offscreen split predictions and non-Expert modes
+ok 322 - Velkoz overlap defers offscreen split predictions and non-Expert modes
+  ---
+  duration_ms: 11.769666
+  type: 'test'
+  ...
+# Subtest: Expert director keeps Ezreal separate from Velkoz missiles
+ok 323 - Expert director keeps Ezreal separate from Velkoz missiles
+  ---
+  duration_ms: 4768.411834
+  type: 'test'
+  ...
+# Subtest: pending split follow-up is discarded if its original threat has resolved
+ok 324 - pending split follow-up is discarded if its original threat has resolved
+  ---
+  duration_ms: 15.172416
+  type: 'test'
+  ...
+# Subtest: pending split follow-up waits through pause and is cleared by restart
+ok 325 - pending split follow-up waits through pause and is cleared by restart
+  ---
+  duration_ms: 3.509542
+  type: 'test'
+  ...
+# Subtest: seeded Expert combat remains deterministic at 30, 60 and 120 FPS
+ok 326 - seeded Expert combat remains deterministic at 30, 60 and 120 FPS
+  ---
+  duration_ms: 7392.466333
+  type: 'test'
+  ...
+# Subtest: Orianna ball is shown before its shockwave, with no stun or pull on hit
+ok 327 - Orianna ball is shown before its shockwave, with no stun or pull on hit
+  ---
+  duration_ms: 4.936417
+  type: 'test'
+  ...
+# Subtest: Orianna cancels the shockwave if the player has no ordinary escape when it would cast
+ok 328 - Orianna cancels the shockwave if the player has no ordinary escape when it would cast
+  ---
+  duration_ms: 4.044958
+  type: 'test'
+  ...
+# Subtest: unsafe scheduled rare ultimates defer instead of consuming a full rare interval
+ok 329 - unsafe scheduled rare ultimates defer instead of consuming a full rare interval
+  ---
+  duration_ms: 14.534458
+  type: 'test'
+  ...
+# Subtest: committed rare ultimates retain their normal long interval
+ok 330 - committed rare ultimates retain their normal long interval
+  ---
+  duration_ms: 8.942041
+  type: 'test'
+  ...
+# Subtest: Orianna ball blocks other encounters and its preparation freezes while paused
+ok 331 - Orianna ball blocks other encounters and its preparation freezes while paused
+  ---
+  duration_ms: 3.0265
+  type: 'test'
+  ...
+# Subtest: rare Orianna event is not scheduled in the first 90 seconds
+ok 332 - rare Orianna event is not scheduled in the first 90 seconds
+  ---
+  duration_ms: 52.590042
+  type: 'test'
+  ...
+# Subtest: Malphite approaches before dashing and hit deals damage without immobilization
+ok 333 - Malphite approaches before dashing and hit deals damage without immobilization
+  ---
+  duration_ms: 7.089
+  type: 'test'
+  ...
+# Subtest: Malphite renders bounded stone art and retains a missing-image fallback
+ok 334 - Malphite renders bounded stone art and retains a missing-image fallback
+  ---
+  duration_ms: 6.354333
+  type: 'test'
+  ...
+# Subtest: Malphite landing effect appears on impact and not as a target guide
+ok 335 - Malphite landing effect appears on impact and not as a target guide
+  ---
+  duration_ms: 3.196416
+  type: 'test'
+  ...
+# Subtest: Malphite R has a walkable response after a 200ms reaction delay
+ok 336 - Malphite R has a walkable response after a 200ms reaction delay
+  ---
+  duration_ms: 4.431458
+  type: 'test'
+  ...
+# Subtest: Malphite is not eligible in the first 150 seconds
+ok 337 - Malphite is not eligible in the first 150 seconds
+  ---
+  duration_ms: 81.261417
+  type: 'test'
+  ...
+# Subtest: Orianna ball travels visibly from caster to its destination before Shockwave
+ok 338 - Orianna ball travels visibly from caster to its destination before Shockwave
+  ---
+  duration_ms: 4.298542
+  type: 'test'
+  ...
+# Subtest: Orianna encounter renders a caster and ball during setup
+ok 339 - Orianna encounter renders a caster and ball during setup
+  ---
+  duration_ms: 3.20725
+  type: 'test'
+  ...
+# Subtest: Orianna ball draws over Ahri when their positions coincide
+ok 340 - Orianna ball draws over Ahri when their positions coincide
+  ---
+  duration_ms: 3.028
+  type: 'test'
+  ...
+# Subtest: Orianna R shows its circle during windup before damage
+ok 341 - Orianna R shows its circle during windup before damage
+  ---
+  duration_ms: 3.43025
+  type: 'test'
+  ...
+# Subtest: Orianna cast energy contracts while the outer boundary stays fixed
+ok 342 - Orianna cast energy contracts while the outer boundary stays fixed
+  ---
+  duration_ms: 3.069208
+  type: 'test'
+  ...
+# Subtest: Orianna R deals damage only as its full-radius shockwave appears
+ok 343 - Orianna R deals damage only as its full-radius shockwave appears
+  ---
+  duration_ms: 3.307541
+  type: 'test'
+  ...
+# Subtest: Orianna impact survives a delayed render after simulation catch-up
+ok 344 - Orianna impact survives a delayed render after simulation catch-up
+  ---
+  duration_ms: 3.171334
+  type: 'test'
+  ...
+# Subtest: Lux, Malphite and Cassiopeia impacts survive delayed rendering
+ok 345 - Lux, Malphite and Cassiopeia impacts survive delayed rendering
+  ---
+  duration_ms: 9.385416
+  type: 'test'
+  ...
+# Subtest: Orianna Q hits along its moving path once and records its own damage
+ok 346 - Orianna Q hits along its moving path once and records its own damage
+  ---
+  duration_ms: 3.4955
+  type: 'test'
+  ...
+# Subtest: Orianna Q arrival area uses its own radius without applying a second hit
+ok 347 - Orianna Q arrival area uses its own radius without applying a second hit
+  ---
+  duration_ms: 7.581375
+  type: 'test'
+  ...
+# Subtest: a lethal Orianna Q is recorded before the result screen
+ok 348 - a lethal Orianna Q is recorded before the result screen
+  ---
+  duration_ms: 3.178583
+  type: 'test'
+  ...
+# Subtest: Orianna Q counts escape from its threatened arrival area
+ok 349 - Orianna Q counts escape from its threatened arrival area
+  ---
+  duration_ms: 3.428417
+  type: 'test'
+  ...
+# Subtest: Ahri charm interrupts a Dodge visitor before release and moves it toward her
+ok 350 - Ahri charm interrupts a Dodge visitor before release and moves it toward her
+  ---
+  duration_ms: 4.100666
+  type: 'test'
+  ...
+# Subtest: charming a Dodge visitor preserves an already-fired projectile
+ok 351 - charming a Dodge visitor preserves an already-fired projectile
+  ---
+  duration_ms: 2.883625
+  type: 'test'
+  ...
+# Subtest: an interrupted visitor routes back around terrain before despawning
+ok 352 - an interrupted visitor routes back around terrain before despawning
+  ---
+  duration_ms: 9.432791
+  type: 'test'
+  ...
+# Subtest: damage text is rounded without changing fractional damage or health
+ok 353 - damage text is rounded without changing fractional damage or health
+  ---
+  duration_ms: 3.196375
+  type: 'test'
+  ...
+# Subtest: CS deaths do not draw an artificial MISSED label
+ok 354 - CS deaths do not draw an artificial MISSED label
+  ---
+  duration_ms: 3.027917
+  type: 'test'
+  ...
+# Subtest: result counts a pending Velkoz split as unresolved when it can still hit
+ok 355 - result counts a pending Velkoz split as unresolved when it can still hit
+  ---
+  duration_ms: 3.069084
+  type: 'test'
+  ...
+# Subtest: result excludes an already-ineligible Velkoz split branch
+ok 356 - result excludes an already-ineligible Velkoz split branch
+  ---
+  duration_ms: 3.171792
+  type: 'test'
+  ...
+# Subtest: pause freezes a pending Velkoz split and restart clears it and its outcomes
+ok 357 - pause freezes a pending Velkoz split and restart clears it and its outcomes
+  ---
+  duration_ms: 3.389417
+  type: 'test'
+  ...
+# Subtest: Flash works with the physical F key on a Greek keyboard layout
+ok 358 - Flash works with the physical F key on a Greek keyboard layout
+  ---
+  duration_ms: 2.795208
+  type: 'test'
+  ...
+# Subtest: menu keys and browser shortcuts are not intercepted by gameplay controls
+ok 359 - menu keys and browser shortcuts are not intercepted by gameplay controls
+  ---
+  duration_ms: 2.586084
+  type: 'test'
+  ...
+# Subtest: Flash aimed at Ahri herself does not waste its cooldown
+ok 360 - Flash aimed at Ahri herself does not waste its cooldown
+  ---
+  duration_ms: 2.632875
+  type: 'test'
+  ...
+# Subtest: a failed Flash landing does not cancel an attack windup
+ok 361 - a failed Flash landing does not cancel an attack windup
+  ---
+  duration_ms: 2.520541
+  type: 'test'
+  ...
+# Subtest: a valid Flash still cancels an uncommitted attack windup
+ok 362 - a valid Flash still cancels an uncommitted attack windup
+  ---
+  duration_ms: 2.647791
+  type: 'test'
+  ...
+# Subtest: Flash cooldown display never shows zero while Flash is unavailable
+ok 363 - Flash cooldown display never shows zero while Flash is unavailable
+  ---
+  duration_ms: 2.695375
+  type: 'test'
+  ...
+# Subtest: Dodge Flash respects cursor distance, maximum range and training cooldown
+ok 364 - Dodge Flash respects cursor distance, maximum range and training cooldown
+  ---
+  duration_ms: 6.442292
+  type: 'test'
+  ...
+# Subtest: forward Flash preserves a move order and continues walking from the landing
+ok 365 - forward Flash preserves a move order and continues walking from the landing
+  ---
+  duration_ms: 3.115084
+  type: 'test'
+  ...
+# Subtest: backward Flash or an overshot destination does not reverse movement
+ok 366 - backward Flash or an overshot destination does not reverse movement
+  ---
+  duration_ms: 5.425458
+  type: 'test'
+  ...
+# Subtest: Flash clears an attack chase rather than turning it into a move order
+ok 367 - Flash clears an attack chase rather than turning it into a move order
+  ---
+  duration_ms: 2.683917
+  type: 'test'
+  ...
+# Subtest: forward Flash rebuilds a movement route around terrain
+ok 368 - forward Flash rebuilds a movement route around terrain
+  ---
+  duration_ms: 4.689167
+  type: 'test'
+  ...
+# Subtest: Ahri can flash during a spell cast without cancelling the spell
+ok 369 - Ahri can flash during a spell cast without cancelling the spell
+  ---
+  duration_ms: 3.099541
+  type: 'test'
+  ...
+# Subtest: Ahri flash in kite has no artificial damage immunity
+ok 370 - Ahri flash in kite has no artificial damage immunity
+  ---
+  duration_ms: 2.672958
+  type: 'test'
+  ...
+# Subtest: fresh later waves acquire matching melee rows instead of collapsing on one target
+ok 371 - fresh later waves acquire matching melee rows instead of collapsing on one target
+  ---
+  duration_ms: 14.221167
+  type: 'test'
+  ...
+# Subtest: Ahri regenerates base health over time without exceeding max or while paused
+ok 372 - Ahri regenerates base health over time without exceeding max or while paused
+  ---
+  duration_ms: 7.591917
+  type: 'test'
+  ...
+# Subtest: arcade presets do not receive Ahri health regeneration
+ok 373 - arcade presets do not receive Ahri health regeneration
+  ---
+  duration_ms: 4.360167
+  type: 'test'
+  ...
+# Subtest: clean Dodge sustain restores one full health bar over thirty seconds and resets on hit
+ok 374 - clean Dodge sustain restores one full health bar over thirty seconds and resets on hit
+  ---
+  duration_ms: 17.087667
+  type: 'test'
+  ...
+# Subtest: Dodge healing clock pauses and does not bank ticks at full health
+ok 375 - Dodge healing clock pauses and does not bank ticks at full health
+  ---
+  duration_ms: 6.083833
+  type: 'test'
+  ...
+# Subtest: a Dodge hit briefly holds new director encounters without cancelling live threats
+ok 376 - a Dodge hit briefly holds new director encounters without cancelling live threats
+  ---
+  duration_ms: 3.716791
+  type: 'test'
+  ...
+# Subtest: Xerath Q charge shows a short directional cue without drawing the full aim line
+ok 377 - Xerath Q charge shows a short directional cue without drawing the full aim line
+  ---
+  duration_ms: 3.011666
+  type: 'test'
+  ...
+# Subtest: expired hostile projectiles cannot hit later movement in the same frame
+ok 378 - expired hostile projectiles cannot hit later movement in the same frame
+  ---
+  duration_ms: 11.359792
+  type: 'test'
+  ...
+# Subtest: a hostile projectile can still hit before expiring mid-frame
+ok 379 - a hostile projectile can still hit before expiring mid-frame
+  ---
+  duration_ms: 2.798917
+  type: 'test'
+  ...
+# Subtest: minion missile expiry is compared against target motion only during its lifetime
+ok 380 - minion missile expiry is compared against target motion only during its lifetime
+  ---
+  duration_ms: 2.725625
+  type: 'test'
+  ...
+# Subtest: dodge director rejects a cast when the current move order enters an existing projectile before reaction
+ok 381 - dodge director rejects a cast when the current move order enters an existing projectile before reaction
+  ---
+  duration_ms: 3.65575
+  type: 'test'
+  ...
+# Subtest: moving-player escape witnesses survive continuing the existing order during reaction
+ok 382 - moving-player escape witnesses survive continuing the existing order during reaction
+  ---
+  duration_ms: 8.686666
+  type: 'test'
+  ...
+# Subtest: Orianna safety checks consider movement toward the ball before reaction
+ok 383 - Orianna safety checks consider movement toward the ball before reaction
+  ---
+  duration_ms: 2.832292
+  type: 'test'
+  ...
+# Subtest: Orianna moving-player escape witness clears the actual impact
+ok 384 - Orianna moving-player escape witness clears the actual impact
+  ---
+  duration_ms: 3.402833
+  type: 'test'
+  ...
+# Subtest: Xerath beam witness survives actual impact while the initial movement continues
+ok 385 - Xerath beam witness survives actual impact while the initial movement continues
+  ---
+  duration_ms: 7.14825
+  type: 'test'
+  ...
+# Subtest: Malphite planned landing remains escapable from a moving player
+ok 386 - Malphite planned landing remains escapable from a moving player
+  ---
+  duration_ms: 3.454583
+  type: 'test'
+  ...
+# Subtest: Expert direct Malphite R provides a real Flash-and-move escape
+ok 387 - Expert direct Malphite R provides a real Flash-and-move escape
+  ---
+  duration_ms: 3.539875
+  type: 'test'
+  ...
+# Subtest: Expert Malphite defers when Flash is on cooldown
+ok 388 - Expert Malphite defers when Flash is on cooldown
+  ---
+  duration_ms: 2.622416
+  type: 'test'
+  ...
+# Subtest: direct Malphite results report Flash use during the cast without claiming a dodge
+ok 389 - direct Malphite results report Flash use during the cast without claiming a dodge
+  ---
+  duration_ms: 2.728916
+  type: 'test'
+  ...
+# Subtest: direct Malphite Flash witnesses survive existing movement and W decay
+ok 390 - direct Malphite Flash witnesses survive existing movement and W decay
+  ---
+  duration_ms: 14.652959
+  type: 'test'
+  ...
+# Subtest: direct Malphite Flash plans remain safe across sampled arena positions
+ok 391 - direct Malphite Flash plans remain safe across sampled arena positions
+  ---
+  duration_ms: 577.696833
+  type: 'test'
+  ...
+# Subtest: forecast accounts for W decay and soft caps across movement and expiration
+ok 392 - forecast accounts for W decay and soft caps across movement and expiration
+  ---
+  duration_ms: 15.544625
+  type: 'test'
+  ...
+# Subtest: W decays during root before the existing movement order resumes
+ok 393 - W decays during root before the existing movement order resumes
+  ---
+  duration_ms: 3.185333
+  type: 'test'
+  ...
+# Subtest: boosted moving-player witness clears an actual Ezreal shot
+ok 394 - boosted moving-player witness clears an actual Ezreal shot
+  ---
+  duration_ms: 4.504
+  type: 'test'
+  ...
+# Subtest: boosted area-escape witness survives Xerath impact after continuing its move
+ok 395 - boosted area-escape witness survives Xerath impact after continuing its move
+  ---
+  duration_ms: 3.72425
+  type: 'test'
+  ...
+# Subtest: Orianna encounter draws its own clockwork sprite and supports missing art
+ok 396 - Orianna encounter draws its own clockwork sprite and supports missing art
+  ---
+  duration_ms: 3.024334
+  type: 'test'
+  ...
+# Subtest: moving dodge witnesses remain safe across positions, approach angles and W states
+ok 397 - moving dodge witnesses remain safe across positions, approach angles and W states
+  ---
+  duration_ms: 284.390292
+  type: 'test'
+  ...
+# Subtest: Orianna escape can stop at a nearby arena corner instead of needing a full-speed destination
+ok 398 - Orianna escape can stop at a nearby arena corner instead of needing a full-speed destination
+  ---
+  duration_ms: 3.46175
+  type: 'test'
+  ...
+# Subtest: clipped area escape never claims a point through a wall is reachable
+ok 399 - clipped area escape never claims a point through a wall is reachable
+  ---
+  duration_ms: 3.341834
+  type: 'test'
+  ...
+# Subtest: moving-player seeded sessions sustain mixed pressure without impossible state
+ok 400 - moving-player seeded sessions sustain mixed pressure without impossible state
+  ---
+  duration_ms: 361.301458
+  type: 'test'
+  ...
+# [{"casts":50,"ezreal":22,"orianna":1,"malphite":1},{"casts":52,"ezreal":36,"orianna":1,"malphite":0},{"casts":53,"ezreal":24,"orianna":1,"malphite":0}]
+# Subtest: a third identical complex visitor is deferred while repeated Ezreal remains allowed
+ok 401 - a third identical complex visitor is deferred while repeated Ezreal remains allowed
+  ---
+  duration_ms: 3.580084
+  type: 'test'
+  ...
+# Subtest: Dodge results separate compact summary from accessible spell breakdown and reset it
+ok 402 - Dodge results separate compact summary from accessible spell breakdown and reset it
+  ---
+  duration_ms: 3.116625
+  type: 'test'
+  ...
+# Subtest: blocked third Xerath Q or W falls back to an Ezreal visitor
+ok 403 - blocked third Xerath Q or W falls back to an Ezreal visitor
+  ---
+  duration_ms: 6.174042
+  type: 'test'
+  ...
+# Subtest: area impacts sample the player position at impact rather than frame end
+ok 404 - area impacts sample the player position at impact rather than frame end
+  ---
+  duration_ms: 11.199334
+  type: 'test'
+  ...
+# Subtest: an area impact still hits when the player leaves later in the same frame
+ok 405 - an area impact still hits when the player leaves later in the same frame
+  ---
+  duration_ms: 2.963083
+  type: 'test'
+  ...
+# Subtest: Xerath W center damage uses the position at impact
+ok 406 - Xerath W center damage uses the position at impact
+  ---
+  duration_ms: 2.816708
+  type: 'test'
+  ...
+# Subtest: Orianna Q arrival ignores movement after the ball has arrived
+ok 407 - Orianna Q arrival ignores movement after the ball has arrived
+  ---
+  duration_ms: 2.690291
+  type: 'test'
+  ...
+# Subtest: Orianna Q arrival hits a player who leaves only after arrival
+ok 408 - Orianna Q arrival hits a player who leaves only after arrival
+  ---
+  duration_ms: 2.744333
+  type: 'test'
+  ...
+# Subtest: a seeded double Ezreal encounter admits a shared walking escape
+ok 409 - a seeded double Ezreal encounter admits a shared walking escape
+  ---
+  duration_ms: 203.584333
+  type: 'test'
+  ...
+# Subtest: double Ezreal projectiles occur naturally on Standard but not Foundation
+ok 410 - double Ezreal projectiles occur naturally on Standard but not Foundation
+  ---
+  duration_ms: 512.050833
+  type: 'test'
+  ...
+# Subtest: Expert does not generate scripted duplicate Ezreal pairs
+ok 411 - Expert does not generate scripted duplicate Ezreal pairs
+  ---
+  duration_ms: 244.340375
+  type: 'test'
+  ...
+# Subtest: Dodge allows an Ahri skillshot followed by movement to evade an incoming attack
+ok 412 - Dodge allows an Ahri skillshot followed by movement to evade an incoming attack
+  ---
+  duration_ms: 4.997042
+  type: 'test'
+  ...
+# Subtest: Dodge counts Q once across both orb legs and counts a missed cast separately
+ok 413 - Dodge counts Q once across both orb legs and counts a missed cast separately
+  ---
+  duration_ms: 5.953292
+  type: 'test'
+  ...
+# Subtest: a piercing Q hitting multiple visitors earns one transparent skill bonus
+ok 414 - a piercing Q hitting multiple visitors earns one transparent skill bonus
+  ---
+  duration_ms: 4.807875
+  type: 'test'
+  ...
+# Subtest: Dodge skill results distinguish a released in-flight E from a miss
+ok 415 - Dodge skill results distinguish a released in-flight E from a miss
+  ---
+  duration_ms: 3.185584
+  type: 'test'
+  ...
+# Subtest: Dodge counts Charm hits against a visitor once per released E
+ok 416 - Dodge counts Charm hits against a visitor once per released E
+  ---
+  duration_ms: 3.702125
+  type: 'test'
+  ...
+# Subtest: skill-scored Dodge records stay separate while retaining the survival record
+ok 417 - skill-scored Dodge records stay separate while retaining the survival record
+  ---
+  duration_ms: 2.951958
+  type: 'test'
+  ...
+# Subtest: new Dodge balance keeps previous survival records separate
+ok 418 - new Dodge balance keeps previous survival records separate
+  ---
+  duration_ms: 2.928833
+  type: 'test'
+  ...
+# Subtest: paired Ezreal escapes remain safe with existing movement and W decay
+ok 419 - paired Ezreal escapes remain safe with existing movement and W decay
+  ---
+  duration_ms: 1028.491334
+  type: 'test'
+  ...
+# Subtest: Ahri Q forecast rejects a path safe outbound but crossed by the returning orb
+ok 420 - Ahri Q forecast rejects a path safe outbound but crossed by the returning orb
+  ---
+  duration_ms: 3.537625
+  type: 'test'
+  ...
+# Subtest: accepted Ahri Q walking witnesses avoid both orb phases
+ok 421 - accepted Ahri Q walking witnesses avoid both orb phases
+  ---
+  duration_ms: 45.679417
+  type: 'test'
+  ...
+# Subtest: accepted Ahri Q overlap witnesses also avoid an incoming Ezreal shot
+ok 422 - accepted Ahri Q overlap witnesses also avoid an incoming Ezreal shot
+  ---
+  duration_ms: 29.728208
+  type: 'test'
+  ...
+# Subtest: Ezreal-pattern sprite has normal dimensions and a safe fallback
+ok 423 - Ezreal-pattern sprite has normal dimensions and a safe fallback
+  ---
+  duration_ms: 2.914625
+  type: 'test'
+  ...
+# Subtest: cached HTML without new caster image nodes keeps the arena rendering
+ok 424 - cached HTML without new caster image nodes keeps the arena rendering
+  ---
+  duration_ms: 11.15125
+  type: 'test'
+  ...
+# Subtest: visitor projectile travels only after its windup ends inside a simulation step
+ok 425 - visitor projectile travels only after its windup ends inside a simulation step
+  ---
+  duration_ms: 2.884084
+  type: 'test'
+  ...
+# Subtest: Ahri Q and E only travel after their cast finishes within the step
+ok 426 - Ahri Q and E only travel after their cast finishes within the step
+  ---
+  duration_ms: 6.011625
+  type: 'test'
+  ...
+# Subtest: Ahri Q and E do not hit a target that left before release
+ok 427 - Ahri Q and E do not hit a target that left before release
+  ---
+  duration_ms: 6.034459
+  type: 'test'
+  ...
+# Subtest: Ahri Q and E can hit a target that enters during the active interval
+ok 428 - Ahri Q and E can hit a target that enters during the active interval
+  ---
+  duration_ms: 6.015334
+  type: 'test'
+  ...
+# Subtest: queued movement starts only after a cast or root expires within the step
+ok 429 - queued movement starts only after a cast or root expires within the step
+  ---
+  duration_ms: 5.775875
+  type: 'test'
+  ...
+# Subtest: area impact samples the player before queued movement begins
+ok 430 - area impact samples the player before queued movement begins
+  ---
+  duration_ms: 2.978833
+  type: 'test'
+  ...
+# Subtest: projectile collision respects movement beginning after a cast lock
+ok 431 - projectile collision respects movement beginning after a cast lock
+  ---
+  duration_ms: 6.207084
+  type: 'test'
+  ...
+# Subtest: Cassiopeia checks facing before a queued turn actually begins
+ok 432 - Cassiopeia checks facing before a queued turn actually begins
+  ---
+  duration_ms: 3.079375
+  type: 'test'
+  ...
+# Subtest: area and missile impacts account for reaching a nearby move destination early
+ok 433 - area and missile impacts account for reaching a nearby move destination early
+  ---
+  duration_ms: 5.921459
+  type: 'test'
+  ...
+# Subtest: queued move does not reuse a completed dash step
+ok 434 - queued move does not reuse a completed dash step
+  ---
+  duration_ms: 3.059958
+  type: 'test'
+  ...
+# Subtest: projectile does not collide with player movement before its release
+ok 435 - projectile does not collide with player movement before its release
+  ---
+  duration_ms: 2.863084
+  type: 'test'
+  ...
+# Subtest: Velkoz splits from first swept contact, including a moving champion
+ok 436 - Velkoz splits from first swept contact, including a moving champion
+  ---
+  duration_ms: 5.913292
+  type: 'test'
+  ...
+# Subtest: Dodge still resolves lethal impacts beyond the former time limit
+ok 437 - Dodge still resolves lethal impacts beyond the former time limit
+  ---
+  duration_ms: 3.046875
+  type: 'test'
+  ...
+# Subtest: Velkoz split retains sub-step expiry and launches children within their active step
+ok 438 - Velkoz split retains sub-step expiry and launches children within their active step
+  ---
+  duration_ms: 2.90175
+  type: 'test'
+  ...
+# Subtest: Velkoz children ignore champion movement before split activation
+ok 439 - Velkoz children ignore champion movement before split activation
+  ---
+  duration_ms: 2.863667
+  type: 'test'
+  ...
+# Subtest: Velkoz child can hit during the remainder of the split activation step
+ok 440 - Velkoz child can hit during the remainder of the split activation step
+  ---
+  duration_ms: 2.930625
+  type: 'test'
+  ...
+# Subtest: seeded straight visitors sometimes lead existing movement and retain a walking escape
+ok 441 - seeded straight visitors sometimes lead existing movement and retain a walking escape
+  ---
+  duration_ms: 442.718583
+  type: 'test'
+  ...
+# Subtest: a predictive shot can punish continuing straight while a changed path dodges it
+ok 442 - a predictive shot can punish continuing straight while a changed path dodges it
+  ---
+  duration_ms: 11.651459
+  type: 'test'
+  ...
+# Subtest: a reversal read can punish reversing movement and has an escape
+ok 443 - a reversal read can punish reversing movement and has an escape
+  ---
+  duration_ms: 34.935458
+  type: 'test'
+  ...
+# Subtest: unsafe lead falls back to a separately verified direct shot
+ok 444 - unsafe lead falls back to a separately verified direct shot
+  ---
+  duration_ms: 1790.352375
+  type: 'test'
+  ...
+# Subtest: Dodge permits a W-boosted escape that base movement alone cannot make
+ok 445 - Dodge permits a W-boosted escape that base movement alone cannot make
+  ---
+  duration_ms: 5.646916
+  type: 'test'
+  ...
+# Subtest: Flash faces its displacement and leaves facing unchanged on zero displacement
+ok 446 - Flash faces its displacement and leaves facing unchanged on zero displacement
+  ---
+  duration_ms: 3.096041
+  type: 'test'
+  ...
+# Subtest: Flash changes facing without redirecting an Ahri spell already casting
+ok 447 - Flash changes facing without redirecting an Ahri spell already casting
+  ---
+  duration_ms: 3.535083
+  type: 'test'
+  ...
+# Subtest: Xerath W and Ezreal Q witnesses remain safe with existing movement and W
+ok 448 - Xerath W and Ezreal Q witnesses remain safe with existing movement and W
+  ---
+  duration_ms: 137.792792
+  type: 'test'
+  ...
+# Subtest: Expert Xerath W reserves room instead of joining four live missiles
+ok 449 - Expert Xerath W reserves room instead of joining four live missiles
+  ---
+  duration_ms: 2.996875
+  type: 'test'
+  ...
+# Subtest: Expert visitor witnesses avoid an already-active Xerath W at impact
+ok 450 - Expert visitor witnesses avoid an already-active Xerath W at impact
+  ---
+  duration_ms: 143.261417
+  type: 'test'
+  ...
+# Subtest: Expert Xerath Q and two missiles share an executable walking escape
+ok 451 - Expert Xerath Q and two missiles share an executable walking escape
+  ---
+  duration_ms: 157.35125
+  type: 'test'
+  ...
+# Subtest: Expert visitor witnesses avoid an already-active Xerath Q at impact
+ok 452 - Expert visitor witnesses avoid an already-active Xerath Q at impact
+  ---
+  duration_ms: 129.840667
+  type: 'test'
+  ...
+# Subtest: Expert does not naturally schedule the removed Xerath Q laser
+ok 453 - Expert does not naturally schedule the removed Xerath Q laser
+  ---
+  duration_ms: 1154.573333
+  type: 'test'
+  ...
+# Subtest: Expert does not force Xerath W above the four-threat budget
+ok 454 - Expert does not force Xerath W above the four-threat budget
+  ---
+  duration_ms: 3.683875
+  type: 'test'
+  ...
+# Subtest: queued Xerath follow-up expires without its missiles and resets cleanly
+ok 455 - queued Xerath follow-up expires without its missiles and resets cleanly
+  ---
+  duration_ms: 3.061166
+  type: 'test'
+  ...
+# Subtest: Xerath W may use a safe shortened route near arena boundaries
+ok 456 - Xerath W may use a safe shortened route near arena boundaries
+  ---
+  duration_ms: 237.406916
+  type: 'test'
+  ...
+# Subtest: Xerath W can select a safe lateral response against an incoming Ezreal Q
+ok 457 - Xerath W can select a safe lateral response against an incoming Ezreal Q
+  ---
+  duration_ms: 458.711292
+  type: 'test'
+  ...
+# Subtest: Xerath W shared escape respects a committed led Ezreal cast while moving
+ok 458 - Xerath W shared escape respects a committed led Ezreal cast while moving
+  ---
+  duration_ms: 294.593792
+  type: 'test'
+  ...
+# Subtest: straight-shot director can use an oblique escape against a second missile
+ok 459 - straight-shot director can use an oblique escape against a second missile
+  ---
+  duration_ms: 399.026333
+  type: 'test'
+  ...
+# Subtest: straight-shot director can accept a safe shortened route near a boundary
+ok 460 - straight-shot director can accept a safe shortened route near a boundary
+  ---
+  duration_ms: 2220.984083
+  type: 'test'
+  ...
+# Subtest: enemy Ahri orb returns and can hit during the remainder of its turn step
+ok 461 - enemy Ahri orb returns and can hit during the remainder of its turn step
+  ---
+  duration_ms: 3.160792
+  type: 'test'
+  ...
+# Subtest: player Ahri orb returns and hits during the remainder of its turn step
+ok 462 - player Ahri orb returns and hits during the remainder of its turn step
+  ---
+  duration_ms: 3.286625
+  type: 'test'
+  ...
+# Subtest: player Ahri orb does not hit target movement after its return ends
+ok 463 - player Ahri orb does not hit target movement after its return ends
+  ---
+  duration_ms: 3.110041
+  type: 'test'
+  ...
+# Subtest: enemy Ahri return does not hit movement completed before the turn
+ok 464 - enemy Ahri return does not hit movement completed before the turn
+  ---
+  duration_ms: 3.239209
+  type: 'test'
+  ...
+# Subtest: Expert encounter interval follows the readable rhythm from the start
+ok 465 - Expert encounter interval follows the readable rhythm from the start
+  ---
+  duration_ms: 21.723167
+  type: 'test'
+  ...
+# Subtest: Velkoz split awards one dodge only after both threatened branches miss
+ok 466 - Velkoz split awards one dodge only after both threatened branches miss
+  ---
+  duration_ms: 3.444167
+  type: 'test'
+  ...
+# Subtest: Velkoz split awards no dodge when a later branch hits
+ok 467 - Velkoz split awards no dodge when a later branch hits
+  ---
+  duration_ms: 4.113417
+  type: 'test'
+  ...
+# Subtest: Velkoz split counts as one unresolved opportunity while both branches are active
+ok 468 - Velkoz split counts as one unresolved opportunity while both branches are active
+  ---
+  duration_ms: 3.552458
+  type: 'test'
+  ...
+# Subtest: Expert pressure does not wait minutes to become difficult
+ok 469 - Expert pressure does not wait minutes to become difficult
+  ---
+  duration_ms: 4.144542
+  type: 'test'
+  ...
+# Subtest: endless Dodge keeps best survival separately from score
+ok 470 - endless Dodge keeps best survival separately from score
+  ---
+  duration_ms: 3.378666
+  type: 'test'
+  ...
+# Subtest: Expert endless round remains active beyond twelve simulated minutes and ends on death
+ok 471 - Expert endless round remains active beyond twelve simulated minutes and ends on death
+  ---
+  duration_ms: 1017.88325
+  type: 'test'
+  ...
+# Subtest: Expert endless cadence stays active across twelve simulated minutes
+ok 472 - Expert endless cadence stays active across twelve simulated minutes
+  ---
+  duration_ms: 3495.12275
+  type: 'test'
+  ...
+# casts/min per seed [[38,42,41,39,45,35,42,42,41,41,44,38],[37,40,41,44,40,38,45,42,41,43,42,41],[42,42,41,43,41,42,40,40,41,39,42,43]]
+# cast mix per seed [{"ezreal":75,"ahri":17,"lux":39,"blitz":38,"velkoz":15,"xerath":10,"orianna":6,"malphite":6,"malDirect":6,"cassio":4},{"ezreal":75,"ahri":15,"lux":46,"blitz":28,"velkoz":10,"xerath":16,"orianna":6,"malphite":5,"malDirect":5,"cassio":6},{"ezreal":72,"ahri":14,"lux":53,"blitz":29,"velkoz":19,"xerath":16,"orianna":6,"malphite":6,"malDirect":6,"cassio":9}]
+# resolved phase outcomes per seed [{"avoided":67,"hit":369,"blocked":0,"harmless":83},{"avoided":54,"hit":387,"blocked":0,"harmless":78},{"avoided":69,"hit":366,"blocked":0,"harmless":91}]
+# Ezreal releases during Ahri orb per seed [5,3,3]
+# Subtest: Expert idle survival is shorter than Standard across a seeded sample
+ok 473 - Expert idle survival is shorter than Standard across a seeded sample
+  ---
+  duration_ms: 967.786875
+  type: 'test'
+  ...
+# idle survival seconds {"normal":[90,90,90,90,90,90,90,90],"hard":[19.78,18.2,17.26,23.13,16.77,17.23,16.74,16.47]}
+# Subtest: Expert recovery defers new overlaps without canceling committed missiles
+ok 474 - Expert recovery defers new overlaps without canceling committed missiles
+  ---
+  duration_ms: 7.354209
+  type: 'test'
+  ...
+# Subtest: Expert recovery still schedules an isolated encounter
+ok 475 - Expert recovery still schedules an isolated encounter
+  ---
+  duration_ms: 3.642167
+  type: 'test'
+  ...
+# Subtest: Expert director does not select Xerath Q alongside an existing straight shot
+ok 476 - Expert director does not select Xerath Q alongside an existing straight shot
+  ---
+  duration_ms: 4.576833
+  type: 'test'
+  ...
+# Subtest: Expert spawn respects its four-threat cap
+ok 477 - Expert spawn respects its four-threat cap
+  ---
+  duration_ms: 3.172125
+  type: 'test'
+  ...
+# Subtest: visitor spacing detects intersecting entry paths, including a stationary caster
+ok 478 - visitor spacing detects intersecting entry paths, including a stationary caster
+  ---
+  duration_ms: 3.231417
+  type: 'test'
+  ...
+# Subtest: different entering Dodge casters keep separated trajectories
+ok 479 - different entering Dodge casters keep separated trajectories
+  ---
+  duration_ms: 199.731625
+  type: 'test'
+  ...
+# Subtest: visible Dodge casters wind up during their actual cast without drawing an aim line
+ok 480 - visible Dodge casters wind up during their actual cast without drawing an aim line
+  ---
+  duration_ms: 7.366541
+  type: 'test'
+  ...
+# Subtest: Expert Cassiopeia sometimes leaves without casting and does not score a dodge
+ok 481 - Expert Cassiopeia sometimes leaves without casting and does not score a dodge
+  ---
+  duration_ms: 377.020625
+  type: 'test'
+  ...
+# Subtest: Cassiopeia feint visibly retreats even if Ahri is locked or out of range
+ok 482 - Cassiopeia feint visibly retreats even if Ahri is locked or out of range
+  ---
+  duration_ms: 8.233459
+  type: 'test'
+  ...
+# Subtest: Cassiopeia cone and facing distinguish turn-away, face and escape
+ok 483 - Cassiopeia cone and facing distinguish turn-away, face and escape
+  ---
+  duration_ms: 9.27575
+  type: 'test'
+  ...
+# Subtest: Dodge uses Tier-1 boots and compact readable collision
+ok 484 - Dodge uses Tier-1 boots and compact readable collision
+  ---
+  duration_ms: 3.958667
+  type: 'test'
+  ...
+# Subtest: Cassiopeia has a readable 1.25-second reaction window and visibly departs
+ok 485 - Cassiopeia has a readable 1.25-second reaction window and visibly departs
+  ---
+  duration_ms: 4.473292
+  type: 'test'
+  ...
+# Subtest: Cassiopeia spawn is isolated and appears before committing her cast
+ok 486 - Cassiopeia spawn is isolated and appears before committing her cast
+  ---
+  duration_ms: 4.071708
+  type: 'test'
+  ...
+# Subtest: moving away from Cassiopeia changes facing before impact into a full trainer evade
+ok 487 - moving away from Cassiopeia changes facing before impact into a full trainer evade
+  ---
+  duration_ms: 4.803458
+  type: 'test'
+  ...
+# Subtest: Cassiopeia defers an unreactable cast rather than immobilizing the player
+ok 488 - Cassiopeia defers an unreactable cast rather than immobilizing the player
+  ---
+  duration_ms: 3.216708
+  type: 'test'
+  ...
+# Subtest: Cassiopeia defers if the player leaves range during setup, without a false dodge
+ok 489 - Cassiopeia defers if the player leaves range during setup, without a false dodge
+  ---
+  duration_ms: 3.06275
+  type: 'test'
+  ...
+# Subtest: Cassiopeia can commit at the range boundary and credit a subsequent escape
+ok 490 - Cassiopeia can commit at the range boundary and credit a subsequent escape
+  ---
+  duration_ms: 4.740833
+  type: 'test'
+  ...
+# Subtest: Cassiopeia outcome is preserved in the result after a lethal hit
+ok 491 - Cassiopeia outcome is preserved in the result after a lethal hit
+  ---
+  duration_ms: 3.236333
+  type: 'test'
+  ...
+# Subtest: Cassiopeia results explain the turn-away lesson only after a cast
+ok 492 - Cassiopeia results explain the turn-away lesson only after a cast
+  ---
+  duration_ms: 3.071958
+  type: 'test'
+  ...
+# Subtest: Cassiopeia is scheduled in sustained Expert endless play
+ok 493 - Cassiopeia is scheduled in sustained Expert endless play
+  ---
+  duration_ms: 844.027917
+  type: 'test'
+  ...
+# Subtest: Flash away changes the Cassiopeia facing outcome while still in the cone
+ok 494 - Flash away changes the Cassiopeia facing outcome while still in the cone
+  ---
+  duration_ms: 4.652458
+  type: 'test'
+  ...
+# Subtest: Cassiopeia setup and cast freeze during pause and render without extra assets
+ok 495 - Cassiopeia setup and cast freeze during pause and render without extra assets
+  ---
+  duration_ms: 4.355083
+  type: 'test'
+  ...
+# Subtest: Cassiopeia training cone and facing boundaries use centre geometry
+ok 496 - Cassiopeia training cone and facing boundaries use centre geometry
+  ---
+  duration_ms: 3.322542
+  type: 'test'
+  ...
+# Subtest: Cassiopeia uses a bounded sprite with a safe missing-image fallback
+ok 497 - Cassiopeia uses a bounded sprite with a safe missing-image fallback
+  ---
+  duration_ms: 6.3665
+  type: 'test'
+  ...
+# Subtest: Cassiopeia release shows its effect only at impact, not as a targeting guide
+ok 498 - Cassiopeia release shows its effect only at impact, not as a targeting guide
+  ---
+  duration_ms: 3.84275
+  type: 'test'
+  ...
+# Subtest: Cassiopeia cast cue grows during windup without revealing the cone
+ok 499 - Cassiopeia cast cue grows during windup without revealing the cone
+  ---
+  duration_ms: 3.771833
+  type: 'test'
+  ...
+# Subtest: Syndra Q E leads a straight route and punishes keeping it
+ok 500 - Syndra Q E leads a straight route and punishes keeping it
+  ---
+  duration_ms: 630.089375
+  type: 'test'
+  ...
+# Subtest: Syndra Q E leads and reversals keep an executable walking escape
+ok 501 - Syndra Q E leads and reversals keep an executable walking escape
+  ---
+  duration_ms: 875.6115
+  type: 'test'
+  ...
+# Subtest: Syndra Q E reads stay in Q and E range and start outside the E cone
+ok 502 - Syndra Q E reads stay in Q and E range and start outside the E cone
+  ---
+  duration_ms: 1139.504625
+  type: 'test'
+  ...
+# Subtest: Syndra Q E mixes leads with direct and reversal reads like Mindgame Aim
+ok 503 - Syndra Q E mixes leads with direct and reversal reads like Mindgame Aim
+  ---
+  duration_ms: 2393.128
+  type: 'test'
+  ...
+# Subtest: Syndra Q E lead resolves the same at 30, 60 and 120 FPS
+ok 504 - Syndra Q E lead resolves the same at 30, 60 and 120 FPS
+  ---
+  duration_ms: 205.85025
+  type: 'test'
+  ...
+# Subtest: Syndra Q telegraph and hit area are both 180 game units, matching League Syndra Q
+ok 505 - Syndra Q telegraph and hit area are both 180 game units, matching League Syndra Q
+  ---
+  duration_ms: 17.864208
+  type: 'test'
+  ...
+# Subtest: Expert Syndra stays on screen, walks and casts several Qs from where she stands
+ok 506 - Expert Syndra stays on screen, walks and casts several Qs from where she stands
+  ---
+  duration_ms: 91.05775
+  type: 'test'
+  ...
+# Subtest: Staying Syndra keeps Mindgame Aim: lead, direct and reversal Qs plus led Q E
+ok 507 - Staying Syndra keeps Mindgame Aim: lead, direct and reversal Qs plus led Q E
+  ---
+  duration_ms: 232.622875
+  type: 'test'
+  ...
+# Subtest: every mid-stay Syndra Q and Q E has an executable escape
+ok 508 - every mid-stay Syndra Q and Q E has an executable escape
+  ---
+  duration_ms: 269.579
+  type: 'test'
+  ...
+# Subtest: Syndra walks out at the end of a stay and a defeat ends it early
+ok 509 - Syndra walks out at the end of a stay and a defeat ends it early
+  ---
+  duration_ms: 30.542958
+  type: 'test'
+  ...
+# Subtest: a charmed staying Syndra holds her next cast until the charm ends
+ok 510 - a charmed staying Syndra holds her next cast until the charm ends
+  ---
+  duration_ms: 15.855416
+  type: 'test'
+  ...
+# Subtest: Expert 60 s sessions: Syndra is present most of the time, Q every few seconds and Q E every 8-12 s
+ok 511 - Expert 60 s sessions: Syndra is present most of the time, Q every few seconds and Q E every 8-12 s
+  ---
+  duration_ms: 632.461042
+  type: 'test'
+  ...
+# seed 3: first 7.8 s, present 69%, Q 11, Q E 3, others 26; seed 8: first 8.0 s, present 63%, Q 11, Q E 3, others 26; seed 13: first 6.1 s, present 69%, Q 12, Q E 4, others 26; seed 21: first 7.6 s, present 68%, Q 13, Q E 4, others 28
+# Subtest: a route goes around the wall and all segments clear the player radius
+ok 512 - a route goes around the wall and all segments clear the player radius
+  ---
+  duration_ms: 0.726458
+  type: 'test'
+  ...
+# Subtest: a click inside a wall resolves to a nearby walkable destination
+ok 513 - a click inside a wall resolves to a nearby walkable destination
+  ---
+  duration_ms: 0.080125
+  type: 'test'
+  ...
+# Subtest: a dash stops before the wall and cannot tunnel across in one update
+ok 514 - a dash stops before the wall and cannot tunnel across in one update
+  ---
+  duration_ms: 0.364041
+  type: 'test'
+  ...
+# Subtest: unobstructed paths remain direct
+ok 515 - unobstructed paths remain direct
+  ---
+  duration_ms: 0.082458
+  type: 'test'
+  ...
+# Subtest: routes for varied starts and goals stay walkable and reach a valid destination
+ok 516 - routes for varied starts and goals stay walkable and reach a valid destination
+  ---
+  duration_ms: 2.869792
+  type: 'test'
+  ...
+1..516
+# tests 516
+# suites 0
+# pass 516
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 83596.979333

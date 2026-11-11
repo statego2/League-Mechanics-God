@@ -3662,6 +3662,21 @@ function syndraStayRun(g,seconds,{follow=false,wander=true,onFrame}={}){
  }
  return seen;
 }
+test('staying Syndra casts E from her visible position and can reach its sphere',()=>{
+ let checked=0;
+ for(const seed of [1,2,3,4,5,6,7,8]){
+  const {g}=syndraStayBoot(seed);
+  syndraStayRun(g,18,{onFrame:g=>{
+   for(const h of g.hazards){
+    if(!h.syndra||!h.combo||!['q','e'].includes(h.phase))continue;
+    const caster=g.foes.find(e=>e.alive&&e.id===h.casterId);if(!caster||caster.charm>0)continue;
+    assert.ok(Math.hypot(caster.x-h.source.x,caster.y-h.source.y)<1e-6,'visible caster must match E source');
+    assert.ok(Math.hypot(h.x-h.source.x,h.y-h.source.y)<=g.SYNDRA.eDirectRange+1e-6,'sphere must be within the training E interaction range');checked++;
+   }
+  }});
+ }
+ assert.ok(checked>0,'fixture must exercise a combo');
+});
 test('Expert Syndra stays on screen, walks and casts several Qs from where she stands',()=>{
  for(const seed of [1,2,3]){
   const {g}=syndraStayBoot(seed);let ids=new Set(),walked=0,last=null,maxRange=0;
@@ -3718,7 +3733,7 @@ test('Expert 60 s sessions: Syndra is present most of the time, Q every few seco
    if(g.foes.some(e=>e.alive&&e.syndraCaster)){present+=1/120;first??=g.time;}
    for(const h of g.hazards)if(h.syndra&&!seen.has(h)){seen.add(h);assert.ok(h.escape,'every cast has an escape witness');streak=h.combo?0:streak+1;maxStreak=Math.max(maxStreak,streak);}
   }
-  const d=g.dodgeDirector,qe=d.syndraCombo||0,q=d.syndra-qe,others=d.attempted-d.syndra;
+  const d=g.dodgeDirector,qe=d.syndraCombo||0,q=d.syndra-qe,others=d.attempted-d.syndra-(d.syndraE||0);
   summary.push(`seed ${seed}: first ${first.toFixed(1)} s, present ${(present/.6).toFixed(0)}%, Q ${q}, Q E ${qe}, others ${others}`);
   assert.ok(first<=10,`seed ${seed}: first Syndra at ${first}`);assert.ok(present>=25,`seed ${seed}: present ${present.toFixed(1)} s`);
   assert.ok(q>=7&&qe>=2&&q>qe,`seed ${seed}: Q ${q}, Q E ${qe}`);assert.ok(maxStreak<=3,'Q E after at most three Qs');

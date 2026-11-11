@@ -1,0 +1,240 @@
+TAP version 13
+# Subtest: visible build identifies the executed script and matches its cache key
+ok 1 - visible build identifies the executed script and matches its cache key
+  ---
+  duration_ms: 12.887458
+  type: 'test'
+  ...
+# Subtest: Syndra Q stays in cast range, visibly resolves at 0.6 seconds, and a witness can dodge
+ok 2 - Syndra Q stays in cast range, visibly resolves at 0.6 seconds, and a witness can dodge
+  ---
+  duration_ms: 12.772833
+  type: 'test'
+  ...
+# Subtest: Syndra is targetable and her committed Q survives her defeat
+ok 3 - Syndra is targetable and her committed Q survives her defeat
+  ---
+  duration_ms: 4.096292
+  type: 'test'
+  ...
+# Subtest: Syndra uses Riot snapshot base defenses and an Ahri E cannot one-shot her
+ok 4 - Syndra uses Riot snapshot base defenses and an Ahri E cannot one-shot her
+  ---
+  duration_ms: 5.189
+  type: 'test'
+  ...
+# Subtest: defeating or charming Syndra before E stops the follow-up but not her committed Q
+ok 5 - defeating or charming Syndra before E stops the follow-up but not her committed Q
+  ---
+  duration_ms: 9.249417
+  type: 'test'
+  ...
+# Subtest: Charm cancels Syndra E during windup but not a sphere already launched
+ok 6 - Charm cancels Syndra E during windup but not a sphere already launched
+  ---
+  duration_ms: 8.876208
+  type: 'test'
+  ...
+# Subtest: Ahri can Charm the visible Syndra to interrupt Q E and earn skill credit
+ok 7 - Ahri can Charm the visible Syndra to interrupt Q E and earn skill credit
+  ---
+  duration_ms: 4.834541
+  type: 'test'
+  ...
+# Subtest: Syndra Q E creates a pushed sphere after Q and its hit stuns Ahri (round 3: was no immobilize)
+ok 8 - Syndra Q E creates a pushed sphere after Q and its hit stuns Ahri (round 3: was no immobilize)
+  ---
+  duration_ms: 4.741958
+  type: 'test'
+  ...
+# Subtest: Syndra E shows a growing cast wave before the pushed sphere launches
+ok 9 - Syndra E shows a growing cast wave before the pushed sphere launches
+  ---
+  duration_ms: 5.567041
+  type: 'test'
+  ...
+# Subtest: lethal Syndra Q records the hit and retains its impact animation
+ok 10 - lethal Syndra Q records the hit and retains its impact animation
+  ---
+  duration_ms: 4.599833
+  type: 'test'
+  ...
+# Subtest: Syndra combo offers an executable Q and E escape
+ok 11 - Syndra combo offers an executable Q and E escape
+  ---
+  duration_ms: 107.1865
+  type: 'test'
+  ...
+# Subtest: Syndra Q E starts beyond the approximated direct E cone with the sphere inside it
+ok 12 - Syndra Q E starts beyond the approximated direct E cone with the sphere inside it
+  ---
+  duration_ms: 3.356583
+  type: 'test'
+  ...
+# Subtest: Syndra E cone hits at release once even if its pushed sphere also crosses Ahri
+ok 13 - Syndra E cone hits at release once even if its pushed sphere also crosses Ahri
+  ---
+  duration_ms: 6.179875
+  type: 'test'
+  ...
+# Subtest: Syndra E direct cone excludes players outside its angular boundary
+ok 14 - Syndra E direct cone excludes players outside its angular boundary
+  ---
+  duration_ms: 4.639667
+  type: 'test'
+  ...
+# Subtest: Syndra E direct cone uses the documented training radius and angle
+ok 15 - Syndra E direct cone uses the documented training radius and angle
+  ---
+  duration_ms: 16.338917
+  type: 'test'
+  ...
+# Subtest: lethal direct Syndra E resolves once and leaves its impact visible
+ok 16 - lethal direct Syndra E resolves once and leaves its impact visible
+  ---
+  duration_ms: 4.623416
+  type: 'test'
+  ...
+# Subtest: Dodge results list Syndra Q and E among the cast totals
+ok 17 - Dodge results list Syndra Q and E among the cast totals
+  ---
+  duration_ms: 7.135
+  type: 'test'
+  ...
+# Subtest: Syndra E windup is counted as unresolved if a run ends before launch
+ok 18 - Syndra E windup is counted as unresolved if a run ends before launch
+  ---
+  duration_ms: 3.806792
+  type: 'test'
+  ...
+# Subtest: Syndra Q and combo escapes remain executable around the arena
+ok 19 - Syndra Q and combo escapes remain executable around the arena
+  ---
+  duration_ms: 49.475417
+  type: 'test'
+  ...
+# Subtest: Syndra escape witnesses work with an existing movement order and W boost
+ok 20 - Syndra escape witnesses work with an existing movement order and W boost
+  ---
+  duration_ms: 125.622958
+  type: 'test'
+  ...
+# Subtest: Expert director schedules Syndra as part of endless Dodge
+ok 21 - Expert director schedules Syndra as part of endless Dodge
+  ---
+  duration_ms: 192.596583
+  type: 'test'
+  ...
+# Subtest: Syndra Q remains the main pattern while Q E appears in sustained Expert sessions
+ok 22 - Syndra Q remains the main pattern while Q E appears in sustained Expert sessions
+  ---
+  duration_ms: 1097.555667
+  type: 'test'
+  ...
+# [{"seed":11,"q":35,"e":14,"firstQ":5.3,"firstE":7.6},{"seed":29,"q":40,"e":15,"firstQ":5.4,"firstE":6.3},{"seed":71,"q":47,"e":15,"firstQ":6.9,"firstE":11.6}]
+# Subtest: Syndra Q can lead, aim directly, and read a reversal while remaining in range
+ok 23 - Syndra Q can lead, aim directly, and read a reversal while remaining in range
+  ---
+  duration_ms: 341.699792
+  type: 'test'
+  ...
+# Subtest: Expert guarantees an occasional Syndra combo after three Q-only encounters
+ok 24 - Expert guarantees an occasional Syndra combo after three Q-only encounters
+  ---
+  duration_ms: 4.15725
+  type: 'test'
+  ...
+# Subtest: Syndra events pause, reset and preserve prior Expert records
+ok 25 - Syndra events pause, reset and preserve prior Expert records
+  ---
+  duration_ms: 3.860667
+  type: 'test'
+  ...
+# Subtest: Syndra Q and both E hit paths agree at 30, 60 and 120 FPS
+ok 26 - Syndra Q and both E hit paths agree at 30, 60 and 120 FPS
+  ---
+  duration_ms: 424.426333
+  type: 'test'
+  ...
+# Subtest: Syndra Q E leads a straight route and punishes keeping it
+ok 27 - Syndra Q E leads a straight route and punishes keeping it
+  ---
+  duration_ms: 481.35
+  type: 'test'
+  ...
+# Subtest: Syndra Q E leads and reversals keep an executable walking escape
+ok 28 - Syndra Q E leads and reversals keep an executable walking escape
+  ---
+  duration_ms: 745.036833
+  type: 'test'
+  ...
+# Subtest: Syndra Q E reads stay in Q and E range and start outside the E cone
+ok 29 - Syndra Q E reads stay in Q and E range and start outside the E cone
+  ---
+  duration_ms: 1068.2795
+  type: 'test'
+  ...
+# Subtest: Syndra Q E mixes leads with direct and reversal reads like Mindgame Aim
+ok 30 - Syndra Q E mixes leads with direct and reversal reads like Mindgame Aim
+  ---
+  duration_ms: 2204.538958
+  type: 'test'
+  ...
+# Subtest: Syndra Q E lead resolves the same at 30, 60 and 120 FPS
+ok 31 - Syndra Q E lead resolves the same at 30, 60 and 120 FPS
+  ---
+  duration_ms: 328.698083
+  type: 'test'
+  ...
+# Subtest: Syndra Q telegraph and hit area are both 180 game units, matching League Syndra Q
+ok 32 - Syndra Q telegraph and hit area are both 180 game units, matching League Syndra Q
+  ---
+  duration_ms: 19.073125
+  type: 'test'
+  ...
+# Subtest: Expert Syndra stays on screen, walks and casts several Qs from where she stands
+ok 33 - Expert Syndra stays on screen, walks and casts several Qs from where she stands
+  ---
+  duration_ms: 84.159709
+  type: 'test'
+  ...
+# Subtest: Staying Syndra keeps Mindgame Aim: lead, direct and reversal Qs plus led Q E
+ok 34 - Staying Syndra keeps Mindgame Aim: lead, direct and reversal Qs plus led Q E
+  ---
+  duration_ms: 230.913584
+  type: 'test'
+  ...
+# Subtest: every mid-stay Syndra Q and Q E has an executable escape
+ok 35 - every mid-stay Syndra Q and Q E has an executable escape
+  ---
+  duration_ms: 260.144959
+  type: 'test'
+  ...
+# Subtest: Syndra walks out at the end of a stay and a defeat ends it early
+ok 36 - Syndra walks out at the end of a stay and a defeat ends it early
+  ---
+  duration_ms: 31.350333
+  type: 'test'
+  ...
+# Subtest: a charmed staying Syndra holds her next cast until the charm ends
+ok 37 - a charmed staying Syndra holds her next cast until the charm ends
+  ---
+  duration_ms: 13.258
+  type: 'test'
+  ...
+# Subtest: Expert 60 s sessions: short frequent Syndra visits, Q every few seconds and Q E every 8-12 s
+ok 38 - Expert 60 s sessions: short frequent Syndra visits, Q every few seconds and Q E every 8-12 s
+  ---
+  duration_ms: 595.122791
+  type: 'test'
+  ...
+# seed 3: first 5.5 s, present 59%, Q 9, Q E 3, others 23; seed 8: first 5.5 s, present 61%, Q 6, Q E 5, others 24; seed 13: first 6.1 s, present 56%, Q 7, Q E 4, others 27; seed 21: first 5.5 s, present 60%, Q 8, Q E 4, others 27
+1..38
+# tests 38
+# suites 0
+# pass 38
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 8613.949542

@@ -1649,3 +1649,18 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
   - Syndra walking mid-stay
   - a Q E
 - Validation: the serial full suite passed 516/516. Local build only; nothing deployed.
+
+
+## Dodge completion audit and implementation handoff (10 November 2026)
+
+- Added [project audit](DODGE_PROJECT_AUDIT.md), [ordered completion plan](DODGE_COMPLETION_PLAN.md), and [next-AI prompt](DODGE_NEXT_AI_PROMPT.md). Scope: finish existing Expert Dodge/Syndra with bounded tasks; no gameplay changes or deployment.
+- Verified Code 2 bundle 505fb4c and applied round3 WIP only in temporary analysis copies. Current c833be4 plus existing dirty test: 503/503; clean serial bundle: 516/516; patched copy: 516/516. Targeted Syndra/build checks: 38/38 in both copies. Node 24.21.0; CI uses Node 22. Initial bundle full run ended at process level; serial rerun passed, both logs retained.
+- Additional deterministic probe reproduced stale Syndra E source vs visible caster, placements beyond the declared direct-E range (sphere interaction contract missing), and an inflated other-champion cast counter. WIP also applies sphere stun to cone hits and lacks dedicated coverage for several new prediction/CC behaviors. See audit for evidence, limits and reproducible probe.
+- Existing uncommitted test and CODE2_HANDOFF artifacts preserved. No new browser playtest or live-client verification.
+- Next three actions: (1) safely integrate verified bundle while preserving existing changes; (2) add regressions/fix geometry and metrics; (3) selectively complete CC, short visits and prediction, then browser acceptance using the plan.
+
+## Dodge integration and Syndra source geometry (11 November 2026)
+
+- Recovered the verified Code 2 bundle by fast-forward to `505fb4c`; it includes the original Syndra art, Q/Q→E presentation, predicted aim, results and repeat visits. Preserved the pre-existing audit and the modified timing test in the named Git stash; the test was already included in the bundle. The integration passed the complete serial suite, 516/516.
+- Fixed a committed Q→E casting from a stale point after the visible caster had walked away. Syndra now holds position through the Q and E cast, and combo sphere placement must lie within the trainer's declared E interaction radius. This radius is an approximation, not a verified live-client sphere interaction range. The cadence test now subtracts released Syndra E from other champions' casts; selected seeds still pass, and executable escape witnesses remain covered. Build `28781371432d`.
+- The user's latest reported preference in the Code 2 handoff calls for short visits and a sphere stun/push; the round-3 patch is unfinished and has known CC, collision and prediction issues described in the audit. Those changes are not included yet. Browser acceptance and player balance review are still required. Do not deploy without the user's explicit approval after local review.

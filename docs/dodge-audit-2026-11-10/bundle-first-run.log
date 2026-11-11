@@ -1,0 +1,22 @@
+✔ checked-in Ahri data matches its provenance-bearing snapshot (25.968917ms)
+✔ data generator rejects null, mismatched patch and incorrect units (74.010916ms)
+✖ tests/game.test.cjs (37001.562625ms)
+✔ a route goes around the wall and all segments clear the player radius (0.830084ms)
+✔ a click inside a wall resolves to a nearby walkable destination (0.084208ms)
+✔ a dash stops before the wall and cannot tunnel across in one update (0.484959ms)
+✔ unobstructed paths remain direct (0.059084ms)
+✔ routes for varied starts and goals stay walkable and reach a valid destination (3.7835ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 7
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 37007.062541
+
+✖ failing tests:
+
+test at tests/game.test.cjs:1:1
+✖ tests/game.test.cjs (37001.562625ms)
+  'test failed'
