@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="d4e2ec22849d";
+const BUILD_ID="51b71785d09c";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -1628,7 +1628,7 @@ for(const h of hazards){
   h.ttl-=dt;
   if(h.ttl<=0&&h.phase==='q'){
    fx.push({x:h.x,y:h.y,vx:0,vy:0,r:h.r,ttl:.22,max:.22,syndraImpact:true});
-   if(dist(effectPlayer,h)<=h.r){recordDodgeOutcome(h,'hit');takeHit(physicalDamage(SYNDRA.qDamage,30));}
+   if(dist(effectPlayer,h)<=h.r){if(player.invuln>0){recordDodgeOutcome(h,'blocked');stats.blocked++;}else{recordDodgeOutcome(h,'hit');takeHit(physicalDamage(SYNDRA.qDamage,30));}}
    else{recordDodgeOutcome(h,h.threat?'avoided':'harmless');if(h.threat){dodged++;cue('dodge');}}
    if(state!=="playing")return;burst(h.x,h.y,'#d991ff',16);
    h.phase=h.combo?'e':'exit';h.ttl=h.combo?SYNDRA.eDelay:.3;h.max=h.ttl;

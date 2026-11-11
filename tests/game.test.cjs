@@ -242,6 +242,13 @@ test('lethal Syndra Q records the hit and retains its impact animation',()=>{
  advance(g,.61);assert.equal(g.state,'ended');assert.match(node('dodgeBreakdownText').textContent,/SYNDRA Q: 0 avoided \/ 1 hit/);
  arcs.length=0;g.render();assert.ok(arcs.some(a=>a.x===h.x&&a.y===h.y&&a.r===h.r));
 });
+test('an invulnerable player blocks Syndra Q without hit or damage credit',()=>{
+ const {g,node}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(false));const h=g.hazards[0];
+ g.player.x=h.x;g.player.y=h.y;g.player.invuln=1;const hp=g.player.hp;advance(g,.61);
+ assert.equal(g.player.hp,hp);assert.equal(g.stats.hits,0);assert.equal(g.stats.blocked,1);
+ assert.equal(g.dodgeDirector.outcomes['SYNDRA Q'].blocked,1);assert.equal(g.dodgeDirector.outcomes['SYNDRA Q'].hit,0);
+ g.end(false);assert.match(node('dodgeBreakdownText').textContent,/SYNDRA Q: 0 avoided \/ 0 hit \/ 1 blocked/);
+});
 test('Syndra combo offers an executable Q and E escape',()=>{
  for(let seed=1;seed<=20;seed++){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.setRng(seed*70001);const witness={};assert.ok(g.spawnSyndra(true,witness));
