@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,DODGE_TUNING,DODGE_DIRECTOR,REFERENCE_SPELLS,MAP,updateAwareness,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnSyndra,syndraConeContains,applySyndraStun,SYNDRA,visitorPathsCrowded,updateDodgeVisitor,dodgeAimPoint,dodgeRhythmMultiplier,spawnXerathW,spawnXerathQ,spawnLuxR,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,oriannaFlashEscape,sampleAreaEscape,forecastTravel,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get awareness(){return awareness},get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,DODGE_TUNING,DODGE_DIRECTOR,REFERENCE_SPELLS,MAP,updateAwareness,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnSyndra,syndraConeContains,applySyndraStun,SYNDRA,visitorPathsCrowded,updateDodgeVisitor,dodgeAimPoint,dodgeRhythmMultiplier,spawnXerathW,spawnXerathQ,spawnLuxR,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,oriannaFlashEscape,sampleAreaEscape,forecastTravel,forecastDodgePath,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get awareness(){return awareness},get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,drawSizes,strokes,strokeWidths,arcs,texts,lines,rotations,renderEvents,click(x,y,button=2){const e={clientX:x,clientY:y,button,preventDefault(){}};node('arena').listeners.pointerdown(e);node('arena').listeners.pointerup(e);},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -401,6 +401,21 @@ test('Syndra can cast an avoidable solo Q at a nearby player',()=>{
   const witness={};assert.ok(g.spawnSyndra(false,witness,caster),`player ${distance} units away should remain targetable`);
   const h=g.hazards[0];assert.ok(Math.hypot(h.x-caster.x,h.y-caster.y)<=g.SYNDRA.qRange);advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,.5);assert.equal(g.stats.hits,0);
  }
+});
+test('cached and uncached Dodge forecasts agree across paths, boosts and overlapping shots',()=>{
+ let safe=0,unsafe=0;
+ for(const boost of [0,.25,1,2])for(let seed=0;seed<12;seed++){
+  const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.boost=boost;g.moveTo(500+seed*12,260+(seed%4)*45);
+  const reaction=.2,approach=g.dodgeReactionPath(reaction),cache={travel:new Map(),approach:new Map(),shots:new Map()},angle=seed*Math.PI/6;
+  const incoming=[{x:200,y:210+seed*20,vx:Math.cos(angle)*700,vy:Math.sin(angle)*700,r:20,start:.1,end:1.5},{x:950,y:420-seed*9,vx:-650,vy:(seed%3-1)*110,r:30,start:.35,end:1.7}];
+  const areas=[{x:600,y:337,r:50,ttl:.75}];
+  for(let i=0;i<16;i++){
+   const a=i*Math.PI/8,destination={x:approach.end.x+Math.cos(a)*100,y:approach.end.y+Math.sin(a)*100};
+   const expected=g.forecastDodgePath(incoming,destination,reaction,0,approach,areas),actual=g.forecastDodgePath(incoming,destination,reaction,0,approach,areas,cache);
+   assert.equal(actual,expected,`boost ${boost}, seed ${seed}, direction ${i}`);if(actual)safe++;else unsafe++;
+  }
+ }
+ assert.ok(safe>0&&unsafe>0,`must cover both safe and unsafe paths: ${safe}/${unsafe}`);
 });
 test('Expert guarantees an occasional Syndra combo after three Q-only encounters',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');

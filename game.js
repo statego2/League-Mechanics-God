@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="5fd4b3a59d3c";
+const BUILD_ID="2c9a3f00f828";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -893,21 +893,34 @@ function dodgeReactionPath(reaction){
 }
 // Sample a response against moving projectiles, including existing movement
 // during the reaction period. This remains an approximate training forecast.
-function forecastDodgePath(incoming,destination,reaction,margin=0,approach=dodgeReactionPath(reaction),areas=[]){
+function forecastDodgePath(incoming,destination,reaction,margin=0,approach=dodgeReactionPath(reaction),areas=[],cache=null){
  const start=approach.end,length=dist(start,destination);
  const position=t=>{
-  if(t<=reaction)return approach.at(t);
-  const f=length>0?clamp(forecastTravel(reaction,t)/length,0,1):1;
+  if(t<=reaction){let point=cache?.approach.get(t);if(!point){point=approach.at(t);cache?.approach.set(t,point);}return point;}
+  let travelled=cache?.travel.get(t);if(travelled===undefined){travelled=forecastTravel(reaction,t);cache?.travel.set(t,travelled);}
+  const f=length>0?clamp(travelled/length,0,1):1;
   return {x:start.x+(destination.x-start.x)*f,y:start.y+(destination.y-start.y)*f};
  };
  for(const shot of incoming){
-  const end=Math.min(shot.end,3);
-  for(let t=Math.max(0,shot.start);t<end;){
-   const next=Math.min(end,t+1/80),p=position(t),q=position(next);
-   const a=t-shot.start,b=next-shot.start;
-   if(segmentDistance(shot.x+shot.vx*a-p.x,shot.y+shot.vy*a-p.y,shot.x+shot.vx*b-q.x,shot.y+shot.vy*b-q.y)<=shot.r+player.hitRadius+margin)return false;
-   t=next;
+  if(!cache){
+   const end=Math.min(shot.end,3);
+   for(let t=Math.max(0,shot.start);t<end;){
+    const next=Math.min(end,t+1/80),p=position(t),q=position(next),a=t-shot.start,b=next-shot.start;
+    if(segmentDistance(shot.x+shot.vx*a-p.x,shot.y+shot.vy*a-p.y,shot.x+shot.vx*b-q.x,shot.y+shot.vy*b-q.y)<=shot.r+player.hitRadius+margin)return false;
+    t=next;
+   }
+   continue;
   }
+  let segments=cache.shots.get(shot);
+  if(!segments){
+   segments=[];const end=Math.min(shot.end,3);
+   for(let t=Math.max(0,shot.start);t<end;){
+    const next=Math.min(end,t+1/80),a=t-shot.start,b=next-shot.start;
+    segments.push({t,next,ax:shot.x+shot.vx*a,ay:shot.y+shot.vy*a,bx:shot.x+shot.vx*b,by:shot.y+shot.vy*b});t=next;
+   }
+   cache.shots.set(shot,segments);
+  }
+  for(const segment of segments){const p=position(segment.t),q=position(segment.next);if(segmentDistance(segment.ax-p.x,segment.ay-p.y,segment.bx-q.x,segment.by-q.y)<=shot.r+player.hitRadius+margin)return false;}
  }
  for(const area of areas)if(area.ttl>=0){const p=position(area.ttl);if(area.cone?syndraConeContains(area.source,area.angle,p):area.beam?beamTouchesPlayer(area,p,player.hitRadius+8):dist(p,area)<area.r+10)return false;}
  return true;
@@ -1011,6 +1024,10 @@ function canEvadeDodgeCast(origin,spell,witness=null,aimPoint=player){
  if(available<=0||forecastTravel(reaction,reaction+available)<clearance)return false;
  const approach=dodgeReactionPath(reaction),start=approach.end,shotAngle=Math.atan2(dy,dx),incoming=dodgeIncoming(origin,spell,aimPoint),areas=hazards.filter(h=>h.directed&&(h.xerath||h.beam));
  if(incoming===null)return false;
+ // All candidates in this single cast share the same incoming trajectories,
+ // reaction path and speed profile; the cache is discarded before state can
+ // change, preserving the uncached collision and escape decisions.
+ const forecastCache={travel:new Map(),approach:new Map(),shots:new Map()};
  // Prioritize short perpendicular dodges, then test longer and oblique
  // responses; crossing shots can require continuing past the first sidestep.
  for(const scale of [1,1.5,2])for(const turn of [0,1,-1,2,-2,3,-3])for(const side of [-1,1]){
@@ -1018,7 +1035,7 @@ function canEvadeDodgeCast(origin,spell,witness=null,aimPoint=player){
   const raw={x:start.x+Math.cos(angle)*clearance*scale,y:start.y+Math.sin(angle)*clearance*scale};
   const bounded={x:clamp(raw.x,world.bounds.left,world.bounds.right),y:clamp(raw.y,world.bounds.top,world.bounds.bottom)};
   const destination=world.clip(start,bounded,player.r);
-  if(world.pointWalkable(destination,player.r)&&world.segmentClear(start,destination,player.r)&&forecastDodgePath(incoming,destination,reaction,0,approach,areas)){if(witness)witness.destination=destination;return true;}
+  if(world.pointWalkable(destination,player.r)&&world.segmentClear(start,destination,player.r)&&forecastDodgePath(incoming,destination,reaction,0,approach,areas,forecastCache)){if(witness)witness.destination=destination;return true;}
  }
  return false;
 }
