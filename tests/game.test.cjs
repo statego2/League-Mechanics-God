@@ -3730,6 +3730,16 @@ test('Syndra plans varied short visits with more solo Qs than combos',()=>{
  }
  assert.ok(visits>=8);assert.ok(plans.size>=3,`sequences: ${[...plans]}`);
 });
+test('Syndra executes each visit plan in order even across solo-Q streaks',()=>{
+ let casts=0,visits=0;
+ for(const seed of [1,2,3,4,5,6,7,8]){
+  const {g}=syndraStayBoot(seed),plans=new Map();
+  const seen=syndraStayRun(g,35,{onFrame:g=>{const c=g.foes.find(e=>e.alive&&e.syndraCaster);if(c&&!plans.has(c.id))plans.set(c.id,[...c.syndraStay.plan]);}});
+  const ordered=new Map();for(const [h] of seen){if(!ordered.has(h.casterId))ordered.set(h.casterId,[]);ordered.get(h.casterId).push(!!h.combo);}
+  for(const [id,actual] of ordered){const plan=plans.get(id);assert.ok(plan);assert.ok(actual.length<=plan.length);actual.forEach((combo,i)=>assert.equal(combo,plan[i],`seed ${seed}, caster ${id}, cast ${i}`));casts+=actual.length;visits++;}
+ }
+ assert.ok(casts>=50&&visits>=15,`${casts} casts in ${visits} visits`);
+});
 test('Expert Syndra makes short visits and casts from where she stands',()=>{
  for(const seed of [1,2,3]){
   const {g}=syndraStayBoot(seed);let ids=new Set(),walked=0,last=null,maxRange=0;

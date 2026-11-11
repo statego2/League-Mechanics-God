@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="f080821ce159";
+const BUILD_ID="d4e2ec22849d";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -1203,7 +1203,11 @@ function syndraObservedVelocity(){
 function chooseSyndraPlan(){
  const d=dodgeDirector,plans=SYNDRA_STAY.plans;
  if((d.syndraQStreak||0)>=3){d.syndraLastPlan=2;return [...plans[2]];}
- const choices=plans.map((_,i)=>i).filter(i=>i!==d.syndraLastPlan),pick=choices[Math.floor(random()*choices.length)];d.syndraLastPlan=pick;return [...plans[pick]];
+ // If the previous visit ended with two solo Qs, do not pick a plan that
+ // opens with two more: that would force an unplanned early combo.
+ let choices=plans.map((_,i)=>i).filter(i=>i!==d.syndraLastPlan&&((d.syndraQStreak||0)<2||plans[i][0]||plans[i][1]));
+ if(!choices.length)choices=plans.map((_,i)=>i).filter(i=>(d.syndraQStreak||0)<2||plans[i][0]||plans[i][1]);
+ const pick=choices[Math.floor(random()*choices.length)];d.syndraLastPlan=pick;return [...plans[pick]];
 }
 function syndraBoardClear(){return !foes.some(e=>e.alive&&e.dodgeVisitor&&e.phase!=="exit")&&!shots.some(s=>s.alive&&s.directed)&&!hazards.some(h=>h.directed);}
 function syndraCastDone(combo,stay){

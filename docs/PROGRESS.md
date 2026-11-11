@@ -1708,3 +1708,7 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 ## Repeatable overlap and cadence sample (11 November 2026)
 
 - Added `scripts/benchmark-overlap.cjs` to measure the previously discussed natural projectile overlaps and aggregate casts over 20 fixed seeds × 120 simulated seconds, with stationary scripted input and artificially high HP. This is a diagnostic stress fixture, not human difficulty data. Comparing `505fb4c` to `d016097`: sessions containing Ahri-orb overlap with Ezreal 3→5, Lux 2→4 and Blitz 2→1; attempted casts 1625→1302, Syndra Q 714→426, released Syndra E 182→152. After subtracting both Syndra Q and E, other champion casts are 729→724 over the same 40 simulated minutes (~18.2→18.1/min). Fewer total casts here largely reflect the deliberately shorter Syndra visits; overlapping projectiles remain uncommon in this idle sample. No change in actual player difficulty can be inferred without human playtesting.
+
+## Syndra visit sequence consistency (11 November 2026)
+
+- Fixed a visit-plan edge case: when the prior visit ended with two solo Qs, a plan beginning with two additional solo Qs could force an unplanned early Q→E. Plan selection now excludes that invalid opening; the three-Q safeguard remains. A new regression checks that actual casts match each visit's planned sequence across eight seeds and 35 seconds each, including incomplete visits. All 48 targeted Syndra/build tests and the complete serial suite (527/527) passed on build `d4e2ec22849d`.
