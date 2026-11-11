@@ -270,6 +270,19 @@ test('Syndra Q E starts beyond the approximated direct E cone with the sphere in
  assert.ok(Math.hypot(h.source.x-g.player.x,h.source.y-g.player.y)>directRange);
  assert.ok(Math.hypot(h.source.x-h.x,h.source.y-h.y)<directRange);
 });
+test('Syndra can cast a safe Q E from a closer in-range position',()=>{
+ const {g}=boot('ahri');g.reset('dodge');Object.assign(g.dodgeDirector,{next:999,syndraAt:Infinity,cassAt:Infinity,rareAt:Infinity,malAt:Infinity,luxRAt:Infinity});
+ g.player.x=650;g.player.y=337;const caster=g.enemy(215,337);caster.syndraCaster=true;g.setFoes([caster]);
+ assert.ok(g.spawnSyndra(true,null,caster),'a valid closer combo should not be rejected by the preferred sphere offset');
+ const h=g.hazards[0];assert.ok(Math.hypot(h.x-caster.x,h.y-caster.y)<=g.SYNDRA.eDirectRange);assert.ok(h.eEscape);
+ while(h.phase==='q')g.update(1/120);advance(g,.15);g.moveTo(h.eEscape.x,h.eEscape.y);advance(g,1.5);
+ assert.equal(g.dodgeDirector.outcomes['SYNDRA E']?.hit||0,0,'a perpendicular E response remains possible');
+});
+test('Syndra still defers a close Q E if the post-cue sidestep is not safe',()=>{
+ const {g}=boot('ahri');g.reset('dodge');Object.assign(g.dodgeDirector,{next:999,syndraAt:Infinity,cassAt:Infinity,rareAt:Infinity,malAt:Infinity,luxRAt:Infinity});
+ g.player.x=650;g.player.y=337;const caster=g.enemy(240,337);caster.syndraCaster=true;g.setFoes([caster]);
+ assert.equal(g.spawnSyndra(true,null,caster),false);assert.equal(g.hazards.length,0);assert.equal(g.dodgeDirector.syndra||0,0);
+});
 test('Syndra first appears in the intended Q or Q E standoff band',()=>{
  for(const [combo,expected] of [[false,330],[true,460]]){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const witness={};assert.ok(g.spawnSyndra(combo,witness));
