@@ -377,6 +377,16 @@ test('defeating Syndra during her introduction prevents an uncast Q',()=>{
  g.update(1/120);const c=g.foes.find(e=>e.alive&&e.syndraCaster);assert.ok(c);g.damageEnemy(c,1e5);advance(g,1);
  assert.equal(g.dodgeDirector.syndra||0,0);assert.ok(!g.hazards.some(h=>h.syndra));
 });
+test('Syndra visibly enters near arena edges before a combo and keeps a walkable source',t=>{
+ const world=require('../world.js');let cast=0,missed=[];
+ for(const [x,y] of [[50,80],[1150,80],[50,620],[1150,620],[205,220],[650,530]]){
+  const {g,node,draws}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');Object.assign(g.dodgeDirector,{next:999,syndraAt:0,syndraQStreak:3,cassAt:Infinity,rareAt:Infinity,malAt:Infinity,luxRAt:Infinity});g.player.x=x;g.player.y=y;
+  const art=node('umbralArt');art.complete=true;art.naturalWidth=100;g.update(1/120);const c=g.foes.find(e=>e.alive&&e.syndraCaster);assert.ok(c,`no entry from ${x},${y}`);assert.ok(world.pointWalkable(c,c.r));
+  g.render();assert.ok(draws.includes(art),'entry draws the visible caster');assert.ok(!g.hazards.some(h=>h.syndra));advance(g,.55);assert.equal(g.dodgeDirector.syndra||0,0);
+  advance(g,4);if(g.dodgeDirector.syndraCombo>0)cast++;else missed.push([x,y]);
+ }
+ t.diagnostic(`${cast}/6 edge entries cast a combo within four seconds; deferred: ${JSON.stringify(missed)}`);assert.ok(cast>=4,`only ${cast} edge entries found a safe combo`);
+});
 test('Syndra events pause, reset and preserve prior Expert records',()=>{
  const {g,node,window}=boot('ahri'),values=new Map();window.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)};
  node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');g.dodgeDirector.next=999;assert.ok(g.spawnSyndra(true));const h=g.hazards[0],ttl=h.ttl;
