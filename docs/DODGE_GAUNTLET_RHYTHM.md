@@ -9,6 +9,8 @@ Q→E places a sphere between the visible caster and player, then fires it outwa
 
 Expert visits use varied short sequences, usually two solo Qs and one Q→E, followed by a brief gap. Syndra appears 0.65 seconds before her first Q; a seven-second visit limit can extend while a committed spell and exit finish. If a safe combo placement is unavailable, the visit can end early. Q→E aim extrapolates observed movement to the E cue, with a mix of short forward and shorter reads; forced movement and dashes clear that history. Candidates also require a sampled perpendicular response after the E cue, with an assumed 150 ms reaction and a safety margin. Solo Q and the escape solver still use route forecasts. These are training approximations, not live Syndra AI or a universal guarantee of escape. The sampled behavior and remaining limitations are recorded in [PROGRESS.md](PROGRESS.md).
 
+The v1.0 candidate schedules the next Syndra visit after a 6.5–8.5 second post-visit gap. The fixed stationary and moving fixtures measured 72.4% and 76.3% of baseline visits respectively; this changes neither the other champions' cadence parameters nor the contents of each Syndra visit. See [DODGE_RELEASE_REPORT.md](DODGE_RELEASE_REPORT.md) for evidence and outstanding release gates.
+
 
 
 **Date:** 2026-10-30  
