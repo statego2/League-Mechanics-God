@@ -376,6 +376,12 @@ test('Syndra solo Q clamps a predicted aim to her maximum range',()=>{
  const h=g.hazards[0];assert.equal(h.aimPattern,'lead');assert.ok(Math.abs(Math.hypot(h.x-caster.x,h.y-caster.y)-g.SYNDRA.qRange)<1e-6);
  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,.5);assert.equal(g.stats.hits,0);
 });
+test('Syndra solo Q retries a safe direct aim when its clamped lead is unavoidable',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.x=650;g.player.y=337;
+ const caster=g.enemy(300,337);caster.syndraCaster=true;g.setFoes([caster]);g.moveTo(1100,337);g.setRng(1234);
+ const witness={};assert.ok(g.spawnSyndra(false,witness,caster),'a safe direct Q should be attempted');
+ const h=g.hazards[0];assert.equal(h.aimPattern,'direct');assert.ok(Math.abs(h.x-650)<1e-6);advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,.5);assert.equal(g.stats.hits,0);
+});
 test('Syndra can cast an avoidable solo Q at a nearby player',()=>{
  for(const distance of [0,25,100,119]){
   const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;const caster=g.enemy(g.player.x-distance,g.player.y);caster.syndraCaster=true;g.setFoes([caster]);
