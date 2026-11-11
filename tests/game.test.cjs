@@ -369,6 +369,13 @@ test('Syndra solo Q lands close to its intended target and remains avoidable',()
  assert.ok(Math.hypot(h.x-h.aimPoint.x,h.y-h.aimPoint.y)<30,'Q must not be displaced far from its aim');
  advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,.5);assert.equal(g.stats.hits,0);
 });
+test('Syndra solo Q clamps a predicted aim to her maximum range',()=>{
+ const {g}=boot('ahri');g.reset('dodge');g.dodgeDirector.next=999;g.player.x=620;g.player.y=337;
+ const caster=g.enemy(300,337);caster.syndraCaster=true;g.setFoes([caster]);g.moveTo(1100,337);g.setRng(1234);
+ const witness={};assert.ok(g.spawnSyndra(false,witness,caster),'in-range target should not be ignored because its predicted position is out of range');
+ const h=g.hazards[0];assert.equal(h.aimPattern,'lead');assert.ok(Math.abs(Math.hypot(h.x-caster.x,h.y-caster.y)-g.SYNDRA.qRange)<1e-6);
+ advance(g,.2);g.moveTo(witness.destination.x,witness.destination.y);advance(g,.5);assert.equal(g.stats.hits,0);
+});
 test('Expert guarantees an occasional Syndra combo after three Q-only encounters',()=>{
  const {g,node}=boot('ahri');node('difficulty').listeners.change({target:{value:'hard'}});g.reset('dodge');
  Object.assign(g.dodgeDirector,{next:999,syndraAt:0,syndraQStreak:3});g.update(1/120);
@@ -3866,7 +3873,7 @@ test('Expert Syndra makes short visits and casts from where she stands',()=>{
 });
 test('Staying Syndra keeps Mindgame Aim: lead, direct and reversal Qs plus led Q E',()=>{
  const patterns=new Set(),combo=new Set();let q=0,qe=0;
- for(const seed of [1,2,3,4,5,6]){const {g}=syndraStayBoot(seed);const seen=syndraStayRun(g,20);for(const [h] of [...seen].slice(1)){if(h.combo){qe++;combo.add(h.aimPattern);}else{q++;patterns.add(h.aimPattern);}}}
+ for(const seed of [1,2,3,4,5,6,7,8,9,10,11,12]){const {g}=syndraStayBoot(seed);const seen=syndraStayRun(g,20);for(const [h] of [...seen].slice(1)){if(h.combo){qe++;combo.add(h.aimPattern);}else{q++;patterns.add(h.aimPattern);}}}
  assert.deepEqual([...patterns].sort(),['direct','lead','reversal']);assert.ok(combo.has('lead'),'mid-stay Q E still leads Ahri');
  assert.ok(q>qe&&qe>0,`Q ${q}, Q E ${qe}`);
 });

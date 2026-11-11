@@ -1764,3 +1764,8 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 ## Syndra sphere visual/collision boundary (11 November 2026)
 
 - Added an actual-projectile regression for horizontal, diagonal and vertical sphere travel. It checks that the rendered ring uses the sphere's collision radius, that a pass 0.1 canvas units inside the combined sphere/player boundary hits, and that 0.1 outside avoids; both the boundary test and the E-cue escape test passed. This checks Canvas draw calls and simulation geometry in the mocked VM; it does not replace visual browser inspection of sprite scale or perceived hitboxes. No runtime change; build remains `db8f4af40213`.
+
+## Syndra solo Q maximum range (11 November 2026)
+
+- Reproduced a case where Syndra's solo-Q lead projected beyond her range, causing her to skip the cast even though the player was in range. The trainer now clamps the predicted Q centre to the range edge and still requires its existing walkable escape check. This is a targeting approximation pending live-client verification; it does not alter Q→E placement. A regression checks the clamped centre and executable dodge.
+- In stationary high-HP 30-seed × 90-second samples, before/after both produced 461 Syndra Q, 162 E and 832 other casts. In the 20-seed normal-HP scripted movement smoke, median survival was 34.7→34.4 s and Syndra Q totals 128→128; this is a limited synthetic sample, not a human balance conclusion. One small six-seed pattern test missed its rare reversal after the different cast changed RNG consumption; a 12-seed corpus still checks all three patterns. The full serial suite passed 541/541. A comment-only clarification was then followed by a build refresh and four focused checks; current build `fe40532814ca`.
