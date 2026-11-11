@@ -23,6 +23,19 @@ function boot(preset="standard", options={}){
 }
 function foe(g,x=800,y=337.5){const e=g.enemy(x,y);e.speed=0;e.shoot=999;e.hp=e.maxHp=10000;g.setFoes([e]);return e;}
 function advance(g,seconds){for(let i=0;i<Math.round(seconds*120);i++)g.update(1/120);}
+test('visible build identifies the executed script and matches its cache key',()=>{
+ const html=fs.readFileSync(require.resolve('../index.html'),'utf8'),source=fs.readFileSync(require.resolve('../game.js'),'utf8');
+ const cache=html.match(/game\.js\?v=([^"']+)/)?.[1],build=source.match(/const BUILD_ID="([^"]+)"/)?.[1];
+ const normalized=source.replace(/const BUILD_ID="[^"]+"/,'const BUILD_ID="<content-hash>"');
+ const digest=require('node:crypto').createHash('sha256').update(normalized).digest('hex').slice(0,12);
+ assert.ok(cache);assert.equal(build,cache);assert.equal(build,digest,'update the build ID and cache key when game.js changes');
+ assert.equal(boot('ahri').node('buildLabel').textContent,'Build: '+build);
+ assert.doesNotThrow(()=>boot('ahri',{missingNodes:['buildLabel']}));
+});
+test('benchmark harness prefix does not register tests or pollute JSON output',()=>{
+ const source=fs.readFileSync(__filename,'utf8'),marker="test('visible build",prefix=source.slice(0,source.indexOf(marker));
+ assert.ok(source.includes(marker));assert.doesNotMatch(prefix,/\btest\s*\(/);
+});
 test('drills home, pause and results keep their own menu state and settings',()=>{
  const {g,node}=boot('ahri'),classes=new Set();
  node('menu').classList.toggle=(name,on)=>{if(on)classes.add(name);else classes.delete(name);};
@@ -36,15 +49,6 @@ test('drills home retains one playable button for each mode and unique settings'
  for(const mode of ['dodge','kite','lastHit'])assert.equal((html.match(new RegExp(`data-mode="${mode}"`,'g'))||[]).length,1);
  for(const id of ['settings','difficulty','mapAwareness','attackSpeed','newSeed','seedLabel','soundBtn','buildLabel'])assert.equal((html.match(new RegExp(`id="${id}"`,'g'))||[]).length,1);
  assert.match(html,/DODGE TRIAL[\s\S]*PLAY DODGE/);assert.equal((html.match(/IN DEVELOPMENT · PLAYABLE/g)||[]).length,3);
-});
-test('visible build identifies the executed script and matches its cache key',()=>{
- const html=fs.readFileSync(require.resolve('../index.html'),'utf8'),source=fs.readFileSync(require.resolve('../game.js'),'utf8');
- const cache=html.match(/game\.js\?v=([^"']+)/)?.[1],build=source.match(/const BUILD_ID="([^"]+)"/)?.[1];
- const normalized=source.replace(/const BUILD_ID="[^"]+"/,'const BUILD_ID="<content-hash>"');
- const digest=require('node:crypto').createHash('sha256').update(normalized).digest('hex').slice(0,12);
- assert.ok(cache);assert.equal(build,cache);assert.equal(build,digest,'update the build ID and cache key when game.js changes');
- assert.equal(boot('ahri').node('buildLabel').textContent,'Build: '+build);
- assert.doesNotThrow(()=>boot('ahri',{missingNodes:['buildLabel']}));
 });
 test('map awareness is optional, Dodge only, and pings reward once',()=>{
  const {g,node,click,key}=boot('ahri');g.reset('dodge');assert.equal(g.awareness,null);
