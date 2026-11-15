@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://statego2.github.io/League-Mechanics-God/sitemap.xml
