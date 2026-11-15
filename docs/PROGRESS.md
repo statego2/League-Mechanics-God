@@ -2,6 +2,10 @@
 
 Read PROJECT_BLUEPRINT.md first. Browser Canvas product; no Unity or paid dependencies.
 
+## Search listing (15 November 2026)
+
+- SEO-only update on the Pages branch. The entry page title is “League Mechanics God”, with a canonical URL, Open Graph tags, and a summary Twitter card. The existing brand heading now reads “League Mechanics God” in the HTML and stays visually uppercase through CSS. `robots.txt` and `sitemap.xml` list the one app page. No gameplay, layout, or navigation changes.
+
 ## Dodge v1.0 shipped (11 November 2026)
 
 - Published gameplay commit `7c601c7edc8a8d0cb69516524a190e46da72115f`, build `0030a3a91f5a`. CI and Pages deployment succeeded for that SHA. Fresh live-tab verification confirmed the executing build, new home, Play, awareness ON, movement/W/Flash/pause, loaded images and no console errors. See DODGE_RELEASE_REPORT.md for evidence and limitations. Kite/CS remain playable and in development.
