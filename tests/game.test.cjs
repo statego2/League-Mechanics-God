@@ -46,7 +46,7 @@ test('drills home, pause and results keep their own menu state and settings',()=
 });
 test('drills home retains one playable button for each mode and unique settings',()=>{
  const html=fs.readFileSync(require.resolve('../index.html'),'utf8');
- for(const mode of ['dodge','kite','lastHit'])assert.equal((html.match(new RegExp(`data-mode="${mode}"`,'g'))||[]).length,1);
+ for(const mode of ['dodge','adc','lastHit'])assert.equal((html.match(new RegExp(`data-mode="${mode}"`,'g'))||[]).length,1);
  for(const id of ['settings','difficulty','mapAwareness','attackSpeed','newSeed','seedLabel','soundBtn','buildLabel'])assert.equal((html.match(new RegExp(`id="${id}"`,'g'))||[]).length,1);
  assert.match(html,/DODGE TRIAL[\s\S]*PLAY DODGE/);assert.equal((html.match(/IN DEVELOPMENT · PLAYABLE/g)||[]).length,3);
 });
@@ -1232,7 +1232,7 @@ test('Ahri CS allied melee and caster damage use minion ratios',()=>{
 });
 
 test('Ahri is the selected default and visible menu has three focused drills',()=>{
- const html=fs.readFileSync(require.resolve('../index.html'),'utf8');assert.match(html,/value="ahri" selected/);assert.deepEqual([...html.matchAll(/data-mode="([^"]+)"/g)].map(m=>m[1]),['dodge','kite','lastHit']);
+ const html=fs.readFileSync(require.resolve('../index.html'),'utf8');assert.match(html,/value="ahri" selected/);assert.deepEqual([...html.matchAll(/data-mode="([^"]+)"/g)].map(m=>m[1]),['dodge','adc','lastHit']);
  const {g}=boot('ahri');for(const mode of ['dodge','kite','lastHit']){g.reset(mode);assert.equal(g.player.hp,590);assert.equal(g.player.speed,mode==='dodge'?177.5:165);}
 });
 test('Ahri dodge integrates Lux and Ezreal casts in one drill',()=>{
