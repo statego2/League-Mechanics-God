@@ -4039,3 +4039,15 @@ test('ADC auto cadence is consistent at 30, 60 and 120 rendered FPS',()=>{
 test('ADC Syndra Q is cancelled when its caster dies before impact',()=>{
  const {g}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+240,g.player.y);e.speed=0;e.adcCaster=true;e.adcSyndra=true;e.shoot=0;g.setFoes([e]);advance(g,.02);assert.equal(g.hazards.length,1);e.alive=false;advance(g,1);assert.equal(g.player.hp,160);
 });
+
+test('ADC swept collision catches fast hostile shots and reports skill damage',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player;g.fire(p.x-100,p.y,24000,0,'enemy',24,7,.2);advance(g,1/120);assert.equal(p.hp,136);assert.equal(g.stats.skillDamage,24);assert.equal(g.stats.contactDamage,0);
+});
+test('ADC pending line cast is cancelled with its caster while launched shots persist',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+240,g.player.y);e.speed=0;e.adcCaster=true;e.shoot=0;g.setFoes([e]);advance(g,.05);assert.ok(e.pending);e.alive=false;advance(g,.5);assert.equal(g.shots.length,0);
+ const f=g.enemy(g.player.x+240,g.player.y);f.speed=0;f.adcCaster=true;f.shoot=0;g.setFoes([f]);advance(g,.42);assert.ok(g.shots.some(s=>s.kind==='enemy'));f.alive=false;advance(g,.4);assert.equal(g.stats.skillDamage,24);
+});
+
+test('ADC A-click chooses the nearest in-range enemy to Tristana',()=>{
+ const {g,key,click}=boot();g.reset('adc');g.disableSpawn();const p=g.player,a=g.enemy(p.x+130,p.y),b=g.enemy(p.x-240,p.y);for(const e of [a,b]){e.speed=0;e.shoot=999;e.hp=e.maxHp=1000;}g.setFoes([a,b]);key('a');click(b.x,b.y,0);advance(g,.5);assert.equal(a.hp,972);assert.equal(b.hp,1000);
+});
