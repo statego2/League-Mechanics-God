@@ -4010,3 +4010,13 @@ test('retry clears previous awareness result before a new pause',()=>{
  const {g,node}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');g.end(false);assert.equal(node('awarenessResult').hidden,false);
  g.reset('dodge');g.pause();assert.equal(node('awarenessResult').hidden,true);
 });
+
+test('ADC windup cancels on movement and committed shots survive movement',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+180,g.player.y);e.speed=0;e.hp=e.maxHp=112;g.setFoes([e]);
+ g.attackOrder(e);advance(g,.09);g.moveTo(g.player.x-100,g.player.y);assert.equal(g.stats.cancelled,1);assert.equal(g.stats.released,0);
+ g.attackOrder(e);advance(g,.20);assert.equal(g.stats.released,1);g.moveTo(g.player.x-100,g.player.y);advance(g,.3);assert.equal(e.hp,84);assert.equal(g.stats.autoHits,1);
+});
+test('ADC chaser contact has independent cooldown and mode switch resets state',()=>{
+ const {g}=boot('ahri');g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+10,g.player.y);e.speed=0;e.contactCooldown=0;g.setFoes([e]);advance(g,.1);assert.equal(g.player.hp,120);advance(g,.5);assert.equal(g.player.hp,120);advance(g,.3);assert.equal(g.player.hp,80);assert.equal(g.stats.contactDamage,80);
+ g.reset('dodge');assert.equal(g.foes.length,0);assert.equal(g.stats.contactDamage,0);assert.equal(g.state,'playing');
+});
