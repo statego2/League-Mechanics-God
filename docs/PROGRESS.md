@@ -1850,3 +1850,8 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 - Full suite run against gameplay build `0f5a05f44ca3`: 556 of 558 passed; two menu assertions still expected the replaced Kite card. Updated those assertions to expect ADC, and both pass in the focused rerun together with all nine ADC tests and the build-ID check (13/13). A fresh full-suite rerun is in progress; do not report it as passed until it finishes.
 
 - Final full regression: `node --test tests/*.test.cjs` passed **561/561** tests in 180.3 seconds after updating the two menu expectations. The automated Chromium 10-kill result above and the separate real-input smoke test also passed. Human playtesting and subjective balance assessment are still outstanding; the mode remains a prototype.
+
+## ADC real-input browser run (2026-11-16)
+
+- Headless Chromium played the entire ADC challenge at real-time speed using actual Playwright mouse and keyboard events, with read-only game-state instrumentation to choose actions: 10/10 kills in 41.6s, 96/160 HP, 41 autos hit, 40 contact and 24 skillshot damage, no page errors. The bot's exact decisions are reproducible via [verify-adc-real-input.cjs](../scripts/verify-adc-real-input.cjs) (optional Playwright, server on port 8765, and `PLAYWRIGHT_CHROMIUM_EXECUTABLE` if needed). This verifies a full input-to-result path, but does not substitute for human assessment of balance or feel.
+- The full automated regression remains 561/561 passing. The draft PR targets the newer Dodge branch. Next: user playtest and tune encounter pacing; assess further champion variants; merge/release only after the target branch and release workflow are chosen.
