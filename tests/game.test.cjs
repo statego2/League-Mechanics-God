@@ -4020,3 +4020,22 @@ test('ADC chaser contact has independent cooldown and mode switch resets state',
  const {g}=boot('ahri');g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+10,g.player.y);e.speed=0;e.contactCooldown=0;g.setFoes([e]);advance(g,.1);assert.equal(g.player.hp,120);advance(g,.5);assert.equal(g.player.hp,120);advance(g,.3);assert.equal(g.player.hp,80);assert.equal(g.stats.contactDamage,80);
  g.reset('dodge');assert.equal(g.foes.length,0);assert.equal(g.stats.contactDamage,0);assert.equal(g.state,'playing');
 });
+
+test('ADC attack range, four hits, chase and target loss',()=>{
+ const {g}=boot('ahri');g.reset('adc');g.disableSpawn();const p=g.player,e=g.enemy(p.x+276,p.y);e.hp=e.maxHp=112;e.speed=0;e.shoot=999;g.setFoes([e]);g.attackOrder(e);advance(g,.01);assert.equal(g.stats.released,0);assert.ok(p.target,'chases targets outside range');
+ e.x=p.x+180;g.attackOrder(e);advance(g,3);assert.equal(g.stats.autoHits,4);assert.equal(g.getKills?.()??e.alive,false);assert.equal(e.hp,0);
+ const f=g.enemy(p.x+180,p.y);f.speed=0;f.shoot=999;g.setFoes([f]);g.attackOrder(f);advance(g,.2);f.alive=false;advance(g,.1);assert.equal(g.shots.filter(s=>s.kind==='auto').length,0);
+});
+test('ADC ten kills ends run and retry resets counts',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();g.setKills(9);const e=g.enemy(g.player.x+100,g.player.y);e.speed=0;e.hp=e.maxHp=28;g.setFoes([e]);g.attackOrder(e);advance(g,.5);assert.equal(g.state,'ended');g.reset('adc');assert.equal(g.state,'playing');assert.equal(g.stats.autoHits,0);assert.equal(g.foes.length,0);
+});
+test('ADC spawn warnings are untargetable and avoid close contact',()=>{
+ const {g,click}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+30,g.player.y);e.speed=0;e.spawnTimer=.05;e.contactCooldown=0;g.setFoes([e]);click(e.x,e.y);advance(g,.3);assert.equal(g.stats.released,0);assert.equal(g.player.hp,160);assert.ok(e.spawnTimer>0);g.player.x-=200;advance(g,.03);assert.equal(e.spawnTimer,0);
+});
+
+test('ADC auto cadence is consistent at 30, 60 and 120 rendered FPS',()=>{
+ const outcomes=[];for(const fps of [30,60,120]){const {g}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+200,g.player.y);e.hp=e.maxHp=10000;e.speed=0;e.shoot=999;g.setFoes([e]);g.attackOrder(e);g.loop(1000);for(let i=1;i<=fps*3;i++)g.loop(1000+i*1000/fps);outcomes.push([g.stats.released,g.stats.autoHits,e.hp]);}assert.deepEqual(outcomes[0],outcomes[1]);assert.deepEqual(outcomes[1],outcomes[2]);
+});
+test('ADC Syndra Q is cancelled when its caster dies before impact',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+240,g.player.y);e.speed=0;e.adcCaster=true;e.adcSyndra=true;e.shoot=0;g.setFoes([e]);advance(g,.02);assert.equal(g.hazards.length,1);e.alive=false;advance(g,1);assert.equal(g.player.hp,160);
+});

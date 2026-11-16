@@ -40,3 +40,6 @@
 .menu.results .mode-card.featured .mode-info small{font-size:10px}
 .menu.results .mode-card.prototype{padding:8px 12px}
 @media(max-width:640px){.menu{padding:12px}.mode-buttons{grid-template-columns:1fr}.mode-card.featured,.mode-buttons>.settings,.prototype-label{grid-column:1}.mode-card.featured .mode-info b{font-size:17px}.play-cta{padding:8px;font-size:10px}.settings{gap:8px}}
+
+/* ADC uses autos and Flash; the other kit belongs to Ahri. */
+.ability-bar.adc-mode .ability:not(.flash){display:none}
