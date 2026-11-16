@@ -1,3 +1,18 @@
+# ADC planning update — 2026-11-16
+
+This branch adds documentation only. No gameplay code, deployment, or Dodge behavior changed.
+
+- User intent: [VISION-ADC.md](../VISION-ADC.md).
+- Astra design and Terra implementation handoff: [ADC-PLAN.md](ADC-PLAN.md).
+- Base inspected: main at `7de3430fbf908f0bdf026abaac55a2d50337f545`.
+- Remote ADC branch/local vision file were not available; this is a new planning branch.
+- Verified by static source inspection: existing A+click, windup, autos, generic kite mode.
+- Not present in inspected main: Tristana, named champion roster, Syndra two-Q implementation.
+- Next: locate and record the actual current Dodge revision; follow the plan's staged checklist; preserve Dodge and report real test evidence.
+- Planning session: no gameplay tests run, no implementation claimed. Older progress below is historical and does not supersede the user's current ADC-only scope.
+
+---
+
 # League Mechanics God — Progress & Codex Handoff
 
 **Updated:** 2026-10-30. **Canonical spec:** [PROJECT_BLUEPRINT.md](../PROJECT_BLUEPRINT.md).
