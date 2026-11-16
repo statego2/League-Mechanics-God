@@ -1848,3 +1848,5 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 - Next: (1) record the full suite result; (2) play the full run with a mouse and keyboard and tune encounter pacing; (3) assess whether further champion variants add useful readable pressure before expanding the roster.
 
 - Full suite run against gameplay build `0f5a05f44ca3`: 556 of 558 passed; two menu assertions still expected the replaced Kite card. Updated those assertions to expect ADC, and both pass in the focused rerun together with all nine ADC tests and the build-ID check (13/13). A fresh full-suite rerun is in progress; do not report it as passed until it finishes.
+
+- Final full regression: `node --test tests/*.test.cjs` passed **561/561** tests in 180.3 seconds after updating the two menu expectations. The automated Chromium 10-kill result above and the separate real-input smoke test also passed. Human playtesting and subjective balance assessment are still outstanding; the mode remains a prototype.
