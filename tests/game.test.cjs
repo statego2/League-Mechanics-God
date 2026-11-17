@@ -4227,6 +4227,14 @@ test('ADC spawn warnings remain safely separated near arena corners',()=>{
   assert.ok(Math.hypot(e.x-x,e.y-y)>=285);assert.equal(e.spawnTimer,0);assert.ok(e.x>=22&&e.x<=1178&&e.y>=59&&e.y<=639);
  }
 });
+test('ADC corner arrivals avoid overlapping visible ambient casters',()=>{
+ for(const kind of ['emitter','special','beam','area']){
+  const {g}=boot();g.reset('adc');g.disableSpawn();g.setRng(7);g.adcState.cornerBag=[0];const source={x:66,y:103};
+  const hazard=kind==='emitter'?{adcEmitter:true,actor:source}:kind==='special'?{adcAmbient:true,actor:source}:kind==='beam'?{adcBeam:true,...source}:{adcArea:true,adcSource:source};
+  g.hazards.push({...hazard,ttl:1,max:1,phase:"windup"});g.addEnemy();assert.equal(g.foes.length,1,kind);assert.ok(Math.hypot(g.foes[0].x-source.x,g.foes[0].y-source.y)>=100,kind);
+ }
+
+});
 test('ADC corner bag reaches all four valid zones and defers when all are unsafe',()=>{
  for(const seed of [1,7,99,9001,503219]){
   const {g}=boot();g.reset('adc');g.disableSpawn();g.setRng(seed);const seen=new Set();

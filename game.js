@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="380b89973026";
+const BUILD_ID="b7d2016dcd41";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -648,13 +648,15 @@ function adcCornerBounds(index){
 function addEnemy(){
  if(foes.length>=(mode==="adc"?ADC_SPAWN.maxEnemies:mode==="kite"?5:PRESETS[difficulty].cap))return false;
  if(mode==="adc"){
+  // Keep a new target visually distinct from active, untargetable spell casters.
+  const casterSources=hazards.map(h=>h.adcEmitter||h.adcAmbient?h.actor:h.adcBeam?h:h.adcArea?h.adcSource:null).filter(Boolean);
   if(!adcState.cornerBag.length){adcState.cornerBag=[0,1,2,3];for(let i=3;i>0;i--){const j=Math.floor(random()*(i+1));[adcState.cornerBag[i],adcState.cornerBag[j]]=[adcState.cornerBag[j],adcState.cornerBag[i]];}}
   const fallback=[0,1,2,3].filter(c=>!adcState.cornerBag.includes(c));for(let i=fallback.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[fallback[i],fallback[j]]=[fallback[j],fallback[i]];}
   for(const corner of [...adcState.cornerBag,...fallback]){
    const zone=adcCornerBounds(corner);let point=null;
    for(let j=0;j<16;j++){
     const candidate={x:zone.left+random()*(zone.right-zone.left),y:zone.top+random()*(zone.bottom-zone.top)};
-    if(!world.pointWalkable(candidate,20)||dist(candidate,player)<ADC_SPAWN.playerDistance||foes.some(e=>e.alive&&dist(candidate,e)<ADC_SPAWN.spacing)||!world.path(candidate,player,20).length)continue;
+    if(!world.pointWalkable(candidate,20)||dist(candidate,player)<ADC_SPAWN.playerDistance||foes.some(e=>e.alive&&dist(candidate,e)<ADC_SPAWN.spacing)||casterSources.some(c=>dist(candidate,c)<100)||!world.path(candidate,player,20).length)continue;
     point=candidate;break;
    }
    if(!point)continue;
