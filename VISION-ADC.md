@@ -51,3 +51,7 @@ The user rejected the implemented prototype: “ούτε τριστάνα βλέ
 > επισης θελω το full stack των σκιλ της τριστανα οπως στο dodge για την ahri
 
 This supersedes champion-as-target encounters, trajectory preview lines and autos-only scope. Generic targets and surrounding spells are independent; Tristana needs the complete passive/QWER interactions and Flash. The canonical plan and Terra handoff were rewritten in full so old conflicting requirements do not remain executable instructions. Preserve Dodge.
+
+## Latest pacing clarification — 17 November 2026
+
+Remove “upcoming” (current UI: INCOMING), use random positions only at the corners, slow enemies, improve attack speed, and inspect https://loldodgegame.com/kiting/ before revising the design. The subsequent owner clarification is: “αν ειναι 5 και μοιαζει ο ρυθμος φεν με πειραζει” — five hits are acceptable if the rhythm is similar. This overrides the earlier fewer-hits preference; do not make three hits a requirement. Full Tristana, independent surrounding skills and untouched Dodge remain binding.

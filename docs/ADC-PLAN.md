@@ -1,6 +1,6 @@
 # ADC Mechanics God — generic pursuers, surrounding spells, full Tristana
 
-**Authoritative revision: 17 November 2026.** This replaces the previous champion-as-target / autos-only plan in full. The user asks to change the design; this revision makes no gameplay changes. Preserve Dodge exactly.
+**Authoritative revision: 17 November 2026, updated after the kiting-reference review.** This replaces the previous champion-as-target / autos-only plan in full. The user asks to change the design; this revision makes no gameplay changes. Preserve Dodge exactly.
 
 ## Experience
 
@@ -12,20 +12,47 @@ Keep the existing arena and recognizable Tristana art, autos, A + click, right-c
 
 ## Current source and evidence
 
-Continue from `codex/adc-mode`; committed HEAD at this audit is `e237a97`, with substantial **uncommitted** implementation, tests and evidence already present. Preserve all of it. Inspect actual HEAD/status before proceeding; neither old `main` nor a clean checkout of HEAD represents the full current working state.
+Continue from `codex/adc-mode`; committed HEAD at this audit is `33ad5cf`, with substantial **uncommitted** implementation, tests and evidence already present. Preserve all of it. Inspect actual HEAD/status before proceeding; neither old `main` nor a clean checkout of HEAD represents the full current working state.
 
 The local working copy already contains `updateAdcAmbient`, generic enemy handling, `ADC_KIT`, `castAdc`, `adcDamageAndStack`, `adcExplode`, `adcJumpLand`, `adcKnockEnemy` and revised rendering. The previous documents only prepended a correction and retained contradictory instructions below it; this document replaces those instructions. Audit the local implementation against the contract here rather than rebuilding completed work.
 
 The existing progress log reports focused checks and bot runs for the corrected mode. Those reports are retained as historical evidence, not independently rerun in this planning pass. Final full regression, full-kit fidelity, visual review and user acceptance remain open. A function name or four enabled buttons is not proof of a complete kit.
 
-## Generic enemy loop
+## Reference-driven rhythm and generic enemies
 
-- Use readable neutral enemy silhouettes with HP bars, not named champions. Start with one durable pursuer type; cosmetic variants must not conceal different rules.
-- Proposed initial baseline: 112 HP, 28 base auto damage, speed 185, and 40 contact damage with .75s per-enemy cooldown. Existing numbers are training values, not live League stats. Four base autos kill an ordinary target; abilities can shorten this.
-- Enemies pursue, route around walls and separate. They do not fire the surrounding spells. Keep safe spawning with a short local spawn effect; no spawn on top of the player or immediate contact hit.
-- Start with two enemies, ramp toward three/four using elapsed time and replace deaths continuously. Avoid kill-gated mechanics and ID-modulo composition. Numbers are tunable after real play.
-- Contact is dangerous but cannot damage every frame. Define shared brief grace after forced displacement so stacked pursuers do not produce an unavoidable instant death. Preserve meaningful danger after the recovery window.
-- Generic enemies are the targets for autos, E and R, and receive W landing damage. E splash, R displacement and W resets must matter in packs.
+Read [the source-backed kiting audit](ADC-KITING-REFERENCE.md). The reference was inspected in Chrome and its public client source; exact findings and limits are recorded there. The owner initially requested fewer hits, then explicitly clarified that **five hits is fine if the rhythm is similar**. Therefore fewer-than-five is not a hard acceptance criterion. The five-hit proposal below replaces the earlier four-hit/slow-cadence target.
+
+| Parameter | Current inspected implementation | New initial design target |
+| --- | --- | --- |
+| Unbuffed autos | .72 s period ≈ 1.39/s | **.40 s period = 2.5/s** |
+| Windup | .18 s, 25% of cycle | **.06 s, 15% of cycle**, followed by .34 s movable recovery |
+| Ordinary target HP / auto damage | 112 / 28 = 4 hits | **140 / 28 = 5 hits**, now accepted by owner |
+| Enemy speed / player speed | 185 / 270 ≈ .685 | **145 / 270 ≈ .537**, close to reference's 3 / 5.5 ratio |
+| Q cadence | Existing +50% training boost | Keep +50%: **3.75/s**, .2667 s period and .04 s windup; snapshot per attack |
+| Auto range / missile speed | 275 / 920 canvas units/s | Keep initially; do not change collision/range to fake faster response |
+| Contact | 40 damage, .75 s per-enemy timer | Preserve initially with existing ADC recovery/grace; reference instant death is not adopted |
+
+These are trainer tuning proposals awaiting implementation/playtest. Five shots release in about 1.66 s from a ready attack, excluding travel, versus 2.34 s for today's four-shot sequence. Q and damage abilities may shorten kills. Do not undo the accepted five-hit rhythm by silently escalating HP or enemy speed over time.
+
+Retain generic readable silhouettes, HP bars, pursuit/pathing and separation. No champion-target roster or enemy spell casting: surrounding skills remain independent. Base enemies have one consistent tuning; no added tank just to make E stacks possible. Five-hit baseline lets E reach four auto stacks before the unmodified auto-only kill; verify death/explosion/reset ordering when W/R/splash shorten this. Use durable fixtures for individual interaction tests without adding unrequested public enemy types.
+
+### Four-corner arrivals, no UPCOMING/INCOMING
+
+The UI actually draws `INCOMING` in the `spawnTimer` renderer; the user's “upcoming” refers to this. Remove that text and the conspicuous pre-spawn warning ring. Do not rename it to another warning label. Arrival should read as an enemy walking in, not a warning marker becoming a body.
+
+Use a shuffled four-corner bag, then sample a random valid entry position inside that corner's small entry zone. Choose among **top-left, top-right, bottom-left, bottom-right**, not points on a circle around Tristana and not arbitrary mid-edge points. For a 1200×675 canvas, define zones from the actual playable bounds: up to 80 canvas units inward along each adjoining edge, inset enough for collision radius/HUD. Declare the bounds in one ADC config. Do not let `nearestWalkable` project a corner candidate to a central point; recheck zone membership after any correction.
+
+Prefer a short outside-edge approach into a valid corner gate if existing world clipping supports it safely. Otherwise create a fully visible, immediately targetable enemy at the validated corner gate with continuous walking; no .8s untargetable marker phase. Do not use a fade that hides a live contact threat. This is a small ADC spawn change, not a map/pathfinding rewrite.
+
+Reject a corner candidate within 285 units of Tristana, within 80 of another entering enemy, or lacking a valid walkable route. Try another corner; if all are unsafe defer briefly. Never fall back to a player-centred spawn. Do not queue a burst of deferred enemies. Seeded tests must prove all four zones are reachable from ordinary centre play and every accepted spawn stays in its declared zone, including corner-camping cases.
+
+Start with two staggered arrivals; retain a maximum of four active generic enemies for the first tuning pass. Candidate replacement interval: 2.5 s, with one deferred retry at a time. Tune cadence after observing the faster clear speed; do not compensate immediately by restoring faster enemies or bigger HP pools. The user wants a more fluid, forgiving pursuit rhythm while spells keep the dodge challenge.
+
+### Attack feel contract
+
+Keep A + click and right-click semantics. Movement before release cancels the windup; movement after release starts immediately and preserves the projectile and recovery timer. No full-animation movement lock, shot loss, extra delay from recoil, target-chase stutter or cooldown reset exploit. Q activation/expiry snapshots the committed attack and cannot manufacture an extra shot. Muzzle, sound, projectile and recoil must agree on the release tick.
+
+Measure commanded-to-release timing and release-to-release intervals at 30/60/120 rendered FPS using the existing fixed-step simulation. Permit at most one simulation-step rounding error in isolated deterministic timing fixtures; do not silently tolerate a whole .1s delay. Test click→release→move repeatedly and compare normal/Q cadence. Keep the reference's feel while preserving our target selection rules and robust collision.
 
 ## Surrounding skill pressure
 
@@ -79,7 +106,7 @@ Key acceptance sequence: **E → Q → autos while kiting → four-stack explosi
 ## Isolation and implementation order for Terra
 
 1. **Audit current working state.** Preserve uncommitted gameplay, tests, captures and unrelated files. Read latest progress and identify already implemented parts versus the contracts above. Record current build and a same-seed Dodge baseline. Do not restart at the old rejected prototype.
-2. **Lock the two-system encounter.** Verify only generic enemies are targetable, spells arrive independently before any kill, no predictive lines remain, native effects stay readable, and kills cannot cancel ambient casts. Fix concrete mismatches in ADC-only paths.
+2. **Deliver the corner/rhythm correction first.** Remove INCOMING/ring state, implement validated four-corner arrivals and the proposed slower/five-hit/faster-auto profile. Update ADC_KIT.md as implementation lands; do not pretend its historical values already changed. Then **lock the two-system encounter.** Verify only generic enemies are targetable, spells arrive independently before any kill, no predictive lines remain, native effects stay readable, and kills cannot cancel ambient casts. Fix concrete mismatches in ADC-only paths.
 3. **Complete the kit.** Audit existing `ADC_KIT`/cast/stack/reset helpers against a pinned PC reference, add missing passive/profile and interactions, and implement the full HUD/resource policy. Prioritize E/Q/W/R interaction bugs over cosmetic roster expansion.
 4. **Balance combined play.** Normal-HP real-time runs must require moving/attacking and use meaningful QWER choices. Tune generic durability, contact, spell intervals and recovery together. Test corners and large E kill chains. No general Dodge retuning.
 5. **Verify and hand off.** Focused meaningful tests per change, final full regression, actual browser captures and input runs, updated build/progress and reviewable commits. Do not merge/deploy using historical Dodge authorization.
@@ -91,7 +118,7 @@ No changes to Dodge's constants, director, visit cadence, aim, hitboxes, HP, con
 - Current browser build and local asset loading verified; actual-scale recognizable Tristana, generic targets, visible incoming skills and full usable ability bar.
 - Pre-launch screenshots show no predictive path lines; released frames show each spell family. Capture the same distinction for beams/AoEs and the directional Cassiopeia source.
 - Real mouse/keyboard, normal HP: opening with zero-kill spell pressure, sustained kite+QWER run through at least ten kills without forced finish, death/retry, pause/focus loss, resize and Flash. Read-only instrumentation is allowed; invulnerability/injected orders do not replace this evidence.
-- Focused tests cover independent emitter lifetime, untargetable actors, contact/recovery, cast budgets and all kit interactions above. Reuse current scripts and tests rather than assuming older snapshots still apply.
+- Focused tests prove four-corner-only valid spawns, unsafe-corner deferral without burst, no warning-label/marker render, five unbuffed hits, slower pursuit ratio, .4/.06 attack timing and Q snapshots at 30/60/120 FPS. Also cover independent emitter lifetime, untargetable actors, contact/recovery, cast budgets and all kit interactions above. Reuse current scripts and tests rather than assuming older snapshots still apply.
 - After runtime changes: `node --check game.js`, `node scripts/update-build.cjs`, final `node --test tests/*.test.cjs` using Node 22+, and same-seed Dodge trace comparison plus Dodge→ADC→Dodge browser regression. Compare render output if shared rendering changed.
 - Record exact commits/builds, actual checks, remaining limitations and three next actions in `docs/PROGRESS.md`. Previous champion-target evidence remains historical; do not relabel it as evidence for this design.
 

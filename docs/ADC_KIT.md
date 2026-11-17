@@ -1,5 +1,7 @@
 # ADC Tristana training profile
 
+**Pending rhythm revision:** The latest [ADC plan](ADC-PLAN.md) proposes .40s auto period/.06s windup (2.5/s), five-hit targets and slower pursuers after the [reference audit](ADC-KITING-REFERENCE.md). The table below documents the previously implemented profile; update its values only when runtime changes are implemented and verified. Q remains +50% in the proposal. Do not treat the old .72/.18 values as the new design target.
+
 This is a fixed training profile, not a live League simulator. The pinned PC
 source is Riot Data Dragon [16.21.1 Tristana](https://ddragon.leagueoflegends.com/cdn/16.21.1/data/en_US/champion/Tristana.json),
 archived at `data/tristana-16.21.1.json` (SHA-256 `a5d13395cab89d6207bb2e13e89c018e9078ac005999aa3883886be7e969ca5b`); the [PC champion page](https://www.leagueoflegends.com/en-us/champions/tristana/)
