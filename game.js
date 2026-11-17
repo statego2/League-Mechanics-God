@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="6b9b9a24afd7";
+const BUILD_ID="5f4570146450";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -1758,8 +1758,13 @@ function castAdc(key){
  if(key==="q"){player.adcRapid=ADC_KIT.qDuration;player.cd.q=ADC_KIT.qCooldown;cue("ready");updateUI();return;}
  if(key==="w"){
   const dx=aim.x-player.x,dy=aim.y-player.y,d=Math.hypot(dx,dy);if(d<1)return;
-  const distance=Math.min(d,ADC_KIT.wRange),landing=world.nearestWalkable({x:player.x+dx/d*distance,y:player.y+dy/d*distance},player.r);
-  if(dist(player,landing)<1)return;cancelAttack();player.order=null;player.focus=null;player.target=null;player.route=[];player.routeGoal=null;
+  const distance=Math.min(d,ADC_KIT.wRange),requested={x:player.x+dx/d*distance,y:player.y+dy/d*distance};let landing=world.nearestWalkable(requested,player.r);
+  // Wall snapping may push a valid point beyond max range; find the furthest
+  // walkable point along the requested jump instead of extending its range.
+  if(dist(player,landing)>ADC_KIT.wRange+1e-6||!world.pointWalkable(landing,player.r)){
+   landing=null;for(let r=distance;r>=1;r-=1){const point={x:player.x+dx/d*r,y:player.y+dy/d*r};if(world.pointWalkable(point,player.r)){landing=point;break;}}
+  }
+  if(!landing||dist(player,landing)<1)return;cancelAttack();player.order=null;player.focus=null;player.target=null;player.route=[];player.routeGoal=null;
   player.dashing={...landing,speed:ADC_KIT.wSpeed,throughTerrain:true,adcJump:true,jumpDistance:dist(player,landing)};player.facing=Math.atan2(dy,dx);player.cd.w=ADC_KIT.wCooldown;burst(player.x,player.y,"#ffc57c",12);cue("dodge");updateUI();return;
  }
  if(key!=="e"&&key!=="r")return;

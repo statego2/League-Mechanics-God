@@ -4415,6 +4415,10 @@ test('ADC surrounding spell casters reuse visible Dodge champion art without bec
   const {g,node,draws}=boot();g.reset('adc');g.disableSpawn();Object.assign(node(art),{complete:true,naturalWidth:100});g.adcState.bag=[family];g.adcState.ambientAt=0;g.setRng(7);advance(g,.02);g.render();assert.ok(draws.includes(node(art)),family);assert.equal(g.foes.length,0,family);
  }
 });
+test('ADC Rocket Jump wall snapping never extends its maximum range',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player;Object.assign(p,{x:22,y:527});const a=5.061454830783556;g.setAim(p.x+Math.cos(a)*450,p.y+Math.sin(a)*450);g.cast('w');
+ assert.ok(p.dashing);assert.ok(Math.hypot(p.dashing.x-p.x,p.dashing.y-p.y)<=450+1e-6);assert.ok(g.world.pointWalkable(p.dashing,p.r));
+});
 test('ADC ambient emitters cannot be targeted or reset Rocket Jump',()=>{
  const {g}=boot();g.reset('adc');g.disableSpawn();g.adcState.bag=['ezreal'];g.adcState.ambientAt=0;g.player.cd.w=10;advance(g,.02);
  assert.equal(g.foes.length,0);const emitter=g.hazards.find(h=>h.adcEmitter);assert.ok(emitter);g.setAim(emitter.actor.x,emitter.actor.y);g.cast('e');g.cast('r');
