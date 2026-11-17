@@ -4178,6 +4178,16 @@ test('ADC mixed opening produces generic targets and ambient casts across seeds'
  }
 });
 
+test('ADC ambient bag weights ordinary spells and avoids repeating its previous family',()=>{
+ for(const seed of [1,7,99,1049,314159]){
+  const {g}=boot();g.reset('adc');g.disableSpawn();g.setRng(seed);g.adcState.bag=[];g.adcState.lastAmbient='lux';g.adcState.ambientAt=0;advance(g,.01);
+  const bag=g.adcState.lastAmbient==='lux'?g.adcState.bag:[g.adcState.lastAmbient,...g.adcState.bag];
+  assert.equal(bag.length,17);assert.notEqual(bag[0],'lux');
+  for(let i=1;i<bag.length-1;i++)assert.notEqual(bag[i],bag[i-1],`repeated family at ${i}`);
+  for(const name of ['ezreal','lux','ahri','blitz','velkoz'])assert.equal(bag.filter(x=>x===name).length,2,name);
+  for(const name of ['xerath-q','xerath-w','lux-r','syndra','orianna','malphite','cassio'])assert.equal(bag.filter(x=>x===name).length,1,name);
+ }
+});
 test('ADC spawn warnings remain safely separated near arena corners',()=>{
  for(const [x,y] of [[30,70],[1170,70],[30,630],[1170,630]])for(const seed of [7,9001,503219]){
   const {g}=boot();g.reset('adc');g.disableSpawn();g.player.x=x;g.player.y=y;g.setRng(seed);g.addEnemy();

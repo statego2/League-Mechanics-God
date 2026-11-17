@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="8a92bef29787";
+const BUILD_ID="c183fdeef068";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -538,8 +538,13 @@ function updateAdcAmbient(){
  if(time<adcState.ambientAt||time<adcState.recoveryUntil||player.hooked||player.dashing||player.stun>0)return;
  const live=adcLiveCasts();if(live.size>=2||[...live.values()].some(Boolean))return;
  if(!adcState.bag.length){
-  adcState.bag=["ezreal","lux","ahri","blitz","velkoz","xerath-q","xerath-w","lux-r","syndra","orianna","malphite","cassio"];
-  for(let i=adcState.bag.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[adcState.bag[i],adcState.bag[j]]=[adcState.bag[j],adcState.bag[i]];}
+  // Ordinary projectiles get twice the weight of the rarer complex events.
+  // Avoid selecting the same family twice in succession whenever another is available.
+  const pool=["ezreal","ezreal","lux","lux","ahri","ahri","blitz","blitz","velkoz","velkoz","xerath-q","xerath-w","lux-r","syndra","orianna","malphite","cassio"];
+  let previous=adcState.lastAmbient||null;
+  while(pool.length){const choices=pool.map((name,index)=>({name,index})).filter(entry=>entry.name!==previous),eligible=choices.length?choices:pool.map((name,index)=>({name,index}));
+   const picked=eligible[Math.floor(random()*eligible.length)];adcState.bag.push(picked.name);pool.splice(picked.index,1);previous=picked.name;}
+
  }
  const name=adcState.bag[0];let placed=false,source=null;
  if(name==="xerath-w"){
@@ -576,7 +581,7 @@ function updateAdcAmbient(){
    }
   }
  }
- if(placed){if(source)adcState.lastOriginAngle=Math.atan2(source.y-player.y,source.x-player.x);adcState.bag.shift();adcState.ambientAt=time+2.3;}else adcState.ambientAt=time+.4;
+ if(placed){adcState.lastAmbient=name;if(source)adcState.lastOriginAngle=Math.atan2(source.y-player.y,source.x-player.x);adcState.bag.shift();adcState.ambientAt=time+2.3;}else adcState.ambientAt=time+.4;
 }
 function adcStartSpecial(e){
  const type=e.adcChampion,angle=Math.atan2(player.y-e.y,player.x-e.x),target={x:player.x,y:player.y};
