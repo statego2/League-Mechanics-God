@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="21685b8f25b7";
+const BUILD_ID="77952b416568";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -2445,7 +2445,13 @@ for(const h of hazards){if(h.adcSpecial){
  // charging lane so the player receives the full 0.9-second reaction window.
  const dx=h.endX-h.x,dy=h.endY-h.y,len=Math.hypot(dx,dy)||1;
  const precast=h.luxR&&h.precast,progress=clamp(1-h.ttl/h.max,0,1),cueLength=h.adcBeam?45:h.luxR?len*(h.cueStart+(1-h.cueStart)*.94*progress):45;
- if(h.adcBeam){circle(h.x,h.y,12,h.luxR?"#ffe09a88":"#8bcfff88");continue;}
+ if(h.adcBeam){
+  // A local charging effect communicates the cast without projecting its path.
+  const pulse=1+progress*.35,outer=h.luxR?"#ffd99477":"#8bcfff77",core=h.luxR?"#fff0bd":"#d8f4ff";
+  circle(h.x,h.y,25*pulse,outer);circle(h.x,h.y,16*pulse,core,false,2.5);circle(h.x,h.y,7+progress*3,core);
+  ctx.save();ctx.translate(h.x,h.y);ctx.rotate(time*1.8);ctx.strokeStyle=core;ctx.lineWidth=2;
+  for(let i=0;i<4;i++){const a=i*TAU/4;ctx.beginPath();ctx.moveTo(Math.cos(a)*19,Math.sin(a)*19);ctx.lineTo(Math.cos(a)*27,Math.sin(a)*27);ctx.stroke();}ctx.restore();continue;
+ }
  if(h.luxR&&!h.adcBeam)drawChampion(h.x,h.y,Math.atan2(dy,dx),false,false,precast?.15:progress,time*7,"lux");
  if(precast){circle(h.x,h.y,28,"#ffe09a33",false,2);circle(h.x,h.y,10,"#fff2c9");continue;}
  ctx.save();ctx.lineCap="round";ctx.beginPath();ctx.moveTo(h.x,h.y);ctx.lineTo(h.x+dx/len*cueLength,h.y+dy/len*cueLength);ctx.strokeStyle=h.luxR?"#ffe5a8aa":"#9edcffaa";ctx.lineWidth=h.luxR?5:7;ctx.stroke();ctx.restore();

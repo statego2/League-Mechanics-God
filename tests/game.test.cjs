@@ -4202,6 +4202,15 @@ test('ADC Rapid Fire increases attack cadence and expires',()=>{
  }
  assert.ok(runs[1]>runs[0],JSON.stringify(runs));
 });
+test('ADC Rapid Fire cadence is consistent at 30, 60 and 120 rendered FPS',()=>{
+ const outcomes=[];for(const fps of [30,60,120]){
+  const {g}=boot();g.reset('adc');g.disableSpawn();g.adcState.ambientAt=999;const e=g.enemy(g.player.x+200,g.player.y);
+  Object.assign(e,{speed:0,hp:10000,maxHp:10000});g.setFoes([e]);g.cast('q');g.attackOrder(e);g.loop(1000);
+  for(let i=1;i<=fps*3;i++)g.loop(1000+i*1000/fps);
+  outcomes.push([g.stats.released,g.stats.autoHits,e.hp]);
+ }
+ assert.deepEqual(outcomes[0],outcomes[1]);assert.deepEqual(outcomes[1],outcomes[2]);
+});
 test('ADC Explosive Charge stacks autos, detonates and resets Rocket Jump',()=>{
  const {g}=boot();g.reset('adc');g.disableSpawn();g.adcState.ambientAt=999;const p=g.player,e=g.enemy(p.x+180,p.y);
  Object.assign(e,{speed:0,hp:10000,maxHp:10000,contactCooldown:0});g.setFoes([e]);g.setAim(e.x,e.y);g.cast('e');assert.ok(e.adcCharge);p.cd.w=10;g.attackOrder(e);advance(g,3);
