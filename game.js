@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="b7d2016dcd41";
+const BUILD_ID="b681c51b36f1";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -1716,9 +1716,13 @@ if(order.type==="attack"){
 function nearestEnemy(x,y,r=Infinity){let best=null,bd=r;for(const e of foes)if(e.alive&&!e.spawnTimer&&!e.baitCaster&&!e.referenceCaster){const ground=Math.hypot(e.x-x,e.y-y);const body=Math.hypot(e.x-x,Math.max(0,Math.abs(y-(e.y-(e.minion?20:38)))-(e.minion?16:30)));const d=Math.min(ground,body);if(d<bd){best=e;bd=d;}}return best;}
 // In ADC, select the visible enemy sprite or its feet, not arbitrary nearby ground.
 function adcEnemyAt(x,y){
- let selected=null,best=Infinity;
- for(const e of foes)if(e.alive&&!e.adcCaster&&!e.adcChampion&&!e.baitCaster&&!e.referenceCaster&&!e.spawnTimer){const dx=x-e.x,dy=y-e.y,insideBody=Math.abs(dx)<=32&&dy>=-91&&dy<=5,insideFeet=Math.hypot(dx,dy)<=26;if(!insideBody&&!insideFeet)continue;
-  const score=Math.min(Math.hypot(dx,dy+38),Math.hypot(dx,dy));if(score<best){selected=e;best=score;}}
+ let selected=null,bestPriority=0,bestDistance=Infinity;
+ for(const e of foes)if(e.alive&&!e.adcCaster&&!e.adcChampion&&!e.baitCaster&&!e.referenceCaster&&!e.spawnTimer){
+  const dx=x-e.x,dy=y-e.y,body=Math.abs(dx)<=32&&dy>=-76&&dy<=1,health=Math.abs(dx)<=25&&dy>=-86&&dy<=-81,feet=Math.hypot(dx,dy)<=26,priority=health?3:feet?2:body?1:0;
+  const distance=health?Math.abs(dx):feet?Math.hypot(dx,dy):Math.abs(dx);
+  // Prefer the visible foreground sprite; use precise hits to resolve equal-depth overlaps.
+  if(priority&&(!selected||e.y>selected.y+1e-6||Math.abs(e.y-selected.y)<1e-6&&(priority>bestPriority||priority===bestPriority&&distance<=bestDistance))){selected=e;bestPriority=priority;bestDistance=distance;}
+ }
  return selected;
 }
 // Tristana training kit. Values are local approximations, not live-client stats.

@@ -4066,6 +4066,18 @@ test('ADC clicking ground beside a sprite moves while clicking its body attacks'
  const {g,click}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+180,g.player.y);Object.assign(e,{adcGeneric:true,speed:0,hp:140,maxHp:140});g.setFoes([e]);
  click(e.x+34,e.y-38);assert.equal(g.player.order,null);assert.ok(g.player.target);click(e.x+24,e.y-50);assert.equal(g.player.order?.id,e.id);advance(g,.3);assert.ok(e.hp<140);
 });
+test('ADC selects the enemy health bar without targeting empty space above it',()=>{
+ const {g,click}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+160,g.player.y);Object.assign(e,{adcGeneric:true,speed:0});g.setFoes([e]);
+ click(e.x,e.y-84);assert.equal(g.player.order?.id,e.id);click(e.x,e.y-92);assert.equal(g.player.order,null);assert.ok(g.player.target);
+});
+test('ADC selects the closer foot hitbox for enemies beside each other',()=>{
+ const {g,click}=boot();g.reset('adc');g.disableSpawn();const p=g.player,left=g.enemy(p.x+150,p.y),right=g.enemy(p.x+180,p.y);
+ for(const e of [left,right])Object.assign(e,{adcGeneric:true,speed:0});g.setFoes([left,right]);click(left.x,left.y);assert.equal(p.order?.id,left.id);
+});
+test('ADC clicking overlapping enemy art selects the visually frontmost target',()=>{
+ const {g,click}=boot();g.reset('adc');g.disableSpawn();const p=g.player,back=g.enemy(p.x+160,p.y),front=g.enemy(p.x+160,p.y+35);
+ for(const e of [back,front])Object.assign(e,{adcGeneric:true,speed:0,hp:140,maxHp:140});g.setFoes([back,front]);click(back.x,back.y-50);assert.equal(p.order?.id,front.id);
+});
 test('ADC attack move on ground prefers the in-range enemy nearest the cursor',()=>{
  const {g,key,click}=boot();g.reset('adc');g.disableSpawn();const p=g.player,a=g.enemy(p.x+100,p.y),b=g.enemy(p.x-200,p.y);for(const e of [a,b])Object.assign(e,{adcGeneric:true,speed:0,hp:1000,maxHp:1000});g.setFoes([a,b]);
  key('a');click(b.x-60,b.y,0);advance(g,.3);assert.equal(a.hp,1000);assert.ok(b.hp<1000);
@@ -4335,7 +4347,7 @@ test('ADC lethal fourth charge stack uses full explosion damage',()=>{
 });
 test('ADC Buster Shot knocks nearby targets without secondary damage',()=>{
  const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,a=g.enemy(p.x+180,p.y),b=g.enemy(p.x+180,p.y+40);
- for(const e of [a,b])Object.assign(e,{speed:0,hp:1000,maxHp:1000});g.setFoes([a,b]);g.setAim(a.x,a.y);g.cast('r');advance(g,.4);
+ for(const e of [a,b])Object.assign(e,{speed:0,hp:1000,maxHp:1000});g.setFoes([a,b]);g.setAim(a.x,a.y-60);g.cast('r');advance(g,.4);
  assert.ok(a.x>p.x+180);assert.ok(b.x>p.x+180);assert.equal(a.hp,940);assert.equal(b.hp,1000);
 });
 
