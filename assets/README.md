@@ -65,3 +65,6 @@ The ranger has three directional illustrations with left/right mirroring and pro
 - `lux-adc-generated.png`: generated with OpenAI image generation on 2026-11-17 for ADC; original fan-art interpretation, not an official Riot asset. Dodge retains its existing art.
 
 - `blitz-adc-generated.png`: generated with OpenAI image generation on 2026-11-17 for ADC; original fan-art interpretation, not an official Riot asset. Dodge retains its existing art.
+
+- `tristana-front.png` and `tristana-back.png`: generated front and rear variants using the existing Tristana fan art as a visual reference on 2026-11-17; original fan-art interpretations, not official Riot assets.
+- `xerath-adc.png`: generated 2026-11-17 as an original blue arcane mage sprite for the ADC ambient Xerath source. Dodge's Xerath attacks do not use a character sprite; this is an ADC-only fan-art interpretation, not an official Riot asset.

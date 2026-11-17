@@ -4058,10 +4058,18 @@ test('ADC pending line cast is cancelled with its caster while launched shots pe
  const f=g.enemy(g.player.x+240,g.player.y);f.speed=0;f.adcCaster=true;f.shoot=0;g.setFoes([f]);advance(g,.42);assert.ok(g.shots.some(s=>s.kind==='enemy'));f.alive=false;advance(g,.4);assert.equal(g.stats.skillDamage,24);
 });
 
-test('ADC A-click chooses the nearest in-range enemy to Tristana',()=>{
- const {g,key,click}=boot();g.reset('adc');g.disableSpawn();const p=g.player,a=g.enemy(p.x+130,p.y),b=g.enemy(p.x-240,p.y);for(const e of [a,b]){e.speed=0;e.shoot=999;e.hp=e.maxHp=1000;}g.setFoes([a,b]);key('a');click(b.x,b.y,0);advance(g,.5);assert.equal(a.hp,972);assert.equal(b.hp,1000);
+test('ADC A-click attacks the enemy selected by the cursor',()=>{
+ const {g,key,click}=boot();g.reset('adc');g.disableSpawn();const p=g.player,a=g.enemy(p.x+130,p.y),b=g.enemy(p.x-240,p.y);for(const e of [a,b]){e.speed=0;e.shoot=999;e.hp=e.maxHp=1000;}g.setFoes([a,b]);key('a');click(b.x,b.y,0);advance(g,.5);assert.equal(a.hp,1000);assert.ok(b.hp<1000);
 });
 
+test('ADC clicking ground beside a sprite moves while clicking its body attacks',()=>{
+ const {g,click}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+180,g.player.y);Object.assign(e,{adcGeneric:true,speed:0,hp:140,maxHp:140});g.setFoes([e]);
+ click(e.x+34,e.y-38);assert.equal(g.player.order,null);assert.ok(g.player.target);click(e.x+24,e.y-50);assert.equal(g.player.order?.id,e.id);advance(g,.3);assert.ok(e.hp<140);
+});
+test('ADC attack move on ground prefers the in-range enemy nearest the cursor',()=>{
+ const {g,key,click}=boot();g.reset('adc');g.disableSpawn();const p=g.player,a=g.enemy(p.x+100,p.y),b=g.enemy(p.x-200,p.y);for(const e of [a,b])Object.assign(e,{adcGeneric:true,speed:0,hp:1000,maxHp:1000});g.setFoes([a,b]);
+ key('a');click(b.x-60,b.y,0);advance(g,.3);assert.equal(a.hp,1000);assert.ok(b.hp<1000);
+});
 test('ADC starts with generic pursuers and independent ambient spells',()=>{
  const {g}=boot();g.reset('adc');let launched=false,generic=false;
  for(let i=0;i<600&&g.state==='playing';i++){advance(g,1/120);launched||=g.shots.some(s=>s.adcOwner==='adc');generic||=g.foes.some(e=>e.adcGeneric);}
@@ -4235,6 +4243,9 @@ test('ADC hook recovery prevents a second enemy from stacking unavoidable contac
 });
 
 
+test('ADC Rapid Fire displays its remaining duration inside Q and clears on mode change',()=>{
+ const {g,node}=boot('ahri');g.reset('adc');g.disableSpawn();g.cast('q');assert.equal(node('nameQ').textContent,'RAPID 7s');advance(g,1.1);assert.equal(node('nameQ').textContent,'RAPID 6s');advance(g,6);assert.equal(node('nameQ').textContent,'RAPID FIRE');g.reset('dodge');assert.equal(node('nameQ').textContent,'ORB');
+});
 test('ADC Rapid Fire increases attack cadence and expires',()=>{
  const runs=[];
  for(const boosted of [false,true]){
@@ -4399,10 +4410,15 @@ test('ADC Rocket Jump validates destination, prevents Flash in flight and expire
  g.setAim(p.x,p.y);g.cast('w');assert.equal(p.cd.w,0);assert.equal(p.dashing,null);
  g.setAim(e.x,e.y);g.cast('w');g.cast('f');assert.equal(p.cd.f,0);assert.ok(p.dashing?.adcJump);advance(g,.4);assert.ok(e.adcSlow>0);advance(g,2.1);assert.equal(e.adcSlow,0);
 });
+test('ADC surrounding spell casters reuse visible Dodge champion art without becoming targets',()=>{
+ for(const [family,art] of [['ezreal','explorerArt'],['ahri','ahriArt'],['velkoz','voidArt'],['syndra','umbralArt'],['orianna','clockworkArt'],['malphite','stoneArt'],['cassio','serpentArt']]){
+  const {g,node,draws}=boot();g.reset('adc');g.disableSpawn();Object.assign(node(art),{complete:true,naturalWidth:100});g.adcState.bag=[family];g.adcState.ambientAt=0;g.setRng(7);advance(g,.02);g.render();assert.ok(draws.includes(node(art)),family);assert.equal(g.foes.length,0,family);
+ }
+});
 test('ADC ambient emitters cannot be targeted or reset Rocket Jump',()=>{
  const {g}=boot();g.reset('adc');g.disableSpawn();g.adcState.bag=['ezreal'];g.adcState.ambientAt=0;g.player.cd.w=10;advance(g,.02);
- assert.equal(g.foes.length,0);const shot=g.shots.find(s=>s.adcOwner==='adc');assert.ok(shot);g.setAim(shot.x,shot.y);g.cast('e');g.cast('r');
- assert.equal(g.player.cd.e,0);assert.equal(g.player.cd.r,0);assert.ok(g.player.cd.w>9);
+ assert.equal(g.foes.length,0);const emitter=g.hazards.find(h=>h.adcEmitter);assert.ok(emitter);g.setAim(emitter.actor.x,emitter.actor.y);g.cast('e');g.cast('r');
+ assert.equal(g.player.cd.e,0);assert.equal(g.player.cd.r,0);assert.ok(g.player.cd.w>9);advance(g,.45);assert.ok(g.shots.some(s=>s.adcOwner==='adc'));
 });
 
 test('ADC ambient sources stay visible and can appear near arena corners',()=>{

@@ -2,6 +2,10 @@
 
 **Authoritative revision: 17 November 2026, updated after the kiting-reference review.** This replaces the previous champion-as-target / autos-only plan in full. The user asks to change the design; this revision makes no gameplay changes. Preserve Dodge exactly.
 
+## Owner correction — visible casters and targeting
+
+The owner requests the same health bar appearance and recognizable caster visuals used in Dodge, plus corrected attack targeting. Show temporary, untargetable caster actors using the existing Dodge art during their ambient casts; generic pursuers remain the only attackable enemies. Direct clicks select the clicked pursuer, while ground attack-move selects the in-range pursuer closest to the clicked point. Do not reintroduce predictive trajectory overlays or change Dodge.
+
 ## Experience
 
 Control recognizable Tristana in the existing second mode. Generic durable enemies approach and must be killed through repeated attacks, positioning and Tristana's whole kit. At the same time, independent Dodge-family skills arrive from different directions around the arena. Killing a generic enemy does not switch off this external spell pressure.

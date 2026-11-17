@@ -65,7 +65,7 @@ Choose Foundation, Standard or Expert for Dodge; Expert is the active tuning tar
 
 ## Mechanics and checks
 
-Right-click orders chase a moving target until it enters attack range. A + click keeps an attack-move order active while travelling. ADC selects the nearest in-range enemy to Tristana; other applicable drills select relative to the clicked point. Moving during the attack windup cancels the attack; after release you can move during recovery. Auto projectiles track their selected target.
+Right-click orders chase a moving target until it enters attack range. A + click keeps an attack-move order active while travelling. In ADC, clicking an enemy selects it directly; an attack-move click on ground selects the in-range enemy nearest the clicked point. Moving during the attack windup cancels the attack; after release you can move during recovery. Auto projectiles track their selected target.
 
 Dodges are based on resolved threats: the trainer checks projectile paths and the existing movement route, with separate handling for area effects and multi-phase spells. This is an approximation, not a measurement of player intent. Blocks are counted separately in results. Simulation uses a fixed 120 Hz step and swept collision. Losing window focus automatically pauses.
 

@@ -8,13 +8,16 @@ const {chromium}=require('playwright'),fs=require('fs');
  await page.route('**/game.js?*',async route=>{
   const src=fs.readFileSync('game.js','utf8').replace(/\}\)\(\);\s*$/,`window.adcFixture={setup(name){
    reset('adc');spawn=999;adcState.bag=[name];adcState.ambientAt=0;rng=0;
-  },setupStationary(){reset('adc');},get hazards(){return hazards},get shots(){return shots},get state(){return state},get hp(){return player.hp},get kills(){return kills},get player(){return player},get foes(){return foes},setupCombo(){reset("adc");spawn=999;adcState.bag=["ezreal","lux"];adcState.ambientAt=1.1;const e=enemy(player.x+180,player.y);Object.assign(e,{adcGeneric:true,adcPursuer:true,hp:112,maxHp:112,speed:60,contactCooldown:0});foes=[e];},setupInteraction(){reset("adc");spawn=999;adcState.bag=["ezreal","lux"];adcState.ambientAt=1.1;const e=enemy(player.x+180,player.y);Object.assign(e,{adcGeneric:true,adcPursuer:true,hp:1000,maxHp:1000,speed:30,contactCooldown:0});foes=[e];},setupKit(){reset("adc");spawn=999;adcState.ambientAt=999;const e=enemy(player.x+190,player.y);Object.assign(e,{adcGeneric:true,adcPursuer:true,hp:1000,maxHp:1000,speed:0,contactCooldown:0});foes=[e];}};})();`);
+  },setupStationary(){reset('adc');},get hazards(){return hazards},get shots(){return shots},get state(){return state},get hp(){return player.hp},get kills(){return kills},get player(){return player},get foes(){return foes},setupCombo(){reset("adc");spawn=999;adcState.bag=["ezreal","lux"];adcState.ambientAt=1.1;const e=enemy(player.x+180,player.y);Object.assign(e,{adcGeneric:true,adcPursuer:true,hp:112,maxHp:112,speed:60,contactCooldown:0});foes=[e];},setupTargeting(){reset("adc");spawn=999;adcState.ambientAt=999;const a=enemy(player.x+120,player.y),b=enemy(player.x-220,player.y);for(const e of [a,b])Object.assign(e,{adcGeneric:true,adcPursuer:true,hp:1000,maxHp:1000,speed:0});foes=[a,b];},setupInteraction(){reset("adc");spawn=999;adcState.bag=["ezreal","lux"];adcState.ambientAt=1.1;const e=enemy(player.x+180,player.y);Object.assign(e,{adcGeneric:true,adcPursuer:true,hp:1000,maxHp:1000,speed:30,contactCooldown:0});foes=[e];},setupKit(){reset("adc");spawn=999;adcState.ambientAt=999;const e=enemy(player.x+190,player.y);Object.assign(e,{adcGeneric:true,adcPursuer:true,hp:1000,maxHp:1000,speed:0,contactCooldown:0});foes=[e];}};})();`);
   await route.fulfill({status:200,contentType:'text/javascript',body:src});
  });
  await page.goto(process.env.ADC_URL||'http://127.0.0.1:8765/');
  fs.mkdirSync('docs/evidence/adc',{recursive:true});
  for(const [name,delay] of [['ezreal',500],['lux',500],['ahri',500],['blitz',500],['velkoz',500],['syndra',750],['lux-r',600],['orianna',700],['malphite',800],['cassio',600],['xerath-q',500],['xerath-w',500]]){
-  await page.evaluate(name=>window.adcFixture.setup(name),name);if(['ezreal','lux','ahri','blitz','velkoz'].includes(name))await page.waitForFunction(()=>adcFixture.shots.some(s=>s.adcOwner==='adc'),null,{timeout:2500});else await page.waitForTimeout(delay);
+  await page.evaluate(name=>window.adcFixture.setup(name),name);if(['ezreal','lux','ahri','blitz','velkoz'].includes(name)){
+   await page.waitForFunction(()=>adcFixture.hazards.some(h=>h.adcEmitter&&h.phase==='windup'),null,{timeout:2500});await page.screenshot({path:`docs/evidence/adc/fixture-${name}-windup.jpg`,quality:83});
+   await page.waitForFunction(()=>adcFixture.shots.some(s=>s.adcOwner==='adc'),null,{timeout:2500});
+  }else await page.waitForTimeout(delay);
   const obs=await page.evaluate(()=>({state:adcFixture.state,hazards:adcFixture.hazards.map(h=>({type:h.adcSpecial||h.spellName||h.phase,phase:h.phase})),shots:adcFixture.shots.map(s=>s.spellName)}));
   await page.screenshot({path:`docs/evidence/adc/fixture-${name}.jpg`,quality:83});console.log(JSON.stringify({name,...obs}));
   if(name==='ahri'||name==='velkoz'){
@@ -56,6 +59,10 @@ const {chromium}=require('playwright'),fs=require('fs');
  const combo=await page.evaluate(()=>({kills:adcFixture.kills,wCooldown:adcFixture.player.cd.w,hp:adcFixture.hp}));
  if(combo.kills<1||combo.wCooldown!==0)throw Error('E-Q-auto-W reset combo failed: '+JSON.stringify(combo));
  console.log(JSON.stringify({realInputCombo:combo}));
+ // A-click the farther visible enemy and verify that target, not the nearer one, is hit.
+ await page.evaluate(()=>adcFixture.setupTargeting());let chosen=await page.evaluate(()=>({x:adcFixture.foes[1].x,y:adcFixture.foes[1].y}));where=screen(chosen);
+ await page.keyboard.press('a');await page.mouse.click(where.x,where.y);await page.waitForFunction(()=>adcFixture.foes[1].hp<1000,null,{timeout:3000});
+ const targeting=await page.evaluate(()=>({near:adcFixture.foes[0].hp,chosen:adcFixture.foes[1].hp}));if(targeting.near!==1000)throw Error('A-click hit the wrong target: '+JSON.stringify(targeting));console.log(JSON.stringify({realInputTargeting:targeting}));
  // E → W landing → R impact against a moving target, using actual inputs.
  await page.evaluate(()=>adcFixture.setupInteraction());
  let target=await page.evaluate(()=>({x:adcFixture.foes[0].x,y:adcFixture.foes[0].y}));where=screen(target);
