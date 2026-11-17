@@ -8,6 +8,12 @@
 
 ---
 
+## Owner decision — ADC redesign after prototype rejection (2026-11-16)
+
+The current ADC prototype is **not accepted as fulfilling the user vision**: the player must visibly read as Tristana, and recognizable Dodge opponents must cast their signature skills while the player kites durable enemies. Passing automated checks does not satisfy this visual/gameplay requirement.
+
+[ADC redesign plan](docs/ADC-PLAN.md) and [Terra execution handoff](ADC_NEXT_AI_PROMPT.md) govern the second mode and supersede the previous ADC plan and conflicting older Ahri/Mechanics Arena scope for this task. Keep the existing `adc` mode slot; do not add another menu mode. Preserve the shipped Dodge behavior, visuals, tuning and controls. Astra plans; Terra implements in a subsequent coding session. This revision changes documentation only, not gameplay, and does not authorize merging or publishing the rejected prototype.
+
 ## Owner decision — finish and ship Dodge v1.0 (2026-11-11)
 
 The current release scope is [DODGE_SHIP_PLAN.md](docs/DODGE_SHIP_PLAN.md), with the [Drills home specification](docs/DRILLS_HOME_DESIGN.md) and [current progress audit](docs/DODGE_RELEASE_AUDIT.md). This supersedes the November 10 recovery plan and older release-approval hold for this delivery.
