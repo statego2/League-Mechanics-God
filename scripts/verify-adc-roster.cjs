@@ -24,6 +24,10 @@ const {chromium}=require('playwright'),fs=require('fs');
    await page.waitForFunction(n=>adcFixture.shots.some(s=>n==='ahri'?s.kind==='enemyOrb'&&s.phase==='return':s.velkoz==='child'),name,{timeout:2500});
    await page.screenshot({path:`docs/evidence/adc/fixture-${name}-second-phase.jpg`,quality:83});
   }
+  if(name==='malphite'){
+   await page.waitForFunction(()=>adcFixture.hazards.some(h=>h.adcSpecial==='malphite'&&h.phase==='recovery'),null,{timeout:2500});
+   await page.screenshot({path:'docs/evidence/adc/fixture-malphite-recovery.jpg',quality:83});
+  }
   if(['orianna','syndra','xerath-q','xerath-w'].includes(name)){
    await page.waitForTimeout(name==='xerath-w'?560:400);await page.screenshot({path:`docs/evidence/adc/fixture-${name}-second-phase.jpg`,quality:83});
   }

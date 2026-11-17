@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="b681c51b36f1";
+const BUILD_ID="dcb6fd929673";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -1942,7 +1942,7 @@ for(const h of hazards){
    if(h.phase==="windup"&&h.ttl<=0){h.phase="dash";h.from={x:caster.x,y:caster.y};h.ttl=h.max=.35;}
    else if(h.phase==="dash"){
     const t=clamp(1-h.ttl/h.max,0,1),next=world.clip(caster,{x:h.from.x+(h.target.x-h.from.x)*t,y:h.from.y+(h.target.y-h.from.y)*t},caster.r);caster.x=next.x;caster.y=next.y;
-    if(h.ttl<=0){if(dist(effectPlayer,caster)<=h.r+player.hitRadius)takeHit(32);adcState.contactGrace=time+1;adcState.recoveryUntil=time+.8;caster.adcSpecialUntil=time+1;caster.adcHoldUntil=time+1;burst(caster.x,caster.y,"#d6b28d",18);}
+    if(h.ttl<=0){if(dist(effectPlayer,caster)<=h.r+player.hitRadius)takeHit(32);adcState.contactGrace=time+1;adcState.recoveryUntil=time+.8;caster.adcSpecialUntil=time+1;caster.adcHoldUntil=time+1;burst(caster.x,caster.y,"#d6b28d",18);if(h.adcAmbient){h.phase="recovery";h.ttl=h.max=.8;}}
    }
   }else if(h.adcSpecial==="cassio"&&h.ttl<=0){
    if(cassioConeContains(h,effectPlayer)&&facingCassio(h,effectPlayer,player.facing))takeHit(30);
@@ -2451,7 +2451,7 @@ for(const wall of sweeps){
 }
 for(const h of hazards){if(h.adcEmitter){const pose=h.phase==="windup"?clamp(1-h.ttl/h.max,0,1):0;ctx.save();if(h.phase==="exit")ctx.globalAlpha=clamp(h.ttl/h.max,0,1);drawChampion(h.actor.x,h.actor.y,h.angle,false,false,pose,time*7,h.profile);ctx.restore();continue;}
  if(h.adcSpecial){
- if(h.adcAmbient&&h.actor){if(h.adcSpecial==="malphite"){const art=$("stoneArt");if(art?.complete&&art.naturalWidth)ctx.drawImage(art,h.actor.x-42,h.actor.y-90,84,90);else drawChampion(h.actor.x,h.actor.y,h.angle,false,false,1,time*7);}
+ if(h.adcAmbient&&h.actor){if(h.adcSpecial==="malphite"){const art=$("stoneArt");ctx.save();if(h.phase==="recovery")ctx.globalAlpha=clamp(h.ttl/h.max,0,1);if(art?.complete&&art.naturalWidth)ctx.drawImage(art,h.actor.x-42,h.actor.y-90,84,90);else drawChampion(h.actor.x,h.actor.y,h.angle,false,false,1,time*7);ctx.restore();}
  else{drawChampion(h.actor.x,h.actor.y,h.angle,false,false,h.phase==="windup"?clamp(1-h.ttl/h.max,0,1):1,time*7,h.adcSpecial==="orianna"?"clockwork":"cassio");
   if(h.adcSpecial==="cassio"){ctx.save();ctx.translate(h.actor.x,h.actor.y);ctx.rotate(h.angle);ctx.fillStyle="#c4f6a8";ctx.beginPath();ctx.moveTo(30,0);ctx.lineTo(19,-5);ctx.lineTo(19,5);ctx.closePath();ctx.fill();ctx.restore();}}}
  if(h.adcSpecial==="orianna"){
