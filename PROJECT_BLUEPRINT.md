@@ -8,11 +8,11 @@
 
 ---
 
-## Owner decision — ADC redesign after prototype rejection (2026-11-16)
+## Owner decision — generic targets, surrounding skills, full Tristana (2026-11-17)
 
-The current ADC prototype is **not accepted as fulfilling the user vision**: the player must visibly read as Tristana, and recognizable Dodge opponents must cast their signature skills while the player kites durable enemies. Passing automated checks does not satisfy this visual/gameplay requirement.
+ADC Mechanics God uses **generic durable pursuers to kite**, with independent Dodge-family spells arriving from around the arena. Named champions are not persistent targetable opponents. Remove ADC predictive trajectory lines while retaining visible skills and necessary native cast effects. The player has recognizable Tristana with **passive, full Q/W/E/R and Flash**, including charge stacks, jump resets and knockback interactions.
 
-[ADC redesign plan](docs/ADC-PLAN.md) and [Terra execution handoff](ADC_NEXT_AI_PROMPT.md) govern the second mode and supersede the previous ADC plan and conflicting older Ahri/Mechanics Arena scope for this task. Keep the existing `adc` mode slot; do not add another menu mode. Preserve the shipped Dodge behavior, visuals, tuning and controls. Astra plans; Terra implements in a subsequent coding session. This revision changes documentation only, not gameplay, and does not authorize merging or publishing the rejected prototype.
+[ADC design](docs/ADC-PLAN.md) and [Terra handoff](ADC_NEXT_AI_PROMPT.md) replace the previous champion-target/autos-only plan in full and govern the second mode over conflicting older Mechanics Arena scope. Preserve Dodge exactly. Current local implementation is in progress and includes uncommitted work; audit and preserve it. This revision is documentation-only and makes no claim of gameplay completion or deployment.
 
 ## Owner decision — finish and ship Dodge v1.0 (2026-11-11)
 

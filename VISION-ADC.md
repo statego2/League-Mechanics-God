@@ -42,3 +42,12 @@ No remote ADC branch was present when inspected. The user's local branch and fil
 ## Current correction — 2026-11-16
 
 The user rejected the implemented prototype: “ούτε τριστάνα βλέπω ούτε εχθρούς που να πετάνε σκιλς”. Redesign is required before the next Terra coding session. Recognizable Tristana and simultaneous kiting plus champion skillshots are core acceptance criteria, not optional polish after a generic demo. The original request above remains binding. Preserve Dodge. The current local source is now available on `codex/adc-mode`; the earlier provenance note describes the historical planning session, not a current missing-source blocker. See `docs/ADC-PLAN.md` and `ADC_NEXT_AI_PROMPT.md`.
+
+## Latest binding correction — 17 November 2026
+
+> χμμμ δεν θελω να δουλευει ετσι ακριβως..
+> γιατί εμφανίζονται οι γραμμές των σκιλ;
+> μπρο θελω να ερχονται generic εχθροι και γυρω γυρω να πεταγονται σκιλς
+> επισης θελω το full stack των σκιλ της τριστανα οπως στο dodge για την ahri
+
+This supersedes champion-as-target encounters, trajectory preview lines and autos-only scope. Generic targets and surrounding spells are independent; Tristana needs the complete passive/QWER interactions and Flash. The canonical plan and Terra handoff were rewritten in full so old conflicting requirements do not remain executable instructions. Preserve Dodge.
