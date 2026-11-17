@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="77952b416568";
+const BUILD_ID="8a92bef29787";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -1613,7 +1613,7 @@ function resolveDeath(e,impact){
  if(ahriCS()&&e.minion&&!e.ally){const gold=e.minionType==="siege"?50:e.minionType==="caster"?14:20;stats.gold+=gold;number(e.x,e.y-20,"+"+gold+"g","#ffe08a");}
  if(e.minion&&(mode==="lane"||mode==="lastHit"))stats.cs++;
  if(!(mode==="lane"&&e.minion))kills++;
- if(mode==="adc"){player.cd.w=0;if(e.adcCharge)adcExplode(e);if(impact.kind==="auto")adcPassiveBurst(e);}
+ if(mode==="adc"){adcResetJump();if(e.adcCharge)adcExplode(e);if(impact.kind==="auto")adcPassiveBurst(e);}
  burst(e.x,e.y,"#ffbd85",20);
  if(ahriBase()){
   if(e.minion){player.essence++;if(player.essence>=9){player.essence=0;player.hp=Math.min(player.maxHp,player.hp+35);}}
@@ -1687,12 +1687,16 @@ if(order.type==="attack"){
 function nearestEnemy(x,y,r=Infinity){let best=null,bd=r;for(const e of foes)if(e.alive&&!e.spawnTimer&&!e.baitCaster&&!e.referenceCaster){const ground=Math.hypot(e.x-x,e.y-y);const body=Math.hypot(e.x-x,Math.max(0,Math.abs(y-(e.y-(e.minion?20:38)))-(e.minion?16:30)));const d=Math.min(ground,body);if(d<bd){best=e;bd=d;}}return best;}
 // Tristana training kit. Values are local approximations, not live-client stats.
 const ADC_KIT={qDuration:7,qCooldown:20,wRange:450,wSpeed:650,wRadius:100,wDamage:45,wCooldown:22,eDuration:4,eRadius:105,eBase:32,ePerStack:12,eCooldown:16,rDamage:60,rDistance:210,rCooldown:60};
+function adcResetJump(){
+ if(player.cd.w<=0)return;player.cd.w=0;fx.push({x:player.x,y:player.y-80,vx:0,vy:-35,ttl:.8,max:.8,text:"W READY",color:"#ffe4a3"});cue("ready");
+}
 function adcExplode(target){
  const charge=target.adcCharge;if(!charge)return;target.adcCharge=null;
  const raw=ADC_KIT.eBase+charge.stacks*ADC_KIT.ePerStack;
  burst(target.x,target.y,"#ffb04e",22);
+ fx.push({x:target.x,y:target.y,vx:0,vy:0,r:ADC_KIT.eRadius*(charge.radiusMultiplier||1),ttl:.32,max:.32,adcBlast:true});cue("impact");
  for(const e of [...foes])if(e.alive&&dist(e,target)<=ADC_KIT.eRadius*(charge.radiusMultiplier||1)+e.r)applyImpact(e,{sourceId:"player",sourceTeam:"player",kind:"adcCharge",raw,damageType:"physical"});
- if(charge.stacks>=4)player.cd.w=0;
+ if(charge.stacks>=4)adcResetJump();
 }
 function adcDamageAndStack(e,impact){
  const charge=e.adcCharge;if(charge&&!charge.pendingDetonation)charge.stacks=Math.min(4,charge.stacks+1);
@@ -1708,6 +1712,7 @@ function adcPassiveBurst(dead){
 }
 function adcJumpLand(point){
  burst(point.x,point.y,"#ffd08a",20);
+ fx.push({x:point.x,y:point.y,vx:0,vy:0,r:ADC_KIT.wRadius,ttl:.28,max:.28,adcBlast:true});cue("impact");
  for(const e of [...foes])if(e.alive&&dist(e,point)<=ADC_KIT.wRadius+e.r){adcDamageAndStack(e,{sourceId:"player",sourceTeam:"player",kind:"adcJump",raw:ADC_KIT.wDamage,damageType:"magic"});if(e.alive)e.adcSlow=2;}
 }
 function adcBusterImpact(target,shot){
@@ -1724,7 +1729,7 @@ function castAdc(key){
   const dx=aim.x-player.x,dy=aim.y-player.y,d=Math.hypot(dx,dy);if(d<1)return;
   const distance=Math.min(d,ADC_KIT.wRange),landing=world.nearestWalkable({x:player.x+dx/d*distance,y:player.y+dy/d*distance},player.r);
   if(dist(player,landing)<1)return;cancelAttack();player.order=null;player.focus=null;player.target=null;player.route=[];player.routeGoal=null;
-  player.dashing={...landing,speed:ADC_KIT.wSpeed,throughTerrain:true,adcJump:true,jumpDistance:dist(player,landing)};player.facing=Math.atan2(dy,dx);player.cd.w=ADC_KIT.wCooldown;burst(player.x,player.y,"#ffc57c",12);updateUI();return;
+  player.dashing={...landing,speed:ADC_KIT.wSpeed,throughTerrain:true,adcJump:true,jumpDistance:dist(player,landing)};player.facing=Math.atan2(dy,dx);player.cd.w=ADC_KIT.wCooldown;burst(player.x,player.y,"#ffc57c",12);cue("dodge");updateUI();return;
  }
  if(key!=="e"&&key!=="r")return;
  const target=nearestEnemy(aim.x,aim.y,55);
@@ -2572,7 +2577,10 @@ for(const rawShot of shots){
 }
 for(const f of fx){
  if(impactEffect(f)&&!f.rendered){f.rendered=true;if(f.ttl<=0)f.ttl=.12;}
- ctx.globalAlpha=clamp(f.ttl/f.max,0,1);if(f.syndraWave){const glow=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r);glow.addColorStop(0,'#f1c8ff77');glow.addColorStop(.65,'#bb6be755');glow.addColorStop(1,'#8e34b800');ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.arc(f.x,f.y,f.r,f.angle-SYNDRA.eHalfAngle,f.angle+SYNDRA.eHalfAngle);ctx.closePath();ctx.fillStyle=glow;ctx.fill();}else if(f.syndraImpact){
+ ctx.globalAlpha=clamp(f.ttl/f.max,0,1);if(f.adcBlast){
+  const progress=clamp(1-f.ttl/f.max,0,1),glow=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r);glow.addColorStop(0,"#fff2ca99");glow.addColorStop(.45,"#ffbd6377");glow.addColorStop(1,"#ed7f2600");circle(f.x,f.y,f.r,glow);
+  circle(f.x,f.y,f.r*(.55+.45*progress),"#ffe1a4",false,3*(1-progress)+1);
+ }else if(f.syndraWave){const glow=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r);glow.addColorStop(0,'#f1c8ff77');glow.addColorStop(.65,'#bb6be755');glow.addColorStop(1,'#8e34b800');ctx.beginPath();ctx.moveTo(f.x,f.y);ctx.arc(f.x,f.y,f.r,f.angle-SYNDRA.eHalfAngle,f.angle+SYNDRA.eHalfAngle);ctx.closePath();ctx.fillStyle=glow;ctx.fill();}else if(f.syndraImpact){
  // Detonation: full-radius flash, an outward shock ring and dark shards.
  const k=clamp(1-f.ttl/f.max,0,1),glow=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r);glow.addColorStop(0,'#fbe6ffee');glow.addColorStop(.35,'#c770f5aa');glow.addColorStop(.8,'#6d22a866');glow.addColorStop(1,'#8e34b800');circle(f.x,f.y,f.r,glow);
  ctx.save();ctx.strokeStyle='#f3d4ff';ctx.lineWidth=4*(1-k)+1;ctx.beginPath();ctx.arc(f.x,f.y,f.r*(.55+.5*k),0,TAU);ctx.stroke();

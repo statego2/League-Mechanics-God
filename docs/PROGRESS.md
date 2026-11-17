@@ -1923,3 +1923,9 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 
 - Added `scripts/verify-adc-audio.cjs`, a real Chromium/Web Audio smoke check with a read-only analyser attached to generated gain nodes. Enabling sound produced a measurable ready tone (peak 0.0257); an actual right-click attack produced a separate measurable tone (peak 0.0335). After mute, an actual Q activated without starting another oscillator. The browser check passed on build `77952b416568`.
 - This verifies generated audio signal and mute behavior, not the operating system's speaker output or subjective volume. Native window focus, audible playback and player balance/feel assessment remain open. Next: (1) listen on a real output device; (2) verify native window-focus loss interactively; (3) respond to the player's playtest.
+
+## ADC ability feedback — 2026-11-17
+
+- Added expanding impact effects at Rocket Jump's landing radius and Explosive Charge's actual detonation radius, including the doubled radius after Buster Shot. Jump takeoff and landing and charge detonation now use the optional audio cues. A visible `W READY` cue appears when a takedown or full charge actually resets Rocket Jump; overlapping reset causes produce one cue.
+- Gameplay build `8a92bef29787`; syntax, build generation, 61 focused ADC/build checks, an additional explosion-radius/reset feedback test, and three Dodge traces against `cafb8a4` passed. Full regression passed 610/610 before the extra focused feedback test, which passed separately. The new visual/audio feedback has not yet had an interactive human review.
+- Next: (1) finish regression and browser review of the new effects; (2) verify native focus loss and real speaker output in an interactive session; (3) incorporate the player's feedback on feel and balance.

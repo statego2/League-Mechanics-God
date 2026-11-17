@@ -4216,6 +4216,11 @@ test('ADC Explosive Charge stacks autos, detonates and resets Rocket Jump',()=>{
  Object.assign(e,{speed:0,hp:10000,maxHp:10000,contactCooldown:0});g.setFoes([e]);g.setAim(e.x,e.y);g.cast('e');assert.ok(e.adcCharge);p.cd.w=10;g.attackOrder(e);advance(g,3);
  assert.equal(g.stats.autoHits,4);assert.equal(e.adcCharge,null);assert.equal(e.hp,10000-4*28-(32+4*12));assert.equal(p.cd.w,0);
 });
+test('ADC charge explosions show their true radius and announce a W reset once',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,e=g.enemy(p.x+180,p.y);
+ Object.assign(e,{speed:0,hp:1,maxHp:100,adcCharge:{remaining:3,stacks:4,radiusMultiplier:2}});g.setFoes([e]);p.cd.w=10;g.damageEnemy(e,1);
+ assert.equal(p.cd.w,0);assert.equal(g.fx.filter(f=>f.text==='W READY').length,1);assert.ok(g.fx.some(f=>f.adcBlast&&f.r===210));
+});
 test('ADC Rocket Jump lands, damages and slows; Buster Shot pushes a target',()=>{
  const {g}=boot();g.reset('adc');g.disableSpawn();g.adcState.ambientAt=999;const p=g.player,e=g.enemy(p.x+200,p.y);
  Object.assign(e,{speed:0,hp:10000,maxHp:10000,contactCooldown:0});g.setFoes([e]);g.setAim(e.x,e.y);g.cast('w');assert.ok(p.dashing?.adcJump);advance(g,.5);
