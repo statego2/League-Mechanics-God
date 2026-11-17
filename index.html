@@ -15,10 +15,10 @@
   <meta name="twitter:title" content="League Mechanics God">
   <meta name="twitter:description" content="Free browser trainer for League-style mechanics. Play Dodge Trial against champion skillshots; kiting and last-hit modes are playable prototypes.">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=8">
   <script defer src="world.js"></script>
   <script defer src="ahri-data.js"></script>
-  <script defer src="game.js?v=9db94bffc8f8"></script>
+  <script defer src="game.js?v=21685b8f25b7"></script>
 </head>
 <body>
   <main class="app">
@@ -36,8 +36,6 @@
         <div class="hud-health"><div class="health-top"><span>YOUR HEALTH</span><b id="healthText">160 / 160</b></div><div class="health-track"><div id="healthFill" class="health-fill"></div></div></div>
       </div>
       <div id="encounterValue" class="encounter">NORMAL · AS 0.668</div>
-      <img id="blitzAdcArt" src="assets/blitz-adc-generated.png" hidden alt="">
-      <img id="luxAdcArt" src="assets/lux-adc-generated.png" hidden alt="">
       <img id="tristanaArt" src="assets/tristana-generated.png" hidden alt="">
       <img id="mageArt" src="assets/mage.png" hidden alt="">
       <img id="voidArt" src="assets/void-caster.png" hidden alt="">
@@ -80,10 +78,10 @@
         </div>
       </div>
       <div class="ability-bar" id="abilityBar" aria-label="Abilities">
-        <div class="ability" data-ability="q"><kbd>Q</kbd><span class="ability-name">ORB</span><span class="cooldown" id="cdQ"></span></div>
-        <div class="ability" data-ability="w"><kbd>W</kbd><span class="ability-name">FOX-FIRE</span><span class="cooldown" id="cdW"></span></div>
-        <div class="ability" data-ability="e"><kbd>E</kbd><span class="ability-name">CHARM</span><span class="cooldown" id="cdE"></span></div>
-        <div class="ability" data-ability="r"><kbd>R</kbd><span class="ability-name">SPIRIT RUSH</span><span class="cooldown" id="cdR"></span></div>
+        <div class="ability" data-ability="q"><kbd>Q</kbd><span class="ability-name" id="nameQ">ORB</span><span class="cooldown" id="cdQ"></span></div>
+        <div class="ability" data-ability="w"><kbd>W</kbd><span class="ability-name" id="nameW">FOX-FIRE</span><span class="cooldown" id="cdW"></span></div>
+        <div class="ability" data-ability="e"><kbd>E</kbd><span class="ability-name" id="nameE">CHARM</span><span class="cooldown" id="cdE"></span></div>
+        <div class="ability" data-ability="r"><kbd>R</kbd><span class="ability-name" id="nameR">SPIRIT RUSH</span><span class="cooldown" id="cdR"></span></div>
         <div class="ability flash" data-ability="f"><kbd>F</kbd><span class="ability-name">FLASH</span><span class="cooldown" id="cdF"></span></div>
       </div>
     </section>
@@ -91,7 +89,7 @@
       <span><kbd>RIGHT CLICK</kbd> Move / attack target</span>
       <span><kbd>A</kbd> + left click Attack move</span>
       <span id="standardAbilityHelp"><kbd>Q W E R F</kbd> Abilities toward cursor</span>
-      <span id="adcAbilityHelp" hidden><kbd>F</kbd> Flash toward cursor</span>
+      <span id="adcAbilityHelp" hidden><kbd>Q</kbd> Attack speed · <kbd>W</kbd> Jump · <kbd>E R</kbd> Aim at enemy · <kbd>F</kbd> Flash</span>
       <span><kbd>S</kbd> Stop · <kbd>P</kbd> Pause · <kbd>T</kbd> Retry</span>
       <span class="help-tag">An independent fan-made mechanics trainer. Not affiliated with Riot Games.</span>
     </footer>
