@@ -1,0 +1,52 @@
+{
+  "attack": {
+    "value": "Attack command starts windup; a different command before launch cancels; at launch melee hits and ranged creates a tracking projectile; movement after launch preserves projectile.",
+    "unit": "rule",
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Attack_speed",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "Summoner’s Rift; no modifiers",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "attack_speed": {
+    "value": "base attack speed + attack speed ratio × bonus attack speed fraction",
+    "unit": "formula",
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Attack_speed",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "caps and special exceptions not modeled",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "damage": {
+    "value": "Physical damage uses armor and magic damage uses magic resistance; true damage bypasses these resistances. Resolve penetration, reductions and shields separately.",
+    "unit": "rule",
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Damage",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "Summoner’s Rift; no modifiers",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "edge_range": {
+    "value": "basic attacks generally use edge range; distinguish gameplay radius from pathing radius",
+    "unit": "rule",
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Basic_attack",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "Summoner’s Rift; no modifiers",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "movement": {
+    "value": "Minions respect unit collision and player-generated terrain; target selection and pathing are independent of render scale.",
+    "unit": "rule",
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Minions",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "Summoner’s Rift; no modifiers",
+    "confidence": "source_reported",
+    "status": "direct"
+  }
+}

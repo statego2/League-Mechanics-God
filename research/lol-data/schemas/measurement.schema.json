@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sourced mechanics measurement",
+  "type": "object",
+  "required": ["value", "unit", "source_url", "json_path", "patch", "conditions", "confidence", "status"],
+  "properties": {
+    "value": {},
+    "unit": {"type": "string", "minLength": 1},
+    "source_url": {"type": "string", "format": "uri"},
+    "json_path": {"type": ["string", "null"]},
+    "patch": {"type": ["string", "null"]},
+    "conditions": {"type": "string", "minLength": 1},
+    "confidence": {"enum": ["direct_source", "source_reported", "conflicting"]},
+    "status": {"enum": ["direct", "unknown"]}
+  },
+  "additionalProperties": false
+}

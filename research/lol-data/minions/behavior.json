@@ -1,0 +1,123 @@
+{
+  "target_priority": {
+    "value": [
+      "enemy champion attacking allied champion",
+      "enemy minion attacking allied champion",
+      "enemy minion attacking allied minion",
+      "enemy turret attacking allied minion",
+      "closest enemy minion",
+      "closest enemy champion"
+    ],
+    "unit": "ordered_categories",
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Minions",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "switch to higher priority; same-priority target retained",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "acquisition_range": {
+    "value": 500,
+    "unit": "game_units",
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Minions",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "general; exceptions apply",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "call_for_help_range": {
+    "value": 1000,
+    "unit": "game_units",
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Minions",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "distance of allied champion being attacked from minion; not attack range",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "aggro": {
+    "value": "Basic attacks and most unit-targeted abilities damaging an enemy champion trigger call for help; attacking an enemy minion no longer triggers it since 26.10. Turret-attacking minions ignore call for help except first-wave exception.",
+    "unit": "rule",
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Minions",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "Summoner’s Rift; no modifiers",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "first_wave": {
+    "value": "mid ghosted 18 s, side lanes 28 s; distribute attacks among enemy melee minions on wave meeting",
+    "unit": "rule",
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Minions",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "Summoner’s Rift; no modifiers",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "death_grace": {
+    "value": "When below 0.35% max HP and killed by another minion for at most 190 damage, set HP to 1; die after 0.066 seconds unless another source damages first",
+    "unit": "rule",
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Minions",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "Summoner’s Rift; no modifiers",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "experience_range": {
+    "value": 1500,
+    "unit": "game_units",
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Minions",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "killer included regardless of distance; split rules apply",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "minion_damage_champions_structures": {
+    "value": 60,
+    "unit": "percent",
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Minions",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "siege vs turret special case",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "siege_damage_turrets": {
+    "value": 84,
+    "unit": "percent",
+    "source_url": "https://www.leagueoflegends.com/en-us/news/game-updates/patch-26-1-notes/",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "Summoner’s Rift; no modifiers",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "turret_siege_max_hp": {
+    "value": [
+      14,
+      11,
+      8
+    ],
+    "unit": "percent_pre_mitigation",
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Blue_Siege_Minion",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "outer / inner / inhibitor turret respectively",
+    "confidence": "source_reported",
+    "status": "direct"
+  },
+  "turret_super_max_hp": {
+    "value": 7,
+    "unit": "percent_pre_mitigation",
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Super_minion",
+    "json_path": null,
+    "patch": "16.21.1",
+    "conditions": "Summoner’s Rift; no modifiers",
+    "confidence": "source_reported",
+    "status": "direct"
+  }
+}

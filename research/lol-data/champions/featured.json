@@ -1,0 +1,224 @@
+{
+  "Tristana": {
+    "passive_range": {
+      "value": "550 to 717.65 based on level",
+      "unit": "game_units",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Tristana",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "basic attack, E and R; exact interpolation unresolved",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "q_bonus_attack_speed": {
+      "value": [
+        40,
+        60,
+        80,
+        100,
+        120
+      ],
+      "unit": "percent",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Tristana",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "rank 1–5, 26.21",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "q_duration": {
+      "value": 7,
+      "unit": "seconds",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Tristana",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "q_cooldown": {
+      "value": [
+        20,
+        19,
+        18,
+        17,
+        16
+      ],
+      "unit": "seconds",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Tristana",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "rank 1–5; before haste",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "w_range": {
+      "value": 900,
+      "unit": "game_units",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Tristana",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "w_cast_time": {
+      "value": 0.25,
+      "unit": "seconds",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Tristana",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "w_reset": {
+      "value": "champion takedown or maximum-stack E detonation on a champion",
+      "unit": "rule",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Tristana",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "e_cast_time": {
+      "value": "100% of basic attack windup",
+      "unit": "rule",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Tristana/Explosive_Charge",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "q_no_attack_cancel": {
+      "value": true,
+      "unit": "boolean",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Tristana",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "community patch history 10.7",
+      "confidence": "source_reported",
+      "status": "direct"
+    }
+  },
+  "Ahri": {
+    "attack_windup_percent": {
+      "value": 20,
+      "unit": "percent",
+      "source_url": "https://www.leagueoflegends.com/en-gb/news/game-updates/patch-13-22-notes/",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "base; scaling and modifiers need verification",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "attack_speed_ratio": {
+      "value": 0.625,
+      "unit": "attacks_per_second",
+      "source_url": "https://www.leagueoflegends.com/en-gb/news/game-updates/patch-13-22-notes/",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "attack_missile_speed": {
+      "value": 1750,
+      "unit": "game_units_per_second",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Ahri",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "q_range": {
+      "value": 900,
+      "unit": "game_units",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Ahri",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "q_cast_time": {
+      "value": 0.25,
+      "unit": "seconds",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Ahri",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "q_outbound_speed": {
+      "value": 1550,
+      "unit": "game_units_per_second",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Ahri",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "q_width": {
+      "value": 200,
+      "unit": "game_units",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Ahri",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "q_damage_per_pass": {
+      "value": [
+        35,
+        60,
+        85,
+        110,
+        135
+      ],
+      "unit": "damage",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Ahri",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "base by rank; 26.06; outgoing magic, returning true",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "q_return_speed": {
+      "value": "60–2600",
+      "unit": "game_units_per_second",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Ahri",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "variable; trajectory must follow Ahri; exact function unknown",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "q_hit_rule": {
+      "value": "once per target per pass",
+      "unit": "rule",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Ahri",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    },
+    "r_recast": {
+      "value": "takedown essence extends recast window and grants a recast, storing up to 3",
+      "unit": "rule",
+      "source_url": "https://wiki.leagueoflegends.com/en-us/Ahri",
+      "json_path": null,
+      "patch": "16.21.1",
+      "conditions": "Summoner’s Rift; no modifiers",
+      "confidence": "source_reported",
+      "status": "direct"
+    }
+  }
+}
