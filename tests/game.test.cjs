@@ -4070,6 +4070,11 @@ test('ADC attack move on ground prefers the in-range enemy nearest the cursor',(
  const {g,key,click}=boot();g.reset('adc');g.disableSpawn();const p=g.player,a=g.enemy(p.x+100,p.y),b=g.enemy(p.x-200,p.y);for(const e of [a,b])Object.assign(e,{adcGeneric:true,speed:0,hp:1000,maxHp:1000});g.setFoes([a,b]);
  key('a');click(b.x-60,b.y,0);advance(g,.3);assert.equal(a.hp,1000);assert.ok(b.hp<1000);
 });
+test('ADC attack move keeps its committed target through windup',()=>{
+ const {g,key,click}=boot();g.reset('adc');g.disableSpawn();const p=g.player,a=g.enemy(p.x+140,p.y),b=g.enemy(p.x+220,p.y);
+ for(const e of [a,b])Object.assign(e,{adcGeneric:true,speed:0,hp:1000,maxHp:1000});g.setFoes([a,b]);key('a');click(p.x+260,p.y,0);advance(g,.016);assert.equal(p.windupTarget,b.id);
+ [a.x,b.x]=[b.x,a.x];advance(g,.016);assert.equal(p.focus,b.id);advance(g,.05);assert.ok(g.shots.some(s=>s.kind==='auto'&&s.targetId===b.id));
+});
 test('ADC starts with generic pursuers and independent ambient spells',()=>{
  const {g}=boot();g.reset('adc');let launched=false,generic=false;
  for(let i=0;i<600&&g.state==='playing';i++){advance(g,1/120);launched||=g.shots.some(s=>s.adcOwner==='adc');generic||=g.foes.some(e=>e.adcGeneric);}

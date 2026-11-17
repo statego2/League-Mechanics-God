@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="5f4570146450";
+const BUILD_ID="380b89973026";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -1701,6 +1701,9 @@ if(order.type==="attack"){
  player.focus=t.id;
  if(dist(player,t)>attackReach(t)){player.target={x:t.x,y:t.y};}else{player.target=null;startAttack(t);}
 }else if(order.type==="attackMove"){
+ // Keep the target indicator aligned with the already committed windup.
+ // A new movement or attack command still cancels that windup normally.
+ if(mode==="adc"&&player.windup>0&&foes.some(e=>e.alive&&e.id===player.windupTarget)){player.focus=player.windupTarget;return;}
  // Prefer a unit near the clicked point among units already inside attack range.
  let t=null,best=Infinity;
  for(const e of foes)if(e.alive&&!e.spawnTimer&&!e.baitCaster&&!e.referenceCaster&&dist(player,e)<=attackReach(e)){const d=dist(e,order);if(d<best){best=d;t=e;}}
