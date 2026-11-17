@@ -61,3 +61,7 @@ The ranger has three directional illustrations with left/right mirroring and pro
 
 
 - `tristana-generated.png`: generated with OpenAI image generation on 2026-11-17 for this project; original fan-art interpretation, not an official Riot asset. Visual integration remains under review.
+
+- `lux-adc-generated.png`: generated with OpenAI image generation on 2026-11-17 for ADC; original fan-art interpretation, not an official Riot asset. Dodge retains its existing art.
+
+- `blitz-adc-generated.png`: generated with OpenAI image generation on 2026-11-17 for ADC; original fan-art interpretation, not an official Riot asset. Dodge retains its existing art.

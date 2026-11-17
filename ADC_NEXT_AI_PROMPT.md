@@ -1,5 +1,7 @@
 # Terra execution handoff — ADC Mechanics God redesign
 
+**Implementation update (2026-11-17):** The roster now has initial ADC-only implementations and browser fixtures. This document preserves the original handoff; read [docs/PROGRESS.md](docs/PROGRESS.md) for current evidence and outstanding gates before continuing.
+
 Use Terra for implementation when the user starts the coding phase. This file is an execution prompt, not a claim implementation has happened.
 
 Read `AGENTS.md`, `PROJECT_BLUEPRINT.md`, `README.md`, `docs/ADC-PLAN.md`, latest `docs/PROGRESS.md`, and current source. The authoritative redesign is `docs/ADC-PLAN.md`, reviewed 17 November 2026 against `codex/adc-mode` at `c1bf897`, executing build `0f5a05f44ca3`. The old main-alpha plan is superseded. Inspect actual HEAD/status first and preserve untracked or unrelated work, including any handoff directory. Reuse the current checkout when suitable. Do not rebuild from old `main`, switch engines or rewrite the architecture.

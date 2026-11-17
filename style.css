@@ -43,3 +43,9 @@
 
 /* ADC uses autos and Flash; the other kit belongs to Ahri. */
 .ability-bar.adc-mode .ability:not(.flash){display:none}
+
+/* Keep ADC combat visible when champions approach the top edge. */
+.game-shell.adc-playing{margin-top:62px;overflow:visible}
+.game-shell.adc-playing #arena{border-radius:inherit}
+.game-shell.adc-playing .hud{top:-62px;height:58px;padding:8px 14px;border:1px solid #426175;border-radius:9px;background:#101e2df5}
+@media(max-width:550px){.game-shell.adc-playing{margin-top:50px}.game-shell.adc-playing .hud{top:-50px;height:46px;padding:5px 8px}.game-shell.adc-playing .hud-health{display:block;min-width:80px;width:110px}}

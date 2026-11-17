@@ -1,9 +1,9 @@
 # ADC Mechanics God — redesign plan for Terra
 
-**Status: design ready for implementation; current prototype rejected by the user.**
+**Status: implementation in progress; the original prototype was rejected. The roster now has initial ADC-only implementations, but verification and user acceptance remain open. See [PROGRESS.md](PROGRESS.md) for current evidence.**
 **Reviewed:** 17 November 2026. **Source baseline:** `codex/adc-mode` at `c1bf897`, gameplay build `0f5a05f44ca3`. This replaces the stale plan based on `main` at `7de3430`. The current source already contains the developed Dodge roster and an isolated ADC prototype. Do not restart from old `main` or copy another game's implementation.
 
-Read `AGENTS.md`, `PROJECT_BLUEPRINT.md`, `README.md`, the latest `docs/PROGRESS.md`, and this plan before coding. The latest owner direction takes precedence over the older full-Ahri Mechanics Arena design. This planning pass changes no runtime. Terra implements in a later session using `ADC_NEXT_AI_PROMPT.md`.
+Read `AGENTS.md`, `PROJECT_BLUEPRINT.md`, `README.md`, the latest `docs/PROGRESS.md`, and this plan before coding. The latest owner direction takes precedence over the older full-Ahri Mechanics Arena design. The baseline descriptions below are historical; implementation is underway. Continue from the current checkout and [progress log](PROGRESS.md), not the original planning snapshot.
 
 ## 1. Outcome and authority
 
