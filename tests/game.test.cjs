@@ -4026,8 +4026,8 @@ test('ADC attack range, four hits, chase and target loss',()=>{
  e.x=p.x+180;g.attackOrder(e);advance(g,3);assert.equal(g.stats.autoHits,4);assert.equal(g.getKills?.()??e.alive,false);assert.equal(e.hp,0);
  const f=g.enemy(p.x+180,p.y);f.speed=0;f.shoot=999;g.setFoes([f]);g.attackOrder(f);advance(g,.2);f.alive=false;advance(g,.1);assert.equal(g.shots.filter(s=>s.kind==='auto').length,0);
 });
-test('ADC ten kills ends run and retry resets counts',()=>{
- const {g}=boot();g.reset('adc');g.disableSpawn();g.setKills(9);const e=g.enemy(g.player.x+100,g.player.y);e.speed=0;e.hp=e.maxHp=28;g.setFoes([e]);g.attackOrder(e);advance(g,.5);assert.equal(g.state,'ended');g.reset('adc');assert.equal(g.state,'playing');assert.equal(g.stats.autoHits,0);assert.equal(g.foes.length,0);
+test('ADC continues past ten kills and retry resets counts',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();g.setKills(9);const e=g.enemy(g.player.x+100,g.player.y);e.speed=0;e.hp=e.maxHp=28;g.setFoes([e]);g.attackOrder(e);advance(g,.5);assert.equal(g.state,'playing');g.reset('adc');assert.equal(g.state,'playing');assert.equal(g.stats.autoHits,0);assert.equal(g.foes.length,0);
 });
 test('ADC spawn warnings are untargetable and avoid close contact',()=>{
  const {g,click}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+30,g.player.y);e.speed=0;e.spawnTimer=.05;e.contactCooldown=0;g.setFoes([e]);click(e.x,e.y);advance(g,.3);assert.equal(g.stats.released,0);assert.equal(g.player.hp,160);assert.ok(e.spawnTimer>0);g.player.x-=200;advance(g,.03);assert.equal(e.spawnTimer,0);
@@ -4050,4 +4050,11 @@ test('ADC pending line cast is cancelled with its caster while launched shots pe
 
 test('ADC A-click chooses the nearest in-range enemy to Tristana',()=>{
  const {g,key,click}=boot();g.reset('adc');g.disableSpawn();const p=g.player,a=g.enemy(p.x+130,p.y),b=g.enemy(p.x-240,p.y);for(const e of [a,b]){e.speed=0;e.shoot=999;e.hp=e.maxHp=1000;}g.setFoes([a,b]);key('a');click(b.x,b.y,0);advance(g,.5);assert.equal(a.hp,972);assert.equal(b.hp,1000);
+});
+
+test('ADC opens with distinct casters and launches a spell before a kill',()=>{
+ const {g}=boot();g.reset('adc');let launched=false;
+ for(let i=0;i<600&&g.state==='playing';i++){advance(g,1/120);if(g.shots.some(s=>s.adcCast&&s.spellName==='EZREAL Q'))launched=true;}
+ assert.ok(launched,'Ezreal must launch during the opening');
+ assert.ok(g.foes.some(e=>e.adcLux),'Lux must join the opening');
 });

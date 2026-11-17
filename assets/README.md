@@ -58,3 +58,6 @@ The ranger has three directional illustrations with left/right mirroring and pro
 ## Dodge umbral caster (2026-11-03)
 
 - `umbral-caster.png` is an original sprite for the Syndra-pattern encounter, made with the built-in image generator on a flat green background. The green was then keyed out to transparency locally: alpha comes from green dominance, the edges were despilled, and the result was cropped to 550×828. Prompt: "Original fantasy game character sprite… a single full-body hooded umbral sorceress of my own design, deep indigo and charcoal layered robes with thin silver trim, deep hood shadowing face with two faint lilac glowing eyes, long flowing cape, hands raised with small crackling violet energy wisps… elevated three-quarter camera, facing right, painted 3D fantasy game art… flat pure green (#00FF00) chroma-key background, no orbs or spheres." It is a static illustration, not a Riot asset and not Syndra's in-game model. The game draws the orbiting dark spheres in code (`drawDarkSphere`). If the image has not loaded, the earlier vector silhouette is used instead. Collision and spell stats are unchanged.
+
+
+- `tristana-generated.png`: generated with OpenAI image generation on 2026-11-17 for this project; original fan-art interpretation, not an official Riot asset. Visual integration remains under review.

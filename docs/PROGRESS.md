@@ -1864,3 +1864,10 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 - GitHub work continues on `codex/adc-mode`, existing draft PR #7 into `codex/controls-and-dodge`; do not restart from stale `main`. This documentation checkpoint is recorded in Git history; no unrelated local `CODE2_HANDOFF/` content is included.
 - Next three actions for Terra: (1) establish the actual baseline and deliver recognizable Tristana plus an early visible caster/chaser encounter, with gameplay screenshots; (2) implement the specified ADC-only champion adapters and encounter scheduling without changing Dodge; (3) complete the plan's browser, combat and Dodge-regression gates and record results, gaps and exact commits. Follow the ordered milestones and acceptance criteria in the new plan.
 - Documentation verification: reviewed the complete plan and handoff against the inspected runtime hooks; `git diff --check` passed. Only Markdown files changed. Gameplay tests were not rerun for this documentation-only revision. The new plan includes all ten existing champion identities, early mixed pressure and proposed continuous survival; these remain unimplemented design requirements.
+
+
+## ADC redesign — initial implementation checkpoint (2026-11-17)
+
+- Added generated Tristana fan-art sprite and ADC-only Ezreal/Lux pursuing and stand-off casts without a kill gate. ADC now continues after ten kills, with elapsed-time foe cap and difficulty-independent spawn cadence. These are preliminary changes, not completion of the redesign.
+- Browser loaded the new sprite in ADC and the updated HUD; the narrow viewport did not establish gameplay-scale art quality. No sustained real-input test, normal-seed balance evaluation or Dodge trace comparison has been completed.
+- Remaining: reliable mixed opening across seeds, all other champion families and specials, threat lifetime and displacement fairness, animation and visual acceptance, full browser evidence, and all plan gates. Do not present this checkpoint as a complete mode.
