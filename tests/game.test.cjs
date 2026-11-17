@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,DODGE_TUNING,DODGE_DIRECTOR,REFERENCE_SPELLS,MAP,updateAwareness,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnSyndra,syndraConeContains,applySyndraStun,SYNDRA,visitorPathsCrowded,updateDodgeVisitor,dodgeAimPoint,dodgeRhythmMultiplier,spawnXerathW,spawnXerathQ,spawnLuxR,spawnOriannaR,spawnMalphiteR,spawnCassioR,adcLiveCasts,adcStartSpecial,adcBeam,addEnemy,get adcState(){return adcState},setAim(x,y){aim={x,y}},cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,oriannaFlashEscape,sampleAreaEscape,forecastTravel,forecastDodgePath,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get awareness(){return awareness},get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999;if(typeof adcState!=="undefined"&&adcState)adcState.ambientAt=999},setRng(v){rng=v},setTime(v){time=v},setSpawn(v){spawn=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,world,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,DODGE_TUNING,DODGE_DIRECTOR,REFERENCE_SPELLS,MAP,updateAwareness,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnSyndra,syndraConeContains,applySyndraStun,SYNDRA,visitorPathsCrowded,updateDodgeVisitor,dodgeAimPoint,dodgeRhythmMultiplier,spawnXerathW,spawnXerathQ,spawnLuxR,spawnOriannaR,spawnMalphiteR,spawnCassioR,adcLiveCasts,adcStartSpecial,adcBeam,addEnemy,get adcState(){return adcState},setAim(x,y){aim={x,y}},cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,oriannaFlashEscape,sampleAreaEscape,forecastTravel,forecastDodgePath,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get awareness(){return awareness},get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999;if(typeof adcState!=="undefined"&&adcState)adcState.ambientAt=999},setRng(v){rng=v},setTime(v){time=v},setSpawn(v){spawn=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,drawSizes,strokes,strokeWidths,arcs,texts,lines,rotations,renderEvents,click(x,y,button=2){const e={clientX:x,clientY:y,button,preventDefault(){}};node('arena').listeners.pointerdown(e);node('arena').listeners.pointerup(e);},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -4030,7 +4030,7 @@ test('ADC continues past ten kills and retry resets counts',()=>{
  const {g}=boot();g.reset('adc');g.disableSpawn();g.setKills(9);const e=g.enemy(g.player.x+100,g.player.y);e.speed=0;e.hp=e.maxHp=28;g.setFoes([e]);g.attackOrder(e);advance(g,.5);assert.equal(g.state,'playing');g.reset('adc');assert.equal(g.state,'playing');assert.equal(g.stats.autoHits,0);assert.equal(g.foes.length,0);
 });
 test('ADC corner arrivals are immediately targetable without warning text',()=>{
- const {g,texts}=boot();g.reset('adc');g.disableSpawn();g.addEnemy();const e=g.foes[0];assert.ok(e);assert.equal(e.spawnTimer,0);assert.equal(e.hp,140);assert.equal(e.speed,145);
+ const {g,texts}=boot();g.reset('adc');g.disableSpawn();g.addEnemy();const e=g.foes[0];assert.ok(e);assert.equal(e.spawnTimer,0);assert.equal(e.hp,140);assert.equal(e.speed,105);
  g.render();assert.ok(!texts.includes('INCOMING'));g.player.x=e.x+180;g.player.y=e.y;g.attackOrder(e);advance(g,.1);assert.equal(g.stats.released,1);
 });
 
@@ -4165,6 +4165,10 @@ test('ADC special timing agrees at 30, 60 and 120 rendered FPS',()=>{
  assert.deepEqual(results[0],results[1]);assert.deepEqual(results[1],results[2]);
 });
 
+test('ADC Tristana chooses front, back and mirrored side art by facing',()=>{
+ const {g,node,draws}=boot();g.reset('adc');g.disableSpawn();for(const id of ['tristanaArt','tristanaFrontArt','tristanaBackArt'])Object.assign(node(id),{complete:true,naturalWidth:100});
+ for(const [angle,id] of [[0,'tristanaArt'],[Math.PI,'tristanaArt'],[Math.PI/2,'tristanaFrontArt'],[-Math.PI/2,'tristanaBackArt']]){draws.length=0;g.player.facing=angle;g.render();assert.ok(draws.includes(node(id)),`facing ${angle}`);}
+});
 test('ADC HUD layout and control help reset when switching back to Dodge',()=>{
  const {g,node}=boot('ahri'),active=new Set();
  node('gameShell').classList.toggle=(name,on)=>on?active.add(name):active.delete(name);
@@ -4214,12 +4218,14 @@ test('ADC corner bag reaches all four valid zones and defers when all are unsafe
  for(const seed of [1,7,99,9001,503219]){
   const {g}=boot();g.reset('adc');g.disableSpawn();g.setRng(seed);const seen=new Set();
   for(let i=0;i<4;i++){g.addEnemy();assert.equal(g.foes.length,1);const e=g.foes[0];const left=e.x<=102,right=e.x>=1098,top=e.y<=139,bottom=e.y>=559;
-   assert.ok((left||right)&&(top||bottom));seen.add((right?1:0)+(bottom?2:0));g.setFoes([]);}
+   assert.ok((left||right)&&(top||bottom));assert.ok(e.x>=32&&e.x<=1168&&e.y>=86,'sprite and health bar remain visible at arrival');seen.add((right?1:0)+(bottom?2:0));g.setFoes([]);}
   assert.equal(seen.size,4,`seed ${seed}`);
  }
- const {g}=boot();g.reset('adc');g.disableSpawn();g.player.x=1134;g.player.y=595;
- const blockers=[[66,103],[1134,103],[66,595]].map(([x,y])=>{const e=g.enemy(x,y);e.speed=0;return e;});g.setFoes(blockers);
- g.setSpawn(0);advance(g,1.5);assert.equal(g.foes.length,3);g.setFoes([]);for(let i=0;i<50&&g.foes.length===0;i++)advance(g,.01);assert.equal(g.foes.length,1);advance(g,.1);assert.equal(g.foes.length,1);
+ const {g}=boot();g.reset('adc');g.disableSpawn();const walkable=g.world.pointWalkable;g.world.pointWalkable=()=>false;
+ g.setSpawn(0);advance(g,1.5);assert.equal(g.foes.length,0);g.world.pointWalkable=walkable;
+ for(let i=0;i<50&&g.foes.length===0;i++)advance(g,.01);assert.equal(g.foes.length,1);advance(g,.1);assert.equal(g.foes.length,1);
+ advance(g,4);assert.equal(g.foes.length,2);advance(g,4);assert.ok(g.foes.length<=2);
+
 });
 test('ADC hook recovery prevents a second enemy from stacking unavoidable contact',()=>{
  const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,blitz=g.enemy(p.x+240,p.y),other=g.enemy(p.x+205,p.y);

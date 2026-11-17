@@ -27,12 +27,12 @@ Read [the source-backed kiting audit](ADC-KITING-REFERENCE.md). The reference wa
 | Unbuffed autos | .72 s period ≈ 1.39/s | **.40 s period = 2.5/s** |
 | Windup | .18 s, 25% of cycle | **.06 s, 15% of cycle**, followed by .34 s movable recovery |
 | Ordinary target HP / auto damage | 112 / 28 = 4 hits | **140 / 28 = 5 hits**, now accepted by owner |
-| Enemy speed / player speed | 185 / 270 ≈ .685 | **145 / 270 ≈ .537**, close to reference's 3 / 5.5 ratio |
+| Enemy speed / player speed | 185 / 270 ≈ .685 | **105 / 270 ≈ .389**, reduced further at the owner's request |
 | Q cadence | Existing +50% training boost | Keep +50%: **3.75/s**, .2667 s period and .04 s windup; snapshot per attack |
 | Auto range / missile speed | 275 / 920 canvas units/s | Keep initially; do not change collision/range to fake faster response |
 | Contact | 40 damage, .75 s per-enemy timer | Preserve initially with existing ADC recovery/grace; reference instant death is not adopted |
 
-These are trainer tuning proposals awaiting implementation/playtest. Five shots release in about 1.66 s from a ready attack, excluding travel, versus 2.34 s for today's four-shot sequence. Q and damage abilities may shorten kills. Do not undo the accepted five-hit rhythm by silently escalating HP or enemy speed over time.
+These are trainer tuning values; the owner subsequently requested slower and fewer pursuers, so the updated values above supersede the earlier proposal. Human feel and balance review remain pending. Five shots release in about 1.66 s from a ready attack, excluding travel, versus 2.34 s for today's four-shot sequence. Q and damage abilities may shorten kills. Do not undo the accepted five-hit rhythm by silently escalating HP or enemy speed over time.
 
 Retain generic readable silhouettes, HP bars, pursuit/pathing and separation. No champion-target roster or enemy spell casting: surrounding skills remain independent. Base enemies have one consistent tuning; no added tank just to make E stacks possible. Five-hit baseline lets E reach four auto stacks before the unmodified auto-only kill; verify death/explosion/reset ordering when W/R/splash shorten this. Use durable fixtures for individual interaction tests without adding unrequested public enemy types.
 
@@ -46,7 +46,7 @@ Prefer a short outside-edge approach into a valid corner gate if existing world 
 
 Reject a corner candidate within 285 units of Tristana, within 80 of another entering enemy, or lacking a valid walkable route. Try another corner; if all are unsafe defer briefly. Never fall back to a player-centred spawn. Do not queue a burst of deferred enemies. Seeded tests must prove all four zones are reachable from ordinary centre play and every accepted spawn stays in its declared zone, including corner-camping cases.
 
-Start with two staggered arrivals; retain a maximum of four active generic enemies for the first tuning pass. Candidate replacement interval: 2.5 s, with one deferred retry at a time. Tune cadence after observing the faster clear speed; do not compensate immediately by restoring faster enemies or bigger HP pools. The user wants a more fluid, forgiving pursuit rhythm while spells keep the dodge challenge.
+Start with two staggered arrivals; allow at most two active generic enemies, as requested by the owner. Candidate replacement interval: 2.5 s, with one deferred retry at a time. Tune cadence after observing the faster clear speed; do not compensate immediately by restoring faster enemies or bigger HP pools. The user wants a more fluid, forgiving pursuit rhythm while spells keep the dodge challenge.
 
 ### Attack feel contract
 

@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="5b3c0dae2d95";
+const BUILD_ID="22aaae40da1e";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -635,13 +635,13 @@ function updateAdcEnemy(e,dt){
  if(dist(e,player)<e.r+player.r&&e.contactCooldown<=0&&time>=adcState.contactGrace&&time>=(e.adcSpecialUntil||0)&&!player.hooked){e.contactCooldown=.75;adcState.contactGrace=time+.35;applyImpact(player,{sourceId:e.id,sourceTeam:"enemy",kind:"contact",raw:40,damageType:"true"});}
 }
 // Corner gates are inset from the playable bounds and never projected outside their zone.
-const ADC_SPAWN={inset:8,depth:80,spacing:80,playerDistance:285,enemySpeed:145,hp:140};
+const ADC_SPAWN={insetX:10,insetTop:27,insetBottom:8,depth:80,spacing:80,playerDistance:285,enemySpeed:105,hp:140,maxEnemies:2};
 function adcCornerBounds(index){
- const b=world.bounds,i=ADC_SPAWN.inset,d=ADC_SPAWN.depth,right=index%2===1,bottom=index>=2;
- return {left:right?b.right-d:b.left+i,right:right?b.right-i:b.left+d,top:bottom?b.bottom-d:b.top+i,bottom:bottom?b.bottom-i:b.top+d};
+ const b=world.bounds,{insetX,insetTop,insetBottom,depth:d}=ADC_SPAWN,right=index%2===1,bottom=index>=2;
+ return {left:right?b.right-d:b.left+insetX,right:right?b.right-insetX:b.left+d,top:bottom?b.bottom-d:b.top+insetTop,bottom:bottom?b.bottom-insetBottom:b.top+d};
 }
 function addEnemy(){
- if(foes.length>=(mode==="adc"?4:mode==="kite"?5:PRESETS[difficulty].cap))return false;
+ if(foes.length>=(mode==="adc"?ADC_SPAWN.maxEnemies:mode==="kite"?5:PRESETS[difficulty].cap))return false;
  if(mode==="adc"){
   if(!adcState.cornerBag.length){adcState.cornerBag=[0,1,2,3];for(let i=3;i>0;i--){const j=Math.floor(random()*(i+1));[adcState.cornerBag[i],adcState.cornerBag[j]]=[adcState.cornerBag[j],adcState.cornerBag[i]];}}
   const fallback=[0,1,2,3].filter(c=>!adcState.cornerBag.includes(c));for(let i=fallback.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[fallback[i],fallback[j]]=[fallback[j],fallback[i]];}
@@ -1760,7 +1760,7 @@ function castAdc(key){
   const a=Math.atan2(target.y-player.y,target.x-player.x);
   cancelAttack();player.cd.r=ADC_KIT.rCooldown;player.facing=a;
   const shot=fire(player.x,player.y,Math.cos(a)*1100,Math.sin(a)*1100,"adcBuster",ADC_KIT.rDamage,10,1.5);
-  Object.assign(shot,{targetId:target.id,originX:player.x,originY:player.y,adcAuto:true,adcBirth:time,adcMuzzleSide:Math.cos(a)>=0?1:-1});player.recoil=.13;cue("attack");
+  Object.assign(shot,{targetId:target.id,originX:player.x,originY:player.y,adcAuto:true,adcBirth:time,adcMuzzleSide:Math.cos(a)>=0?1:-1,adcMuzzle:adcMuzzleOffset(a)});player.recoil=.13;cue("attack");
  }
  updateUI();
 }
@@ -1851,7 +1851,7 @@ if(!player.casting&&!player.dashing&&!player.hooked&&!(player.stun>0))updateOrde
 // descriptive feedback; positioning or dodging can make waiting intentional.
 if(mode==="kite"&&player.attackTimer<=0&&player.windup<=0&&foes.some(e=>e.alive&&dist(player,e)<=attackReach(e)))stats.readyIdle+=dt;
 if(player.windup>0){player.windup=Math.max(0,player.windup-dt);if(player.windup<1e-8){player.windup=0;const t=foes.find(e=>e.id===player.windupTarget&&e.alive);
- if(t&&dist(player,t)<=attackReach(t)+(mode==="adc"?0:35)){const a=Math.atan2(t.y-player.y,t.x-player.x);const shot=fire(player.x,player.y,Math.cos(a)*autoSpeed(),Math.sin(a)*autoSpeed(),"auto",autoDamage(),5,1.5);shot.targetId=t.id;stats.released++;if(mode==="adc"){player.recoil=.13;shot.adcAuto=true;shot.adcBirth=time;shot.adcMuzzleSide=Math.cos(player.facing)>=0?1:-1;}cue("attack");player.attackTimer=mode==="adc"?player.adcAttackPeriod-player.adcWindupDuration:ATTACK.period-ATTACK.windup;}else stats.cancelled++;
+ if(t&&dist(player,t)<=attackReach(t)+(mode==="adc"?0:35)){const a=Math.atan2(t.y-player.y,t.x-player.x);const shot=fire(player.x,player.y,Math.cos(a)*autoSpeed(),Math.sin(a)*autoSpeed(),"auto",autoDamage(),5,1.5);shot.targetId=t.id;stats.released++;if(mode==="adc"){player.recoil=.13;shot.adcAuto=true;shot.adcBirth=time;shot.adcMuzzleSide=Math.cos(player.facing)>=0?1:-1;shot.adcMuzzle=adcMuzzleOffset(player.facing);}cue("attack");player.attackTimer=mode==="adc"?player.adcAttackPeriod-player.adcWindupDuration:ATTACK.period-ATTACK.windup;}else stats.cancelled++;
  player.windupTarget=null;
 }}
 if(player.target&&player.windup<=0&&player.root<=0&&!(player.stun>0)&&!player.casting&&!player.dashing&&!player.hooked&&!wasDashing&&!wasHooked){
@@ -2268,13 +2268,15 @@ function visitorCastPose(e){
 }
 // Original vector ranger and enemy mage silhouettes with facing and articulated steps.
 function adcJumpHeight(p){const jump=p.dashing;return jump?.adcJump?Math.sin(Math.PI*clamp(1-dist(p,jump)/Math.max(jump.jumpDistance,1),0,1))*32:0;}
+function adcFacingView(angle){const vertical=Math.sin(angle);return vertical>.55?"front":vertical<-.55?"back":"side";}
+function adcMuzzleOffset(angle){const view=adcFacingView(angle),side=Math.cos(angle)>=0?1:-1;return {x:side*(view==="side"?42:view==="front"?25:16),y:view==="back"?-68:-40};}
 function drawAdc(p){
- const sprite=$("tristanaArt");
+ const view=adcFacingView(p.facing),sideArt=$("tristanaArt"),chosen=$(view==="front"?"tristanaFrontArt":view==="back"?"tristanaBackArt":"tristanaArt"),sprite=chosen?.complete&&chosen.naturalWidth?chosen:sideArt;
  if(sprite?.complete&&sprite.naturalWidth){
   ctx.save();ctx.translate(p.x,p.y);ctx.save();ctx.scale(1,.43);circle(0,4,22,"#0009");ctx.restore();
-  ctx.translate(0,-adcJumpHeight(p));ctx.scale(Math.cos(p.facing)>=0?1:-1,1);ctx.translate(-(p.recoil||0)*35,-Math.abs(Math.sin(p.motion))*1.5);ctx.rotate(p.windup>0?-.04*(1-p.windup/(p.adcWindupDuration||ATTACK.windup)):0);ctx.drawImage(sprite,-43,-76,91,76);
+  ctx.translate(0,-adcJumpHeight(p));ctx.scale(Math.cos(p.facing)>=0?1:-1,1);ctx.translate(-(p.recoil||0)*35,-Math.abs(Math.sin(p.motion))*1.5);ctx.rotate(p.windup>0?-.04*(1-p.windup/(p.adcWindupDuration||ATTACK.windup)):0);const width=sprite===sideArt?91:view==="front"?67:72;ctx.drawImage(sprite,-width/2,-76,width,76);
   if(p.adcRapid>0)circle(32,-39,12,"#ffd77b55");
-  if(p.recoil>0){const flash=p.recoil/.13;circle(42,-40,5+flash*7,`rgba(255,210,115,${flash*.8})`);}
+  if(p.recoil>0){const flash=p.recoil/.13,muzzle=adcMuzzleOffset(p.facing);circle(Math.abs(muzzle.x),muzzle.y,5+flash*7,`rgba(255,210,115,${flash*.8})`);}
   if(p.hitFlash>0){ctx.globalAlpha=.3;circle(0,-35,22,"#fff");}ctx.restore();return;
  }
  ctx.save();ctx.translate(p.x,p.y);ctx.scale(Math.cos(p.facing)>=0?1:-1,1);
@@ -2509,8 +2511,12 @@ if(mode==="adc")drawAdc(player);else drawChampion(player.x,player.y,player.facin
 if(player.invuln>0)circle(player.x,player.y,25,"#ffe4ad",false,2);
 if(player.stun>0){ctx.fillStyle="#dcb5ff";ctx.font="bold 12px sans-serif";ctx.textAlign="center";ctx.fillText("STUNNED",player.x,player.y-98);}
 if(player.fox){for(let i=0;i<player.fox.count;i++){const a=time*3+i*TAU/3;circle(player.x+Math.cos(a)*25,player.y-20+Math.sin(a)*10,5,"#a4e6ff");}}
-if(mode==="adc"){ctx.fillStyle="#e9deb8";ctx.font="bold 11px sans-serif";ctx.textAlign="center";ctx.fillText("TRISTANA",player.x,player.y-94);const progress=player.windup>0?1-player.windup/(player.adcWindupDuration||ATTACK.windup):player.attackTimer>0?1-player.attackTimer/Math.max(.01,(player.adcAttackPeriod||ATTACK.period)-(player.adcWindupDuration||ATTACK.windup)):1;ctx.fillStyle="#142b35";ctx.fillRect(player.x-22,player.y-78,44,3);ctx.fillStyle=player.windup>0?"#ffd178":"#9cdfff";ctx.fillRect(player.x-22,player.y-78,44*clamp(progress,0,1),3);}
-ctx.fillStyle="#102d27";ctx.fillRect(player.x-22,player.y-86,44,4);ctx.fillStyle="#8ceebd";ctx.fillRect(player.x-22,player.y-86,44*player.hp/player.maxHp,4);
+if(mode==="adc"){
+ // A single compact health bar stays above the sprite; attack timing is conveyed by the animation.
+ const x=clamp(player.x-27,2,W-58),y=clamp(player.y-91,3,H-8),hp=clamp(player.hp/player.maxHp,0,1);
+ ctx.save();ctx.fillStyle="#07131de8";ctx.fillRect(x-2,y-2,58,10);ctx.strokeStyle="#b9a77d";ctx.lineWidth=1;ctx.strokeRect(x-2,y-2,58,10);
+ ctx.fillStyle="#213c39";ctx.fillRect(x,y,54,6);ctx.fillStyle=hp>.3?"#77d6ac":"#ef816e";ctx.fillRect(x,y,54*hp,6);ctx.restore();
+}else{ctx.fillStyle="#102d27";ctx.fillRect(player.x-22,player.y-86,44,4);ctx.fillStyle="#8ceebd";ctx.fillRect(player.x-22,player.y-86,44*player.hp/player.maxHp,4);}
  continue;
  }
  if(e.ally){
@@ -2557,7 +2563,7 @@ for(const h of hazards)if(h.orianna){circle(h.x,h.y,12,h.casting?"#f4d5ff":"#a98
 for(const rawShot of shots){
  // Visual-only convergence from the raised cannon to the ground-plane shot.
  const fade=rawShot.adcAuto||rawShot.adcSourceVisual?clamp(1-(time-rawShot.adcBirth)/.18,0,1):0;
- const s=fade?{...rawShot,x:rawShot.x+rawShot.adcMuzzleSide*(rawShot.adcAuto?42:24)*fade,y:rawShot.y-(rawShot.adcAuto?40:32)*fade}:rawShot;
+ const s=fade?{...rawShot,x:rawShot.x+(rawShot.adcMuzzle?.x??rawShot.adcMuzzleSide*(rawShot.adcAuto?42:24))*fade,y:rawShot.y+(rawShot.adcMuzzle?.y??-(rawShot.adcAuto?40:32))*fade}:rawShot;
  if(s.kind==="adcBuster"){
   ctx.save();ctx.lineCap="round";ctx.lineWidth=12;ctx.strokeStyle="#ffb867aa";ctx.beginPath();ctx.moveTo(s.x-s.vx*.025,s.y-s.vy*.025);ctx.lineTo(s.x,s.y);ctx.stroke();ctx.restore();circle(s.x,s.y,11,"#ffe0a1");circle(s.x,s.y,17,"#ffba5a55");continue;
  }

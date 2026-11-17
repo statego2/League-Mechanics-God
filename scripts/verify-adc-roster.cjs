@@ -35,6 +35,12 @@ const {chromium}=require('playwright'),fs=require('fs');
  await page.mouse.move(box.x+box.width*.7,box.y+box.height*.55);await page.keyboard.press('w');
  if(!(await page.evaluate(()=>!!adcFixture.player.dashing?.adcJump)))throw Error('W did not jump');
  await page.screenshot({path:'docs/evidence/adc/tristana-kit.jpg',quality:83});console.log(JSON.stringify({kitInputs:'Q W E R passed'}));
+ // Controlled visual captures of all directional sprites, using the real renderer.
+ await page.evaluate(()=>adcFixture.setupKit());
+ for(const [view,angle] of [['front',Math.PI/2],['back',-Math.PI/2],['side',0]]){
+  await page.evaluate(angle=>{adcFixture.player.facing=angle;},angle);await page.waitForTimeout(120);
+  await page.screenshot({path:`docs/evidence/adc/tristana-${view}.jpg`,quality:83});
+ }
  // Real-input combo against a moving normal-HP target with ambient pressure.
  await page.evaluate(()=>adcFixture.setupCombo());const comboBox=await page.locator('#arena').boundingBox();
  const screen=point=>({x:comboBox.x+point.x*comboBox.width/1200,y:comboBox.y+point.y*comboBox.height/675});

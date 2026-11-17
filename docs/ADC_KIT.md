@@ -28,4 +28,4 @@ lethal eligible hit first increments its charge; death detonates that charge
 once, followed by E's passive only if the killing impact was an auto. Q/W/E/R
 remain scoped to ADC and do not alter Ahri or Dodge.
 
-Generic pursuers have 140 HP (five unbuffed autos) and 145 canvas units/s movement speed. They enter targetable from validated corner zones and deal 40 contact damage with a 0.75 s per-enemy cooldown.
+Generic pursuers have 140 HP (five unbuffed autos) and 105 canvas units/s movement speed, with at most two active pursuers. They enter targetable from validated corner zones and deal 40 contact damage with a 0.75 s per-enemy cooldown.
