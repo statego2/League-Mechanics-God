@@ -1,5 +1,7 @@
 # ADC Mechanics God — generic pursuers, surrounding spells, full Tristana
 
+**Active ADC iteration (18 November 2026).** Follow the [next ADC playtest specification](ADC-NEXT-PLAYTEST.md) for movement, E targeting, seeds, regeneration and encounter pacing. It supersedes older ADC tuning wherever they overlap.
+
 **Authoritative revision: 17 November 2026, updated after the kiting-reference review.** This replaces the previous champion-as-target / autos-only plan in full. The user asks to change the design; this revision makes no gameplay changes. Preserve Dodge exactly.
 
 ## Owner correction — visible casters and targeting

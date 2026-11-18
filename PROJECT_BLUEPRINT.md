@@ -1,4 +1,6 @@
 # LEAGUE MECHANICS GOD
+
+**Active ADC iteration (18 November 2026).** Follow the [next ADC playtest specification](docs/ADC-NEXT-PLAYTEST.md) for movement, E targeting, seeds, regeneration and encounter pacing. It supersedes older ADC tuning wherever they overlap.
 ## Project Blueprint — Vision, Product Specification & Development Roadmap
 
 **Repository:** https://github.com/statego2/League-Mechanics-God  

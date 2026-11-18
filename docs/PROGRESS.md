@@ -2030,3 +2030,7 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 - Build `e203c83d61f2` passed `node --check game.js`, the full Node suite (636/636), and the two configured same-seed Dodge trace comparisons (120 snapshots each). The build fingerprint was unchanged on regeneration.
 - A current-build Chromium run with real mouse/keyboard reached 10 kills in 26.66s with 104 HP and no page errors; Q/E/R were used in that run, and separate input fixtures covered Q/W/E/R, targeting, E facing, W reset, jump/ultimate, death/retry, Flash and resize. Dodge → ADC → Dodge → ADC switching passed. Headless focus loss needed synthetic blur, so native window focus and physical speaker output remain unverified; owner assessment of feel remains pending.
 - Next: (1) incorporate owner playtest feedback; (2) verify native focus and audible speaker output interactively; (3) address issues revealed in play.
+
+## Next ADC playtest design · 18 November 2026
+
+Published the [five-part playtest spec](ADC-NEXT-PLAYTEST.md) against b04fc31. The 636 passing tests above cover the preceding implementation. This checkpoint changes documentation only. Next work covers E and movement, seeds and healing, then mild pressure variation and playtesting.
