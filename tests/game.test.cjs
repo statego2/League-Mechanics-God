@@ -16,7 +16,7 @@ function boot(preset="standard", options={}){
  vm.runInContext(fs.readFileSync(require.resolve("../world.js"),"utf8"),sandbox);
  if (!options.noData) vm.runInContext(fs.readFileSync(require.resolve("../ahri-data.js"),"utf8"),sandbox);
  if (options.data) window.LMGAhriData=options.data;
- const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace(/\}\)\(\);\s*$/,`globalThis.g={reset,update,loop,render,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,DODGE_TUNING,DODGE_DIRECTOR,REFERENCE_SPELLS,MAP,updateAwareness,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnSyndra,syndraConeContains,applySyndraStun,SYNDRA,visitorPathsCrowded,updateDodgeVisitor,dodgeAimPoint,dodgeRhythmMultiplier,spawnXerathW,spawnXerathQ,spawnLuxR,spawnOriannaR,spawnMalphiteR,spawnCassioR,cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,oriannaFlashEscape,sampleAreaEscape,forecastTravel,forecastDodgePath,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get awareness(){return awareness},get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999},setRng(v){rng=v},setTime(v){time=v},setKills(v){kills=v}};})();`);
+ const source=fs.readFileSync(require.resolve('../game.js'),'utf8').replace('let adcState=null,adcPreviousSeed=null;', 'let adcState=null,adcPreviousSeed=null,adcTestNoRegen=false;').replace('if(mode==="adc"&&state==="playing"&&player.hp>0)player.hp=', 'if(!adcTestNoRegen&&mode==="adc"&&state==="playing"&&player.hp>0)player.hp=').replace(/\}\)\(\);\s*$/,`globalThis.g={disableAdcRegen(){adcTestNoRegen=true},reset,update,loop,render,world,drawChampion,enemy,damageEnemy,applyImpact,AHRI,AHRI_DATA,SIMULATION,DODGE_TUNING,DODGE_DIRECTOR,REFERENCE_SPELLS,MAP,updateAwareness,fire,moveTo,attackOrder,cast,pause,end,segmentDistance,beamTouchesPlayer,threatening,shootEnemy,releaseEnemy,spawnDodgeVisitor,spawnSyndra,syndraConeContains,applySyndraStun,SYNDRA,visitorPathsCrowded,updateDodgeVisitor,dodgeAimPoint,dodgeRhythmMultiplier,spawnXerathW,spawnXerathQ,spawnLuxR,spawnOriannaR,spawnMalphiteR,spawnCassioR,adcLiveCasts,adcStartSpecial,adcBeam,addEnemy,get adcState(){return adcState},setAim(x,y){aim={x,y}},cassioConeContains,facingCassio,aimMalphiteR,oriannaEscape,oriannaFlashEscape,sampleAreaEscape,forecastTravel,forecastDodgePath,dodgeReactionPath,dodgeEscapeClear,canEvadeDodgeCast,canEvadeVelkoz,addWave,addTarget,get awareness(){return awareness},get bait(){return bait},get dodgeDirector(){return dodgeDirector},get sweeps(){return sweeps},get hazards(){return hazards},get fx(){return fx},get player(){return player},get foes(){return foes},get allies(){return allies},setAllies(v){allies=v},get shots(){return shots},get stats(){return stats},get time(){return time},get dodged(){return dodged},get state(){return state},setFoes(v){foes=v},disableSpawn(){spawn=999;if(typeof adcState!=="undefined"&&adcState)adcState.ambientAt=999},setRng(v){rng=v},setTime(v){time=v},setSpawn(v){spawn=v},setKills(v){kills=v}};})();`);
  vm.runInContext(source,sandbox);
  const g=sandbox.g;node('difficulty').listeners.change({target:{value:'normal'}});node('attackSpeed').listeners.change({target:{value:preset}});g.reset('kite');g.disableSpawn();
  return {g,node,window,draws,drawSizes,strokes,strokeWidths,arcs,texts,lines,rotations,renderEvents,click(x,y,button=2){const e={clientX:x,clientY:y,button,preventDefault(){}};node('arena').listeners.pointerdown(e);node('arena').listeners.pointerup(e);},key(key){window.listeners.keydown({key,repeat:false,preventDefault(){}});}};
@@ -46,7 +46,7 @@ test('drills home, pause and results keep their own menu state and settings',()=
 });
 test('drills home retains one playable button for each mode and unique settings',()=>{
  const html=fs.readFileSync(require.resolve('../index.html'),'utf8');
- for(const mode of ['dodge','kite','lastHit'])assert.equal((html.match(new RegExp(`data-mode="${mode}"`,'g'))||[]).length,1);
+ for(const mode of ['dodge','adc','lastHit'])assert.equal((html.match(new RegExp(`data-mode="${mode}"`,'g'))||[]).length,1);
  for(const id of ['settings','difficulty','mapAwareness','attackSpeed','newSeed','seedLabel','soundBtn','buildLabel'])assert.equal((html.match(new RegExp(`id="${id}"`,'g'))||[]).length,1);
  assert.match(html,/DODGE TRIAL[\s\S]*PLAY DODGE/);assert.equal((html.match(/IN DEVELOPMENT · PLAYABLE/g)||[]).length,3);
 });
@@ -1232,7 +1232,7 @@ test('Ahri CS allied melee and caster damage use minion ratios',()=>{
 });
 
 test('Ahri is the selected default and visible menu has three focused drills',()=>{
- const html=fs.readFileSync(require.resolve('../index.html'),'utf8');assert.match(html,/value="ahri" selected/);assert.deepEqual([...html.matchAll(/data-mode="([^"]+)"/g)].map(m=>m[1]),['dodge','kite','lastHit']);
+ const html=fs.readFileSync(require.resolve('../index.html'),'utf8');assert.match(html,/value="ahri" selected/);assert.deepEqual([...html.matchAll(/data-mode="([^"]+)"/g)].map(m=>m[1]),['dodge','adc','lastHit']);
  const {g}=boot('ahri');for(const mode of ['dodge','kite','lastHit']){g.reset(mode);assert.equal(g.player.hp,590);assert.equal(g.player.speed,mode==='dodge'?177.5:165);}
 });
 test('Ahri dodge integrates Lux and Ezreal casts in one drill',()=>{
@@ -4009,4 +4009,538 @@ test('Expert 60 s sessions retain Q and Q E while other champions remain active'
 test('retry clears previous awareness result before a new pause',()=>{
  const {g,node}=boot('ahri');node('mapAwareness').checked=true;g.reset('dodge');g.end(false);assert.equal(node('awarenessResult').hidden,false);
  g.reset('dodge');g.pause();assert.equal(node('awarenessResult').hidden,true);
+});
+
+test('ADC windup cancels on movement and committed shots survive movement',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+180,g.player.y);e.speed=0;e.hp=e.maxHp=112;g.setFoes([e]);
+ g.attackOrder(e);advance(g,.025);g.moveTo(g.player.x-100,g.player.y);assert.equal(g.stats.cancelled,1);assert.equal(g.stats.released,0);
+ g.attackOrder(e);advance(g,.20);assert.equal(g.stats.released,1);g.moveTo(g.player.x-100,g.player.y);advance(g,.3);assert.equal(e.hp,84);assert.equal(g.stats.autoHits,1);
+});
+test('ADC chaser contact has independent cooldown and mode switch resets state',()=>{
+ const {g}=boot('ahri');g.reset('adc');g.disableAdcRegen();g.disableSpawn();const e=g.enemy(g.player.x+10,g.player.y);e.speed=0;e.contactCooldown=0;g.setFoes([e]);advance(g,.1);assert.equal(g.player.hp,120);advance(g,.5);assert.equal(g.player.hp,120);advance(g,.3);assert.equal(g.player.hp,80);assert.equal(g.stats.contactDamage,80);
+ g.reset('dodge');assert.equal(g.foes.length,0);assert.equal(g.stats.contactDamage,0);assert.equal(g.state,'playing');
+});
+
+test('ADC attack range, five hits, chase and target loss',()=>{
+ const {g}=boot('ahri');g.reset('adc');g.disableSpawn();const p=g.player,e=g.enemy(p.x+276,p.y);e.hp=e.maxHp=140;e.speed=0;e.shoot=999;g.setFoes([e]);g.attackOrder(e);advance(g,.01);assert.equal(g.stats.released,0);assert.ok(p.target,'chases targets outside range');
+ e.x=p.x+180;g.attackOrder(e);advance(g,3);assert.equal(g.stats.autoHits,5);assert.equal(g.getKills?.()??e.alive,false);assert.equal(e.hp,0);
+ const f=g.enemy(p.x+180,p.y);f.speed=0;f.shoot=999;g.setFoes([f]);g.attackOrder(f);advance(g,.2);f.alive=false;advance(g,.1);assert.equal(g.shots.filter(s=>s.kind==='auto').length,0);
+});
+test('ADC death clears pursuers and independent spell pressure before retry',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+180,g.player.y);Object.assign(e,{adcGeneric:true,speed:0});g.setFoes([e]);g.adcState.bag=['ezreal'];g.adcState.ambientAt=0;advance(g,.02);assert.ok(g.hazards.some(h=>h.adcEmitter));
+ g.applyImpact(g.player,{sourceId:99,sourceTeam:'enemy',kind:'contact',raw:500,damageType:'true'});assert.equal(g.state,'ended');assert.equal(g.foes.length,0);assert.equal(g.hazards.length,0);assert.equal(g.shots.length,0);
+ g.reset('adc');assert.equal(g.state,'playing');assert.equal(g.player.hp,160);assert.equal(g.foes.length,0);assert.equal(g.hazards.length,0);
+});
+test('ADC lethal projectile ends the run without retaining actors or throwing',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,e=g.enemy(p.x+200,p.y);Object.assign(e,{adcGeneric:true,speed:0});g.setFoes([e]);p.hp=20;
+ g.adcState.bag=['lux'];g.adcState.ambientAt=0;g.fire(p.x-30,p.y,1200,0,'enemy',24,7,.2);assert.doesNotThrow(()=>advance(g,.1));assert.equal(g.state,'ended');assert.equal(g.foes.length,0);assert.equal(g.hazards.length,0);assert.equal(g.shots.length,0);
+});
+test('ADC continues past ten kills and retry resets counts',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();g.setKills(9);const e=g.enemy(g.player.x+100,g.player.y);e.speed=0;e.hp=e.maxHp=28;g.setFoes([e]);g.attackOrder(e);advance(g,.5);assert.equal(g.state,'playing');g.reset('adc');assert.equal(g.state,'playing');assert.equal(g.stats.autoHits,0);assert.equal(g.foes.length,0);
+});
+test('ADC corner arrivals are immediately targetable without warning text',()=>{
+ const {g,texts}=boot();g.reset('adc');g.disableSpawn();g.addEnemy();const e=g.foes[0];assert.ok(e);assert.equal(e.spawnTimer,0);assert.equal(e.hp,140);assert.equal(e.speed,105);
+ g.render();assert.ok(!texts.includes('INCOMING'));g.player.x=e.x+180;g.player.y=e.y;g.attackOrder(e);advance(g,.1);assert.equal(g.stats.released,1);
+});
+
+test('ADC auto cadence is consistent at 30, 60 and 120 rendered FPS',()=>{
+ const outcomes=[];for(const fps of [30,60,120]){const {g}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+200,g.player.y);e.hp=e.maxHp=10000;e.speed=0;e.shoot=999;g.setFoes([e]);g.attackOrder(e);g.loop(1000);for(let i=1;i<=fps*3;i++)g.loop(1000+i*1000/fps);outcomes.push([g.stats.released,g.stats.autoHits,e.hp]);}assert.deepEqual(outcomes[0],outcomes[1]);assert.deepEqual(outcomes[1],outcomes[2]);
+});
+test('ADC release timing follows the new normal and Q cadence at 30, 60 and 120 FPS',()=>{
+ for(const fps of [30,60,120])for(const boosted of [false,true]){
+  const {g}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+200,g.player.y);Object.assign(e,{speed:0,hp:10000,maxHp:10000});g.setFoes([e]);if(boosted)g.cast('q');g.attackOrder(e);g.loop(1000);
+  const times=new Set();for(let i=1;i<=fps*2;i++){g.loop(1000+i*1000/fps);for(const shot of g.shots)if(shot.kind==='auto')times.add(shot.adcBirth);}
+  const released=[...times].sort((a,b)=>a-b),period=boosted?.4/1.5:.4,windup=boosted?.06/1.5:.06;
+  assert.ok(released.length>=5,`${fps} fps: ${released}`);assert.ok(Math.abs(released[0]-windup)<=1/120+1e-8,`${fps} fps first ${released[0]}`);
+  for(let i=1;i<released.length;i++)assert.ok(Math.abs((released[i]-released[i-1])-period)<=1/120+1e-8,`${fps} fps intervals ${released}`);
+ }
+});
+test('ADC Syndra Q is cancelled when its caster dies before impact',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+240,g.player.y);e.speed=0;e.adcCaster=true;e.adcSyndra=true;e.shoot=0;g.setFoes([e]);advance(g,.02);assert.equal(g.hazards.length,1);e.alive=false;advance(g,1);assert.equal(g.player.hp,160);
+});
+
+test('ADC swept collision catches fast hostile shots and reports skill damage',()=>{
+ const {g}=boot();g.reset('adc');g.disableAdcRegen();g.disableSpawn();const p=g.player;g.fire(p.x-100,p.y,24000,0,'enemy',24,7,.2);advance(g,1/120);assert.equal(p.hp,136);assert.equal(g.stats.skillDamage,24);assert.equal(g.stats.contactDamage,0);
+});
+test('ADC pending line cast is cancelled with its caster while launched shots persist',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+240,g.player.y);e.speed=0;e.adcCaster=true;e.shoot=0;g.setFoes([e]);advance(g,.05);assert.ok(e.pending);e.alive=false;advance(g,.5);assert.equal(g.shots.length,0);
+ const f=g.enemy(g.player.x+240,g.player.y);f.speed=0;f.adcCaster=true;f.shoot=0;g.setFoes([f]);advance(g,.42);assert.ok(g.shots.some(s=>s.kind==='enemy'));f.alive=false;advance(g,.4);assert.equal(g.stats.skillDamage,24);
+});
+
+test('ADC A-click attacks the enemy selected by the cursor',()=>{
+ const {g,key,click}=boot();g.reset('adc');g.disableSpawn();const p=g.player,a=g.enemy(p.x+130,p.y),b=g.enemy(p.x-240,p.y);for(const e of [a,b]){e.speed=0;e.shoot=999;e.hp=e.maxHp=1000;}g.setFoes([a,b]);key('a');click(b.x,b.y,0);advance(g,.5);assert.equal(a.hp,1000);assert.ok(b.hp<1000);
+});
+
+test('ADC clicking ground beside a sprite moves while clicking its body attacks',()=>{
+ const {g,click}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+180,g.player.y);Object.assign(e,{adcGeneric:true,speed:0,hp:140,maxHp:140});g.setFoes([e]);
+ click(e.x+34,e.y-38);assert.equal(g.player.order,null);assert.ok(g.player.target);click(e.x+24,e.y-50);assert.equal(g.player.order?.id,e.id);advance(g,.3);assert.ok(e.hp<140);
+});
+test('ADC selects the enemy health bar without targeting empty space above it',()=>{
+ const {g,click}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+160,g.player.y);Object.assign(e,{adcGeneric:true,speed:0});g.setFoes([e]);
+ click(e.x,e.y-84);assert.equal(g.player.order?.id,e.id);click(e.x,e.y-92);assert.equal(g.player.order,null);assert.ok(g.player.target);
+});
+test('ADC selects the closer foot hitbox for enemies beside each other',()=>{
+ const {g,click}=boot();g.reset('adc');g.disableSpawn();const p=g.player,left=g.enemy(p.x+150,p.y),right=g.enemy(p.x+180,p.y);
+ for(const e of [left,right])Object.assign(e,{adcGeneric:true,speed:0});g.setFoes([left,right]);click(left.x,left.y);assert.equal(p.order?.id,left.id);
+});
+test('ADC clicking overlapping enemy art selects the visually frontmost target',()=>{
+ const {g,click}=boot();g.reset('adc');g.disableSpawn();const p=g.player,back=g.enemy(p.x+160,p.y),front=g.enemy(p.x+160,p.y+35);
+ for(const e of [back,front])Object.assign(e,{adcGeneric:true,speed:0,hp:140,maxHp:140});g.setFoes([back,front]);click(back.x,back.y-50);assert.equal(p.order?.id,front.id);
+});
+test('ADC attack move on ground prefers the in-range enemy nearest the cursor',()=>{
+ const {g,key,click}=boot();g.reset('adc');g.disableSpawn();const p=g.player,a=g.enemy(p.x+100,p.y),b=g.enemy(p.x-200,p.y);for(const e of [a,b])Object.assign(e,{adcGeneric:true,speed:0,hp:1000,maxHp:1000});g.setFoes([a,b]);
+ key('a');click(b.x-60,b.y,0);advance(g,.3);assert.equal(a.hp,1000);assert.ok(b.hp<1000);
+});
+test('ADC attack move keeps its committed target through windup',()=>{
+ const {g,key,click}=boot();g.reset('adc');g.disableSpawn();const p=g.player,a=g.enemy(p.x+140,p.y),b=g.enemy(p.x+220,p.y);
+ for(const e of [a,b])Object.assign(e,{adcGeneric:true,speed:0,hp:1000,maxHp:1000});g.setFoes([a,b]);key('a');click(p.x+260,p.y,0);advance(g,.016);assert.equal(p.windupTarget,b.id);
+ [a.x,b.x]=[b.x,a.x];advance(g,.016);assert.equal(p.focus,b.id);advance(g,.05);assert.ok(g.shots.some(s=>s.kind==='auto'&&s.targetId===b.id));
+});
+test('ADC starts with generic pursuers and independent ambient spells',()=>{
+ const {g}=boot();g.reset('adc');let launched=false,generic=false;
+ for(let i=0;i<600&&g.state==='playing';i++){advance(g,1/120);launched||=g.shots.some(s=>s.adcOwner==='adc');generic||=g.foes.some(e=>e.adcGeneric);}
+ assert.ok(generic,'generic target must appear');assert.ok(launched,'ambient spell must launch without kills');
+ assert.ok(g.foes.every(e=>e.adcGeneric&&!e.adcCaster),'no champion caster is a target');
+});
+
+test('ADC Ahri return survives caster death and Velkoz split retains cast budget',()=>{
+ for(const champion of ['ahri','velkoz']){
+  const {g}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+240,g.player.y);
+  Object.assign(e,{speed:0,adcCaster:true,adcChampion:champion,adcPursuer:true,shoot:0,contactCooldown:0});g.setFoes([e]);
+  advance(g,.42);const shot=g.shots.find(s=>s.adcCastId);assert.ok(shot,champion);const id=shot.adcCastId;assert.equal(shot.adcOwner,'adc');assert.equal(shot.adcCasterId,e.id);e.alive=false;
+  g.player.y+=150;advance(g,champion==='velkoz'?.95:.8);
+  assert.ok(g.shots.some(s=>s.adcCastId===id&&(champion==='ahri'?s.phase==='return':s.velkoz==='child')),champion);
+  assert.ok(g.adcLiveCasts().has(id));
+ }
+});
+test('ADC Syndra cancels E on death but a released sphere survives',()=>{
+ for(const killBeforeE of [true,false]){
+  const {g}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+230,g.player.y);
+  Object.assign(e,{speed:0,adcCaster:true,adcChampion:'syndra',adcSyndra:true,shoot:0,contactCooldown:0});g.setFoes([e]);g.setRng(0);
+  advance(g,.02);assert.equal(g.hazards[0].combo,true);g.player.y+=150;advance(g,.61);assert.equal(g.hazards[0].phase,'e');
+  if(killBeforeE)e.alive=false;advance(g,.46);
+  if(killBeforeE)assert.equal(g.shots.filter(s=>s.adcSyndraPush).length,0);
+  else{assert.ok(g.shots.some(s=>s.adcSyndraPush));e.alive=false;advance(g,.02);assert.ok(g.shots.some(s=>s.adcSyndraPush));}
+ }
+});
+test('ADC contact grace prevents stacked enemies from dealing simultaneous hits',()=>{
+ const {g}=boot();g.reset('adc');g.disableAdcRegen();g.disableSpawn();const p=g.player,a=g.enemy(p.x+5,p.y),b=g.enemy(p.x-5,p.y);
+ for(const e of [a,b])Object.assign(e,{speed:0,contactCooldown:0,shoot:999});g.setFoes([a,b]);advance(g,.1);
+ assert.equal(p.hp,120);advance(g,.3);assert.equal(p.hp,80);
+});
+
+
+test('ADC Lux beam cancels on caster death without creating another caster',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+250,g.player.y);e.speed=0;g.setFoes([e]);
+ assert.equal(g.adcBeam(e,Math.PI,true,e.id),true);assert.equal(g.foes.length,1);e.alive=false;advance(g,1.2);
+ assert.equal(g.player.hp,160);assert.equal(g.hazards.length,0);
+});
+test('ADC Orianna Q completes after caster death but cancels R',()=>{
+ const {g}=boot();g.reset('adc');g.disableAdcRegen();g.disableSpawn();const e=g.enemy(g.player.x+230,g.player.y);e.adcChampion='orianna';e.speed=0;g.setFoes([e]);
+ assert.equal(g.adcStartSpecial(e),true);advance(g,.4);assert.equal(g.hazards[0].phase,'travel');e.alive=false;advance(g,.7);
+ assert.equal(g.player.hp,142);assert.equal(g.hazards.length,0);
+});
+test('ADC Cassiopeia cone respects facing and keeps caster targetable',()=>{
+ for(const toward of [true,false]){
+  const {g}=boot();g.reset('adc');g.disableAdcRegen();g.disableSpawn();const e=g.enemy(g.player.x+200,g.player.y);e.adcChampion='cassio';e.speed=0;g.setFoes([e]);
+  g.player.facing=toward?0:Math.PI;assert.equal(g.adcStartSpecial(e),true);assert.equal(e.alive,true);advance(g,1.1);
+  assert.equal(g.player.hp,toward?130:160);assert.equal(g.foes.length,1);
+ }
+});
+test('ADC Malphite moves its targetable body and gives contact recovery',()=>{
+ const {g}=boot();g.reset('adc');g.disableAdcRegen();g.disableSpawn();const e=g.enemy(g.player.x+250,g.player.y);e.adcChampion='malphite';e.speed=0;e.contactCooldown=0;g.setFoes([e]);
+ assert.equal(g.adcStartSpecial(e),true);const start=e.x;advance(g,1.05);assert.ok(e.x<start);assert.equal(g.foes.length,1);assert.equal(g.player.hp,128);
+ advance(g,.5);assert.equal(g.player.hp,128);
+});
+
+test('ADC ambient Xerath Q and W do not create enemy targets',()=>{
+ for(const name of ['xerath-q','xerath-w']){
+  const {g}=boot();g.reset('adc');g.disableSpawn();g.adcState.bag=[name];g.adcState.ambientAt=0;advance(g,.02);
+  assert.ok(g.hazards.some(h=>h.adcBeam||h.adcArea),name);assert.equal(g.foes.length,0);
+ }
+});
+test('ADC complex special waits for existing casts',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player;
+ const line=g.enemy(p.x+240,p.y),special=g.enemy(p.x-250,p.y);
+ Object.assign(line,{speed:0,adcCaster:true,adcChampion:'lux',shoot:0,contactCooldown:0});
+ Object.assign(special,{speed:0,adcCaster:true,adcChampion:'cassio',shoot:0,contactCooldown:0});g.setFoes([line,special]);
+ advance(g,.1);assert.ok(line.pending);assert.ok(!g.hazards.some(h=>h.adcSpecial));assert.ok(g.adcLiveCasts().size<=2);
+});
+
+test('ADC Blitz hook persists after caster death and blocks Flash while pulling',()=>{
+ const {g}=boot();g.reset('adc');g.disableAdcRegen();g.disableSpawn();const p=g.player,e=g.enemy(p.x+240,p.y);
+ Object.assign(e,{speed:0,adcCaster:true,adcChampion:'blitz',adcPursuer:true,shoot:0,contactCooldown:0});g.setFoes([e]);
+ advance(g,.42);assert.ok(g.shots.some(s=>s.hook));e.alive=false;advance(g,.23);
+ assert.ok(p.hooked,'released hook starts pulling');const x=p.x;g.cast('f');assert.equal(p.cd.f,0);advance(g,.5);
+ assert.equal(p.hooked,null);assert.ok(p.x>x);assert.equal(p.hp,136);
+});
+test('ADC uncommitted special casts cancel when the body dies',()=>{
+ for(const name of ['orianna','malphite','cassio']){
+  const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,e=g.enemy(p.x+230,p.y);e.adcChampion=name;e.speed=0;g.setFoes([e]);
+  assert.equal(g.adcStartSpecial(e),true);advance(g,.1);e.alive=false;advance(g,1.5);
+  assert.equal(p.hp,160,name);assert.equal(g.hazards.length,0,name);
+ }
+});
+test('ADC pause freezes a committed Syndra Q until resume',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+240,g.player.y);
+ Object.assign(e,{speed:0,adcCaster:true,adcChampion:'syndra',adcSyndra:true,shoot:0,contactCooldown:0});g.setFoes([e]);g.setRng(0);advance(g,.02);
+ const h=g.hazards[0],remaining=h.ttl;g.pause();advance(g,1);assert.equal(h.ttl,remaining);assert.equal(g.player.hp,160);
+ g.pause();advance(g,.7);assert.ok(g.player.hp<160);
+});
+
+test('ADC special timing agrees at 30, 60 and 120 rendered FPS',()=>{
+ const results=[];
+ for(const fps of [30,60,120]){
+  const {g}=boot();g.reset('adc');g.disableAdcRegen();g.disableSpawn();const e=g.enemy(g.player.x+230,g.player.y);
+  e.adcChampion='malphite';e.speed=0;g.setFoes([e]);assert.ok(g.adcStartSpecial(e));g.loop(1000);
+  for(let i=1;i<=fps*2;i++)g.loop(1000+i*1000/fps);
+  results.push([g.player.hp,Math.round(e.x*1000),g.hazards.length]);
+ }
+ assert.deepEqual(results[0],results[1]);assert.deepEqual(results[1],results[2]);
+});
+
+test('ADC Tristana chooses front, back and mirrored side art by facing',()=>{
+ const {g,node,draws}=boot();g.reset('adc');g.disableSpawn();for(const id of ['tristanaArt','tristanaFrontArt','tristanaBackArt'])Object.assign(node(id),{complete:true,naturalWidth:100});
+ for(const [angle,id] of [[0,'tristanaArt'],[Math.PI,'tristanaArt'],[Math.PI/2,'tristanaFrontArt'],[-Math.PI/2,'tristanaBackArt']]){draws.length=0;g.player.facing=angle;g.render();assert.ok(draws.includes(node(id)),`facing ${angle}`);}
+});
+test('ADC HUD layout and control help reset when switching back to Dodge',()=>{
+ const {g,node}=boot('ahri'),active=new Set();
+ node('gameShell').classList.toggle=(name,on)=>on?active.add(name):active.delete(name);
+ node('gameShell').classList.remove=name=>active.delete(name);
+ g.reset('adc');assert.ok(active.has('adc-playing'));assert.equal(node('adcAbilityHelp').hidden,false);assert.equal(node('standardAbilityHelp').hidden,true);
+ g.reset('dodge');assert.equal(active.has('adc-playing'),false);assert.equal(node('adcAbilityHelp').hidden,true);assert.equal(node('standardAbilityHelp').hidden,false);
+});
+
+
+test('ADC stand-off enemies stay inside the arena when retreating at an edge',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();g.player.x=1140;g.player.y=340;const e=g.enemy(1178,340);
+ Object.assign(e,{speed:185,adcCaster:true,adcChampion:'lux',adcPursuer:false,shoot:999,contactCooldown:0});g.setFoes([e]);advance(g,1);
+ assert.ok(e.x<=1178&&e.x>=22);assert.ok(e.y>=59&&e.y<=639);
+});
+
+test('ADC mixed opening produces generic targets and ambient casts across seeds',()=>{
+ for(const seed of [1,7,99,1049,314159,8000001]){
+  const {g}=boot();g.reset('adc');g.setRng(seed);let cast=false,generic=false;
+  for(let i=0;i<600&&g.state==='playing';i++){advance(g,1/120);generic||=g.foes.some(e=>e.adcGeneric);cast||=g.shots.some(s=>s.adcCastId);}
+  assert.ok(generic&&cast,`seed ${seed}: generic=${generic} cast=${cast}`);
+ }
+});
+
+test('ADC ambient bag weights ordinary spells and avoids repeating its previous family',()=>{
+ for(const seed of [1,7,99,1049,314159]){
+  const {g}=boot();g.reset('adc');g.disableSpawn();g.setRng(seed);g.adcState.bag=[];g.adcState.lastAmbient='lux';g.adcState.ambientAt=0;advance(g,.01);
+  const bag=g.adcState.lastAmbient==='lux'?g.adcState.bag:[g.adcState.lastAmbient,...g.adcState.bag];
+  assert.equal(bag.length,17);assert.notEqual(bag[0],'lux');
+  for(let i=1;i<bag.length-1;i++)assert.notEqual(bag[i],bag[i-1],`repeated family at ${i}`);
+  for(const name of ['ezreal','lux','ahri','blitz','velkoz'])assert.equal(bag.filter(x=>x===name).length,2,name);
+  for(const name of ['xerath-q','xerath-w','lux-r','syndra','orianna','malphite','cassio'])assert.equal(bag.filter(x=>x===name).length,1,name);
+ }
+});
+test('ADC coincident pursuers separate instead of remaining stacked',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const a=g.enemy(g.player.x+180,g.player.y),b=g.enemy(a.x,a.y);
+ Object.assign(a,{adcGeneric:true,speed:0});Object.assign(b,{adcGeneric:true,speed:0});g.setFoes([a,b]);advance(g,.5);
+ assert.ok(Math.hypot(a.x-b.x,a.y-b.y)>20,'coincident targets should become distinct');
+});
+test('ADC spawn warnings remain safely separated near arena corners',()=>{
+ for(const [x,y] of [[30,70],[1170,70],[30,630],[1170,630]])for(const seed of [7,9001,503219]){
+  const {g}=boot();g.reset('adc');g.disableSpawn();g.player.x=x;g.player.y=y;g.setRng(seed);g.addEnemy();
+  assert.equal(g.foes.length,1,`corner ${x},${y}, seed ${seed}`);const e=g.foes[0];
+  assert.ok(Math.hypot(e.x-x,e.y-y)>=285);assert.equal(e.spawnTimer,0);assert.ok(e.x>=22&&e.x<=1178&&e.y>=59&&e.y<=639);
+ }
+});
+test('ADC corner arrivals avoid overlapping visible ambient casters',()=>{
+ for(const kind of ['emitter','special','beam','area']){
+  const {g}=boot();g.reset('adc');g.disableSpawn();g.setRng(7);g.adcState.cornerBag=[0];const source={x:66,y:103};
+  const hazard=kind==='emitter'?{adcEmitter:true,actor:source}:kind==='special'?{adcAmbient:true,actor:source}:kind==='beam'?{adcBeam:true,...source}:{adcArea:true,adcSource:source};
+  g.hazards.push({...hazard,ttl:1,max:1,phase:"windup"});g.addEnemy();assert.equal(g.foes.length,1,kind);assert.ok(Math.hypot(g.foes[0].x-source.x,g.foes[0].y-source.y)>=100,kind);
+ }
+
+});
+test('ADC corner bag reaches all four valid zones and defers when all are unsafe',()=>{
+ for(const seed of [1,7,99,9001,503219]){
+  const {g}=boot();g.reset('adc');g.disableSpawn();g.setRng(seed);const seen=new Set();
+  for(let i=0;i<4;i++){g.addEnemy();assert.equal(g.foes.length,1);const e=g.foes[0];const left=e.x<=102,right=e.x>=1098,top=e.y<=139,bottom=e.y>=559;
+   assert.ok((left||right)&&(top||bottom));assert.ok(e.x>=32&&e.x<=1168&&e.y>=86,'sprite and health bar remain visible at arrival');seen.add((right?1:0)+(bottom?2:0));g.setFoes([]);}
+  assert.equal(seen.size,4,`seed ${seed}`);
+ }
+ const {g}=boot();g.reset('adc');g.disableSpawn();const walkable=g.world.pointWalkable;g.world.pointWalkable=()=>false;
+ g.setSpawn(0);advance(g,1.5);assert.equal(g.foes.length,0);g.world.pointWalkable=walkable;
+ for(let i=0;i<50&&g.foes.length===0;i++)advance(g,.01);assert.equal(g.foes.length,1);advance(g,.1);assert.equal(g.foes.length,1);
+ advance(g,4);assert.equal(g.foes.length,2);advance(g,4);assert.ok(g.foes.length<=2);
+
+});
+test('ADC hook recovery prevents a second enemy from stacking unavoidable contact',()=>{
+ const {g}=boot();g.reset('adc');g.disableAdcRegen();g.disableSpawn();const p=g.player,blitz=g.enemy(p.x+240,p.y),other=g.enemy(p.x+205,p.y);
+ Object.assign(blitz,{speed:0,adcCaster:true,adcChampion:'blitz',adcPursuer:true,shoot:0,contactCooldown:0});
+ Object.assign(other,{speed:0,shoot:999,contactCooldown:0});g.setFoes([blitz,other]);advance(g,1.1);
+ assert.equal(p.hp,136);assert.equal(g.stats.contactDamage,0);assert.equal(g.stats.skillDamage,24);
+});
+
+
+test('ADC Rapid Fire displays its remaining duration inside Q and clears on mode change',()=>{
+ const {g,node}=boot('ahri');g.reset('adc');g.disableSpawn();g.cast('q');assert.equal(node('nameQ').textContent,'RAPID 7s');advance(g,1.1);assert.equal(node('nameQ').textContent,'RAPID 6s');advance(g,6);assert.equal(node('nameQ').textContent,'RAPID FIRE');g.reset('dodge');assert.equal(node('nameQ').textContent,'ORB');
+});
+test('ADC Rapid Fire increases attack cadence and expires',()=>{
+ const runs=[];
+ for(const boosted of [false,true]){
+  const {g}=boot();g.reset('adc');g.disableSpawn();g.adcState.ambientAt=999;const e=g.enemy(g.player.x+200,g.player.y);
+  Object.assign(e,{speed:0,hp:10000,maxHp:10000,contactCooldown:0});g.setFoes([e]);if(boosted)g.cast('q');g.attackOrder(e);advance(g,3);runs.push(g.stats.released);
+  if(boosted){assert.ok(g.player.cd.q>0);advance(g,4.1);assert.equal(g.player.adcRapid,0);}
+ }
+ assert.ok(runs[1]>runs[0],JSON.stringify(runs));
+});
+test('ADC Rapid Fire cadence is consistent at 30, 60 and 120 rendered FPS',()=>{
+ const outcomes=[];for(const fps of [30,60,120]){
+  const {g}=boot();g.reset('adc');g.disableSpawn();g.adcState.ambientAt=999;const e=g.enemy(g.player.x+200,g.player.y);
+  Object.assign(e,{speed:0,hp:10000,maxHp:10000});g.setFoes([e]);g.cast('q');g.attackOrder(e);g.loop(1000);
+  for(let i=1;i<=fps*3;i++)g.loop(1000+i*1000/fps);
+  outcomes.push([g.stats.released,g.stats.autoHits,e.hp]);
+ }
+ assert.deepEqual(outcomes[0],outcomes[1]);assert.deepEqual(outcomes[1],outcomes[2]);
+});
+test('ADC Explosive Charge stacks autos, detonates and resets Rocket Jump',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();g.adcState.ambientAt=999;const p=g.player,e=g.enemy(p.x+180,p.y);
+ Object.assign(e,{speed:0,hp:10000,maxHp:10000,contactCooldown:0});g.setFoes([e]);g.setAim(e.x,e.y);g.cast('e');assert.ok(e.adcCharge);p.cd.w=10;g.attackOrder(e);advance(g,1.5);
+ assert.equal(g.stats.autoHits,4);assert.equal(e.adcCharge,null);assert.equal(e.hp,10000-4*28-(32+4*12));assert.equal(p.cd.w,0);
+});
+test('ADC charge explosions show their true radius and announce a W reset once',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,e=g.enemy(p.x+180,p.y);
+ Object.assign(e,{speed:0,hp:1,maxHp:100,adcCharge:{remaining:3,stacks:4,radiusMultiplier:2}});g.setFoes([e]);p.cd.w=10;g.damageEnemy(e,1);
+ assert.equal(p.cd.w,0);assert.equal(g.fx.filter(f=>f.text==='W READY').length,1);assert.ok(g.fx.some(f=>f.adcBlast&&f.r===210));
+});
+test('ADC Rocket Jump lands, damages and slows; Buster Shot pushes a target',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();g.adcState.ambientAt=999;const p=g.player,e=g.enemy(p.x+200,p.y);
+ Object.assign(e,{speed:0,hp:10000,maxHp:10000,contactCooldown:0});g.setFoes([e]);g.setAim(e.x,e.y);g.cast('w');assert.ok(p.dashing?.adcJump);advance(g,.5);
+ assert.equal(p.dashing,null);assert.equal(e.hp,9955);assert.ok(e.adcSlow>0);assert.ok(p.cd.w>0);
+ p.x-=130;g.setAim(e.x,e.y);const before=e.x;g.cast('r');assert.ok(p.cd.r>0);assert.equal(e.hp,9955);advance(g,.4);assert.equal(e.hp,9895);assert.ok(e.x>before);
+});
+
+test('ADC does not render trajectory warning lines for pending enemy spells',()=>{
+ const {g,strokes}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+240,g.player.y);e.pending={angle:Math.PI,spell:g.REFERENCE_SPELLS.luxDodge};g.setFoes([e]);
+ g.render();assert.ok(!strokes.includes('#ff80634a'));assert.ok(!strokes.includes('#ffd1a4cc'));
+});
+test('ADC QWER labels and availability do not leak into Dodge',()=>{
+ const {g,node}=boot('ahri');g.reset('adc');assert.equal(node('nameQ').textContent,'RAPID FIRE');assert.equal(node('nameW').textContent,'ROCKET JUMP');
+ g.cast('q');assert.ok(g.player.cd.q>0);g.reset('dodge');assert.equal(node('nameQ').textContent,'ORB');assert.equal(node('nameW').textContent,'FOX-FIRE');assert.equal(g.player.cd.q,0);
+});
+
+test('ADC charge expires naturally and its passive damages nearby enemies',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,a=g.enemy(p.x+180,p.y),b=g.enemy(p.x+210,p.y);
+ Object.assign(a,{speed:0,hp:1000,maxHp:1000});Object.assign(b,{speed:0,hp:1000,maxHp:1000});g.setFoes([a,b]);g.setAim(a.x,a.y);g.cast('e');g.player.order=null;g.player.windup=0;g.player.windupTarget=null;advance(g,4.1);
+ assert.equal(a.adcCharge,null);assert.equal(a.hp,968);assert.equal(b.hp,968);
+ a.hp=28;g.attackOrder(a);advance(g,.5);assert.equal(a.alive,false);assert.equal(b.hp,956);
+});
+test('ADC Rocket Jump crosses a wall and kill resets its cooldown',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player;p.x=600;p.y=580;const e=g.enemy(850,580);
+ Object.assign(e,{speed:0,hp:40,maxHp:40});g.setFoes([e]);g.setAim(850,580);g.cast('w');advance(g,.5);
+ assert.equal(p.dashing,null);assert.ok(p.x>800);assert.equal(e.alive,false);assert.equal(p.cd.w,0);
+});
+test('ADC targeted E faces its chosen enemy',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,e=g.enemy(p.x-150,p.y);Object.assign(e,{adcGeneric:true,speed:0});g.setFoes([e]);p.facing=0;g.setAim(e.x,e.y);g.cast('e');
+ assert.ok(e.adcCharge);assert.ok(Math.cos(p.facing)<-.99);
+});
+test('ADC auto release faces the target current position and uses the same muzzle side',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,e=g.enemy(p.x+50,p.y);Object.assign(e,{adcGeneric:true,speed:0,hp:1000,maxHp:1000,contactCooldown:999});g.setFoes([e]);g.attackOrder(e);advance(g,.025);e.x=p.x-50;
+ for(let i=0;i<20&&g.stats.released===0;i++)g.update(1/120);assert.equal(g.stats.released,1);assert.ok(Math.cos(p.facing)<-.99);const shot=g.shots.find(s=>s.kind==='auto');assert.ok(shot);assert.ok(shot.adcMuzzle.x<0);
+});
+test('ADC target abilities reject out-of-range targets without consuming cooldown',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+300,g.player.y);e.speed=0;g.setFoes([e]);g.setAim(e.x,e.y);
+ g.cast('e');g.cast('r');assert.equal(e.adcCharge,undefined);assert.equal(g.player.cd.e,0);assert.equal(g.player.cd.r,0);
+});
+
+test('ADC ambient spell families do not create targetable champion bodies',()=>{
+ for(const name of ['ezreal','lux','ahri','blitz','velkoz','xerath-q','xerath-w','lux-r','syndra','orianna','malphite','cassio']){
+  const {g}=boot();g.reset('adc');g.disableSpawn();g.adcState.bag=[name];g.adcState.ambientAt=0;g.setRng(0);advance(g,.02);
+  assert.ok(g.shots.some(s=>s.adcOwner==='adc')||g.hazards.some(h=>h.adcOwner==='adc'),name);
+  assert.equal(g.foes.length,0,name);
+ }
+});
+
+
+test('ADC lethal fourth charge stack uses full explosion damage',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,a=g.enemy(p.x+180,p.y),b=g.enemy(p.x+210,p.y);
+ Object.assign(a,{speed:0,hp:28,maxHp:1000});Object.assign(b,{speed:0,hp:1000,maxHp:1000});g.setFoes([a,b]);g.setAim(a.x,a.y);g.cast('e');a.adcCharge.stacks=3;p.cd.w=10;g.attackOrder(a);advance(g,.5);
+ assert.equal(a.alive,false);assert.equal(b.hp,908);assert.equal(p.cd.w,0);
+});
+test('ADC Buster Shot knocks nearby targets without secondary damage',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,a=g.enemy(p.x+180,p.y),b=g.enemy(p.x+180,p.y+40);
+ for(const e of [a,b])Object.assign(e,{speed:0,hp:1000,maxHp:1000});g.setFoes([a,b]);g.setAim(a.x,a.y-60);g.cast('r');advance(g,.4);
+ assert.ok(a.x>p.x+180);assert.ok(b.x>p.x+180);assert.equal(a.hp,940);assert.equal(b.hp,1000);
+});
+
+test('ADC Rocket Jump interrupted by a hook does not trigger a landing or Ahri bolts',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,e=g.enemy(p.x+390,p.y);Object.assign(e,{speed:0,hp:1000,maxHp:1000});g.setFoes([e]);
+ g.setAim(p.x+390,p.y);g.cast('w');const shot=g.fire(p.x+120,p.y,-1000,0,'enemy',24,5,.5);
+ Object.assign(shot,{hook:true,anchor:{x:p.x+300,y:p.y},pullDistance:0,pullSpeed:900});advance(g,.12);
+ assert.ok(p.hooked);assert.equal(p.dashing,null);assert.equal(e.hp,1000);assert.ok(!g.shots.some(s=>s.kind==='rush'));
+});
+
+test('ADC Rocket Jump timing is consistent at 30, 60 and 120 rendered FPS',()=>{
+ const results=[];for(const fps of [30,60,120]){
+  const {g}=boot();g.reset('adc');g.disableSpawn();g.setAim(g.player.x+250,g.player.y);g.cast('w');g.loop(1000);
+  for(let i=1;i<=fps;i++)g.loop(1000+i*1000/fps);
+  results.push([Math.round(g.player.x*1000),Math.round(g.player.cd.w*1000),g.player.dashing]);
+ }
+ for(const result of results){assert.equal(result[0],850000);assert.equal(result[2],null);assert.ok(Math.abs(result[1]-21000)<=9);}
+});
+
+test('ADC ambient beams do not reveal a future trajectory line',()=>{
+ for(const lux of [false,true]){
+  const {g,strokes}=boot();g.reset('adc');g.disableSpawn();assert.ok(g.adcBeam({x:g.player.x+300,y:g.player.y},Math.PI,lux));g.render();
+  assert.ok(!strokes.includes('#ffe5a8aa'));assert.ok(!strokes.includes('#9edcffaa'));
+ }
+});
+
+
+test('ADC Buster Shot fourth stack detonates after knockback with expanded radius',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,a=g.enemy(p.x+180,p.y),b=g.enemy(p.x+390,p.y+170);
+ for(const e of [a,b])Object.assign(e,{speed:0,hp:1000,maxHp:1000});g.setFoes([a,b]);g.setAim(a.x,a.y);g.cast('e');g.player.order=null;g.player.windup=0;g.player.windupTarget=null;a.adcCharge.stacks=3;g.cast('r');
+ advance(g,.2);assert.equal(a.hp,940);assert.equal(a.adcCharge.stacks,4);assert.equal(a.adcCharge.pendingDetonation,true);
+ advance(g,.5);assert.equal(a.adcCharge,null);assert.equal(a.hp,860);assert.equal(b.hp,920,'expanded explosion reaches the nearby unit after knockback');
+});
+test('ADC launched Buster Shot expires if its target dies before impact',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+240,g.player.y);Object.assign(e,{speed:0,hp:1000,maxHp:1000});g.setFoes([e]);g.setAim(e.x,e.y);g.cast('r');
+ assert.ok(g.shots.some(s=>s.kind==='adcBuster'));e.alive=false;advance(g,.5);assert.ok(!g.shots.some(s=>s.kind==='adcBuster'));assert.equal(g.player.cd.r>0,true);
+});
+test('ADC E passive splash is restricted to auto-attack kills',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,a=g.enemy(p.x+130,p.y),b=g.enemy(p.x+180,p.y);
+ Object.assign(a,{speed:0,hp:45,maxHp:45});Object.assign(b,{speed:0,hp:1000,maxHp:1000});g.setFoes([a,b]);g.setAim(a.x,a.y);g.cast('r');advance(g,.4);
+ assert.equal(a.alive,false);assert.equal(b.hp,1000);
+});
+
+test('ADC ambient Cassiopeia has a visible source in range and uses facing',()=>{
+ for(const faceToward of [true,false]){
+  const {g}=boot();g.reset('adc');g.disableAdcRegen();g.disableSpawn();g.adcState.bag=['cassio'];g.adcState.ambientAt=0;g.setRng(0);advance(g,.02);
+  const h=g.hazards.find(h=>h.adcSpecial==='cassio');assert.ok(h&&h.adcAmbient);assert.ok(Math.hypot(h.x-g.player.x,h.y-g.player.y)<=350);assert.ok(h.x>=50&&h.x<=1150&&h.y>=105&&h.y<=570);
+  const angle=Math.atan2(h.y-g.player.y,h.x-g.player.x);g.player.facing=faceToward?angle:angle+Math.PI;advance(g,1.1);
+  assert.equal(g.player.hp,faceToward?130:160);assert.equal(g.foes.length,0);
+ }
+});
+test('ADC W landing and R impact each add one Explosive Charge stack',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,e=g.enemy(p.x+200,p.y);Object.assign(e,{speed:0,hp:1000,maxHp:1000});g.setFoes([e]);
+ g.setAim(e.x,e.y);g.cast('e');g.cast('w');advance(g,.5);assert.equal(e.adcCharge.stacks,1);
+ p.x-=130;g.setAim(e.x,e.y);g.cast('r');advance(g,.2);assert.equal(e.adcCharge.stacks,2);assert.equal(e.adcCharge.radiusMultiplier,2);
+});
+
+test('ADC killing a generic pursuer never cancels an unrelated ambient cast',()=>{
+ for(const name of ['ahri','orianna']){
+  const {g}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x-300,g.player.y);Object.assign(e,{adcGeneric:true,adcPursuer:true,speed:0,hp:28,maxHp:28});g.setFoes([e]);
+  g.adcState.bag=[name];g.adcState.ambientAt=0;g.setRng(0);advance(g,.02);const castId=[...g.adcLiveCasts().keys()][0];assert.ok(castId,name);
+  g.damageEnemy(e,28);assert.equal(e.alive,false);assert.ok(g.adcLiveCasts().has(castId),name);advance(g,.1);assert.ok(g.adcLiveCasts().has(castId),name);
+ }
+});
+
+test('ADC Rapid Fire never resets an existing windup or recovery',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,e=g.enemy(p.x+180,p.y);Object.assign(e,{speed:0,hp:10000,maxHp:10000});g.setFoes([e]);
+ g.attackOrder(e);advance(g,.025);const remaining=p.windup;g.cast('q');assert.equal(p.windup,remaining);advance(g,.2);assert.equal(g.stats.released,1);
+ const recovery=p.attackTimer;assert.ok(recovery>0);p.cd.q=0;g.cast('q');assert.equal(p.attackTimer,recovery);
+});
+test('ADC Rapid Fire expiration during windup commits exactly one auto',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,e=g.enemy(p.x+180,p.y);Object.assign(e,{speed:0,hp:10000,maxHp:10000});g.setFoes([e]);
+ p.adcRapid=.02;g.attackOrder(e);advance(g,.24);assert.equal(p.adcRapid,0);assert.equal(g.stats.released,1);assert.equal(g.stats.autoHits,1);
+});
+
+test('ADC ambient line skills vary peripheral sides when room permits',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();g.adcState.bag=['ezreal','lux'];g.adcState.ambientAt=0;g.setRng(0);advance(g,.02);
+ const first=g.adcState.lastOriginAngle;assert.equal(typeof first,'number');for(const shot of g.shots)shot.alive=false;g.adcState.ambientAt=0;advance(g,.02);
+ const second=g.adcState.lastOriginAngle,difference=Math.abs(Math.atan2(Math.sin(second-first),Math.cos(second-first)));
+ assert.ok(difference>=Math.PI/3-1e-9,`angle separation ${difference}`);
+});
+
+test('ADC Rocket Jump validates destination, prevents Flash in flight and expires slow',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,e=g.enemy(p.x+180,p.y);Object.assign(e,{speed:0,hp:1000,maxHp:1000});g.setFoes([e]);
+ g.setAim(p.x,p.y);g.cast('w');assert.equal(p.cd.w,0);assert.equal(p.dashing,null);
+ g.setAim(e.x,e.y);g.cast('w');g.cast('f');assert.equal(p.cd.f,0);assert.ok(p.dashing?.adcJump);advance(g,.4);assert.ok(e.adcSlow>0);advance(g,2.1);assert.equal(e.adcSlow,0);
+});
+test('ADC surrounding spell casters reuse visible Dodge champion art without becoming targets',()=>{
+ for(const [family,art] of [['ezreal','explorerArt'],['ahri','ahriArt'],['velkoz','voidArt'],['syndra','umbralArt'],['orianna','clockworkArt'],['malphite','stoneArt'],['cassio','serpentArt']]){
+  const {g,node,draws}=boot();g.reset('adc');g.disableSpawn();Object.assign(node(art),{complete:true,naturalWidth:100});g.adcState.bag=[family];g.adcState.ambientAt=0;g.setRng(7);advance(g,.02);g.render();assert.ok(draws.includes(node(art)),family);assert.equal(g.foes.length,0,family);
+ }
+});
+test('ADC Rocket Jump wall snapping never extends its maximum range',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player;Object.assign(p,{x:22,y:527});const a=5.061454830783556;g.setAim(p.x+Math.cos(a)*450,p.y+Math.sin(a)*450);g.cast('w');
+ assert.ok(p.dashing);assert.ok(Math.hypot(p.dashing.x-p.x,p.dashing.y-p.y)<=450+1e-6);assert.ok(g.world.pointWalkable(p.dashing,p.r));
+});
+test('ADC Lux and Xerath casters remain visible briefly after impact without repeating damage',()=>{
+ for(const name of ['lux-r','xerath-q','xerath-w']){
+  const {g}=boot();g.reset('adc');g.disableAdcRegen();g.disableSpawn();g.setRng(7);g.adcState.bag=[name];g.adcState.ambientAt=0;advance(g,1.15);
+  const h=g.hazards.find(h=>h.adcBeam||h.adcArea);assert.ok(h,name);assert.equal(h.phase,'exit',name);const hp=g.player.hp;advance(g,.6);assert.equal(g.player.hp,hp,name);assert.ok(!g.hazards.includes(h),name);
+ }
+});
+test('ADC ambient Malphite remains visible through recovery without a second impact',()=>{
+ const {g,node,draws}=boot();g.reset('adc');g.disableAdcRegen();g.disableSpawn();Object.assign(node('stoneArt'),{complete:true,naturalWidth:100});g.setRng(7);g.adcState.bag=['malphite'];g.adcState.ambientAt=0;advance(g,1.05);
+ const h=g.hazards.find(h=>h.adcSpecial==='malphite');assert.ok(h);assert.equal(h.phase,'recovery');assert.ok(g.adcLiveCasts().has(h.adcCastId));const hp=g.player.hp;g.render();assert.ok(draws.includes(node('stoneArt')));advance(g,.9);assert.equal(g.player.hp,hp);assert.ok(!g.hazards.includes(h));
+});
+test('ADC Ahri caster remains visible until her returning orb completes',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();g.setRng(7);g.adcState.bag=['ahri'];g.adcState.ambientAt=0;advance(g,1.4);
+ const orb=g.shots.find(s=>s.kind==='enemyOrb'&&s.phase==='return');assert.ok(orb,'returning orb should still be active');
+ const source=g.hazards.find(h=>h.adcEmitter&&h.adcCastId===orb.adcCastId);assert.ok(source,'caster should remain visible for the return');assert.equal(g.foes.length,0);
+ advance(g,1.5);assert.ok(!g.hazards.includes(source));
+});
+test('ADC Lux caster remains visible while her long-range projectile is in flight',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();g.setRng(7);g.adcState.bag=['lux'];g.adcState.ambientAt=0;advance(g,.02);g.player.y+=200;advance(g,1.28);
+ const shot=g.shots.find(s=>s.spellName==='LUX Q'&&s.alive);assert.ok(shot);const source=g.hazards.find(h=>h.adcEmitter&&h.adcCastId===shot.adcCastId);assert.ok(source);advance(g,1.2);assert.ok(!g.hazards.includes(source));
+});
+test('ADC Velkoz caster remains visible through his split missiles',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();g.setRng(7);g.adcState.bag=['velkoz'];g.adcState.ambientAt=0;advance(g,1.4);
+ const child=g.shots.find(s=>s.velkoz==='child'&&s.alive);assert.ok(child,'split projectile should still be active');const source=g.hazards.find(h=>h.adcEmitter&&h.adcCastId===child.adcCastId);assert.ok(source,'caster should remain visible during the split');assert.equal(g.foes.length,0);
+ advance(g,1.5);assert.ok(!g.hazards.includes(source));
+});
+test('ADC Blitz caster remains visible during the hook and pull',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();g.setRng(7);g.adcState.bag=['blitz'];g.adcState.ambientAt=0;
+ for(let i=0;i<300&&!g.player.hooked;i++)g.update(1/120);assert.ok(g.player.hooked,'hook should reach the player');
+ const source=g.hazards.find(h=>h.adcEmitter&&h.profile==='blitz');assert.ok(source);assert.equal(source.phase,'follow');g.update(1/120);assert.ok(g.hazards.includes(source));advance(g,1.8);assert.ok(!g.hazards.includes(source));
+});
+test('ADC ambient emitters cannot be targeted or reset Rocket Jump',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();g.adcState.bag=['ezreal'];g.adcState.ambientAt=0;g.player.cd.w=10;advance(g,.02);
+ assert.equal(g.foes.length,0);const emitter=g.hazards.find(h=>h.adcEmitter);assert.ok(emitter);g.setAim(emitter.actor.x,emitter.actor.y);g.cast('e');g.cast('r');
+ assert.equal(g.player.cd.e,0);assert.equal(g.player.cd.r,0);assert.ok(g.player.cd.w>9);advance(g,.45);assert.ok(g.shots.some(s=>s.adcOwner==='adc'));
+});
+
+test('ADC ambient sources stay visible and can appear near arena corners',()=>{
+ for(const [x,y] of [[30,70],[1170,70],[30,630],[1170,630]]){
+  const {g}=boot();g.reset('adc');g.disableSpawn();g.player.x=x;g.player.y=y;g.adcState.bag=['cassio'];g.adcState.ambientAt=0;g.setRng(7);advance(g,.1);
+  const h=g.hazards.find(h=>h.adcSpecial==='cassio');assert.ok(h,`corner ${x},${y}`);assert.ok(h.x>=50&&h.x<=1150&&h.y>=105&&h.y<=570);
+ }
+});
+
+test('ADC charged pack kills resolve each explosion once without passive loops',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,a=g.enemy(p.x+130,p.y),b=g.enemy(p.x+160,p.y),c=g.enemy(p.x+190,p.y);
+ Object.assign(a,{speed:0,hp:1,maxHp:100,adcCharge:{remaining:3,stacks:4}});Object.assign(b,{speed:0,hp:50,maxHp:100,adcCharge:{remaining:3,stacks:0}});Object.assign(c,{speed:0,hp:500,maxHp:500});g.setFoes([a,b,c]);
+ p.cd.w=10;g.damageEnemy(a,1);assert.equal(a.alive,false);assert.equal(b.alive,false);assert.equal(c.hp,388);assert.equal(p.cd.w,0);
+});
+
+test('ADC ambient scheduler waits for Rocket Jump to finish before a new cast',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();g.adcState.bag=['ezreal'];g.adcState.ambientAt=0;g.setAim(g.player.x+220,g.player.y);g.cast('w');advance(g,.1);
+ assert.ok(g.player.dashing);assert.equal(g.adcLiveCasts().size,0);advance(g,.4);assert.ok(g.adcLiveCasts().size>0);
+});
+
+test('ADC E orders an immediate attack on the selected bomb carrier',()=>{
+ const {g}=boot();g.reset('adc',0);g.disableSpawn();const a=foe(g,700,337.5),b=g.enemy(700,342);b.speed=0;b.hp=b.maxHp=10000;g.setFoes([a,b]);g.setAim(b.x,b.y-40);g.cast('e');
+ assert.equal(b.adcCharge.stacks,0);assert.equal(g.player.order.id,b.id);assert.equal(g.player.windupTarget,b.id);advance(g,.1);assert.equal(g.stats.released,1);
+});
+test('ADC E respects recovery, movement and invalid casts',()=>{
+ const {g}=boot();g.reset('adc',7);g.disableSpawn();const a=foe(g,700,337.5);g.player.attackTimer=.3;g.setAim(a.x,a.y);g.cast('e');assert.equal(g.player.windup,0);assert.equal(g.player.order.id,a.id);g.moveTo(550,400);advance(g,.4);assert.equal(g.stats.released,0);assert.equal(g.player.order,null);
+ const order={type:'attack',id:a.id};g.player.order=order;g.player.cd.e=0;g.setAim(10,10);g.cast('e');assert.equal(g.player.order,order);
+});
+test('ADC seeds reproduce the opening and vary across runs, including zero',()=>{
+ const {g}=boot();function trace(seed){g.reset('adc',seed);advance(g,2);return JSON.stringify({seed:g.adcState.seed,bag:g.adcState.bag,foes:g.foes.map(e=>[e.x,e.y]),hazards:g.hazards.map(h=>[h.profile,h.x,h.y])});}
+ assert.equal(trace(0),trace(0));assert.notEqual(trace(0),trace(12345));g.reset('adc');const first=g.adcState.seed;g.reset('adc');assert.notEqual(g.adcState.seed,first);
+});
+test('ADC regeneration uses playing simulation time and does not resurrect',()=>{
+ const {g}=boot();g.reset('adc',0);g.disableSpawn();g.player.hp=100;advance(g,1.5);assert.ok(Math.abs(g.player.hp-101.5)<1e-6);g.pause();advance(g,1);assert.ok(Math.abs(g.player.hp-101.5)<1e-6);g.pause();g.player.hp=159.9;advance(g,1);assert.equal(g.player.hp,160);g.player.hp=1;g.applyImpact(g.player,{sourceTeam:'enemy',kind:'contact',raw:40,damageType:'true'});advance(g,1);assert.equal(g.player.hp,0);g.reset('adc',0);assert.equal(g.player.hp,160);
+});
+test('ADC movement and pressure phases follow the playtest profile',()=>{
+ const {g}=boot();g.reset('adc',42);g.disableSpawn();assert.equal(g.player.speed,260);g.player.hp=100;advance(g,4.1);assert.equal(g.adcState.phase,'busy');const end=g.adcState.phaseUntil;assert.ok(end>=12&&end<=16.1);advance(g,end-g.time+.02);assert.equal(g.adcState.phase,'quiet');
+});
+
+test('ADC E alone completes four attack stacks and resets Rocket Jump',()=>{
+ const {g}=boot();g.reset('adc',0);g.disableSpawn();const e=foe(g,730,337.5);g.player.cd.w=10;g.setAim(e.x,e.y);g.cast('e');
+ assert.equal(e.adcCharge.stacks,0);advance(g,1.5);
+ assert.equal(g.stats.autoHits,4);assert.equal(e.adcCharge,null);assert.equal(e.hp,9808);assert.equal(g.player.cd.w,0);
+});
+test('ADC E retargets an unfinished windup while preserving a released missile',()=>{
+ const {g}=boot();g.reset('adc',0);g.disableSpawn();const a=foe(g,730,300),b=g.enemy(730,375);Object.assign(b,{speed:0,hp:10000,maxHp:10000});g.setFoes([a,b]);
+ g.attackOrder(a);advance(g,.025);assert.equal(g.player.windupTarget,a.id);g.setAim(b.x,b.y);g.cast('e');assert.equal(g.player.windupTarget,b.id);advance(g,.4);assert.equal(a.hp,10000);assert.equal(b.hp,9972);
+ g.reset('adc',0);g.disableSpawn();const c=foe(g,730,300),d=g.enemy(730,375);Object.assign(d,{speed:0,hp:10000,maxHp:10000});g.setFoes([c,d]);g.attackOrder(c);advance(g,.07);assert.ok(g.shots.some(s=>s.targetId===c.id));g.setAim(d.x,d.y);g.cast('e');advance(g,.35);assert.equal(c.hp,9972);assert.equal(g.player.order.id,d.id);
 });

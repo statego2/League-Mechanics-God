@@ -1825,3 +1825,224 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 - Re-ran syntax checks and the full serial suite: 547/547, approximately 79.7 s, build 2c9a3f00f828. Added a read-only visit benchmark: 20 fixed seeds each for stationary/moving profiles, 30 s warmup plus 120 s measurement. Baseline actual visits/minute 5.075 / 4.950; target approximately 3.806 / 3.713. Candidate acceptance ratio 0.70–0.80 in each profile. Gap 6.5–8.5 s is a proposed initial candidate, not yet applied or validated.
 - Verified GitHub Pages source via API: codex/controls-and-dodge, root path, legacy build. Remote branch/latest successful Pages commit 6d1777198cc015f5aeb347e8d5f0c90818b2c109 differs from the local gameplay baseline. No push/deploy performed in this planning session.
 - No runtime, HTML, CSS or gameplay-test changes. No new browser playtest. Evidence lives in docs/dodge-release-audit-2026-11-11/. Next: implement Syndra-only cadence change, implement specified home, pass DoD and publish/verify live; do not open another feature cycle.
+
+## ADC Mechanics God — initial playable slice (2026-11-16)
+
+- Reconciled the plan's stale `main` baseline: the newer, tested Dodge source is on `codex/controls-and-dodge` at `bf1a66c`. ADC work starts from that branch; `main` itself remains the earlier alpha. The plan and vision are copied from `codex/adc-mechanics-plan`.
+- Replaced the home screen's Kite card with an isolated `adc` mode. It has a Tristana-inspired original vector gunner, 275-unit auto range, fixed .18s windup/.72s attack period, four-hit pursuers, timed contact damage, progressively introduced ranged line casts, ten-kill finish and factual results. Dodge's own enemy and attack behavior remains mode-gated.
+- Verification: two targeted Node tests pass for cancel/release and contact cooldown/reset; headless Chromium smoke checked ADC selection, A-click, pause/resume, restart and switching to Dodge, without page errors. This is not a full gameplay or balance validation. Full existing suite was started; its result must be recorded when available.
+- Known gaps: no spawn telegraph or enemy separation; generic ranged line is an interim pressure mechanic, not the full Dodge champion roster or a Syndra variant. No full ten-kill browser run, low-frame-rate checks, detailed difficulty tuning or full Dodge regression has been completed. This is an initial slice, not completion of the ADC plan.
+- Next: (1) complete the mixed roster and safe, telegraphed spawns; (2) add deterministic range, chase, target-death, rate and terminal-state coverage; (3) play a full ten-kill run and regression-test Dodge before release.
+
+## ADC follow-up — encounters and regression (2026-11-16)
+
+- Added safe, untargetable spawn warnings, modest separation, visible targeting/windup feedback, ADC-only hiding of Ahri abilities, and stand-off Ezreal/Lux-style line casts plus a single telegraphed Syndra Q. The Syndra cast cancels on caster death; launched line missiles persist. Cast concurrency is capped at two. These ADC-only variants are approximations, not the entire Dodge roster; ADC currently has fixed tuning regardless of the menu difficulty.
+- Seven focused ADC tests pass, including four-hit kills, range/chase, moving after release, contact cooldown, spawn protection, Syndra cancellation, terminal/reset, and cadence at 30/60/120 rendered FPS. The build-ID check passes. A filtered run of 60 existing Dodge tests passed. Chromium smoke: mode selection, attack-move input, pause/resume, restart, and return to Dodge had no page errors. A basic automated kiting agent died after 35.9 seconds; it is not evidence of balance or a completed run.
+- The full Node suite was launched but has not completed at the time of this handoff. A human full ten-kill browser run, balance assessment, broader champion roster and full regression remain open. Avoid claiming completion or publication.
+- Next: (1) finish and record the full regression suite on the final build; (2) play and tune a complete run, checking safe spawns, ranged retreat and meaningful attack windows; (3) add and test more Dodge enemy variants only where they remain fair in the combined encounter.
+
+## ADC verification follow-up (2026-11-16)
+
+- Chromium executed a complete accelerated ADC run via [verify-adc-browser.cjs](../scripts/verify-adc-browser.cjs): 10 kills in 41.4 simulated seconds, 41 autos hit, 160 HP remaining, no page errors. The bot issues in-memory attack/move orders against the real game simulation; only initial mode selection is a real browser click. It is not a human playtest, real-time pointer-input test or balance certification. The script requires a separately installed Playwright and a local HTTP server on port 8765.
+- Nine focused ADC tests plus the build-ID check passed, including nearest-target A-click, swept projectile collision, and uncommitted versus launched caster attacks. The previous filtered set of 60 Dodge tests passed. The full suite was relaunched on the final gameplay source; its result is pending. The optional bot uses one deterministic encounter and cannot establish overall difficulty or fairness.
+- Next: (1) record the full suite result; (2) play the full run with a mouse and keyboard and tune encounter pacing; (3) assess whether further champion variants add useful readable pressure before expanding the roster.
+
+- Full suite run against gameplay build `0f5a05f44ca3`: 556 of 558 passed; two menu assertions still expected the replaced Kite card. Updated those assertions to expect ADC, and both pass in the focused rerun together with all nine ADC tests and the build-ID check (13/13). A fresh full-suite rerun is in progress; do not report it as passed until it finishes.
+
+- Final full regression: `node --test tests/*.test.cjs` passed **561/561** tests in 180.3 seconds after updating the two menu expectations. The automated Chromium 10-kill result above and the separate real-input smoke test also passed. Human playtesting and subjective balance assessment are still outstanding; the mode remains a prototype.
+
+## ADC real-input browser run (2026-11-16)
+
+- Headless Chromium played the entire ADC challenge at real-time speed using actual Playwright mouse and keyboard events, with read-only game-state instrumentation to choose actions: 10/10 kills in 41.6s, 96/160 HP, 41 autos hit, 40 contact and 24 skillshot damage, no page errors. The bot's exact decisions are reproducible via [verify-adc-real-input.cjs](../scripts/verify-adc-real-input.cjs) (optional Playwright, server on port 8765, and `PLAYWRIGHT_CHROMIUM_EXECUTABLE` if needed). This verifies a full input-to-result path, but does not substitute for human assessment of balance or feel.
+- The full automated regression remains 561/561 passing. The draft PR targets the newer Dodge branch. Next: user playtest and tune encounter pacing; assess further champion variants; merge/release only after the target branch and release workflow are chosen.
+
+## ADC redesign after user rejection — 2026-11-17
+
+- User rejected the prototype's visible result: no recognizable Tristana and insufficient visible champion skillshots. The historical 561/561 automated checks and successful bot runs verify parts of the old prototype only; they are not product acceptance and do not validate the redesign.
+- Audited `codex/adc-mode` at `c1bf897`. Current `drawAdc` draws primitive shapes; no Tristana sprite exists in `assets/`. Casters are kill-gated (`kills>=2`) and selected with enemy-ID arithmetic. ADC has only limited Ezreal/Lux line and single Syndra-Q variants. `releaseEnemy` attaches champion `spellName` only for Dodge visitors, so the ADC lines miss the corresponding champion-specific projectile render path. These are source findings, not a new browser playtest.
+- Astra replaced `docs/ADC-PLAN.md` with the current-source redesign and added `ADC_NEXT_AI_PROMPT.md` as the executable Terra handoff. Blueprint/README/vision now identify the rejected prototype and make the new ADC scope authoritative. This session changes documentation only; Dodge, runtime, assets and tests remain unchanged. No new implementation, merge or deployment is claimed.
+- GitHub work continues on `codex/adc-mode`, existing draft PR #7 into `codex/controls-and-dodge`; do not restart from stale `main`. This documentation checkpoint is recorded in Git history; no unrelated local `CODE2_HANDOFF/` content is included.
+- Next three actions for Terra: (1) establish the actual baseline and deliver recognizable Tristana plus an early visible caster/chaser encounter, with gameplay screenshots; (2) implement the specified ADC-only champion adapters and encounter scheduling without changing Dodge; (3) complete the plan's browser, combat and Dodge-regression gates and record results, gaps and exact commits. Follow the ordered milestones and acceptance criteria in the new plan.
+- Documentation verification: reviewed the complete plan and handoff against the inspected runtime hooks; `git diff --check` passed. Only Markdown files changed. Gameplay tests were not rerun for this documentation-only revision. The new plan includes all ten existing champion identities, early mixed pressure and proposed continuous survival; these remain unimplemented design requirements.
+
+
+## ADC redesign — initial implementation checkpoint (2026-11-17)
+
+- Added generated Tristana fan-art sprite and ADC-only Ezreal/Lux pursuing and stand-off casts without a kill gate. ADC now continues after ten kills, with elapsed-time foe cap and difficulty-independent spawn cadence. These are preliminary changes, not completion of the redesign.
+- Browser loaded the new sprite in ADC and the updated HUD; the narrow viewport did not establish gameplay-scale art quality. No sustained real-input test, normal-seed balance evaluation or Dodge trace comparison has been completed.
+- Remaining: reliable mixed opening across seeds, all other champion families and specials, threat lifetime and displacement fairness, animation and visual acceptance, full browser evidence, and all plan gates. Do not present this checkpoint as a complete mode.
+
+
+## ADC roster implementation — 2026-11-17
+
+- Added an ADC-owned encounter bag and persistent, targetable Ezreal, Lux, Ahri, Blitzcrank, Vel’Koz, Syndra, Orianna, Malphite and Cassiopeia; Xerath Q/W is an ambient non-target. Lux can replace a Q with R. The roster and specials have initial implementations; balance and user acceptance remain open.
+- ADC tracks cast ownership and lifetime through return and split phases, with a two-cast budget and exclusive complex casts. It samples walkable escapes, applies a 0.35s shared contact grace, and pauses pressure/contact for 1.1s after hook or Syndra displacement. Syndra uses one Q per cycle with occasional Q→E, no consecutive combos, and displacement without Dodge's stun. Stand-off movement is bounded to the arena. Reset clears the ADC state.
+- Generated ADC-only Lux and Blitz fan art; existing Dodge artwork and assets remain unchanged. Tristana has recoil, muzzle flash and visual projectile alignment. The ADC HUD sits above the playfield to avoid covering top-edge combat. Captures, including ordinary/special casts, return/split, Xerath, opening and results, are in `docs/evidence/adc/`; fixtures inject encounter setup but run the real simulation and renderer.
+- Build `9db94bffc8f8` passed 579/579 with `node --test tests/*.test.cjs`, as well as 28 focused ADC checks and the build-ID check. The isolated test runner terminated its game-test subprocess without an individual assertion report on several earlier attempts; an independent run using `--test-isolation=none` also passed 579/579 on the prior build. Three 60-second same-seed Dodge traces match checkpoint `cafb8a4` via `node scripts/compare-dodge-traces.cjs` on the current source.
+- Real-time Chromium automation used actual mouse/keyboard events, read-only decisions and normal HP. On build `586a71185b93`, a controlled-random run (seed `1073814953`) reached 10 kills in 32.9s with 79.5 HP; all nine visible champion identities appeared, and Xerath Q and several special hazards appeared naturally. On build `9db94bffc8f8`, another run with that seed ended at 9 kills in 31.2s; a second controlled seed (`2147556777`) reached 10 kills in 35.9s with 112 HP, showing all nine visible identities and both Xerath Q/W. Real-time bot input timing affects outcomes. Other varied runs also ended before ten kills. No page errors were observed; this is not human balance validation.
+- Browser checks covered Dodge → ADC → Dodge, pause/retry, Flash, resize, sound toggles, natural death/retry and a stationary normal-HP death/retry. Headless tab switching did not produce a native blur, so the blur handler was exercised synthetically; real window focus loss remains unverified. The refreshed CSS uses its own cache key.
+- Remaining gates: compare more normal-HP seeds and human play for difficulty and identity, verify native focus loss and sound audibly, and broaden special phase/death and edge/fairness checks. User acceptance is pending; do not label the mode complete based on the bot or fixture captures alone.
+
+
+## Owner correction — generic targets and Tristana kit (2026-11-17)
+
+- The user rejected champion-as-target encounters and visible trajectory warning lines. Generic durable pursuers now occupy enemy slots; independent ambient Dodge-family projectiles and specials come from around the arena. ADC hides future-path lines; spell impacts and projectile art remain visible. Existing Dodge behavior remains isolated.
+- Tristana now has Q Rapid Fire, W Rocket Jump with landing damage/slow and cooldown reset on takedowns or a full E detonation, E Explosive Charge with four auto/ability stacks and area explosion, R Buster Shot targeted damage/knockback, and F Flash. E also grants a small on-death area burst. Values are training approximations, not verified live-game stats; the abilities' identities follow [Riot's champion page](https://www.leagueoflegends.com/en-us/champions/tristana/) and [Riot's Wild Rift champion page](https://wildrift.leagueoflegends.com/en-us/champions/tristana/) for the jump/reset description.
+- On build `47030a16e026`, a normal-HP real-input bot reached 10 kills in 32.8s with 37.5 HP, saw only generic enemies, and encountered basic projectiles plus Xerath, Syndra, Lux R, Orianna, Malphite and Cassiopeia hazards. Separate browser fixtures exercised Q/W/E/R using actual mouse/keyboard input. A later visual-only jump/rapid-fire pass produced build `b5bc2b58d5ef`; 37 focused ADC checks plus the build-ID check passed, and three same-seed Dodge traces matched `cafb8a4`.
+- The user can try the current checkout at `http://127.0.0.1:8766/` while the local server session remains alive. Refresh to load the latest build. Remaining: final full regression on the corrected mode, broader real-input QWER and special/fairness checks, real native focus-loss and audible sound validation, and the user's assessment. Earlier champion-as-target screenshots and bot results in this log are historical.
+
+## Design consolidation — generic targets / ambient skills / full kit (2026-11-17)
+
+- Replaced the conflicting plan and handoff in full, rather than leaving a correction above obsolete champion-target/autos-only instructions. Updated blueprint precedence and recorded the owner's latest wording in VISION-ADC.
+- Current working source already has generic targets, ambient scheduler and QWER work. This planning pass preserves all uncommitted runtime, tests and evidence; it does not independently validate earlier bot/test reports. No runtime edits or new gameplay tests in this pass.
+- Design now distinguishes predictive trajectory overlays (remove in ADC) from actual spell/native cast effects (retain readable), and specifies full passive/QWER, E stack/death ordering, W resets and R interactions. PC-reference verification and a documented training profile are required before parity claims; earlier Wild Rift reference is insufficient for PC details.
+- Next: (1) audit working implementation against the new contract without discarding it; (2) fix two-system/visual/full-kit gaps and verify real-input combinations; (3) final full regression, Dodge trace/browser protection and accurate evidence handoff. Documentation links and diff whitespace checked; gameplay remains unverified by this planning pass.
+
+## ADC kit and independent pressure verification — 2026-11-17
+
+- Implemented the revised generic-pursuer and independent ambient-spell contract, including varied visible peripheral sources, cast lifetime/budget isolation and no predictive ADC trajectory overlays. Cassiopeia has a visible directional source; generic deaths do not cancel ambient casts. The HUD and Tristana Q/W/E/R/F include stack, jump and attack feedback. See [ADC_KIT.md](ADC_KIT.md) for fixed training level, rank-one profile, PC Data Dragon snapshot and deliberate approximations; the earlier Wild Rift citation is historical and is not the PC authority.
+- Build `21685b8f25b7`: `node --check game.js`, build generation, 60 focused ADC/build checks and three 60-second Dodge traces against `cafb8a4` passed. The final full suite passed 609/609 with `node --test tests/*.test.cjs`; earlier attempts terminated a Node subprocess or Node itself without an assertion report before the successful rerun.
+- Current-build Chromium real-input run used normal HP: 9 kills in 25.27s, then death, with Q/W/E/R used, generic targets only and no page errors. Separate browser fixtures exercised every spell family and Q/W/E/R; a real-input moving-enemy combo produced a full-stack kill and W reset (136 HP). Dodge → ADC → Dodge, pause/retry, Flash, resize and death/retry passed. Cassiopeia source capture is visible. A second current-build run ended at 5 kills in 15.66s; the input and combo fixtures passed again. A previous build `431cc74454a5` reached 10 kills with Q/W/E/R; timing-dependent bot runs do not establish human balance.
+- Native focus loss remains unverified (synthetic blur passed), audible sound has not been subjectively checked, and player acceptance of feel and presentation is pending. Screenshots of isolated skill fixtures are controlled setups, not natural-play evidence.
+- Next: (1) obtain a current-build ten-kill real-input run and human balance review; (2) verify native focus loss and audible sound; (3) address player feedback before claiming completion.
+
+## ADC beam readability and full-kit run — 2026-11-17
+
+- Made the ADC Lux R / Xerath Q source cue a brighter, animated local charge without drawing its future trajectory. The captured `fixture-lux-r.jpg` shows the source in the arena; Dodge rendering remains unchanged. Added a Rapid Fire cadence comparison at 30/60/120 rendered FPS; it passes.
+- Build `77952b416568`: syntax and build checks pass, three same-seed Dodge traces match `cafb8a4`, and the final full suite passed 610/610, including the new FPS test.
+- Current-build real mouse/keyboard Chromium automation reached 10 kills in 27.96s with 7.5 HP, Q/W/E/R used and no page errors. Individual Q/W/E/R fixtures, moving-enemy four-stack combo with W reset, mode switching, pause/retry, Flash and resize passed. A previous run on build `21685b8f25b7` also reached 10 kills in 28.11s with 82 HP. These are automated runs, not player balance acceptance; timing varies.
+- Native window focus loss and audible output remain unverified; synthetic blur and sound toggle were checked. Next: (1) human play and balance review; (2) verify native focus loss and audible sound; (3) address player feedback before declaring the plan complete.
+
+## ADC additional real-input interaction checks — 2026-11-17
+
+- Extended `scripts/verify-adc-roster.cjs` with an actual pointer/keyboard E → W landing → R impact sequence against a moving generic target while ambient spell pressure is scheduled. The browser run observed one E stack from W, a second from R and active knockback, with 120 HP remaining; the existing full-stack kill/W-reset sequence and all individual Q/W/E/R checks also passed. This uses controlled encounter setup but real input, simulation and collision.
+- Tried a headed Chromium tab switch in addition to the previous headless check. It did not produce a usable native focus transition in this automation environment and timed out waiting for pause; this does not establish a gameplay defect or a native-focus pass. Synthetic blur remains covered, while actual window-focus loss, audible sound and the player's balance/feel assessment remain open.
+- Next: (1) verify native focus loss in an interactive desktop session; (2) listen to the sound in a real output session; (3) incorporate the player's actual playtest feedback.
+
+## ADC Web Audio signal check — 2026-11-17
+
+- Added `scripts/verify-adc-audio.cjs`, a real Chromium/Web Audio smoke check with a read-only analyser attached to generated gain nodes. Enabling sound produced a measurable ready tone (peak 0.0257); an actual right-click attack produced a separate measurable tone (peak 0.0335). After mute, an actual Q activated without starting another oscillator. The browser check passed on build `77952b416568`.
+- This verifies generated audio signal and mute behavior, not the operating system's speaker output or subjective volume. Native window focus, audible playback and player balance/feel assessment remain open. Next: (1) listen on a real output device; (2) verify native window-focus loss interactively; (3) respond to the player's playtest.
+
+## ADC ability feedback — 2026-11-17
+
+- Added expanding impact effects at Rocket Jump's landing radius and Explosive Charge's actual detonation radius, including the doubled radius after Buster Shot. Jump takeoff and landing and charge detonation now use the optional audio cues. A visible `W READY` cue appears when a takedown or full charge actually resets Rocket Jump; overlapping reset causes produce one cue.
+- Gameplay build `8a92bef29787`; syntax, build generation, 61 focused ADC/build checks, an additional explosion-radius/reset feedback test, and three Dodge traces against `cafb8a4` passed. Full regression passed 610/610 before the extra focused feedback test, which passed separately. The new visual/audio feedback has not yet had an interactive human review.
+- Next: (1) finish regression and browser review of the new effects; (2) verify native focus loss and real speaker output in an interactive session; (3) incorporate the player's feedback on feel and balance.
+
+## ADC ambient spell weighting — 2026-11-17
+
+- Reworked the ADC-only shuffled spell bag to weight each ordinary projectile family twice relative to each complex event, while preserving every family and avoiding consecutive repeats whenever a different family remains. The previous successful cast is accounted for across bag boundaries. Cast budgets, safety sampling and Dodge's director are unchanged.
+- Build `c183fdeef068` passed the full Node suite (612/612) and three Dodge traces against `cafb8a4`. A current-build real-time mouse/keyboard run reached 10 kills in 27.79s with 10 HP, used Q/W/E/R, saw generic targets and varied ambient skills, and recorded no page errors; controlled real-input kit and combo checks also passed. The weighted-bag test's extra adjacency assertion was run separately after the full suite began.
+- Player balance and presentation feedback, native focus loss and actual speaker output remain open. Next: (1) review the player's experience of the new pacing; (2) verify native focus and audible playback interactively; (3) tune or fix issues revealed by that review.
+
+## Kiting reference audit and pacing redesign — 17 November 2026
+
+- Inspected the public reference in Chrome (menus, 2.50/Ranked setup, arena/peripheral arrival, death result) and analyzed its publicly served compiled script. Added `docs/ADC-KITING-REFERENCE.md` with URL/hash, function anchors, source-derived timing/HP/speed/spawn findings and limits. Browser session was brief, not a measured successful kite run; no external source or assets copied into the app.
+- Reference ordinary Kiting uses five base hits, short ~12%-cycle release threshold, 2.5 default AS, enemy/player movement ratio 3/5.5, and random edge bands rather than strictly corners. User explicitly accepts five hits if the rhythm matches. Our design adopts the rhythm and slower ratio while preserving four-corner-only arrivals, full Tristana kit, HP contact damage and independent spells.
+- Revised authoritative plan/handoff/blueprint/vision: remove INCOMING and marker rings; proposed 140 HP / 28 auto damage, 145 enemy speed, .40s period/.06s windup, Q +50%, validated four-corner bag. Added timing/spawn/render/kit regression gates. ADC_KIT marks historical values and pending revision clearly.
+- Documentation-only work on HEAD `33ad5cf`; pre-existing uncommitted `game.js`, `index.html`, `tests/game.test.cjs` preserved and not included. No gameplay tests or new balance claims in this planning session.
+- Next: (1) implement corner arrivals/no warning markers; (2) implement/verify attack rhythm, pursuit and five-hit kit interactions; (3) real-input feel review plus final full regression and Dodge trace/browser protection.
+
+## Reference-paced ADC and four-corner arrivals — 2026-11-17
+
+- Implemented the updated plan on top of `8cc9630`, preserving the earlier uncommitted coincident-pursuer separation fix. ADC autos now use a .40 s period / .06 s windup (Q: .2667 / .04), generic pursuers have 140 HP and speed 145, and normal contact damage remains 40. Generic enemies arrive immediately targetable from shuffled corner zones, with walkability/route, player-distance and enemy-spacing checks; unsafe attempts defer without accumulating a burst. The old INCOMING marker is not used by ADC. The local server is available on port 8766.
+- Build `5b3c0dae2d95` passed the full Node suite (615/615), including normal/Q release timings at 30/60/120 FPS and five-hit/corner coverage; a further actual-scheduler deferral/no-burst assertion passed separately. Three same-seed Dodge traces match `cafb8a4`. The kit profile documents the new values.
+- Real-time Chromium with real mouse/keyboard reached 10 kills in 23.26s with 112 HP, used Q/W/E/R, encountered only generic targets and independent varied skills, and had no page errors. Mode switching, pause/retry, Flash, resize, death/retry, W/E/R interactions and the E/Q/auto/W-reset fixture passed. `docs/evidence/adc/opening.jpg` shows current gameplay. This automated run is not human feel or balance acceptance; synthetic blur is still not native window-focus verification.
+- Next: (1) incorporate the owner's feel and balance feedback on the faster kiting rhythm and corner arrivals; (2) verify native window focus loss and actual speaker output interactively; (3) revisit encounter pacing only if real play exposes a problem.
+
+## Owner feedback: slower enemies, direction and HUD — 2026-11-17
+
+- Reduced generic pursuer speed from 145 to 105 canvas units/s and limited active generic pursuers to two, following the owner's request. Kept the five-hit and fast-auto profile, corner arrivals and independent skills. Inset corner gates enough that arriving sprites and health bars are fully within the arena.
+- Added matching transparent front/back Tristana views alongside the existing mirrored side view. The renderer selects them by facing and aligns muzzle flashes and projectile origins to the selected pose. Removed the attack timing bar and name label above Tristana; her single compact health bar stays on screen and changes color at low health. The owner requested that attack bar be removed entirely.
+- Build `22aaae40da1e`: 616/616 Node tests passed and three Dodge traces matched `cafb8a4`. A normal-HP real-input browser run reached 10 kills in 23.94s with 2 HP, no page errors and Q/E/R used; separate real-input fixtures exercised W and all Q/W/E/R interactions. Controlled captures of front/back/side art and the new health bar are in `docs/evidence/adc/tristana-{front,back,side}.jpg`. Human feedback on the new look and pacing remains pending; native focus and physical speaker output remain unverified.
+- Next: (1) incorporate the owner's feedback after trying the new speed, enemy cap and views; (2) check native focus loss and audible output in an interactive session; (3) adjust presentation or balance if feedback identifies an issue.
+
+## Owner correction: attack targeting, visible casters and Dodge health — 2026-11-17
+
+- The owner reported incorrect attack targeting, missing champions casting surrounding skills, and requested the exact Dodge health bar. The prior ADC attack-move chose the closest enemy to Tristana even when the cursor selected another, and surrounding ordinary casts had no visible source. ADC now directly selects the clicked generic enemy, attack-moves toward ground while prioritizing the in-range enemy nearest the clicked point, and distinguishes the visible enemy body/health bar from nearby ground. Right-click, A-click and E/R use the same ADC target hit area. The player health bar now uses precisely the shared Dodge drawing code; no attack bar was restored. Rapid Fire remaining time appears within the Q slot alongside its cooldown.
+- Independent ambient casts now show temporary, untargetable actors using the existing Dodge champion art and spell rendering. Ezreal, Lux, Ahri, Blitz and Vel'Koz use a brief visible cast phase before their projectile and fade after release; Syndra, Orianna, Malphite and Cassiopeia display their source during the cast. Xerath Q/W, which have no caster sprite in Dodge, use a newly generated ADC-only original fan-art sprite. Cast actors never occupy generic enemy slots or receive attacks. Cassiopeia retains a short local facing indicator, with no future trajectory line.
+- Build `6b9b9a24afd7`: 620/620 Node tests passed, as did three same-seed Dodge traces. A current-build real-input browser run reached 10 kills in 24.31s with 56 HP and no page errors; controlled mouse/keyboard selection hit the clicked farther enemy while leaving the nearer one untouched, and Q/W/E/R, both kit-combo fixtures and death/retry passed. Windup/skill screenshots under `docs/evidence/adc/` show the caster sources. This is automated evidence, not the owner's acceptance of targeting or appearance.
+- Next: (1) incorporate the owner's hands-on feedback about targeting and caster visibility; (2) verify native window focus and actual speaker output interactively; (3) tune visible cast duration and pacing only where the owner's playtest warrants it.
+
+## ADC Rocket Jump range correction — 2026-11-17
+
+- Fixed an edge case where snapping a Rocket Jump destination out of a wall could move the landing beyond the 450-unit maximum. When the snapped point would exceed range or be invalid, the jump now selects the furthest walkable point along the requested direction within range. Valid terrain-crossing jumps and invalid-input cooldown behavior remain unchanged.
+- Build `5f4570146450`: the reproduced wall-edge case and all Rocket Jump checks passed; the full Node suite passed 621/621 and three same-seed Dodge traces matched `cafb8a4`. The previous build's real-input kit/combo browser checks remain relevant for the unchanged interactions, but this exact edge case has only been verified deterministically.
+- Next: (1) incorporate the owner's feedback on targeting and visible casters; (2) review jump feel and the edge case in interactive play; (3) verify native focus and audible speaker output interactively.
+
+## ADC attack-move target continuity — 2026-11-17
+
+- Fixed ADC attack-move focus changing to a different moving enemy during an already committed windup while the projectile still targeted the original. The committed target and visual indicator now remain aligned until release; new move or attack commands still cancel an uncommitted windup normally.
+- Build `380b89973026`: the reproduced target-switch case and related attack/move checks passed, the full Node suite passed 622/622, and three same-seed Dodge traces matched `cafb8a4`. The exact focus-transition scenario was checked deterministically, not through a human playtest.
+- A further separate Chrome UI attempt did not establish native focus-loss behavior: the game ended before one action, and subsequent native-app access failed. Synthetic blur remains covered; real window focus and physical speaker output remain unverified. Next: (1) incorporate owner feedback on targeting, spell casters and timing; (2) verify native focus and speaker output in a working interactive session; (3) address any playtest issues.
+
+## ADC caster/target visual separation — 2026-11-17
+
+- Generic pursuers now avoid spawning on top of currently visible ambient caster sources, including ordinary emitters, special actors, beams and Xerath's area source. If that corner is occupied, the existing safe-corner search tries another or defers, keeping untargetable casters distinct from attackable enemies.
+- Build `b7d2016dcd41`: focused coverage verified all four caster-source types, the full Node suite passed 623/623, and three same-seed Dodge traces matched `cafb8a4`. The overlap case was reproduced and verified deterministically; the owner has not yet assessed the new spacing in play.
+- Next: (1) incorporate owner feedback on targeting and caster visibility; (2) verify native window focus and real speaker output interactively; (3) adjust visuals or pacing when actual play identifies a problem.
+
+## ADC selection when targets overlap — 2026-11-17
+
+- Refined ADC direct targeting when enemy sprites overlap: the visible foreground enemy is selected at different depths, while precise health/foot hit areas and proximity resolve same-depth neighbors. The health bar is clickable and empty space above it remains a movement click. This applies to attack, E and R target acquisition; A-click ground selection remains cursor-relative.
+- Build `b681c51b36f1`: the full Node suite passed 625/625, with an additional same-depth neighbor check passing separately. Three Dodge traces matched `cafb8a4`. A current-build browser run with real pointer/keyboard input selected the foreground target through an overlapping health bar, hit the selected farther target in a separate fixture, exercised Q/W/E/R and kit combos, and reached 10 kills in 25.11s with 106 HP and no page errors. Human assessment remains pending.
+- Next: (1) incorporate owner feedback on actual targeting feel; (2) verify native focus and real speaker output interactively; (3) address any issue found through play.
+
+## ADC Malphite impact recovery — 2026-11-17
+
+- Ambient Malphite now remains visible briefly at the landing point and fades through the existing 0.8-second recovery instead of vanishing immediately on impact. The cast remains exclusive during recovery and cannot deal a second impact; generic targets and Dodge's Malphite behavior are unchanged.
+- Build `dcb6fd929673`: the focused recovery/damage checks and the full Node suite passed 627/627; three Dodge traces matched `cafb8a4`. A current-build real-input Chromium run reached 10 kills in 23.97s with 106 HP and no page errors, while separate targeting and Q/W/E/R fixtures passed. A controlled `fixture-malphite-recovery.jpg` capture confirms the actor remains rendered at impact. Human play and subjective visibility remain unverified.
+- Next: (1) incorporate owner feedback on spell casters and targeting; (2) verify native focus and speaker output interactively; (3) adjust pacing or visuals where play reveals a problem.
+
+## ADC Lux and Xerath caster exits — 2026-11-18
+
+- Ambient Lux R and Xerath Q/W sources now remain visible briefly and fade after their real impact instead of disappearing instantly. The casting/ground formation is removed at impact, actual beam/impact visuals remain as before, and the exit phase cannot apply damage twice. The sources remain untargetable and the Dodge renderer and behavior are unchanged.
+- Build `af06cb46459e`: focused impact/exit coverage passed for all three skills; the full Node suite passed 628/628 and three same-seed Dodge traces matched `cafb8a4`. A current-build real mouse/keyboard Chromium run reached 10 kills in 24.54s with 74 HP and no page errors; individual Q/W/E/R and targeting/kit fixtures passed. `fixture-xerath-q-second-phase.jpg` captures the source and actual beam at impact. Human play, native window focus and physical speaker output remain unverified.
+- The owner requested all necessary permissions up front. Existing approved capabilities were sufficient for this work, and the local server was restarted at `http://127.0.0.1:8766/`. Next: (1) incorporate owner playtest feedback; (2) verify native focus and audible output in a working interactive session; (3) address issues revealed by real play.
+
+## ADC death cleanup — 2026-11-18
+
+- Ending an ADC run now clears the generic pursuers, live projectiles and ambient hazards before the result screen. Retry starts with clean encounter state; results retain their original statistics. Dodge and other modes are unchanged. The ADC scheduler object remains available until reset so an impact already being resolved can finish safely.
+- Build `4ac08b4acc22`: death during an active caster and death from a live projectile both cleared the encounter without errors; the full Node suite passed 630/630 and three Dodge traces matched `cafb8a4`. A current-build real-input Chromium run reached 10 kills in 25.57s with 106 HP, and the separate natural death/retry, targeting and Q/W/E/R fixtures passed without page errors. The owner has not yet reviewed the new behavior.
+- Next: (1) incorporate owner playtest feedback; (2) verify native focus loss and real speaker output in a working interactive session; (3) fix issues found in actual play.
+
+## ADC targeted cast and release facing — 2026-11-18
+
+- Corrected Tristana's orientation when applying E to a selected target, and at auto release if the target crossed to the other side during windup. The sprite and visual muzzle offset now use the actual release direction, while targeting, damage, timing and Dodge behavior remain unchanged.
+- Build `24905430a38a`: both previously failing facing cases now pass, the full Node suite passed 632/632, and three same-seed Dodge traces matched `cafb8a4`. A current-build real mouse/keyboard Chromium run reached 10 kills in 25.54s with 26 HP and no page errors; a separate real-input fixture confirmed E charges the chosen left-side target and turns Tristana toward it. Q/W/E/R and targeting/combo fixtures also passed. The owner has not yet reviewed the facing in play.
+- Next: (1) incorporate owner playtest feedback; (2) verify native focus loss and physical speaker output in a working interactive session; (3) fix issues revealed by real play.
+
+## ADC returning spell caster continuity — 2026-11-18
+
+- Ambient Ahri now remains visible until her orb completes its return; ambient Blitz remains visible throughout his hook and pull. Each caster then fades out. They remain untargetable and independent from generic pursuers; cast budget and hook/return lifetimes remain tied to the real spell. Previously the actor faded after a fixed 0.8 seconds even while Ahri's orb was still returning.
+- Build `c7edfde87f9b`: focused return and pull tests passed, the full Node suite passed 634/634, and three same-seed Dodge traces matched `cafb8a4`. A current-build real-input Chromium run reached 10 kills in 24.19s with 26 HP and no page errors; Q/W/E/R, targeting and kit-combo fixtures passed. Controlled `fixture-ahri-second-phase.jpg` and `fixture-blitz-pull.jpg` show the visible sources during their spell phases. Human feel and presentation feedback remains pending.
+- Next: (1) incorporate the owner's playtest feedback; (2) verify native focus and physical speaker output in an interactive session; (3) address issues revealed in play.
+
+## ADC projectile caster continuity — 2026-11-18
+
+- Extended ambient caster visibility to the full lifetime of their projectiles, including Lux Q's long flight and Vel'Koz's split missiles. The caster fades after its spell finishes; Ahri's returning orb and Blitz's hook and pull retain the same behavior. Casters remain independent and untargetable.
+- Build `e203c83d61f2`: focused Lux, Vel'Koz, Ahri and Blitz lifetime tests passed. The full 634-test suite and three matching Dodge traces were run before this extension; the prior build also passed real-input browser checks. Human play, native focus and physical speaker output remain unverified.
+- Next: (1) incorporate owner playtest feedback; (2) verify native focus and audible output in an interactive session; (3) fix issues revealed in play.
+
+## ADC current-build regression — 2026-11-18
+
+- Build `e203c83d61f2` passed `node --check game.js`, the full Node suite (636/636), and the two configured same-seed Dodge trace comparisons (120 snapshots each). The build fingerprint was unchanged on regeneration.
+- A current-build Chromium run with real mouse/keyboard reached 10 kills in 26.66s with 104 HP and no page errors; Q/E/R were used in that run, and separate input fixtures covered Q/W/E/R, targeting, E facing, W reset, jump/ultimate, death/retry, Flash and resize. Dodge → ADC → Dodge → ADC switching passed. Headless focus loss needed synthetic blur, so native window focus and physical speaker output remain unverified; owner assessment of feel remains pending.
+- Next: (1) incorporate owner playtest feedback; (2) verify native focus and audible speaker output interactively; (3) address issues revealed in play.
+
+## Next ADC playtest design · 18 November 2026
+
+Published the [five-part playtest spec](ADC-NEXT-PLAYTEST.md) against b04fc31. The 636 passing tests above cover the preceding implementation. This checkpoint changes documentation only. Next work covers E and movement, seeds and healing, then mild pressure variation and playtesting.
+
+## ADC next playtest implementation — 2026-11-18
+
+- Implemented `ADC-NEXT-PLAYTEST.md`: 260 walking speed; E selects its bomb carrier and starts or queues a normal auto; a fresh non-repeating ADC seed with an explicit deterministic override (including zero) and seeded ordinary opener; 1 HP/s simulation-time regeneration; and seeded busy/quiet phases with their specified admission intervals. Existing enemies and casts finish across phase changes; opening's quick arrival applies only during the opening. `ADC_KIT.md` documents these training rules.
+- Build `87f2c4bc5cd8`: `node --check game.js`, the full Node suite (641/641), and three same-seed Dodge comparisons (120 snapshots each) passed. The real-input browser run with seed 2147483648 reached 10 kills in 27.59 s with 39.18 HP and no page errors; Q/E/R were used naturally, while W and combos were covered in controlled input fixtures. A separate real-input fixture confirmed E alone hit the chosen target and added its first stack. Another seed, 1073741824, ended at nine kills; retry restored full HP. Dodge → ADC → Dodge, Flash and resize passed; focus used synthetic blur.
+- Controlled four-seed simulation (seed 0, 123456, 82473, 90421; elevated HP and forced enemy removal every 2.5 s) observed 124.0 foe-seconds and at least 60 released casts over 131.1 busy seconds, versus 78.4 foe-seconds and at least 45 released casts over 112.9 quiet seconds. These instrumented counts are comparative, not a human balance assessment; their cast count includes observed projectiles and released hazard phases.
+- Next: (1) incorporate the owner's feel and balance feedback; (2) verify native focus and physical speaker output interactively; (3) adjust pressure or movement if play warrants it.
+
+## ADC E order coverage — 2026-11-18
+
+- Added focused coverage for the new E order through four actual automatic hits, charge detonation and W reset without a second attack command. Also covered switching away from an unfinished windup while preserving an already released missile. Both tests pass on build `87f2c4bc5cd8`; no gameplay code changed.
+- Next: (1) incorporate owner feedback on walking and pressure; (2) verify native focus and audible output interactively; (3) address issues revealed during play.

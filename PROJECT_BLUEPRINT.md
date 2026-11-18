@@ -1,4 +1,6 @@
 # LEAGUE MECHANICS GOD
+
+**Active ADC iteration (18 November 2026).** Follow the [next ADC playtest specification](docs/ADC-NEXT-PLAYTEST.md) for movement, E targeting, seeds, regeneration and encounter pacing. It supersedes older ADC tuning wherever they overlap.
 ## Project Blueprint — Vision, Product Specification & Development Roadmap
 
 **Repository:** https://github.com/statego2/League-Mechanics-God  
@@ -7,6 +9,14 @@
 **Current reality:** A browser alpha now includes Dodge Trial, Kite Arena, Skillshot Lab, Bait → Dodge → CS, a foundational Lane Scenario and a foundational Last-Hit Lab. Controls, telegraphs and scoring have regression coverage; the full intended game remains in development. See docs/PROGRESS.md for verified scope.
 
 ---
+
+## Owner decision — generic targets, surrounding skills, full Tristana (2026-11-17)
+
+ADC Mechanics God uses **generic durable pursuers to kite**, with independent Dodge-family spells arriving from around the arena. Named champions are not persistent targetable opponents. Remove ADC predictive trajectory lines while retaining visible skills and necessary native cast effects. The player has recognizable Tristana with **passive, full Q/W/E/R and Flash**, including charge stacks, jump resets and knockback interactions.
+
+Latest pacing correction: remove enemy `INCOMING`/“upcoming” text and marker rings; spawn generic pursuers only from randomized four-corner zones, slow them and improve attack cadence. The owner accepts five hits when the rhythm matches the reference. [Reference audit](docs/ADC-KITING-REFERENCE.md) supports the plan's proposed 2.5 autos/s, .06s windup, 145 enemy speed and five-hit baseline; these are not yet verified gameplay changes.
+
+[ADC design](docs/ADC-PLAN.md) and [Terra handoff](ADC_NEXT_AI_PROMPT.md) replace the previous champion-target/autos-only plan in full and govern the second mode over conflicting older Mechanics Arena scope. Preserve Dodge exactly. Current local implementation is in progress and includes uncommitted work; audit and preserve it. This revision is documentation-only and makes no claim of gameplay completion or deployment.
 
 ## Owner decision — finish and ship Dodge v1.0 (2026-11-11)
 
