@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="af06cb46459e";
+const BUILD_ID="4ac08b4acc22";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -276,6 +276,8 @@ function end(win){
   const bestSurvival=saveDodgeSurvival();
   if(bestSurvival!==null)description=description.replace(/\.$/,"")+` · Best survival: ${bestSurvival.toFixed(1)}s.`;
  }
+ // A finished ADC run must not retain targets or live ambient casts behind results.
+ if(mode==="adc"){foes=[];shots=[];hazards=[];}
  showMenu(win?"TRIAL <span>COMPLETE.</span>":"YOU <span>FELL.</span>",description,true);
  if(awareness){$("awarenessResult").textContent=awarenessResult();$("awarenessResult").hidden=false;}
  if(dodgeDirector&&$("dodgeBreakdown")&&$("dodgeBreakdownText")){

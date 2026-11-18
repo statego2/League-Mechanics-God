@@ -4026,6 +4026,15 @@ test('ADC attack range, five hits, chase and target loss',()=>{
  e.x=p.x+180;g.attackOrder(e);advance(g,3);assert.equal(g.stats.autoHits,5);assert.equal(g.getKills?.()??e.alive,false);assert.equal(e.hp,0);
  const f=g.enemy(p.x+180,p.y);f.speed=0;f.shoot=999;g.setFoes([f]);g.attackOrder(f);advance(g,.2);f.alive=false;advance(g,.1);assert.equal(g.shots.filter(s=>s.kind==='auto').length,0);
 });
+test('ADC death clears pursuers and independent spell pressure before retry',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+180,g.player.y);Object.assign(e,{adcGeneric:true,speed:0});g.setFoes([e]);g.adcState.bag=['ezreal'];g.adcState.ambientAt=0;advance(g,.02);assert.ok(g.hazards.some(h=>h.adcEmitter));
+ g.applyImpact(g.player,{sourceId:99,sourceTeam:'enemy',kind:'contact',raw:500,damageType:'true'});assert.equal(g.state,'ended');assert.equal(g.foes.length,0);assert.equal(g.hazards.length,0);assert.equal(g.shots.length,0);
+ g.reset('adc');assert.equal(g.state,'playing');assert.equal(g.player.hp,160);assert.equal(g.foes.length,0);assert.equal(g.hazards.length,0);
+});
+test('ADC lethal projectile ends the run without retaining actors or throwing',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,e=g.enemy(p.x+200,p.y);Object.assign(e,{adcGeneric:true,speed:0});g.setFoes([e]);p.hp=20;
+ g.adcState.bag=['lux'];g.adcState.ambientAt=0;g.fire(p.x-30,p.y,1200,0,'enemy',24,7,.2);assert.doesNotThrow(()=>advance(g,.1));assert.equal(g.state,'ended');assert.equal(g.foes.length,0);assert.equal(g.hazards.length,0);assert.equal(g.shots.length,0);
+});
 test('ADC continues past ten kills and retry resets counts',()=>{
  const {g}=boot();g.reset('adc');g.disableSpawn();g.setKills(9);const e=g.enemy(g.player.x+100,g.player.y);e.speed=0;e.hp=e.maxHp=28;g.setFoes([e]);g.attackOrder(e);advance(g,.5);assert.equal(g.state,'playing');g.reset('adc');assert.equal(g.state,'playing');assert.equal(g.stats.autoHits,0);assert.equal(g.foes.length,0);
 });
