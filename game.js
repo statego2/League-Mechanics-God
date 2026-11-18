@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="4ac08b4acc22";
+const BUILD_ID="24905430a38a";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -1783,7 +1783,7 @@ function castAdc(key){
  if(!target||dist(player,target)>attackReach(target)){notify("AIM AT AN ENEMY IN RANGE");return;}
  if(key==="e"){
   if(target.adcCharge){notify("TARGET ALREADY CHARGED");return;}
-  target.adcCharge={remaining:ADC_KIT.eDuration,stacks:0};player.cd.e=ADC_KIT.eCooldown;cue("attack");
+  player.facing=Math.atan2(target.y-player.y,target.x-player.x);target.adcCharge={remaining:ADC_KIT.eDuration,stacks:0};player.cd.e=ADC_KIT.eCooldown;cue("attack");
  }else{
   const a=Math.atan2(target.y-player.y,target.x-player.x);
   cancelAttack();player.cd.r=ADC_KIT.rCooldown;player.facing=a;
@@ -1879,7 +1879,7 @@ if(!player.casting&&!player.dashing&&!player.hooked&&!(player.stun>0))updateOrde
 // descriptive feedback; positioning or dodging can make waiting intentional.
 if(mode==="kite"&&player.attackTimer<=0&&player.windup<=0&&foes.some(e=>e.alive&&dist(player,e)<=attackReach(e)))stats.readyIdle+=dt;
 if(player.windup>0){player.windup=Math.max(0,player.windup-dt);if(player.windup<1e-8){player.windup=0;const t=foes.find(e=>e.id===player.windupTarget&&e.alive);
- if(t&&dist(player,t)<=attackReach(t)+(mode==="adc"?0:35)){const a=Math.atan2(t.y-player.y,t.x-player.x);const shot=fire(player.x,player.y,Math.cos(a)*autoSpeed(),Math.sin(a)*autoSpeed(),"auto",autoDamage(),5,1.5);shot.targetId=t.id;stats.released++;if(mode==="adc"){player.recoil=.13;shot.adcAuto=true;shot.adcBirth=time;shot.adcMuzzleSide=Math.cos(player.facing)>=0?1:-1;shot.adcMuzzle=adcMuzzleOffset(player.facing);}cue("attack");player.attackTimer=mode==="adc"?player.adcAttackPeriod-player.adcWindupDuration:ATTACK.period-ATTACK.windup;}else stats.cancelled++;
+ if(t&&dist(player,t)<=attackReach(t)+(mode==="adc"?0:35)){const a=Math.atan2(t.y-player.y,t.x-player.x);if(mode==="adc")player.facing=a;const shot=fire(player.x,player.y,Math.cos(a)*autoSpeed(),Math.sin(a)*autoSpeed(),"auto",autoDamage(),5,1.5);shot.targetId=t.id;stats.released++;if(mode==="adc"){player.recoil=.13;shot.adcAuto=true;shot.adcBirth=time;shot.adcMuzzleSide=Math.cos(player.facing)>=0?1:-1;shot.adcMuzzle=adcMuzzleOffset(player.facing);}cue("attack");player.attackTimer=mode==="adc"?player.adcAttackPeriod-player.adcWindupDuration:ATTACK.period-ATTACK.windup;}else stats.cancelled++;
  player.windupTarget=null;
 }}
 if(player.target&&player.windup<=0&&player.root<=0&&!(player.stun>0)&&!player.casting&&!player.dashing&&!player.hooked&&!wasDashing&&!wasHooked){

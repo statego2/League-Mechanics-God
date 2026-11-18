@@ -67,6 +67,8 @@ const {chromium}=require('playwright'),fs=require('fs');
  await page.evaluate(()=>adcFixture.setupTargeting());let chosen=await page.evaluate(()=>({x:adcFixture.foes[1].x,y:adcFixture.foes[1].y}));where=screen(chosen);
  await page.keyboard.press('a');await page.mouse.click(where.x,where.y);await page.waitForFunction(()=>adcFixture.foes[1].hp<1000,null,{timeout:3000});
  const targeting=await page.evaluate(()=>({near:adcFixture.foes[0].hp,chosen:adcFixture.foes[1].hp}));if(targeting.near!==1000)throw Error('A-click hit the wrong target: '+JSON.stringify(targeting));console.log(JSON.stringify({realInputTargeting:targeting}));
+ chosen=await page.evaluate(()=>({x:adcFixture.foes[1].x,y:adcFixture.foes[1].y}));where=screen(chosen);await page.mouse.move(where.x,where.y);await page.keyboard.press('e');
+ const eFacing=await page.evaluate(()=>({charged:!!adcFixture.foes[1].adcCharge,facing:adcFixture.player.facing}));if(!eFacing.charged||Math.cos(eFacing.facing)>=0)throw Error('E did not face the selected target: '+JSON.stringify(eFacing));console.log(JSON.stringify({realInputEFacing:eFacing}));
  // The visible front target wins when its health bar overlaps another sprite.
  await page.evaluate(()=>adcFixture.setupOverlap());const overlap=await page.evaluate(()=>({x:adcFixture.foes[0].x,y:adcFixture.foes[0].y-50,front:adcFixture.foes[1].id}));where=screen(overlap);
  await page.mouse.click(where.x,where.y,{button:'right'});const selected=await page.evaluate(()=>adcFixture.player.order?.id);if(selected!==overlap.front)throw Error('Click selected an occluded enemy');console.log(JSON.stringify({overlapTarget:selected}));

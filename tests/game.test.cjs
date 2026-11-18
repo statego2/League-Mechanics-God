@@ -4335,6 +4335,14 @@ test('ADC Rocket Jump crosses a wall and kill resets its cooldown',()=>{
  Object.assign(e,{speed:0,hp:40,maxHp:40});g.setFoes([e]);g.setAim(850,580);g.cast('w');advance(g,.5);
  assert.equal(p.dashing,null);assert.ok(p.x>800);assert.equal(e.alive,false);assert.equal(p.cd.w,0);
 });
+test('ADC targeted E faces its chosen enemy',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,e=g.enemy(p.x-150,p.y);Object.assign(e,{adcGeneric:true,speed:0});g.setFoes([e]);p.facing=0;g.setAim(e.x,e.y);g.cast('e');
+ assert.ok(e.adcCharge);assert.ok(Math.cos(p.facing)<-.99);
+});
+test('ADC auto release faces the target current position and uses the same muzzle side',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player,e=g.enemy(p.x+50,p.y);Object.assign(e,{adcGeneric:true,speed:0,hp:1000,maxHp:1000,contactCooldown:999});g.setFoes([e]);g.attackOrder(e);advance(g,.025);e.x=p.x-50;
+ for(let i=0;i<20&&g.stats.released===0;i++)g.update(1/120);assert.equal(g.stats.released,1);assert.ok(Math.cos(p.facing)<-.99);const shot=g.shots.find(s=>s.kind==='auto');assert.ok(shot);assert.ok(shot.adcMuzzle.x<0);
+});
 test('ADC target abilities reject out-of-range targets without consuming cooldown',()=>{
  const {g}=boot();g.reset('adc');g.disableSpawn();const e=g.enemy(g.player.x+300,g.player.y);e.speed=0;g.setFoes([e]);g.setAim(e.x,e.y);
  g.cast('e');g.cast('r');assert.equal(e.adcCharge,undefined);assert.equal(g.player.cd.e,0);assert.equal(g.player.cd.r,0);
