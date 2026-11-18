@@ -2034,3 +2034,10 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 ## Next ADC playtest design · 18 November 2026
 
 Published the [five-part playtest spec](ADC-NEXT-PLAYTEST.md) against b04fc31. The 636 passing tests above cover the preceding implementation. This checkpoint changes documentation only. Next work covers E and movement, seeds and healing, then mild pressure variation and playtesting.
+
+## ADC next playtest implementation — 2026-11-18
+
+- Implemented `ADC-NEXT-PLAYTEST.md`: 260 walking speed; E selects its bomb carrier and starts or queues a normal auto; a fresh non-repeating ADC seed with an explicit deterministic override (including zero) and seeded ordinary opener; 1 HP/s simulation-time regeneration; and seeded busy/quiet phases with their specified admission intervals. Existing enemies and casts finish across phase changes; opening's quick arrival applies only during the opening. `ADC_KIT.md` documents these training rules.
+- Build `87f2c4bc5cd8`: `node --check game.js`, the full Node suite (641/641), and three same-seed Dodge comparisons (120 snapshots each) passed. The real-input browser run with seed 2147483648 reached 10 kills in 27.59 s with 39.18 HP and no page errors; Q/E/R were used naturally, while W and combos were covered in controlled input fixtures. A separate real-input fixture confirmed E alone hit the chosen target and added its first stack. Another seed, 1073741824, ended at nine kills; retry restored full HP. Dodge → ADC → Dodge, Flash and resize passed; focus used synthetic blur.
+- Controlled four-seed simulation (seed 0, 123456, 82473, 90421; elevated HP and forced enemy removal every 2.5 s) observed 124.0 foe-seconds and at least 60 released casts over 131.1 busy seconds, versus 78.4 foe-seconds and at least 45 released casts over 112.9 quiet seconds. These instrumented counts are comparative, not a human balance assessment; their cast count includes observed projectiles and released hazard phases.
+- Next: (1) incorporate the owner's feel and balance feedback; (2) verify native focus and physical speaker output interactively; (3) adjust pressure or movement if play warrants it.

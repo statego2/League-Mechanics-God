@@ -67,6 +67,10 @@ const {chromium}=require('playwright'),fs=require('fs');
  const combo=await page.evaluate(()=>({kills:adcFixture.kills,wCooldown:adcFixture.player.cd.w,hp:adcFixture.hp}));
  if(combo.kills<1||combo.wCooldown!==0)throw Error('E-Q-auto-W reset combo failed: '+JSON.stringify(combo));
  console.log(JSON.stringify({realInputCombo:combo}));
+ // E alone must select and attack its carrier without a second click.
+ await page.evaluate(()=>adcFixture.setupTargeting());let eTarget=await page.evaluate(()=>({x:adcFixture.foes[1].x,y:adcFixture.foes[1].y}));where=screen(eTarget);
+ await page.mouse.move(where.x,where.y);await page.keyboard.press('e');await page.waitForFunction(()=>adcFixture.foes[1].hp<1000,null,{timeout:3000});
+ const eAuto=await page.evaluate(()=>({near:adcFixture.foes[0].hp,chosen:adcFixture.foes[1].hp,stacks:adcFixture.foes[1].adcCharge?.stacks}));if(eAuto.near!==1000||eAuto.stacks<1)throw Error('E did not attack its carrier: '+JSON.stringify(eAuto));console.log(JSON.stringify({eAuto}));
  // A-click the farther visible enemy and verify that target, not the nearer one, is hit.
  await page.evaluate(()=>adcFixture.setupTargeting());let chosen=await page.evaluate(()=>({x:adcFixture.foes[1].x,y:adcFixture.foes[1].y}));where=screen(chosen);
  await page.keyboard.press('a');await page.mouse.click(where.x,where.y);await page.waitForFunction(()=>adcFixture.foes[1].hp<1000,null,{timeout:3000});
