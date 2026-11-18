@@ -4471,6 +4471,17 @@ test('ADC ambient Malphite remains visible through recovery without a second imp
  const {g,node,draws}=boot();g.reset('adc');g.disableSpawn();Object.assign(node('stoneArt'),{complete:true,naturalWidth:100});g.setRng(7);g.adcState.bag=['malphite'];g.adcState.ambientAt=0;advance(g,1.05);
  const h=g.hazards.find(h=>h.adcSpecial==='malphite');assert.ok(h);assert.equal(h.phase,'recovery');assert.ok(g.adcLiveCasts().has(h.adcCastId));const hp=g.player.hp;g.render();assert.ok(draws.includes(node('stoneArt')));advance(g,.9);assert.equal(g.player.hp,hp);assert.ok(!g.hazards.includes(h));
 });
+test('ADC Ahri caster remains visible until her returning orb completes',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();g.setRng(7);g.adcState.bag=['ahri'];g.adcState.ambientAt=0;advance(g,1.4);
+ const orb=g.shots.find(s=>s.kind==='enemyOrb'&&s.phase==='return');assert.ok(orb,'returning orb should still be active');
+ const source=g.hazards.find(h=>h.adcEmitter&&h.adcCastId===orb.adcCastId);assert.ok(source,'caster should remain visible for the return');assert.equal(g.foes.length,0);
+ advance(g,1.5);assert.ok(!g.hazards.includes(source));
+});
+test('ADC Blitz caster remains visible during the hook and pull',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();g.setRng(7);g.adcState.bag=['blitz'];g.adcState.ambientAt=0;
+ for(let i=0;i<300&&!g.player.hooked;i++)g.update(1/120);assert.ok(g.player.hooked,'hook should reach the player');
+ const source=g.hazards.find(h=>h.adcEmitter&&h.profile==='blitz');assert.ok(source);assert.equal(source.phase,'follow');g.update(1/120);assert.ok(g.hazards.includes(source));advance(g,1.8);assert.ok(!g.hazards.includes(source));
+});
 test('ADC ambient emitters cannot be targeted or reset Rocket Jump',()=>{
  const {g}=boot();g.reset('adc');g.disableSpawn();g.adcState.bag=['ezreal'];g.adcState.ambientAt=0;g.player.cd.w=10;advance(g,.02);
  assert.equal(g.foes.length,0);const emitter=g.hazards.find(h=>h.adcEmitter);assert.ok(emitter);g.setAim(emitter.actor.x,emitter.actor.y);g.cast('e');g.cast('r');

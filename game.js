@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="24905430a38a";
+const BUILD_ID="c7edfde87f9b";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -1930,7 +1930,15 @@ for(const h of hazards){
  // not at a later point in the same simulation step.
  const impactFraction=dt>0?clamp(h.ttl/dt,0,1):0;
  const effectPlayer=positionAt(impactFraction);
- if(h.adcEmitter){h.ttl-=dt;if(h.ttl<=0&&h.phase==="windup"){releaseEnemy(h.actor);h.phase="exit";h.ttl=h.max=.8;}continue;}
+ if(h.adcEmitter){
+  if(h.phase==="windup"){h.ttl-=dt;if(h.ttl<=0){releaseEnemy(h.actor);h.phase=h.actor.orbShot?"follow":"exit";h.ttl=h.max=.8;}}
+  else if(h.phase==="follow"){
+   // Ahri remains visible for the return; Blitz remains for the hook and pull.
+   const pull=h.actor.orbShot?.hook&&player.hooked?.source&&dist(player.hooked.source,h.actor)<.01;
+   if(!h.actor.orbShot?.alive&&!pull){h.phase="exit";h.ttl=h.max=.8;}
+  }else h.ttl-=dt;
+  continue;
+ }
  if(h.adcSpecial){
   const caster=h.adcAmbient?h.actor:foes.find(e=>e.id===h.casterId&&e.alive);h.ttl-=dt;
   if(!caster&&!(h.adcSpecial==="orianna"&&h.phase==="travel")){h.ttl=0;continue;}

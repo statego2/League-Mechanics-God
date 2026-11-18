@@ -22,7 +22,11 @@ const {chromium}=require('playwright'),fs=require('fs');
   await page.screenshot({path:`docs/evidence/adc/fixture-${name}.jpg`,quality:83});console.log(JSON.stringify({name,...obs}));
   if(name==='ahri'||name==='velkoz'){
    await page.waitForFunction(n=>adcFixture.shots.some(s=>n==='ahri'?s.kind==='enemyOrb'&&s.phase==='return':s.velkoz==='child'),name,{timeout:2500});
+   if(name==='ahri')await page.waitForTimeout(300);
    await page.screenshot({path:`docs/evidence/adc/fixture-${name}-second-phase.jpg`,quality:83});
+  }
+  if(name==='blitz'){
+   await page.waitForFunction(()=>!!adcFixture.player.hooked,null,{timeout:2500});await page.screenshot({path:'docs/evidence/adc/fixture-blitz-pull.jpg',quality:83});
   }
   if(name==='malphite'){
    await page.waitForFunction(()=>adcFixture.hazards.some(h=>h.adcSpecial==='malphite'&&h.phase==='recovery'),null,{timeout:2500});
