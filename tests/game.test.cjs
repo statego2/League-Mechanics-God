@@ -4477,6 +4477,15 @@ test('ADC Ahri caster remains visible until her returning orb completes',()=>{
  const source=g.hazards.find(h=>h.adcEmitter&&h.adcCastId===orb.adcCastId);assert.ok(source,'caster should remain visible for the return');assert.equal(g.foes.length,0);
  advance(g,1.5);assert.ok(!g.hazards.includes(source));
 });
+test('ADC Lux caster remains visible while her long-range projectile is in flight',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();g.setRng(7);g.adcState.bag=['lux'];g.adcState.ambientAt=0;advance(g,.02);g.player.y+=200;advance(g,1.28);
+ const shot=g.shots.find(s=>s.spellName==='LUX Q'&&s.alive);assert.ok(shot);const source=g.hazards.find(h=>h.adcEmitter&&h.adcCastId===shot.adcCastId);assert.ok(source);advance(g,1.2);assert.ok(!g.hazards.includes(source));
+});
+test('ADC Velkoz caster remains visible through his split missiles',()=>{
+ const {g}=boot();g.reset('adc');g.disableSpawn();g.setRng(7);g.adcState.bag=['velkoz'];g.adcState.ambientAt=0;advance(g,1.4);
+ const child=g.shots.find(s=>s.velkoz==='child'&&s.alive);assert.ok(child,'split projectile should still be active');const source=g.hazards.find(h=>h.adcEmitter&&h.adcCastId===child.adcCastId);assert.ok(source,'caster should remain visible during the split');assert.equal(g.foes.length,0);
+ advance(g,1.5);assert.ok(!g.hazards.includes(source));
+});
 test('ADC Blitz caster remains visible during the hook and pull',()=>{
  const {g}=boot();g.reset('adc');g.disableSpawn();g.setRng(7);g.adcState.bag=['blitz'];g.adcState.ambientAt=0;
  for(let i=0;i<300&&!g.player.hooked;i++)g.update(1/120);assert.ok(g.player.hooked,'hook should reach the player');

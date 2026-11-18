@@ -2018,3 +2018,9 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 - Ambient Ahri now remains visible until her orb completes its return; ambient Blitz remains visible throughout his hook and pull. Each caster then fades out. They remain untargetable and independent from generic pursuers; cast budget and hook/return lifetimes remain tied to the real spell. Previously the actor faded after a fixed 0.8 seconds even while Ahri's orb was still returning.
 - Build `c7edfde87f9b`: focused return and pull tests passed, the full Node suite passed 634/634, and three same-seed Dodge traces matched `cafb8a4`. A current-build real-input Chromium run reached 10 kills in 24.19s with 26 HP and no page errors; Q/W/E/R, targeting and kit-combo fixtures passed. Controlled `fixture-ahri-second-phase.jpg` and `fixture-blitz-pull.jpg` show the visible sources during their spell phases. Human feel and presentation feedback remains pending.
 - Next: (1) incorporate the owner's playtest feedback; (2) verify native focus and physical speaker output in an interactive session; (3) address issues revealed in play.
+
+## ADC projectile caster continuity — 2026-11-18
+
+- Extended ambient caster visibility to the full lifetime of their projectiles, including Lux Q's long flight and Vel'Koz's split missiles. The caster fades after its spell finishes; Ahri's returning orb and Blitz's hook and pull retain the same behavior. Casters remain independent and untargetable.
+- Build `e203c83d61f2`: focused Lux, Vel'Koz, Ahri and Blitz lifetime tests passed. The full 634-test suite and three matching Dodge traces were run before this extension; the prior build also passed real-input browser checks. Human play, native focus and physical speaker output remain unverified.
+- Next: (1) incorporate owner playtest feedback; (2) verify native focus and audible output in an interactive session; (3) fix issues revealed in play.
