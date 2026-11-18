@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id),ui={overlay:$("overlay"),title:$("menuTi
 // Display the version of this executing script, not a hard-coded HTML label.
 // SHA-256 of this file with the BUILD_ID value normalized to <content-hash>.
 // Keep the ID identical to the game.js cache key in index.html.
-const BUILD_ID="dcb6fd929673";
+const BUILD_ID="af06cb46459e";
 if($("buildLabel"))$("buildLabel").textContent="Build: "+BUILD_ID;
 const W=1200,H=675,TAU=Math.PI*2,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y),rand=(a,b)=>a+random()*(b-a);
 const PRESETS={easy:{speed:.8,warning:.6,spawn:1.3,cap:4},normal:{speed:1,warning:.42,spawn:1,cap:6},hard:{speed:1.18,warning:.3,spawn:.78,cap:7}};
@@ -1951,11 +1951,14 @@ for(const h of hazards){
   if(state!=="playing")return;continue;
  }
  if(h.adcBeam||h.adcArea){
+  if(h.phase==="exit"){h.ttl-=dt;continue;}
   if(h.casterId&&!foes.some(e=>e.id===h.casterId&&e.alive)){h.ttl=0;continue;}
   h.ttl-=dt;if(h.ttl<=0){
    if(h.adcBeam){fx.push({x:h.x,y:h.y,endX:h.endX,endY:h.endY,r:h.r,vx:0,vy:0,ttl:.2,max:.2,color:h.luxR?"#ffe2a8":"#b5e5ff",beam:true});if(beamTouchesPlayer(h,effectPlayer,player.hitRadius))takeHit(h.luxR?32:24);}
    else{if(dist(effectPlayer,h)<=h.r+player.hitRadius)takeHit(24);burst(h.x,h.y,"#b5e5ff",20);}
    if(state!=="playing")return;
+   // Keep the untargetable source visible briefly after the real impact.
+   if(!h.casterId){h.phase="exit";h.ttl=h.max=.45;}
   }
   continue;
  }
@@ -2505,7 +2508,8 @@ for(const h of hazards){if(h.adcEmitter){const pose=h.phase==="windup"?clamp(1-h
  const dx=h.endX-h.x,dy=h.endY-h.y,len=Math.hypot(dx,dy)||1;
  const precast=h.luxR&&h.precast,progress=clamp(1-h.ttl/h.max,0,1),cueLength=h.adcBeam?45:h.luxR?len*(h.cueStart+(1-h.cueStart)*.94*progress):45;
  if(h.adcBeam){
-  drawChampion(h.x,h.y,Math.atan2(dy,dx),false,false,progress,time*7,h.luxR?"lux":"xerath");
+  ctx.save();if(h.phase==="exit")ctx.globalAlpha=clamp(h.ttl/h.max,0,1);drawChampion(h.x,h.y,Math.atan2(dy,dx),false,false,h.phase==="exit"?0:progress,time*7,h.luxR?"lux":"xerath");ctx.restore();
+  if(h.phase==="exit")continue;
   // A local charging effect communicates the cast without projecting its path.
   const pulse=1+progress*.35,outer=h.luxR?"#ffd99477":"#8bcfff77",core=h.luxR?"#fff0bd":"#d8f4ff";
   circle(h.x,h.y,25*pulse,outer);circle(h.x,h.y,16*pulse,core,false,2.5);circle(h.x,h.y,7+progress*3,core);
@@ -2517,7 +2521,7 @@ for(const h of hazards){if(h.adcEmitter){const pose=h.phase==="windup"?clamp(1-h
  ctx.save();ctx.lineCap="round";ctx.beginPath();ctx.moveTo(h.x,h.y);ctx.lineTo(h.x+dx/len*cueLength,h.y+dy/len*cueLength);ctx.strokeStyle=h.luxR?"#ffe5a8aa":"#9edcffaa";ctx.lineWidth=h.luxR?5:7;ctx.stroke();ctx.restore();
  circle(h.x,h.y,h.luxR?20:16,h.luxR?"#ffe09a44":"#8bcfff44");circle(h.x,h.y,h.luxR?8:7,h.luxR?"#fff2c9":"#d0edff");continue;
  }if(h.xerath){
-  if(h.adcArea&&h.adcSource)drawChampion(h.adcSource.x,h.adcSource.y,Math.atan2(h.y-h.adcSource.y,h.x-h.adcSource.x),false,false,clamp(1-h.ttl/h.max,0,1),time*7,"xerath");
+  if(h.adcArea&&h.adcSource){ctx.save();if(h.phase==="exit")ctx.globalAlpha=clamp(h.ttl/h.max,0,1);drawChampion(h.adcSource.x,h.adcSource.y,Math.atan2(h.y-h.adcSource.y,h.x-h.adcSource.x),false,false,h.phase==="exit"?0:clamp(1-h.ttl/h.max,0,1),time*7,"xerath");ctx.restore();if(h.phase==="exit")continue;}
   // Eye of Destruction stays an honest circular ground threat, but uses an
   // original arcane rune and inward energy instead of debug-like radius rings.
   const charge=clamp(1-h.ttl/h.max,0,1),glow=ctx.createRadialGradient(h.x,h.y,0,h.x,h.y,h.r);

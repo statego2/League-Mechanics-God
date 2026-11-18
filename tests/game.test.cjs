@@ -4444,6 +4444,12 @@ test('ADC Rocket Jump wall snapping never extends its maximum range',()=>{
  const {g}=boot();g.reset('adc');g.disableSpawn();const p=g.player;Object.assign(p,{x:22,y:527});const a=5.061454830783556;g.setAim(p.x+Math.cos(a)*450,p.y+Math.sin(a)*450);g.cast('w');
  assert.ok(p.dashing);assert.ok(Math.hypot(p.dashing.x-p.x,p.dashing.y-p.y)<=450+1e-6);assert.ok(g.world.pointWalkable(p.dashing,p.r));
 });
+test('ADC Lux and Xerath casters remain visible briefly after impact without repeating damage',()=>{
+ for(const name of ['lux-r','xerath-q','xerath-w']){
+  const {g}=boot();g.reset('adc');g.disableSpawn();g.setRng(7);g.adcState.bag=[name];g.adcState.ambientAt=0;advance(g,1.15);
+  const h=g.hazards.find(h=>h.adcBeam||h.adcArea);assert.ok(h,name);assert.equal(h.phase,'exit',name);const hp=g.player.hp;advance(g,.6);assert.equal(g.player.hp,hp,name);assert.ok(!g.hazards.includes(h),name);
+ }
+});
 test('ADC ambient Malphite remains visible through recovery without a second impact',()=>{
  const {g,node,draws}=boot();g.reset('adc');g.disableSpawn();Object.assign(node('stoneArt'),{complete:true,naturalWidth:100});g.setRng(7);g.adcState.bag=['malphite'];g.adcState.ambientAt=0;advance(g,1.05);
  const h=g.hazards.find(h=>h.adcSpecial==='malphite');assert.ok(h);assert.equal(h.phase,'recovery');assert.ok(g.adcLiveCasts().has(h.adcCastId));const hp=g.player.hp;g.render();assert.ok(draws.includes(node('stoneArt')));advance(g,.9);assert.equal(g.player.hp,hp);assert.ok(!g.hazards.includes(h));
