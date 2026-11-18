@@ -4533,3 +4533,14 @@ test('ADC regeneration uses playing simulation time and does not resurrect',()=>
 test('ADC movement and pressure phases follow the playtest profile',()=>{
  const {g}=boot();g.reset('adc',42);g.disableSpawn();assert.equal(g.player.speed,260);g.player.hp=100;advance(g,4.1);assert.equal(g.adcState.phase,'busy');const end=g.adcState.phaseUntil;assert.ok(end>=12&&end<=16.1);advance(g,end-g.time+.02);assert.equal(g.adcState.phase,'quiet');
 });
+
+test('ADC E alone completes four attack stacks and resets Rocket Jump',()=>{
+ const {g}=boot();g.reset('adc',0);g.disableSpawn();const e=foe(g,730,337.5);g.player.cd.w=10;g.setAim(e.x,e.y);g.cast('e');
+ assert.equal(e.adcCharge.stacks,0);advance(g,1.5);
+ assert.equal(g.stats.autoHits,4);assert.equal(e.adcCharge,null);assert.equal(e.hp,9808);assert.equal(g.player.cd.w,0);
+});
+test('ADC E retargets an unfinished windup while preserving a released missile',()=>{
+ const {g}=boot();g.reset('adc',0);g.disableSpawn();const a=foe(g,730,300),b=g.enemy(730,375);Object.assign(b,{speed:0,hp:10000,maxHp:10000});g.setFoes([a,b]);
+ g.attackOrder(a);advance(g,.025);assert.equal(g.player.windupTarget,a.id);g.setAim(b.x,b.y);g.cast('e');assert.equal(g.player.windupTarget,b.id);advance(g,.4);assert.equal(a.hp,10000);assert.equal(b.hp,9972);
+ g.reset('adc',0);g.disableSpawn();const c=foe(g,730,300),d=g.enemy(730,375);Object.assign(d,{speed:0,hp:10000,maxHp:10000});g.setFoes([c,d]);g.attackOrder(c);advance(g,.07);assert.ok(g.shots.some(s=>s.targetId===c.id));g.setAim(d.x,d.y);g.cast('e');advance(g,.35);assert.equal(c.hp,9972);assert.equal(g.player.order.id,d.id);
+});
