@@ -2024,3 +2024,9 @@ Next actions: (1) replace synthetic sweep with source-informed fair varied spell
 - Extended ambient caster visibility to the full lifetime of their projectiles, including Lux Q's long flight and Vel'Koz's split missiles. The caster fades after its spell finishes; Ahri's returning orb and Blitz's hook and pull retain the same behavior. Casters remain independent and untargetable.
 - Build `e203c83d61f2`: focused Lux, Vel'Koz, Ahri and Blitz lifetime tests passed. The full 634-test suite and three matching Dodge traces were run before this extension; the prior build also passed real-input browser checks. Human play, native focus and physical speaker output remain unverified.
 - Next: (1) incorporate owner playtest feedback; (2) verify native focus and audible output in an interactive session; (3) fix issues revealed in play.
+
+## ADC current-build regression — 2026-11-18
+
+- Build `e203c83d61f2` passed `node --check game.js`, the full Node suite (636/636), and the two configured same-seed Dodge trace comparisons (120 snapshots each). The build fingerprint was unchanged on regeneration.
+- A current-build Chromium run with real mouse/keyboard reached 10 kills in 26.66s with 104 HP and no page errors; Q/E/R were used in that run, and separate input fixtures covered Q/W/E/R, targeting, E facing, W reset, jump/ultimate, death/retry, Flash and resize. Dodge → ADC → Dodge → ADC switching passed. Headless focus loss needed synthetic blur, so native window focus and physical speaker output remain unverified; owner assessment of feel remains pending.
+- Next: (1) incorporate owner playtest feedback; (2) verify native focus and audible speaker output interactively; (3) address issues revealed in play.
